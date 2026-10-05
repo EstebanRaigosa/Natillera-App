@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-tema="claro">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -18,7 +18,29 @@
     <title>Natillerapp – App y plataforma web para administrar tu natillera</title>
     <meta name="description" content="Plataforma web y app para administrar tu natillera sin cuadernos: cuotas, multas, préstamos, rifas, caja y cierre de fin de año. Gratis, en el celular o la computadora." />
     <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#1B5E37" />
+    <!-- Barra de estado: verde marca en claro, verde noche en oscuro. useTema() las
+         reescribe las dos cuando el usuario fuerza un modo distinto al del sistema. -->
+    <meta name="theme-color" content="#1B5E37" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1B5E37" media="(prefers-color-scheme: dark)" />
+    <!--
+      Tema del primer pintado (docs/plan-modo-oscuro.md). Va en línea y antes de
+      cualquier CSS/JS de la app: si esperase a Vue, quien usa el modo oscuro vería
+      un destello blanco al abrir. Usa el último tema que pintó useTema(), que ya
+      tuvo en cuenta la preferencia, el sistema y si la vista admite oscuro.
+    -->
+    <script>
+      (function () {
+        try {
+          // Login y páginas públicas van siempre en claro (no tienen meta.temaOscuro):
+          // sin esta excepción, quien salió en oscuro vería un destello oscuro al abrirlas.
+          var publica = /^\/(?:$|auth(?:\/|$)|unirme\/|privacidad\/?$|terminos\/?$|que-es-una-natillera\/?$)/.test(location.pathname)
+          if (!publica && localStorage.getItem('natillerapp:tema-efectivo') === 'oscuro') {
+            document.documentElement.setAttribute('data-tema', 'oscuro')
+            document.documentElement.style.colorScheme = 'dark'
+          }
+        } catch (e) { /* Safari privado: se queda en claro */ }
+      })()
+    </script>
     <!-- Mulish (tipografía de la marca). Aquí y no con @import en el CSS: así se pide en paralelo. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

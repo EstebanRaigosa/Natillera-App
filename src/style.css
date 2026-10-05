@@ -4,6 +4,54 @@
 
 @import "tailwindcss";
 
+/*
+ * Modo oscuro (docs/plan-modo-oscuro.md). El tema lo decide `useTema()` y lo
+ * marca en <html data-tema="claro|oscuro">. Un bloque puede forzar el claro
+ * con su propio data-tema="claro" (comprobantes que se comparten).
+ *
+ * `oscuro:` es para casos puntuales: lo normal es usar los colores por función
+ * de abajo (bg-superficie-tarjeta, text-texto…), que ya cambian solos.
+ */
+@custom-variant oscuro (&:where([data-tema=oscuro], [data-tema=oscuro] *):not(:where([data-tema=claro], [data-tema=claro] *)));
+
+/* Colores por función expuestos como utilidades: bg-superficie-tarjeta, text-texto-secundario, border-borde… */
+@theme inline {
+  --color-superficie-lienzo: var(--superficie-lienzo);
+  --color-superficie-tarjeta: var(--superficie-tarjeta);
+  --color-superficie-suave: var(--superficie-suave);
+  --color-superficie-hundida: var(--superficie-hundida);
+  --color-superficie-elevada: var(--superficie-elevada);
+  --color-texto-fuerte: var(--texto-fuerte);
+  --color-texto: var(--texto);
+  --color-texto-medio: var(--texto-medio);
+  --color-texto-secundario: var(--texto-secundario);
+  --color-texto-suave: var(--texto-suave);
+  --color-texto-tenue: var(--texto-tenue);
+  --color-texto-sobre-marca: var(--texto-sobre-marca);
+  --color-borde-suave: var(--borde-suave);
+  --color-borde: var(--borde);
+  --color-borde-fuerte: var(--borde-fuerte);
+  --color-marca: var(--marca);
+  --color-marca-hover: var(--marca-hover);
+  --color-marca-suave: var(--marca-suave);
+  --color-marca-texto: var(--marca-texto);
+  --color-marca-tinta: var(--marca-tinta);
+  --color-marca-tinta-borde: var(--marca-tinta-borde);
+  --color-velo-modal: var(--velo-modal);
+  --color-exito: var(--exito);
+  --color-exito-suave: var(--exito-suave);
+  --color-exito-borde: var(--exito-borde);
+  --color-alerta: var(--alerta);
+  --color-alerta-suave: var(--alerta-suave);
+  --color-alerta-borde: var(--alerta-borde);
+  --color-peligro: var(--peligro);
+  --color-peligro-suave: var(--peligro-suave);
+  --color-peligro-borde: var(--peligro-borde);
+  --color-info: var(--info);
+  --color-info-suave: var(--info-suave);
+  --color-info-borde: var(--info-borde);
+}
+
 @theme {
   /* Paleta marca — verde bosque (escala compatible con Tailwind green) */
   --color-natillera-50: #f0fdf4;
@@ -249,8 +297,9 @@
   
   body {
     font-family: var(--font-body);
-    @apply text-gray-800 min-h-screen;
-    background: var(--app-canvas-surface);
+    @apply min-h-screen;
+    color: var(--texto);
+    background: var(--superficie-lienzo);
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -2089,6 +2138,146 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
 }
 
 /* ==========================================================================
+   COLORES POR FUNCIÓN — claro / oscuro
+   Cada token dice para qué sirve, no qué color es: así un mismo nombre puede
+   ser blanco en claro y casi negro en oscuro. En claro valen EXACTAMENTE la
+   paleta de Tailwind que reemplazan (gray-800 → --texto, white → tarjeta…),
+   para que migrar una vista no le cambie un píxel en modo claro.
+
+   Equivalencias para migrar:
+     bg-white → bg-superficie-tarjeta      bg-gray-50 → bg-superficie-suave
+     bg-gray-100 → bg-superficie-hundida   (menús/popovers) → bg-superficie-elevada
+     text-gray-900 → text-texto-fuerte     text-gray-800 → text-texto
+     text-gray-700 → text-texto-medio      text-gray-600 → text-texto-secundario
+     text-gray-500 → text-texto-suave      text-gray-400 → text-texto-tenue
+     border-gray-100 → border-borde-suave  border-gray-200 → border-borde
+     border-gray-300 → border-borde-fuerte
+     Texto encima del verde de marca: text-white se QUEDA (o text-texto-sobre-marca).
+     Verde marca como texto o icono SOBRE una superficie (text-[#1B5E37]) → text-marca-tinta:
+     en oscuro #1B5E37 sobre casi negro no se lee.
+   ========================================================================== */
+:root,
+[data-tema="claro"] {
+  color-scheme: light;
+
+  --superficie-lienzo: hsl(220 13% 92%);
+  --superficie-tarjeta: #fff;
+  --superficie-suave: oklch(98.5% 0.002 247.839);      /* gray-50 */
+  --superficie-hundida: oklch(96.7% 0.003 264.542);    /* gray-100 */
+  --superficie-elevada: #fff;
+
+  --texto-fuerte: oklch(21% 0.034 264.665);            /* gray-900 */
+  --texto: oklch(27.8% 0.033 256.848);                 /* gray-800 */
+  --texto-medio: oklch(37.3% 0.034 259.733);           /* gray-700 */
+  --texto-secundario: oklch(44.6% 0.03 256.802);       /* gray-600 */
+  --texto-suave: oklch(55.1% 0.027 264.364);           /* gray-500 */
+  --texto-tenue: oklch(70.7% 0.022 261.325);           /* gray-400 */
+  --texto-sobre-marca: #fff;
+
+  --borde-suave: oklch(96.7% 0.003 264.542);           /* gray-100 */
+  --borde: oklch(92.8% 0.006 264.531);                 /* gray-200 */
+  --borde-fuerte: oklch(87.2% 0.01 258.338);           /* gray-300 */
+
+  --marca: #1B5E37;
+  --marca-hover: #154a2d;
+  --marca-suave: #E8F5E9;
+  --marca-texto: #15803d;
+  --marca-tinta: #1B5E37;                              /* verde marca como texto/icono sobre superficie */
+  --marca-tinta-borde: rgb(27 94 55 / 0.3);
+  --velo-modal: rgb(200 217 200 / 0.7);                /* salvia #C8D9C8 al 70 % */
+
+  --exito: #15803d;
+  --exito-suave: #ecfdf5;
+  --exito-borde: #a7f3d0;
+  --alerta: #b45309;
+  --alerta-suave: #fffbeb;
+  --alerta-borde: #fde68a;
+  --peligro: #dc2626;
+  --peligro-suave: #fef2f2;
+  --peligro-borde: #fecaca;
+  --info: #1d4ed8;
+  --info-suave: #eff6ff;
+  --info-borde: #bfdbfe;
+}
+
+/* Neutros con un punto de verde: un negro puro se ve frío al lado de la marca. */
+[data-tema="oscuro"] {
+  color-scheme: dark;
+
+  --superficie-lienzo: #0d1411;
+  --superficie-tarjeta: #151e19;
+  --superficie-suave: #1a241f;
+  --superficie-hundida: #111915;
+  --superficie-elevada: #1f2a24;
+
+  --texto-fuerte: #f2f6f4;
+  --texto: #e3eae6;
+  --texto-medio: #c9d3ce;
+  --texto-secundario: #a6b3ad;
+  --texto-suave: #8b9993;
+  --texto-tenue: #6f7d77;
+  --texto-sobre-marca: #fff;
+
+  --borde-suave: rgb(255 255 255 / 0.06);
+  --borde: rgb(255 255 255 / 0.1);
+  --borde-fuerte: rgb(255 255 255 / 0.16);
+
+  --marca: #1B5E37;
+  --marca-hover: #22744a;
+  --marca-suave: rgb(34 197 94 / 0.12);
+  --marca-texto: #4ade80;
+  --marca-tinta: #6ee7a0;
+  --marca-tinta-borde: rgb(110 231 160 / 0.35);
+  --velo-modal: rgb(0 0 0 / 0.6);
+
+  --exito: #4ade80;
+  --exito-suave: rgb(34 197 94 / 0.14);
+  --exito-borde: rgb(74 222 128 / 0.28);
+  --alerta: #fbbf24;
+  --alerta-suave: rgb(245 158 11 / 0.14);
+  --alerta-borde: rgb(251 191 36 / 0.28);
+  --peligro: #f87171;
+  --peligro-suave: rgb(239 68 68 / 0.14);
+  --peligro-borde: rgb(248 113 113 / 0.3);
+  --info: #60a5fa;
+  --info-suave: rgb(59 130 246 / 0.14);
+  --info-borde: rgb(96 165 250 / 0.3);
+
+  /* Variables antiguas que no son alias: se ajustan aquí */
+  --surface-divider: rgb(255 255 255 / 0.08);
+  --surface-divider-strong: rgb(255 255 255 / 0.12);
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-sm: 0 2px 6px -2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 6px 16px -4px rgb(0 0 0 / 0.45);
+  --shadow-lg: 0 14px 32px -8px rgb(0 0 0 / 0.55);
+  --background: 150 20% 7%;
+  --foreground: 150 14% 91%;
+  --card: 148 15% 10%;
+  --card-foreground: 150 14% 91%;
+  --popover: 148 15% 12%;
+  --popover-foreground: 150 14% 91%;
+  --secondary: 150 12% 16%;
+  --secondary-foreground: 150 14% 88%;
+  --muted: 150 12% 14%;
+  --muted-foreground: 150 8% 62%;
+  --accent: 150 14% 18%;
+  --accent-foreground: 150 14% 91%;
+  --border: 150 8% 20%;
+  --input: 150 8% 22%;
+}
+
+/* Alias de las variables antiguas. Se redeclaran en cada [data-tema] y no solo en
+   :root: una variable con var() se resuelve donde se declara, y un bloque forzado a
+   claro dentro de una página oscura heredaría el valor oscuro ya resuelto. */
+[data-tema] {
+  --brand-primary-soft: var(--marca-suave);
+  --app-canvas-surface: var(--superficie-lienzo);
+  --surface-canvas: var(--superficie-lienzo);
+  --surface-card: var(--superficie-tarjeta);
+  --surface-muted: var(--superficie-suave);
+}
+
+/* ==========================================================================
    NATILLERAPP DESIGN SYSTEM — tokens globales
    Fuente única: Mulish. Color marca: #1B5E37 (verde bosque). Backdrop: #C8D9C8.
    Patrón canónico: ver `Funcionalidades/sistema-diseno.md` y skill
@@ -2130,7 +2319,7 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   /* Shell lateral + barra inferior: ~2 tonos más oscuro que el verde primario (#166534) */
   --app-shell-nav-solid: #0f3d22;
   /* Lienzo del panel: gris neutro (tarjetas blancas “flotan” con sombra/borde) */
-  --app-canvas-surface: hsl(220 13% 92%);
+  --app-canvas-surface: var(--superficie-lienzo);
 
   /* === Tokens canónicos de marca (referencia única en el sistema de diseño) === */
   --brand-primary: #1B5E37;            /* verde bosque — cabeceras de modal, CTA primario */
@@ -2148,9 +2337,9 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   --brand-info: #1d4ed8;
 
   /* Superficies */
-  --surface-canvas: hsl(220 13% 92%);
-  --surface-card: #ffffff;
-  --surface-muted: #f8fafc;
+  --surface-canvas: var(--superficie-lienzo);
+  --surface-card: var(--superficie-tarjeta);
+  --surface-muted: var(--superficie-suave);
   --surface-divider: rgba(15, 23, 42, 0.08);
   --surface-divider-strong: rgba(15, 23, 42, 0.12);
 
@@ -3235,3 +3424,86 @@ html[data-theme='forest'] body {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* ==========================================================================
+   MODO OSCURO — clases globales
+   Las clases de arriba se escribieron con colores fijos de modo claro. En vez
+   de reescribirlas (y arriesgar un cambio en claro), aquí solo se dice qué
+   cambia en oscuro. `:where()` no suma especificidad: cada regla pesa lo mismo
+   que la clase original y gana por ir después; y sigue dentro de `components`,
+   así que una utilidad de Tailwind puesta en el elemento sigue mandando.
+   El :not() respeta los bloques forzados a claro (comprobantes).
+   ========================================================================== */
+@layer components {
+  :where([data-tema=oscuro]) :is(.card, .card-hover, .stat-card):not(:where([data-tema=claro] *)) {
+    background-color: color-mix(in oklab, var(--superficie-tarjeta) 92%, transparent);
+    border-color: var(--borde-suave);
+    box-shadow: var(--shadow-md);
+  }
+  :where([data-tema=oscuro]) .card-sunken:not(:where([data-tema=claro] *)) {
+    background: linear-gradient(to bottom, var(--superficie-suave), var(--superficie-hundida));
+    box-shadow: inset 0 2px 8px rgb(0 0 0 / 0.35);
+  }
+  :where([data-tema=oscuro]) .input-field:not(:where([data-tema=claro] *)) {
+    background-color: var(--superficie-suave);
+    border-color: var(--borde-fuerte);
+    color: var(--texto);
+  }
+  :where([data-tema=oscuro]) .input-field:not(:where([data-tema=claro] *))::placeholder { color: var(--texto-tenue); }
+  :where([data-tema=oscuro]) .label:not(:where([data-tema=claro] *)) { color: var(--texto-medio); }
+  :where([data-tema=oscuro]) .stat-value:not(:where([data-tema=claro] *)) { color: var(--marca-texto); }
+  :where([data-tema=oscuro]) .stat-label:not(:where([data-tema=claro] *)) { color: var(--texto-medio); }
+
+  :where([data-tema=oscuro]) .badge-success:not(:where([data-tema=claro] *)),
+  :where([data-tema=oscuro]) .ds-badge--success:not(:where([data-tema=claro] *)) { background: var(--exito-suave); color: var(--exito); }
+  :where([data-tema=oscuro]) .badge-warning:not(:where([data-tema=claro] *)),
+  :where([data-tema=oscuro]) .ds-badge--warning:not(:where([data-tema=claro] *)) { background: var(--alerta-suave); color: var(--alerta); }
+  :where([data-tema=oscuro]) .badge-danger:not(:where([data-tema=claro] *)),
+  :where([data-tema=oscuro]) .ds-badge--danger:not(:where([data-tema=claro] *)) { background: var(--peligro-suave); color: var(--peligro); }
+  :where([data-tema=oscuro]) .badge-info:not(:where([data-tema=claro] *)),
+  :where([data-tema=oscuro]) .ds-badge--info:not(:where([data-tema=claro] *)) { background: var(--info-suave); color: var(--info); }
+  :where([data-tema=oscuro]) .ds-badge--brand:not(:where([data-tema=claro] *)) { background: var(--marca-suave); color: var(--marca-texto); }
+  :where([data-tema=oscuro]) .ds-badge--muted:not(:where([data-tema=claro] *)) { background: var(--superficie-hundida); color: var(--texto-secundario); }
+
+  /* Botones: el primario (verde con texto blanco) no cambia; los secundarios sí */
+  :where([data-tema=oscuro]) .btn-secondary:not(:where([data-tema=claro] *)) {
+    background-color: var(--superficie-tarjeta);
+    color: var(--marca-tinta);
+    border-color: var(--marca-tinta-borde);
+  }
+  :where([data-tema=oscuro]) .btn-secondary:not(:where([data-tema=claro] *)):hover { background-color: var(--marca-suave); }
+  :where([data-tema=oscuro]) .btn-modal-secondary:not(:where([data-tema=claro] *)) {
+    color: var(--texto-medio);
+    background: var(--superficie-tarjeta);
+    border-color: var(--borde-fuerte);
+  }
+  :where([data-tema=oscuro]) .btn-modal-secondary:not(:where([data-tema=claro] *)):hover:not(:disabled) { background: var(--superficie-suave); }
+  :where([data-tema=oscuro]) :is(.btn-descargar, .ds-btn--secondary):not(:where([data-tema=claro] *)) {
+    color: var(--marca-tinta);
+    background: var(--superficie-tarjeta);
+    border-color: var(--marca-tinta-borde);
+  }
+  :where([data-tema=oscuro]) :is(.btn-descargar, .ds-btn--secondary):not(:where([data-tema=claro] *)):hover:not(:disabled) {
+    background: var(--marca-suave);
+    border-color: var(--marca-tinta);
+  }
+  :where([data-tema=oscuro]) .ds-btn--ghost:not(:where([data-tema=claro] *)) { color: var(--texto-medio); }
+  :where([data-tema=oscuro]) .ds-btn--ghost:not(:where([data-tema=claro] *)):hover:not(:disabled) { background: rgb(255 255 255 / 0.06); }
+
+  /* Sistema de diseño ds-* (las superficies ya van por variables; aquí los textos fijos) */
+  :where([data-tema=oscuro]) :is(.ds-page-header__title, .ds-label, .ds-input, .ds-search__input):not(:where([data-tema=claro] *)) { color: var(--texto-fuerte); }
+  :where([data-tema=oscuro]) :is(.ds-page-header__sub, .ds-stat-card__label, .ds-search__clear):not(:where([data-tema=claro] *)) { color: var(--texto-suave); }
+  :where([data-tema=oscuro]) :is(.ds-input, .ds-search, .ds-empty-state, .ds-empty-state__body):not(:where([data-tema=claro] *)) { background: var(--superficie-tarjeta); }
+  :where([data-tema=oscuro]) .ds-empty-state:not(:where([data-tema=claro] *)) { border-color: var(--borde); }
+  :where([data-tema=oscuro]) .ds-empty-state__icon-wrap:not(:where([data-tema=claro] *)) { background: var(--superficie-tarjeta); color: var(--marca-tinta); }
+  :where([data-tema=oscuro]) :is(.ds-input, .ds-search__input):not(:where([data-tema=claro] *))::placeholder { color: var(--texto-tenue); }
+  :where([data-tema=oscuro]) .ds-search > svg:not(:where([data-tema=claro] *)) { color: var(--texto-tenue); }
+  :where([data-tema=oscuro]) :is(.ds-stat-card__icon):not(:where([data-tema=claro] *)) { background: var(--marca-suave); color: var(--marca-texto); }
+  :where([data-tema=oscuro]) :is(.ds-stat-card__value, .ds-callout__icon, .ds-callout__title, .ds-overline):not(:where([data-tema=claro] *)) { color: var(--marca-texto); }
+  :where([data-tema=oscuro]) .ds-callout:not(:where([data-tema=claro] *)) { background: var(--marca-suave); color: var(--texto); }
+  :where([data-tema=oscuro]) .ds-card--brand:not(:where([data-tema=claro] *)) {
+    background: linear-gradient(180deg, var(--superficie-tarjeta) 0%, var(--superficie-suave) 100%);
+    border-color: var(--marca-tinta-borde);
+  }
+}
+

@@ -27,7 +27,7 @@
             <span class="font-extrabold">crece con tu natillera</span>
           </h1>
           <p class="mt-5 max-w-md text-base leading-relaxed text-white/80 sm:text-lg">
-            Cuotas, multas, préstamos, rifas y el cierre de fin de año en una app gratis.
+            Cuotas, multas, préstamos, rifas y el cierre de fin de año en una sola app.
             Tú registras; las cuentas se hacen solas.
           </p>
           <div class="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -35,11 +35,11 @@
               to="/auth/register"
               class="inline-flex min-h-[52px] touch-manipulation items-center justify-center rounded-full bg-white px-7 text-base font-bold text-[#1B5E37] shadow-[0_10px_30px_-10px_rgba(185,228,198,0.7)] hover:bg-[#E8F5E9]"
             >
-              Crear mi natillera gratis
+              Crear mi natillera
             </RouterLink>
             <a
               href="#funciones"
-              class="inline-flex min-h-[52px] touch-manipulation items-center justify-center rounded-full border border-white/30 px-7 text-base font-bold text-white hover:bg-white/10"
+              class="inline-flex min-h-[52px] touch-manipulation items-center justify-center px-4 text-base font-semibold text-white/80 underline-offset-4 hover:text-white hover:underline"
             >
               Conocer más
             </a>
@@ -137,7 +137,7 @@
               to="/auth/register"
               class="mt-8 inline-flex min-h-[48px] touch-manipulation items-center justify-center rounded-full border border-white/25 bg-white/10 px-6 text-sm font-bold hover:bg-white/20"
             >
-              Empezar ahora
+              Crear mi natillera
             </RouterLink>
           </div>
 
@@ -251,7 +251,7 @@
               to="/auth/register"
               class="mt-8 inline-flex min-h-[48px] touch-manipulation items-center justify-center rounded-full border border-white/25 bg-white/10 px-6 text-sm font-bold hover:bg-white/20"
             >
-              Probarla gratis
+              Crear mi natillera
             </RouterLink>
           </div>
         </div>
@@ -297,7 +297,7 @@
               to="/auth/register"
               class="mt-8 inline-flex min-h-[48px] touch-manipulation items-center justify-center rounded-full border border-white/25 bg-white/10 px-6 text-sm font-bold hover:bg-white/20"
             >
-              Crear mi cuenta
+              Crear mi natillera
             </RouterLink>
           </div>
 
@@ -340,17 +340,17 @@
 
           <div class="lp-revelar mt-14 text-center">
             <p class="font-display text-2xl font-extrabold sm:text-3xl">Tu natillera, en orden desde hoy</p>
-            <p class="mt-2 text-white/70">Crea tu cuenta gratis y registra tu primera cuota en minutos.</p>
+            <p class="mt-2 text-white/70">Crea tu natillera y registra tu primera cuota en minutos.</p>
             <div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
               <RouterLink
                 to="/auth/register"
                 class="inline-flex min-h-[52px] touch-manipulation items-center justify-center rounded-full bg-white px-7 text-base font-bold text-[#1B5E37] hover:bg-[#E8F5E9]"
               >
-                Crear cuenta gratis
+                Crear mi natillera
               </RouterLink>
               <RouterLink
                 to="/auth/login"
-                class="inline-flex min-h-[52px] touch-manipulation items-center justify-center rounded-full border border-white/30 px-7 text-base font-bold text-white hover:bg-white/10"
+                class="inline-flex min-h-[52px] touch-manipulation items-center justify-center px-4 text-base font-semibold text-white/80 underline-offset-4 hover:text-white hover:underline"
               >
                 Ya tengo cuenta
               </RouterLink>

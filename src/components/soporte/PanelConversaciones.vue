@@ -1,32 +1,32 @@
 <template>
-  <div class="flex min-h-0 flex-1 overflow-hidden" :class="compacto ? '' : 'gap-0 rounded-2xl border border-gray-200 bg-white shadow-sm'">
+  <div class="flex min-h-0 flex-1 overflow-hidden" :class="compacto ? '' : 'gap-0 rounded-2xl border border-borde bg-superficie-tarjeta shadow-sm'">
     <!-- ── Lista de conversaciones ── -->
     <aside
       :class="[
         'flex min-h-0 flex-col',
         compacto
           ? (conversacionActiva ? 'hidden' : 'flex flex-1')
-          : (conversacionActiva ? 'hidden lg:flex lg:w-80 lg:shrink-0 lg:border-r lg:border-gray-200' : 'flex flex-1 lg:w-80 lg:flex-none lg:shrink-0 lg:border-r lg:border-gray-200'),
+          : (conversacionActiva ? 'hidden lg:flex lg:w-80 lg:shrink-0 lg:border-r lg:border-borde' : 'flex flex-1 lg:w-80 lg:flex-none lg:shrink-0 lg:border-r lg:border-borde'),
       ]"
     >
       <div v-if="soporte.cargando && !soporte.conversaciones.length" class="space-y-2 p-3">
-        <div v-for="n in 4" :key="n" class="h-20 animate-pulse rounded-xl bg-gray-100" />
+        <div v-for="n in 4" :key="n" class="h-20 animate-pulse rounded-xl bg-superficie-hundida" />
       </div>
 
       <div v-else-if="soporte.error && !soporte.conversaciones.length" class="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
         <ExclamationTriangleIcon class="h-8 w-8 text-amber-500" />
-        <p class="text-sm text-gray-600">{{ soporte.error }}</p>
+        <p class="text-sm text-texto-secundario">{{ soporte.error }}</p>
         <button type="button" class="btn-modal-secondary !min-h-[44px] px-4 text-sm" @click="recargar">
           Reintentar
         </button>
       </div>
 
       <div v-else-if="!soporte.conversaciones.length" class="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
-        <div class="flex h-14 w-14 items-center justify-center rounded-full bg-[#E8F5E9]">
-          <ChatBubbleLeftRightIcon class="h-7 w-7 text-[#1B5E37]" />
+        <div class="flex h-14 w-14 items-center justify-center rounded-full bg-marca-suave">
+          <ChatBubbleLeftRightIcon class="h-7 w-7 text-marca-tinta" />
         </div>
-        <p class="font-display text-base font-bold text-gray-900">¿Necesitas ayuda?</p>
-        <p class="max-w-xs text-sm leading-relaxed text-gray-600">
+        <p class="font-display text-base font-bold text-texto-fuerte">¿Necesitas ayuda?</p>
+        <p class="max-w-xs text-sm leading-relaxed text-texto-secundario">
           Escríbenos y te respondemos por aquí mismo. No hace falta salir de la app.
         </p>
         <button type="button" class="btn-modal-primary !min-h-[44px] px-5 text-sm" @click="abrirNueva">
@@ -35,26 +35,26 @@
       </div>
 
       <template v-else>
-        <ul class="min-h-0 flex-1 divide-y divide-gray-100 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
+        <ul class="min-h-0 flex-1 divide-y divide-borde-suave overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
           <li v-for="conversacion in soporte.conversaciones" :key="conversacion.id">
             <button
               type="button"
               :class="[
                 'relative flex w-full flex-col gap-1 py-3 pl-5 pr-4 text-left transition touch-manipulation',
-                conversacion.id === idActivo ? 'bg-[#E8F5E9]' : 'hover:bg-gray-50',
-                estaCerrada(conversacion.estado) && conversacion.id !== idActivo ? 'bg-gray-50/60' : '',
+                conversacion.id === idActivo ? 'bg-marca-suave' : 'hover:bg-superficie-suave',
+                estaCerrada(conversacion.estado) && conversacion.id !== idActivo ? 'bg-superficie-suave/60' : '',
               ]"
               @click="abrirConversacion(conversacion.id)"
             >
               <span
-                :class="['absolute inset-y-0 left-0 w-1.5', ESTADOS[conversacion.estado]?.barra || 'bg-gray-300']"
+                :class="['absolute inset-y-0 left-0 w-1.5', ESTADOS[conversacion.estado]?.barra || 'bg-borde-fuerte']"
                 aria-hidden="true"
               />
               <div class="flex items-center gap-2">
                 <span
                   :class="[
                     'min-w-0 flex-1 truncate text-sm font-semibold',
-                    estaCerrada(conversacion.estado) ? 'text-gray-500' : 'text-gray-900',
+                    estaCerrada(conversacion.estado) ? 'text-texto-suave' : 'text-texto-fuerte',
                   ]"
                 >
                   {{ conversacion.asunto }}
@@ -66,7 +66,7 @@
                   {{ conversacion.sin_leer_usuario }}
                 </span>
               </div>
-              <div class="flex items-center gap-2 text-xs text-gray-500">
+              <div class="flex items-center gap-2 text-xs text-texto-suave">
                 <span
                   :class="['inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[0.6875rem] font-medium', ESTADOS[conversacion.estado]?.clase]"
                 >
@@ -82,7 +82,7 @@
              `--tapado-inferior`: la barra de Safari, que publica ModalWrapper (0 fuera). -->
         <div
           v-if="compacto"
-          class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-3 pb-[calc(max(0.75rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]"
+          class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 pt-3 pb-[calc(max(0.75rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]"
         >
           <button type="button" class="btn-modal-primary w-full !min-h-[44px] text-sm" @click="abrirNueva">
             <PlusIcon class="mr-1.5 h-4 w-4" />
@@ -102,8 +102,8 @@
       <template v-if="conversacionActiva">
         <div
           :class="[
-            'flex-shrink-0 border-b border-gray-200 px-4 py-3 transition-colors',
-            ESTADOS[conversacionActiva.estado]?.tinte || 'bg-white',
+            'flex-shrink-0 border-b border-borde px-4 py-3 transition-colors',
+            ESTADOS[conversacionActiva.estado]?.tinte || 'bg-superficie-tarjeta',
           ]"
         >
           <div class="flex items-center gap-2">
@@ -115,7 +115,7 @@
             <button
               type="button"
               :class="[
-                'flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-600 transition hover:bg-black/5 touch-manipulation',
+                'flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-texto-secundario transition hover:bg-black/5 touch-manipulation',
                 compacto ? '' : 'lg:hidden',
               ]"
               aria-label="Volver a la lista"
@@ -124,8 +124,8 @@
               <ArrowLeftIcon class="h-5 w-5" />
             </button>
             <div class="min-w-0 flex-1">
-              <p class="truncate text-sm font-semibold text-gray-900">{{ conversacionActiva.asunto }}</p>
-              <p class="mt-0.5 text-xs text-gray-500">Conversación {{ codigoConversacion(conversacionActiva.numero) }}</p>
+              <p class="truncate text-sm font-semibold text-texto-fuerte">{{ conversacionActiva.asunto }}</p>
+              <p class="mt-0.5 text-xs text-texto-suave">Conversación {{ codigoConversacion(conversacionActiva.numero) }}</p>
             </div>
             <span
               :class="['inline-flex shrink-0 items-center rounded-full border px-2.5 py-1 text-xs font-medium', ESTADOS[conversacionActiva.estado]?.clase]"
@@ -136,10 +136,10 @@
 
           <div
             v-if="estaCerrada(conversacionActiva.estado)"
-            class="mt-2 flex items-start gap-2 text-xs text-gray-600"
+            class="mt-2 flex items-start gap-2 text-xs text-texto-secundario"
           >
-            <CheckCircleIcon v-if="conversacionActiva.estado === 'resuelta'" class="mt-0.5 h-4 w-4 shrink-0 text-sky-600" />
-            <ArchiveBoxIcon v-else class="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+            <CheckCircleIcon v-if="conversacionActiva.estado === 'resuelta'" class="mt-0.5 h-4 w-4 shrink-0 text-sky-600 oscuro:text-sky-300" />
+            <ArchiveBoxIcon v-else class="mt-0.5 h-4 w-4 shrink-0 text-texto-tenue" />
             <p>
               {{ conversacionActiva.estado === 'resuelta'
                 ? 'El soporte dio esta conversación por resuelta. Si necesitas algo más, abre una nueva.'
@@ -147,7 +147,7 @@
             </p>
           </div>
 
-          <p v-if="estadoCanal === 'degradado'" class="mt-2 text-[0.6875rem] text-amber-700">
+          <p v-if="estadoCanal === 'degradado'" class="mt-2 text-[0.6875rem] text-amber-700 oscuro:text-amber-300">
             Sin conexión en tiempo real: la conversación se actualiza cada minuto.
           </p>
         </div>
@@ -180,8 +180,8 @@
 
       <div v-else class="hidden flex-1 items-center justify-center p-8 text-center lg:flex">
         <div>
-          <ChatBubbleLeftRightIcon class="mx-auto h-10 w-10 text-gray-300" />
-          <p class="mt-3 text-sm text-gray-500">Elige una conversación o abre una nueva.</p>
+          <ChatBubbleLeftRightIcon class="mx-auto h-10 w-10 text-gray-300 oscuro:text-texto-tenue" />
+          <p class="mt-3 text-sm text-texto-suave">Elige una conversación o abre una nueva.</p>
         </div>
       </div>
     </section>
@@ -308,7 +308,9 @@ function fechaRelativa(iso) {
 const { estadoCanal, suscribir } = useSoporteRealtime({
   alRecibir: (mensaje) => {
     const esNuevo = soporte.recibirMensaje(mensaje)
-    if (esNuevo && mensaje.autor === 'soporte' && mensaje.conversacion_id === idActivo.value) {
+    // Con la app en segundo plano el mensaje llega pero nadie lo ve: se marca
+    // leído al volver (alVolverVisible), no ahora. El soporte ve esa hora.
+    if (esNuevo && mensaje.autor === 'soporte' && mensaje.conversacion_id === idActivo.value && pantallaVisible()) {
       soporte.marcarLeido(idActivo.value)
     }
     soporte.cargarConversaciones()
@@ -328,8 +330,17 @@ function alRecuperarConexion() {
   soporte.procesarCola()
 }
 
+function pantallaVisible() {
+  return document.visibilityState === 'visible'
+}
+
+function alVolverVisible() {
+  if (pantallaVisible() && idActivo.value) soporte.marcarLeido(idActivo.value)
+}
+
 onMounted(async () => {
   window.addEventListener('online', alRecuperarConexion)
+  document.addEventListener('visibilitychange', alVolverVisible)
 
   await soporte.cargarConversaciones()
   soporte.refrescarNoLeidos()
@@ -341,6 +352,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('online', alRecuperarConexion)
+  document.removeEventListener('visibilitychange', alVolverVisible)
 })
 
 watch(() => route.params.conversacionId, (nuevo) => {

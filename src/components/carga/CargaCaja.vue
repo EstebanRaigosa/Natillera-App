@@ -18,11 +18,12 @@
         :class="flotante ? 'carga-caja-capa fixed inset-0 z-[70] flex items-center justify-center p-4' : 'flex justify-center py-10'"
         @touchmove="flotante && $event.preventDefault()"
       >
-        <div v-if="flotante" class="absolute inset-0 bg-[#C8D9C8]/85" aria-hidden="true" />
+        <!-- Salvia al 85 % en claro; en oscuro, el velo negro de los modales -->
+        <div v-if="flotante" class="absolute inset-0 bg-[#C8D9C8]/85 oscuro:bg-velo-modal" aria-hidden="true" />
         <div
           :class="[
             'relative flex flex-col items-center text-center',
-            flotante ? 'w-full max-w-[19rem] rounded-2xl border border-gray-200/60 bg-white px-5 py-6 shadow-2xl' : 'max-w-xs'
+            flotante ? 'w-full max-w-[19rem] rounded-2xl border border-borde/60 bg-superficie-tarjeta px-5 py-6 shadow-2xl' : 'max-w-xs'
           ]"
           role="status"
           aria-live="polite"
@@ -30,8 +31,8 @@
           <slot name="figura">
             <FiguraAlcancia :class="flotante ? 'h-24 w-24' : 'h-16 w-16'" />
           </slot>
-          <p :class="['font-display font-bold text-gray-800', flotante ? 'mt-4 text-base' : 'mt-3 text-sm']">{{ texto || 'Cargando' }}</p>
-          <p v-if="detalle" class="mt-1 text-xs leading-relaxed text-gray-500">{{ detalle }}</p>
+          <p :class="['font-display font-bold text-texto', flotante ? 'mt-4 text-base' : 'mt-3 text-sm']">{{ texto || 'Cargando' }}</p>
+          <p v-if="detalle" class="mt-1 text-xs leading-relaxed text-texto-suave">{{ detalle }}</p>
         </div>
       </div>
     </Transition>

@@ -5,8 +5,8 @@
     align="bottom"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="emit('close')"
   >
@@ -57,75 +57,75 @@
       <div
         v-if="dato"
         ref="scrollRef"
-        class="flex-1 min-h-0 space-y-4 overflow-y-auto overflow-x-hidden bg-white px-5 pb-4 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-6"
+        class="flex-1 min-h-0 space-y-4 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta px-5 pb-4 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-6"
         @scroll.passive="onScroll"
       >
         <!-- Lo que se venía a mirar: cuánto recibe o cuánto debe -->
         <div
           class="rounded-2xl px-4 py-3.5 text-center"
-          :class="debe ? 'border border-orange-200 bg-orange-50' : 'bg-[#E8F5E9]'"
+          :class="debe ? 'border border-orange-200 oscuro:border-orange-500/30 bg-orange-50 oscuro:bg-orange-500/15' : 'bg-marca-suave'"
         >
-          <p class="font-display text-[0.6875rem] font-bold uppercase tracking-wide" :class="debe ? 'text-orange-800' : 'text-[#1B5E37]'">
+          <p class="font-display text-[0.6875rem] font-bold uppercase tracking-wide" :class="debe ? 'text-orange-800 oscuro:text-orange-300' : 'text-marca-tinta'">
             {{ debe ? 'Queda debiendo' : 'Recibe' }}
           </p>
-          <p class="mt-1 font-display text-3xl font-extrabold tabular-nums" :class="debe ? 'text-orange-700' : 'text-[#1B5E37]'">
+          <p class="mt-1 font-display text-3xl font-extrabold tabular-nums" :class="debe ? 'text-orange-700 oscuro:text-orange-300' : 'text-marca-tinta'">
             ${{ formatMoney(Math.abs(totalFinal)) }}
           </p>
         </div>
 
         <!-- La cuenta, de arriba abajo -->
-        <dl class="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200">
+        <dl class="divide-y divide-borde-suave overflow-hidden rounded-xl border border-borde">
           <div class="flex items-start justify-between gap-3 px-3 py-2.5">
             <dt class="min-w-0">
-              <span class="block text-sm text-gray-700">Ahorro</span>
-              <span class="block text-xs text-gray-500">
+              <span class="block text-sm text-texto-medio">Ahorro</span>
+              <span class="block text-xs text-texto-suave">
                 {{ dato.cantidadCuotasPagadas ?? 0 }} {{ (dato.cantidadCuotasPagadas || 0) === 1 ? 'cuota' : 'cuotas' }}
                 de ${{ formatMoney(dato.montoAhorradoMensual) }} · {{ periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}
               </span>
             </dt>
-            <dd class="flex-shrink-0 font-display text-sm font-bold tabular-nums text-gray-900">${{ formatMoney(dato.neto?.ahorro ?? dato.ahorro) }}</dd>
+            <dd class="flex-shrink-0 font-display text-sm font-bold tabular-nums text-texto-fuerte">${{ formatMoney(dato.neto?.ahorro ?? dato.ahorro) }}</dd>
           </div>
           <div class="px-3 py-2.5">
             <div class="flex items-center justify-between gap-3">
-              <dt class="text-sm text-gray-700">+ Utilidades</dt>
-              <dd class="flex-shrink-0 font-display text-sm font-bold tabular-nums text-gray-900">${{ formatMoney(dato.neto?.utilidadesTotal ?? dato.utilidades) }}</dd>
+              <dt class="text-sm text-texto-medio">+ Utilidades</dt>
+              <dd class="flex-shrink-0 font-display text-sm font-bold tabular-nums text-texto-fuerte">${{ formatMoney(dato.neto?.utilidadesTotal ?? dato.utilidades) }}</dd>
             </div>
-            <ul v-if="conceptos.length > 0" class="mt-1.5 space-y-0.5 border-l-2 border-[#E8F5E9] pl-3">
+            <ul v-if="conceptos.length > 0" class="mt-1.5 space-y-0.5 border-l-2 border-[#E8F5E9] oscuro:border-borde pl-3">
               <li v-for="concepto in conceptos" :key="concepto.tipo" class="flex items-center justify-between gap-3 text-xs">
-                <span class="truncate text-gray-500">{{ concepto.label }}</span>
-                <span class="flex-shrink-0 tabular-nums text-gray-600">${{ formatMoney(concepto.monto) }}</span>
+                <span class="truncate text-texto-suave">{{ concepto.label }}</span>
+                <span class="flex-shrink-0 tabular-nums text-texto-secundario">${{ formatMoney(concepto.monto) }}</span>
               </li>
             </ul>
           </div>
           <div v-if="(dato.descuentos || 0) > 0" class="px-3 py-2.5">
             <div class="flex items-center justify-between gap-3">
-              <dt class="text-sm text-gray-700">− Descuentos</dt>
-              <dd class="flex-shrink-0 font-display text-sm font-bold tabular-nums text-red-700">−${{ formatMoney(dato.descuentos) }}</dd>
+              <dt class="text-sm text-texto-medio">− Descuentos</dt>
+              <dd class="flex-shrink-0 font-display text-sm font-bold tabular-nums text-red-700 oscuro:text-red-300">−${{ formatMoney(dato.descuentos) }}</dd>
             </div>
-            <ul v-if="dato.descuentosDesglose" class="mt-1.5 space-y-0.5 border-l-2 border-red-100 pl-3">
+            <ul v-if="dato.descuentosDesglose" class="mt-1.5 space-y-0.5 border-l-2 border-red-100 oscuro:border-red-500/30 pl-3">
               <li v-if="dato.descuentosDesglose.prestamosPendientes > 0" class="flex items-center justify-between gap-3 text-xs">
-                <span class="text-gray-500">Préstamos pendientes</span>
-                <span class="tabular-nums text-gray-600">${{ formatMoney(dato.descuentosDesglose.prestamosPendientes) }}</span>
+                <span class="text-texto-suave">Préstamos pendientes</span>
+                <span class="tabular-nums text-texto-secundario">${{ formatMoney(dato.descuentosDesglose.prestamosPendientes) }}</span>
               </li>
               <li v-if="dato.descuentosDesglose.cuotasSinPagar > 0" class="flex items-center justify-between gap-3 text-xs">
-                <span class="text-gray-500">Cuotas o sanciones pendientes</span>
-                <span class="tabular-nums text-gray-600">${{ formatMoney(dato.descuentosDesglose.cuotasSinPagar) }}</span>
+                <span class="text-texto-suave">Cuotas o sanciones pendientes</span>
+                <span class="tabular-nums text-texto-secundario">${{ formatMoney(dato.descuentosDesglose.cuotasSinPagar) }}</span>
               </li>
             </ul>
           </div>
         </dl>
 
         <!-- Casilla real (no un div clicable): el lector de pantalla la anuncia y se marca con teclado -->
-        <label class="flex min-h-[48px] cursor-pointer items-center gap-3 rounded-xl border border-gray-200 px-3 py-2 touch-manipulation">
+        <label class="flex min-h-[48px] cursor-pointer items-center gap-3 rounded-xl border border-borde px-3 py-2 touch-manipulation">
           <input
             type="checkbox"
-            class="h-5 w-5 flex-shrink-0 cursor-pointer rounded border-gray-300 text-[#1B5E37] focus:ring-[#1B5E37]"
+            class="h-5 w-5 flex-shrink-0 cursor-pointer rounded border-borde-fuerte text-marca-tinta focus:ring-[#1B5E37]"
             :checked="enPdf"
             @change="emit('alternar-pdf')"
           />
           <span class="min-w-0">
-            <span class="block text-sm font-semibold text-gray-800">Incluir en el PDF</span>
-            <span class="block text-xs text-gray-500">Para el PDF de comprobantes de «Exportar»</span>
+            <span class="block text-sm font-semibold text-texto">Incluir en el PDF</span>
+            <span class="block text-xs text-texto-suave">Para el PDF de comprobantes de «Exportar»</span>
           </span>
         </label>
       </div>
@@ -134,7 +134,7 @@
     </div>
 
     <div
-      class="flex-shrink-0 border-t border-gray-200 bg-white px-5 pt-4 sm:px-6"
+      class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-5 pt-4 sm:px-6"
       :style="{ paddingBottom: `calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
     >
       <div class="flex gap-3">

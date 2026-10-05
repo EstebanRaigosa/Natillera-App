@@ -59,4 +59,25 @@ defineProps({
     background: #86efac;
   }
 }
+
+/* Modo oscuro: las celdas apagadas pasan al borde fuerte. El color va dentro de la
+   animación y un @keyframes no se sobrescribe por tema, así que va otra con el mismo ritmo. */
+:where([data-tema=oscuro]) .gen-celda {
+  background: var(--borde-fuerte);
+  -webkit-animation-name: gen-encender-oscuro;
+  animation-name: gen-encender-oscuro;
+}
+@-webkit-keyframes gen-encender-oscuro {
+  0%, 100% { background: var(--borde-fuerte); -webkit-transform: scale(1); transform: scale(1); }
+  35% { background: var(--marca-tinta); -webkit-transform: scale(1.18); transform: scale(1.18); }
+  70% { background: #86efac; -webkit-transform: scale(1); transform: scale(1); }
+}
+@keyframes gen-encender-oscuro {
+  0%, 100% { background: var(--borde-fuerte); transform: scale(1); }
+  35% { background: var(--marca-tinta); transform: scale(1.18); }
+  70% { background: #86efac; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  :where([data-tema=oscuro]) .gen-celda { animation: none; background: #86efac; }
+}
 </style>

@@ -2,7 +2,7 @@
   <div v-if="invitaciones.length > 0" class="space-y-2.5">
     <!-- Cabecera solo si el bloque no va dentro de la sección «Invitaciones» del layout -->
     <div v-if="!omitOuterHeading" class="flex items-center justify-between px-0.5">
-      <h3 class="font-display text-sm font-bold tracking-tight text-[#166534]">
+      <h3 class="font-display text-sm font-bold tracking-tight text-[#166534] oscuro:text-marca-tinta">
         Invitaciones
       </h3>
       <span
@@ -45,9 +45,9 @@
               Invitado por
               <span class="break-all font-semibold text-white">{{ emailInvitadorDestacado(invitacion) }}</span>
             </p>
-            <div
+            <!-- tema-fijo: nota ámbar sobre la barra lateral verde -->
+            <div class="mt-2 rounded-lg border border-amber-300/25 bg-amber-500/10 px-2 py-1.5 text-[10px] leading-snug text-amber-50/95"
               v-if="invitacion.notas"
-              class="mt-2 rounded-lg border border-amber-300/25 bg-amber-500/10 px-2 py-1.5 text-[10px] leading-snug text-amber-50/95"
             >
               <span class="font-semibold text-amber-100">Mensaje: </span>
               <span class="whitespace-pre-wrap break-words">{{ invitacion.notas }}</span>

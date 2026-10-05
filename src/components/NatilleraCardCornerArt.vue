@@ -2,7 +2,7 @@
   <!-- Ilustración vectorial esquina inferior derecha (crecimiento + ahorro, line art) -->
   <svg
     :class="[
-      'pointer-events-none absolute bottom-0 right-0 shrink-0 overflow-visible text-[#166534] opacity-[0.92] transition-opacity duration-500 ease-out group-hover:opacity-100 motion-reduce:transition-none',
+      'pointer-events-none absolute bottom-0 right-0 shrink-0 overflow-visible text-[#166534] oscuro:text-marca-tinta opacity-[0.92] transition-opacity duration-500 ease-out group-hover:opacity-100 motion-reduce:transition-none',
       compact ? 'h-[6.75rem] w-[6.75rem] sm:h-[7.25rem] sm:w-[7.25rem]' : 'h-[7.75rem] w-[7.75rem] sm:h-[8.5rem] sm:w-[8.5rem]',
     ]"
     viewBox="0 0 160 160"

@@ -16,14 +16,15 @@
     align="bottom"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="cerrar"
   >
     <!-- ── Cabecera marca (móvil = fila) ── -->
     <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
       <div class="flex min-h-[4.2rem] items-center gap-2 pb-3 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
           <ScaleIcon class="h-5 w-5 text-[#1B5E37]" />
         </div>
@@ -55,6 +56,7 @@
       <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
         <div class="w-11 shrink-0" aria-hidden="true" />
         <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
             <ScaleIcon class="h-6 w-6 text-[#1B5E37]" />
           </div>
@@ -84,13 +86,14 @@
         <Transition :name="dir === 1 ? 'ayuda-slide-next' : 'ayuda-slide-prev'" mode="out-in">
           <div :key="pasoActivo" class="px-5 pb-6 pt-5">
             <!-- ══════════ Escenario (mockup dibujado) ══════════ -->
-            <div class="ayuda-stage">
+            <!-- Ilustración de la pantalla en claro: igual en los dos modos -->
+            <div class="ayuda-stage" data-tema="claro">
               <!-- 0 · Intro: el panel del corte con sus tres formas -->
               <template v-if="paso.escena === 'intro'">
                 <div class="ph ayuda-float">
                   <div class="ph-topbar">
                     <span class="ph-topbar-title">Conciliación</span>
-                    <span class="ph-cal"><CalendarDaysIcon class="h-3 w-3 text-[#1B5E37]" /></span>
+                    <span class="ph-cal"><CalendarDaysIcon class="h-3 w-3 text-marca-tinta" /></span>
                   </div>
                   <div class="ph-fila">
                     <div class="ph-fila-top">
@@ -245,7 +248,7 @@
                           </span>
                         </div>
                         <div class="ph-buscador">
-                          <MagnifyingGlassIcon class="h-3 w-3 text-gray-400" />
+                          <MagnifyingGlassIcon class="h-3 w-3 text-texto-tenue" />
                           <i></i>
                         </div>
                         <span class="ayuda-finger" style="top: 3.1rem; right: 1.6rem"></span>
@@ -255,12 +258,12 @@
                       <template v-else-if="sub === 1">
                         <span class="ph-paso-lbl">O filtra por socio y concepto</span>
                         <div class="ph-buscador">
-                          <MagnifyingGlassIcon class="h-3 w-3 text-gray-400" />
+                          <MagnifyingGlassIcon class="h-3 w-3 text-texto-tenue" />
                           <i></i>
                         </div>
                         <div class="ph-mas">
                           <span class="ph-mas-txt">
-                            <FunnelIcon class="h-2.5 w-2.5 text-gray-400" />
+                            <FunnelIcon class="h-2.5 w-2.5 text-texto-tenue" />
                             Más filtros
                           </span>
                           <span class="ph-mas-num">3</span>
@@ -333,11 +336,11 @@
                       <template v-else>
                         <span class="ph-paso-lbl">Queda firmado</span>
                         <div class="ph-firma">
-                          <CheckIcon class="h-3 w-3 shrink-0 text-[#15803d]" />
+                          <CheckIcon class="h-3 w-3 shrink-0 text-[#15803d] oscuro:text-marca-texto" />
                           <span>Corte del 5 sep · cuadró</span>
                         </div>
                         <div class="ph-firma ph-firma--muted">
-                          <ClockIcon class="h-3 w-3 shrink-0 text-gray-400" />
+                          <ClockIcon class="h-3 w-3 shrink-0 text-texto-tenue" />
                           <span>Revisó Ana · 5 sep, 7:40 p. m.</span>
                         </div>
                         <span class="ph-origen">Y se abre un periodo nuevo</span>
@@ -359,12 +362,12 @@
 
             <!-- Texto del paso -->
             <div class="mt-5 text-center">
-              <div class="mb-2 inline-flex items-center gap-1.5 rounded-full bg-[#E8F5E9] px-3 py-1">
-                <component :is="paso.icono" class="h-4 w-4 text-[#1B5E37]" />
-                <span class="font-display text-xs font-semibold text-[#1B5E37]">{{ paso.tag }}</span>
+              <div class="mb-2 inline-flex items-center gap-1.5 rounded-full bg-marca-suave px-3 py-1">
+                <component :is="paso.icono" class="h-4 w-4 text-marca-tinta" />
+                <span class="font-display text-xs font-semibold text-marca-tinta">{{ paso.tag }}</span>
               </div>
-              <h4 class="font-display text-lg font-bold leading-snug text-gray-800">{{ paso.titulo }}</h4>
-              <p class="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-gray-600">{{ paso.descripcion }}</p>
+              <h4 class="font-display text-lg font-bold leading-snug text-texto">{{ paso.titulo }}</h4>
+              <p class="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-texto-secundario">{{ paso.descripcion }}</p>
             </div>
           </div>
         </Transition>
@@ -374,7 +377,7 @@
     </div>
 
     <!-- ── Footer de acciones ── -->
-    <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 pb-[calc(max(1.1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] pt-3">
+    <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-5 pb-[calc(max(1.1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] pt-3">
       <div class="mb-3 flex items-center justify-center gap-1.5">
         <button
           v-for="(p, i) in pasos"
@@ -592,6 +595,7 @@ onUnmounted(detenerSub)
 </script>
 
 <style scoped>
+/* tema-fijo-inicio: este CSS dibuja un teléfono con la pantalla de Conciliación en modo claro (ilustración de la ayuda) */
 /* ══════════ Escenario ══════════ */
 .ayuda-stage {
   position: relative;
@@ -855,4 +859,5 @@ onUnmounted(detenerSub)
     animation: none !important;
   }
 }
+/* tema-fijo-fin */
 </style>

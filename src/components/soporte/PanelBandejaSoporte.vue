@@ -9,8 +9,8 @@
     >
       <!-- Contenedor flex con el ring, no icono en `absolute`: en Safari el
            campo cambia de alto al enfocarse y rompe el centrado (skill modales). -->
-      <div class="flex min-w-[12rem] flex-1 items-center rounded-xl border-2 border-gray-200 bg-white focus-within:border-[#1B5E37] focus-within:ring-2 focus-within:ring-[#1B5E37]/30">
-        <span class="pointer-events-none shrink-0 pl-3 text-gray-400">
+      <div class="flex min-w-[12rem] flex-1 items-center rounded-xl border-2 border-borde bg-superficie-tarjeta focus-within:border-[#1B5E37] oscuro:focus-within:border-marca-tinta focus-within:ring-2 focus-within:ring-[#1B5E37]/30">
+        <span class="pointer-events-none shrink-0 pl-3 text-texto-tenue">
           <MagnifyingGlassIcon class="h-5 w-5" />
         </span>
         <input
@@ -23,7 +23,7 @@
         <button
           v-if="busqueda.trim()"
           type="button"
-          class="shrink-0 p-2.5 text-gray-400 transition hover:text-gray-600 touch-manipulation"
+          class="shrink-0 p-2.5 text-texto-tenue transition hover:text-texto-secundario touch-manipulation"
           aria-label="Limpiar búsqueda"
           @click="busqueda = ''; recargarBandeja()"
         >
@@ -33,7 +33,7 @@
 
       <select
         v-model="filtroEstado"
-        class="rounded-xl border-2 border-gray-200 bg-white px-3 py-2.5 text-base outline-none focus:border-[#1B5E37]"
+        class="rounded-xl border-2 border-borde bg-superficie-tarjeta px-3 py-2.5 text-base outline-none focus:border-[#1B5E37] oscuro:focus:border-marca-tinta"
         @change="recargarBandeja"
       >
         <option value="todas">Todas</option>
@@ -46,7 +46,7 @@
 
       <select
         v-model="filtroCategoria"
-        class="rounded-xl border-2 border-gray-200 bg-white px-3 py-2.5 text-base outline-none focus:border-[#1B5E37]"
+        class="rounded-xl border-2 border-borde bg-superficie-tarjeta px-3 py-2.5 text-base outline-none focus:border-[#1B5E37] oscuro:focus:border-marca-tinta"
         @change="recargarBandeja"
       >
         <option value="todas">Toda categoría</option>
@@ -57,7 +57,7 @@
     <div
       :class="[
         'flex min-h-0 flex-1 overflow-hidden',
-        compacto ? '' : 'rounded-2xl border border-gray-200 bg-white shadow-sm',
+        compacto ? '' : 'rounded-2xl border border-borde bg-superficie-tarjeta shadow-sm',
       ]"
     >
       <!-- ── Bandeja ── -->
@@ -66,30 +66,30 @@
           'flex min-h-0 flex-col',
           compacto
             ? (idActivo ? 'hidden' : 'flex flex-1')
-            : (idActivo ? 'hidden lg:flex lg:w-96 lg:shrink-0 lg:border-r lg:border-gray-200' : 'flex flex-1 lg:w-96 lg:flex-none lg:shrink-0 lg:border-r lg:border-gray-200'),
+            : (idActivo ? 'hidden lg:flex lg:w-96 lg:shrink-0 lg:border-r lg:border-borde' : 'flex flex-1 lg:w-96 lg:flex-none lg:shrink-0 lg:border-r lg:border-borde'),
         ]"
       >
         <div v-if="soporte.cargando && !soporte.bandeja.length" class="space-y-2 p-3">
-          <div v-for="n in 5" :key="n" class="h-20 animate-pulse rounded-xl bg-gray-100" />
+          <div v-for="n in 5" :key="n" class="h-20 animate-pulse rounded-xl bg-superficie-hundida" />
         </div>
 
         <!-- Un fallo de carga no puede disfrazarse de bandeja vacía: son cosas
              distintas y llevan a conclusiones distintas. -->
         <div v-else-if="soporte.error" class="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
           <ExclamationTriangleIcon class="h-8 w-8 text-amber-500" />
-          <p class="text-sm text-gray-600">{{ soporte.error }}</p>
+          <p class="text-sm text-texto-secundario">{{ soporte.error }}</p>
           <button type="button" class="btn-modal-secondary !min-h-[44px] px-4 text-sm" @click="recargarBandeja()">
             Reintentar
           </button>
         </div>
 
         <div v-else-if="!soporte.bandeja.length" class="flex flex-1 items-center justify-center p-8 text-center">
-          <p class="text-sm text-gray-500">No hay conversaciones con estos filtros.</p>
+          <p class="text-sm text-texto-suave">No hay conversaciones con estos filtros.</p>
         </div>
 
         <ul
           v-else
-          class="min-h-0 flex-1 divide-y divide-gray-100 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
+          class="min-h-0 flex-1 divide-y divide-borde-suave overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
           :class="compacto || !esEscritorio ? 'pb-[calc(max(0.5rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]' : ''"
         >
           <li v-for="conversacion in soporte.bandeja" :key="conversacion.id">
@@ -97,17 +97,17 @@
               type="button"
               :class="[
                 'relative flex w-full flex-col gap-1 py-3 pl-5 pr-4 text-left transition touch-manipulation',
-                conversacion.id === idActivo ? 'bg-[#E8F5E9]' : 'hover:bg-gray-50',
-                ESTADOS_CERRADOS.includes(conversacion.estado) && conversacion.id !== idActivo ? 'bg-gray-50/60' : '',
+                conversacion.id === idActivo ? 'bg-marca-suave' : 'hover:bg-superficie-suave',
+                ESTADOS_CERRADOS.includes(conversacion.estado) && conversacion.id !== idActivo ? 'bg-superficie-suave/60' : '',
               ]"
               @click="abrirConversacion(conversacion.id)"
             >
               <span
-                :class="['absolute inset-y-0 left-0 w-1.5', ESTADOS[conversacion.estado]?.barra || 'bg-gray-300']"
+                :class="['absolute inset-y-0 left-0 w-1.5', ESTADOS[conversacion.estado]?.barra || 'bg-borde-fuerte']"
                 aria-hidden="true"
               />
               <div class="flex items-center gap-2">
-                <span class="min-w-0 flex-1 truncate text-sm font-semibold text-gray-900">
+                <span class="min-w-0 flex-1 truncate text-sm font-semibold text-texto-fuerte">
                   {{ conversacion.asunto }}
                 </span>
                 <span
@@ -117,17 +117,17 @@
                   {{ conversacion.sin_leer_soporte }}
                 </span>
               </div>
-              <p class="truncate text-xs text-gray-600">{{ conversacion.user_email }}</p>
-              <div class="flex flex-wrap items-center gap-1.5 text-xs text-gray-500">
+              <p class="truncate text-xs text-texto-secundario">{{ conversacion.user_email }}</p>
+              <div class="flex flex-wrap items-center gap-1.5 text-xs text-texto-suave">
                 <span :class="['inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[0.6875rem] font-medium', ESTADOS[conversacion.estado]?.clase]">
                   {{ ESTADOS[conversacion.estado]?.etiqueta || conversacion.estado }}
                 </span>
-                <span class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[0.6875rem] capitalize">{{ conversacion.categoria }}</span>
+                <span class="shrink-0 rounded-full bg-superficie-hundida px-2 py-0.5 text-[0.6875rem] capitalize">{{ conversacion.categoria }}</span>
                 <!-- El correlativo interno solo se ve aquí: al soporte le sirve
                      para saber el orden y el volumen; al usuario, no. -->
                 <span class="truncate">
                   {{ codigoConversacion(conversacion.numero) }}
-                  <span class="text-gray-400">#{{ conversacion.numero }}</span>
+                  <span class="text-texto-tenue">#{{ conversacion.numero }}</span>
                   · {{ fechaRelativa(conversacion.ultimo_mensaje_at) }}
                 </span>
               </div>
@@ -138,21 +138,21 @@
         <!-- Paginación de 25 en 25 (RNF-08) -->
         <div
           v-if="totalPaginas > 1"
-          class="flex shrink-0 items-center justify-between border-t border-gray-200 px-4 py-2.5"
+          class="flex shrink-0 items-center justify-between border-t border-borde px-4 py-2.5"
           :class="compacto ? 'pb-[calc(max(0.625rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]' : ''"
         >
           <button
             type="button"
-            class="rounded-full px-3 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 disabled:opacity-40 touch-manipulation"
+            class="rounded-full px-3 py-2 text-xs font-semibold text-texto-medio transition hover:bg-superficie-hundida disabled:opacity-40 touch-manipulation"
             :disabled="pagina === 0"
             @click="cambiarPagina(pagina - 1)"
           >
             Anterior
           </button>
-          <span class="text-xs text-gray-500">{{ pagina + 1 }} / {{ totalPaginas }}</span>
+          <span class="text-xs text-texto-suave">{{ pagina + 1 }} / {{ totalPaginas }}</span>
           <button
             type="button"
-            class="rounded-full px-3 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 disabled:opacity-40 touch-manipulation"
+            class="rounded-full px-3 py-2 text-xs font-semibold text-texto-medio transition hover:bg-superficie-hundida disabled:opacity-40 touch-manipulation"
             :disabled="pagina >= totalPaginas - 1"
             @click="cambiarPagina(pagina + 1)"
           >
@@ -171,31 +171,31 @@
         <template v-if="conversacionActiva">
           <div
             :class="[
-              'flex-shrink-0 space-y-2 border-b border-gray-200 px-4 py-3 transition-colors',
-              ESTADOS[conversacionActiva.estado]?.tinte || 'bg-white',
+              'flex-shrink-0 space-y-2 border-b border-borde px-4 py-3 transition-colors',
+              ESTADOS[conversacionActiva.estado]?.tinte || 'bg-superficie-tarjeta',
             ]"
           >
             <div class="flex items-start gap-2">
               <button
                 v-if="compacto || !esEscritorio"
                 type="button"
-                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-600 transition hover:bg-black/5 touch-manipulation"
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-texto-secundario transition hover:bg-black/5 touch-manipulation"
                 aria-label="Volver a la bandeja"
                 @click="cerrarConversacion"
               >
                 <ArrowLeftIcon class="h-5 w-5" />
               </button>
               <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-semibold text-gray-900">{{ conversacionActiva.asunto }}</p>
-                <p class="mt-0.5 truncate text-xs text-gray-500">
+                <p class="truncate text-sm font-semibold text-texto-fuerte">{{ conversacionActiva.asunto }}</p>
+                <p class="mt-0.5 truncate text-xs text-texto-suave">
                   {{ codigoConversacion(conversacionActiva.numero) }}
-                  <span class="text-gray-400">#{{ conversacionActiva.numero }}</span>
+                  <span class="text-texto-tenue">#{{ conversacionActiva.numero }}</span>
                   · {{ conversacionActiva.user_email }}
                 </p>
               </div>
               <button
                 type="button"
-                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-400 transition hover:bg-red-50 hover:text-red-600 touch-manipulation"
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-texto-tenue transition hover:bg-red-50 oscuro:hover:bg-red-500/15 hover:text-red-600 oscuro:hover:text-red-300 touch-manipulation"
                 aria-label="Eliminar conversación"
                 @click="conversacionABorrar = conversacionActiva"
               >
@@ -208,7 +208,7 @@
                    enfocar el campo (regla 4 de CLAUDE.md) -->
               <select
                 :value="conversacionActiva.estado"
-                class="rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-base outline-none focus:border-[#1B5E37]"
+                class="rounded-lg border border-borde-fuerte bg-superficie-tarjeta px-2.5 py-2 text-base outline-none focus:border-[#1B5E37] oscuro:focus:border-marca-tinta"
                 :disabled="guardandoEstado"
                 @change="cambiarEstado($event.target.value)"
               >
@@ -224,10 +224,10 @@
 
               <button
                 type="button"
-                class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-sm text-gray-700 transition hover:bg-gray-50 touch-manipulation"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-borde-fuerte bg-superficie-tarjeta px-2.5 py-2 text-sm text-texto-medio transition hover:bg-superficie-suave touch-manipulation"
                 @click="mostrarNota = !mostrarNota"
               >
-                <LockClosedIcon class="h-4 w-4 text-gray-500" />
+                <LockClosedIcon class="h-4 w-4 text-texto-suave" />
                 Nota interna
               </button>
 
@@ -235,19 +235,19 @@
                    tenga push. Solo superadmin (lo comprueba la Edge Function). -->
               <button
                 type="button"
-                class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-sm text-gray-700 transition hover:bg-gray-50 disabled:opacity-50 touch-manipulation"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-borde-fuerte bg-superficie-tarjeta px-2.5 py-2 text-sm text-texto-medio transition hover:bg-superficie-suave disabled:opacity-50 touch-manipulation"
                 :disabled="enviandoCorreo"
                 @click="reenviarPorCorreo"
               >
-                <EnvelopeIcon class="h-4 w-4 text-gray-500" />
+                <EnvelopeIcon class="h-4 w-4 text-texto-suave" />
                 {{ enviandoCorreo ? 'Enviando…' : 'Reenviar por correo' }}
               </button>
             </div>
 
             <!-- Nota interna: privada del soporte (RN-11). El usuario no la
                  recibe por ninguna vía; ni siquiera está en su vista. -->
-            <div v-if="mostrarNota" class="rounded-xl bg-amber-50 p-3 ring-1 ring-amber-200">
-              <p class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-amber-900">
+            <div v-if="mostrarNota" class="rounded-xl bg-amber-50 oscuro:bg-amber-500/15 p-3 ring-1 ring-amber-200 oscuro:ring-amber-500/30">
+              <p class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-amber-900 oscuro:text-amber-300">
                 <LockClosedIcon class="h-3.5 w-3.5" />
                 Solo la ves tú. El usuario nunca accede a este texto.
               </p>
@@ -256,7 +256,7 @@
                 rows="3"
                 maxlength="1000"
                 placeholder="Contexto, pasos dados, lo que haga falta recordar…"
-                class="w-full resize-y rounded-lg border border-amber-200 bg-white px-3 py-2 text-base outline-none focus:border-amber-500"
+                class="w-full resize-y rounded-lg border border-amber-200 oscuro:border-amber-500/30 bg-superficie-tarjeta px-3 py-2 text-base outline-none focus:border-amber-500"
               />
               <div class="mt-2 flex justify-end">
                 <button
@@ -275,6 +275,8 @@
             :conversacion-id="idActivo"
             :mensajes="mensajesActivos"
             lado-propio="soporte"
+            mostrar-lectura
+            :leido-hasta="soporte.lecturaUsuario[idActivo] || null"
             :cargando-inicial="soporte.cargandoMensajes && !mensajesActivos.length"
             :cargando-antiguos="soporte.cargandoMensajes"
             :hay-mas-antiguos="soporte.hayMasAntiguos[idActivo] === true"
@@ -288,15 +290,17 @@
             :enviando="enviando"
             :bloqueado="conversacionActiva.estado === 'archivada'"
             motivo-bloqueo="Conversación archivada. Reábrela para poder responder."
-            marcador="Responder al usuario…"
+            marcador="Responder… (escribe / para respuestas)"
+            :respuestas="RESPUESTAS_SOPORTE"
+            :variables-respuesta="{ nombre: nombreUsuarioActivo }"
             @enviar="responder"
           />
         </template>
 
         <div v-else class="hidden flex-1 items-center justify-center p-8 text-center lg:flex">
           <div>
-            <InboxIcon class="mx-auto h-10 w-10 text-gray-300" />
-            <p class="mt-3 text-sm text-gray-500">Elige una conversación de la bandeja.</p>
+            <InboxIcon class="mx-auto h-10 w-10 text-gray-300 oscuro:text-texto-tenue" />
+            <p class="mt-3 text-sm text-texto-suave">Elige una conversación de la bandeja.</p>
           </div>
         </div>
       </section>
@@ -337,6 +341,7 @@ import EliminarConversacionModal from './EliminarConversacionModal.vue'
 import { CATEGORIAS, codigoConversacion, ESTADOS, ESTADOS_CERRADOS, useSoporteStore } from '../../stores/soporte'
 import { useSoporteRealtime } from '../../composables/useSoporteRealtime'
 import { useNotificationStore } from '../../stores/notifications'
+import { primerNombre, RESPUESTAS_SOPORTE } from '../../utils/respuestasSoporte'
 
 const props = defineProps({
   compacto: { type: Boolean, default: false },
@@ -373,6 +378,16 @@ const esEscritorio = ref(typeof window !== 'undefined' && window.innerWidth >= 1
 
 const conversacionActiva = computed(() =>
   soporte.bandeja.find((c) => c.id === idActivo.value) ?? null)
+
+// Primer nombre del usuario activo: personaliza las respuestas predefinidas
+const nombreUsuarioActivo = ref('')
+watch(() => conversacionActiva.value?.user_id, async (userId) => {
+  nombreUsuarioActivo.value = ''
+  if (!userId) return
+  const nombre = primerNombre(await soporte.nombreDeUsuario(userId))
+  // La conversación pudo cambiar mientras se buscaba el nombre
+  if (conversacionActiva.value?.user_id === userId) nombreUsuarioActivo.value = nombre
+}, { immediate: true })
 
 const mensajesActivos = computed(() => soporte.mensajes[idActivo.value] ?? [])
 
@@ -468,7 +483,7 @@ async function abrirConversacion(id, { navegar = true } = {}) {
   mostrarNota.value = false
   if (navegar && props.usarRuta) router.push(`/admin/soporte/${id}`)
 
-  await soporte.cargarMensajes(id)
+  await Promise.all([soporte.cargarMensajes(id), soporte.cargarLecturaUsuario(id)])
   await soporte.marcarLeido(id)
 
   try {

@@ -6,8 +6,8 @@
     :persistent="guardando"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="cerrar"
   >
@@ -61,36 +61,36 @@
     <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
         ref="scrollRef"
-        class="flex-1 min-h-0 space-y-5 overflow-y-auto overflow-x-hidden bg-white px-5 pb-4 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-6"
+        class="flex-1 min-h-0 space-y-5 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta px-5 pb-4 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-6"
         @scroll.passive="onScroll"
       >
-        <p class="text-sm leading-relaxed text-gray-600">
-          Vas a sellar el periodo <strong class="text-gray-800">{{ formatDate(periodoDesde) }} → {{ formatDate(fechaCorte) }}</strong>.
+        <p class="text-sm leading-relaxed text-texto-secundario">
+          Vas a sellar el periodo <strong class="text-texto">{{ formatDate(periodoDesde) }} → {{ formatDate(fechaCorte) }}</strong>.
           El saldo real que declares será el punto de partida del siguiente corte.
         </p>
 
-        <div class="overflow-hidden rounded-xl border border-gray-200">
+        <div class="overflow-hidden rounded-xl border border-borde">
           <table class="w-full text-sm">
             <thead>
-              <tr class="bg-gray-50 text-[0.6875rem] uppercase tracking-wide text-gray-500">
+              <tr class="bg-superficie-suave text-[0.6875rem] uppercase tracking-wide text-texto-suave">
                 <th class="px-3 py-2 text-left font-semibold">Concepto</th>
                 <th class="px-3 py-2 text-right font-semibold">Efectivo</th>
                 <th class="px-3 py-2 text-right font-semibold">Transferencia</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody class="divide-y divide-borde-suave">
               <tr>
-                <td class="px-3 py-2 text-gray-600">Debería haber</td>
-                <td class="px-3 py-2 text-right tabular-nums text-gray-800">${{ formatMoney(esperado.efectivo) }}</td>
-                <td class="px-3 py-2 text-right tabular-nums text-gray-800">${{ formatMoney(esperado.transferencia) }}</td>
+                <td class="px-3 py-2 text-texto-secundario">Debería haber</td>
+                <td class="px-3 py-2 text-right tabular-nums text-texto">${{ formatMoney(esperado.efectivo) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums text-texto">${{ formatMoney(esperado.transferencia) }}</td>
               </tr>
               <tr>
-                <td class="px-3 py-2 text-gray-600">Hay de verdad</td>
-                <td class="px-3 py-2 text-right font-semibold tabular-nums text-gray-900">${{ formatMoney(real.efectivo) }}</td>
-                <td class="px-3 py-2 text-right font-semibold tabular-nums text-gray-900">${{ formatMoney(real.transferencia) }}</td>
+                <td class="px-3 py-2 text-texto-secundario">Hay de verdad</td>
+                <td class="px-3 py-2 text-right font-semibold tabular-nums text-texto-fuerte">${{ formatMoney(real.efectivo) }}</td>
+                <td class="px-3 py-2 text-right font-semibold tabular-nums text-texto-fuerte">${{ formatMoney(real.transferencia) }}</td>
               </tr>
-              <tr class="bg-gray-50">
-                <td class="px-3 py-2 font-semibold text-gray-700">Diferencia</td>
+              <tr class="bg-superficie-suave">
+                <td class="px-3 py-2 font-semibold text-texto-medio">Diferencia</td>
                 <td class="px-3 py-2 text-right font-bold tabular-nums" :class="claseDiferencia(diferenciaEfectivo)">
                   ${{ formatMoneyConSigno(diferenciaEfectivo) }}
                 </td>
@@ -104,7 +104,7 @@
 
         <div
           class="flex items-center justify-between gap-3 rounded-xl px-4 py-3"
-          :class="cuadra ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-900'"
+          :class="cuadra ? 'bg-emerald-50 oscuro:bg-emerald-500/15 text-emerald-800 oscuro:text-emerald-300' : 'bg-amber-50 oscuro:bg-amber-500/15 text-amber-900 oscuro:text-amber-300'"
         >
           <div class="flex min-w-0 items-center gap-2">
             <CheckCircleIcon v-if="cuadra" class="h-5 w-5 flex-shrink-0" />
@@ -119,8 +119,8 @@
         <div>
           <label for="nota-corte" class="ds-label">
             Nota
-            <span v-if="notaObligatoria" class="text-red-600">*</span>
-            <span v-else class="font-normal text-gray-400">(opcional)</span>
+            <span v-if="notaObligatoria" class="text-red-600 oscuro:text-red-300">*</span>
+            <span v-else class="font-normal text-texto-tenue">(opcional)</span>
           </label>
           <textarea
             id="nota-corte"
@@ -130,13 +130,13 @@
             :class="{ 'ds-input--error': errorNota }"
             :placeholder="notaObligatoria ? 'Explica a qué se debe la diferencia' : 'Algo que quieras dejar anotado'"
           />
-          <p v-if="errorNota" class="mt-1.5 text-xs font-medium text-red-600">{{ errorNota }}</p>
-          <p v-else-if="notaObligatoria" class="mt-1.5 text-xs text-gray-500">
+          <p v-if="errorNota" class="mt-1.5 text-xs font-medium text-red-600 oscuro:text-red-300">{{ errorNota }}</p>
+          <p v-else-if="notaObligatoria" class="mt-1.5 text-xs text-texto-suave">
             La diferencia supera el umbral de ${{ formatMoney(umbral) }}, así que hace falta explicarla.
           </p>
         </div>
 
-        <p class="rounded-xl bg-gray-50 px-4 py-3 text-xs leading-relaxed text-gray-500">
+        <p class="rounded-xl bg-superficie-suave px-4 py-3 text-xs leading-relaxed text-texto-suave">
           Los importes se congelan al sellar. Si después se edita o borra un pago anterior a esta
           fecha, el corte no se recalcula y el historial lo marcará como desactualizado.
         </p>
@@ -146,7 +146,7 @@
     </div>
 
     <div
-      class="flex flex-shrink-0 gap-3 border-t border-gray-200 bg-white px-5 pt-4 sm:px-6"
+      class="flex flex-shrink-0 gap-3 border-t border-borde bg-superficie-tarjeta px-5 pt-4 sm:px-6"
       :style="{ paddingBottom: `calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
     >
       <button type="button" class="btn-modal-secondary flex-1" :disabled="guardando" @click="cerrar">
@@ -198,8 +198,8 @@ const cuadra = computed(() => diferenciaTotal.value === 0)
 const notaObligatoria = computed(() => Math.abs(diferenciaTotal.value) > props.umbral)
 
 const claseDiferencia = (valor) => {
-  if (valor === 0) return 'text-gray-500'
-  return valor > 0 ? 'text-emerald-700' : 'text-red-600'
+  if (valor === 0) return 'text-texto-suave'
+  return valor > 0 ? 'text-emerald-700 oscuro:text-emerald-300' : 'text-red-600 oscuro:text-red-300'
 }
 
 watch(visible, (abierto) => {

@@ -5,10 +5,12 @@
     El tamaño lo pone quien la usa (clases h-* w-*).
   -->
   <div class="figura-alcancia" aria-hidden="true">
-    <svg class="figura-alcancia__anillo" viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="46" fill="none" stroke="#1B5E37" stroke-opacity="0.12" stroke-width="5" />
+    <!-- Anillo en `currentColor` con `text-marca-tinta`: el verde marca en claro; en oscuro,
+         un verde claro, porque el de marca se pierde contra el fondo -->
+    <svg class="figura-alcancia__anillo text-marca-tinta" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-opacity="0.12" stroke-width="5" />
       <circle
-        cx="50" cy="50" r="46" fill="none" stroke="#1B5E37" stroke-width="5" stroke-linecap="round"
+        cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"
         pathLength="100" stroke-dasharray="26 74"
       />
     </svg>

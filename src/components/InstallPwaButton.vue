@@ -38,8 +38,8 @@
     align="bottom"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="cerrarInstrucciones"
   >
@@ -93,11 +93,11 @@
     <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
         ref="scrollArea"
-        class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white px-6 pb-4 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch]"
+        class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta px-6 pb-4 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch]"
         @scroll.passive="programarNatiscroll"
       >
-        <p class="text-sm text-gray-600">
-          En iPhone/iPad la instalación se hace desde <strong class="text-gray-800">Safari</strong> en 3 pasos:
+        <p class="text-sm text-texto-secundario">
+          En iPhone/iPad la instalación se hace desde <strong class="text-texto">Safari</strong> en 3 pasos:
         </p>
 
         <!-- El gesto dibujado: en iOS no hay prompt nativo y verlo se entiende
@@ -108,30 +108,30 @@
 
         <ol class="mt-4 space-y-3">
           <li class="flex items-start gap-3">
-            <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#E8F5E9] text-sm font-bold text-[#1B5E37]">1</span>
-            <p class="text-sm text-gray-700 leading-snug">
+            <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-marca-suave text-sm font-bold text-marca-tinta">1</span>
+            <p class="text-sm text-texto-medio leading-snug">
               Toca el botón <strong>Compartir</strong>
-              <ShareIosGlyph class="mx-1 inline-block h-4 w-4 -translate-y-0.5 text-[#1B5E37]" />
+              <ShareIosGlyph class="mx-1 inline-block h-4 w-4 -translate-y-0.5 text-marca-tinta" />
               en la barra de Safari.
             </p>
           </li>
           <li class="flex items-start gap-3">
-            <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#E8F5E9] text-sm font-bold text-[#1B5E37]">2</span>
-            <p class="text-sm text-gray-700 leading-snug">
+            <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-marca-suave text-sm font-bold text-marca-tinta">2</span>
+            <p class="text-sm text-texto-medio leading-snug">
               Desliza y elige <strong>«Añadir a pantalla de inicio»</strong>
-              <PlusSmallIcon class="mx-0.5 inline-block h-4 w-4 -translate-y-0.5 text-[#1B5E37]" />.
+              <PlusSmallIcon class="mx-0.5 inline-block h-4 w-4 -translate-y-0.5 text-marca-tinta" />.
             </p>
           </li>
           <li class="flex items-start gap-3">
-            <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#E8F5E9] text-sm font-bold text-[#1B5E37]">3</span>
-            <p class="text-sm text-gray-700 leading-snug">
+            <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-marca-suave text-sm font-bold text-marca-tinta">3</span>
+            <p class="text-sm text-texto-medio leading-snug">
               Toca <strong>«Añadir»</strong>. Natillerapp quedará como una app en tu inicio.
             </p>
           </li>
         </ol>
 
-        <div class="mt-4 rounded-xl border border-[#C8D9C8] bg-[#E8F5E9] px-4 py-3">
-          <p class="text-xs text-[#1B5E37] leading-snug">
+        <div class="mt-4 rounded-xl border border-[#C8D9C8] oscuro:border-borde bg-marca-suave px-4 py-3">
+          <p class="text-xs text-marca-tinta leading-snug">
             Se abre a pantalla completa, carga más rápido y funciona incluso con conexión débil.
           </p>
         </div>
@@ -143,9 +143,9 @@
         class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
         aria-hidden="true"
       >
-        <div class="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white/90 via-white/40 to-transparent"></div>
+        <div class="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-superficie-tarjeta/90 via-superficie-tarjeta/40 to-transparent"></div>
         <div class="relative flex justify-center px-5 pb-2 pt-8">
-          <span class="rounded-full bg-white/90 px-3 py-1 text-[0.6875rem] font-semibold text-[#1B5E37] shadow-sm">
+          <span class="rounded-full bg-superficie-tarjeta/90 px-3 py-1 text-[0.6875rem] font-semibold text-marca-tinta shadow-sm">
             Desliza para ver más
           </span>
         </div>
@@ -154,7 +154,7 @@
 
     <!-- Footer de acciones fijo (safe-area) -->
     <div
-      class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]"
+      class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]"
     >
       <button type="button" class="btn-modal-primary w-full" @click="cerrarInstrucciones">
         Entendido
@@ -329,6 +329,6 @@ onUnmounted(() => {
   font-size: 0.625rem;
   font-weight: 500;
   line-height: 1.25;
-  color: hsla(152, 42%, 78%, 0.92);
+  color: hsla(152, 42%, 78%, 0.92); /* tema-fijo: texto sobre la barra lateral verde */
 }
 </style>

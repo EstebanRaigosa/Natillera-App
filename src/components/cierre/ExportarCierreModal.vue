@@ -5,8 +5,8 @@
     align="bottom"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="emit('close')"
   >
@@ -56,24 +56,24 @@
     <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
         ref="scrollRef"
-        class="flex-1 min-h-0 space-y-4 overflow-y-auto overflow-x-hidden bg-white px-5 pb-4 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-6"
+        class="flex-1 min-h-0 space-y-4 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta px-5 pb-4 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-6"
         @scroll.passive="onScroll"
       >
         <!-- Excel primero: es una sola acción, y así la lista larga de abajo no lo esconde -->
         <button
           type="button"
-          class="flex min-h-[64px] w-full touch-manipulation items-center gap-3 rounded-2xl border border-gray-200 px-4 py-3 text-left hover:bg-gray-50 disabled:opacity-60"
+          class="flex min-h-[64px] w-full touch-manipulation items-center gap-3 rounded-2xl border border-borde px-4 py-3 text-left hover:bg-superficie-suave disabled:opacity-60"
           :disabled="exportandoExcel"
           @click="emit('excel')"
         >
-          <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#E8F5E9] text-[#1B5E37]">
+          <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-marca-suave text-marca-tinta">
             <TableCellsIcon class="h-5 w-5" />
           </span>
           <span class="min-w-0 flex-1">
-            <span class="block font-display text-sm font-bold text-gray-900">{{ exportandoExcel ? 'Exportando…' : 'Excel completo' }}</span>
-            <span class="block text-xs text-gray-500">Todos los socios y las utilidades por concepto</span>
+            <span class="block font-display text-sm font-bold text-texto-fuerte">{{ exportandoExcel ? 'Exportando…' : 'Excel completo' }}</span>
+            <span class="block text-xs text-texto-suave">Todos los socios y las utilidades por concepto</span>
           </span>
-          <ArrowDownTrayIcon class="h-5 w-5 flex-shrink-0 text-gray-400" />
+          <ArrowDownTrayIcon class="h-5 w-5 flex-shrink-0 text-texto-tenue" />
         </button>
 
         <!--
@@ -83,32 +83,32 @@
         <section aria-labelledby="titulo-pdf-cierre">
           <div class="mb-2 flex items-center justify-between gap-3">
             <div class="min-w-0">
-              <h3 id="titulo-pdf-cierre" class="font-display text-sm font-bold text-gray-900">Comprobantes en PDF</h3>
-              <p class="text-xs text-gray-500">{{ seleccion.length }} de {{ socios.length }} {{ socios.length === 1 ? 'socio' : 'socios' }}</p>
+              <h3 id="titulo-pdf-cierre" class="font-display text-sm font-bold text-texto-fuerte">Comprobantes en PDF</h3>
+              <p class="text-xs text-texto-suave">{{ seleccion.length }} de {{ socios.length }} {{ socios.length === 1 ? 'socio' : 'socios' }}</p>
             </div>
             <button
               type="button"
-              class="min-h-[44px] flex-shrink-0 touch-manipulation rounded-full px-3 text-sm font-bold text-[#1B5E37] hover:bg-[#E8F5E9]"
+              class="min-h-[44px] flex-shrink-0 touch-manipulation rounded-full px-3 text-sm font-bold text-marca-tinta hover:bg-marca-suave"
               @click="emit('seleccionar-todos', !todosMarcados)"
             >
               {{ todosMarcados ? 'Quitar todos' : 'Marcar todos' }}
             </button>
           </div>
 
-          <ul class="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200">
+          <ul class="divide-y divide-borde-suave overflow-hidden rounded-xl border border-borde">
             <li v-for="socio in socios" :key="socio.id">
               <label
                 class="flex min-h-[52px] cursor-pointer touch-manipulation items-center gap-3 px-3 py-2"
-                :class="seleccion.includes(socio.id) ? 'bg-[#f6fbf7]' : 'bg-white'"
+                :class="seleccion.includes(socio.id) ? 'bg-[#f6fbf7] oscuro:bg-superficie-suave' : 'bg-superficie-tarjeta'"
               >
                 <input
                   type="checkbox"
-                  class="h-5 w-5 flex-shrink-0 cursor-pointer rounded border-gray-300 text-[#1B5E37] focus:ring-[#1B5E37]"
+                  class="h-5 w-5 flex-shrink-0 cursor-pointer rounded border-borde-fuerte text-marca-tinta focus:ring-[#1B5E37]"
                   :checked="seleccion.includes(socio.id)"
                   @change="emit('alternar', socio.id)"
                 />
-                <span class="min-w-0 flex-1 truncate text-sm font-semibold text-gray-800">{{ socio.nombre }}</span>
-                <span class="flex-shrink-0 text-xs font-bold tabular-nums" :class="socio.debe ? 'text-orange-700' : 'text-gray-500'">
+                <span class="min-w-0 flex-1 truncate text-sm font-semibold text-texto">{{ socio.nombre }}</span>
+                <span class="flex-shrink-0 text-xs font-bold tabular-nums" :class="socio.debe ? 'text-orange-700 oscuro:text-orange-300' : 'text-texto-suave'">
                   {{ socio.debe ? 'Debe ' : '' }}${{ formatMoney(socio.monto) }}
                 </span>
               </label>
@@ -122,7 +122,7 @@
 
     <!-- La descarga en el pie: visible sin bajar hasta el final de la lista -->
     <div
-      class="flex-shrink-0 border-t border-gray-200 bg-white px-5 pt-4 sm:px-6"
+      class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-5 pt-4 sm:px-6"
       :style="{ paddingBottom: `calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
     >
       <div class="flex gap-3">

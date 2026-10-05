@@ -19,8 +19,8 @@
     :persistent="true"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-xl max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-xl max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="36rem"
     @close="cerrar"
   >
@@ -70,11 +70,11 @@
     </div>
 
     <!-- Controles fijos: no se van con el scroll de la lista -->
-    <div v-if="!resultado" class="flex-shrink-0 space-y-2.5 border-b border-gray-100 px-4 pb-3 pt-3 sm:space-y-3 sm:px-6 sm:pt-4">
+    <div v-if="!resultado" class="flex-shrink-0 space-y-2.5 border-b border-borde-suave px-4 pb-3 pt-3 sm:space-y-3 sm:px-6 sm:pt-4">
       <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
         <SwitchSegmentado v-model="formaPago" :opciones="OPCIONES_FORMA_PAGO" />
-        <label v-if="formaPago === 'transferencia'" class="flex min-h-[44px] cursor-pointer touch-manipulation items-center gap-2 text-sm font-semibold text-gray-700">
-          <input v-model="cobrar4x1000" type="checkbox" class="h-5 w-5 rounded border-gray-300 text-[#1B5E37] focus:ring-[#1B5E37]" />
+        <label v-if="formaPago === 'transferencia'" class="flex min-h-[44px] cursor-pointer touch-manipulation items-center gap-2 text-sm font-semibold text-texto-medio">
+          <input v-model="cobrar4x1000" type="checkbox" class="h-5 w-5 rounded border-borde-fuerte text-marca-tinta focus:ring-[#1B5E37]" />
           Cobrar 4×1000
         </label>
       </div>
@@ -94,7 +94,7 @@
         <button
           v-if="mesSugerido"
           type="button"
-          class="min-h-[44px] flex-shrink-0 touch-manipulation rounded-full border border-[#1B5E37]/25 px-3 text-sm font-semibold text-[#1B5E37] hover:bg-[#E8F5E9]"
+          class="min-h-[44px] flex-shrink-0 touch-manipulation rounded-full border border-[#1B5E37]/25 oscuro:border-marca-tinta/25 px-3 text-sm font-semibold text-marca-tinta hover:bg-marca-suave"
           @click="alternarColumna(mesSugerido.clave)"
         >
           {{ mesTodoMarcado ? 'Quitar' : 'Marcar' }} {{ mesSugerido.etiquetaLarga }}
@@ -104,13 +104,13 @@
 
     <!-- Resultado: reemplaza la cuadrícula al terminar -->
     <div v-if="resultado" class="flex flex-1 flex-col items-center justify-center px-6 py-10 text-center">
-      <span class="flex h-14 w-14 items-center justify-center rounded-full bg-[#E8F5E9]">
-        <CheckIcon class="h-7 w-7 text-[#1B5E37]" />
+      <span class="flex h-14 w-14 items-center justify-center rounded-full bg-marca-suave">
+        <CheckIcon class="h-7 w-7 text-marca-tinta" />
       </span>
-      <p class="mt-3 font-display text-lg font-bold text-gray-900">
+      <p class="mt-3 font-display text-lg font-bold text-texto-fuerte">
         {{ resultado.registrados }} {{ resultado.registrados === 1 ? 'pago registrado' : 'pagos registrados' }}
       </p>
-      <p v-if="resultado.fallidos.length" class="mt-2 max-w-sm text-sm text-amber-700">
+      <p v-if="resultado.fallidos.length" class="mt-2 max-w-sm text-sm text-amber-700 oscuro:text-amber-300">
         No se pudo con {{ resultado.fallidos.join(', ') }}. Lo que falló sigue pendiente; puedes intentarlo de nuevo.
       </p>
     </div>
@@ -123,38 +123,38 @@
       -->
       <div
         ref="scrollRef"
-        class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+        class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch]"
         @scroll.passive="onScroll"
       >
         <CargaCaja v-if="preparando" texto="Preparando la carga" />
 
-        <p v-else-if="sociosVisibles.length === 0" class="px-6 py-10 text-center text-sm text-gray-500">
+        <p v-else-if="sociosVisibles.length === 0" class="px-6 py-10 text-center text-sm text-texto-suave">
           {{ socios.length === 0 ? 'Aún no hay cuotas para cargar.' : 'Ningún socio con ese nombre.' }}
         </p>
 
-        <ul v-else class="divide-y divide-gray-100">
+        <ul v-else class="divide-y divide-borde-suave">
           <li v-for="socio in sociosVisibles" :key="socio.id">
             <!--
               Dos gestos en la misma fila: el botón grande marca de una vez todo lo que el
               socio debía (el caso normal del cuaderno: pagó lo suyo) y el nombre abre el
               detalle solo cuando pagó una parte.
             -->
-            <div class="flex items-stretch gap-1 px-2 sm:px-4" :class="{ 'bg-[#F2F8F3]': abierto === socio.id }">
+            <div class="flex items-stretch gap-1 px-2 sm:px-4" :class="{ 'bg-[#F2F8F3] oscuro:bg-marca-suave': abierto === socio.id }">
               <button
                 type="button"
-                class="flex min-h-[3.75rem] min-w-0 flex-1 touch-manipulation items-center gap-2 rounded-xl px-2 py-2 text-left hover:bg-[#F6FAF7]"
+                class="flex min-h-[3.75rem] min-w-0 flex-1 touch-manipulation items-center gap-2 rounded-xl px-2 py-2 text-left hover:bg-[#F6FAF7] oscuro:hover:bg-superficie-suave"
                 :aria-expanded="abierto === socio.id"
                 :aria-label="`Ver los conceptos de ${socio.nombre}`"
                 @click="alternarSocio(socio.id)"
               >
                 <span class="min-w-0 flex-1">
-                  <span class="block truncate text-[0.9375rem] font-bold text-gray-900">{{ socio.nombre }}</span>
-                  <span class="block truncate text-xs" :class="socio.marcado > 0 ? 'text-[#1B5E37] font-semibold' : 'text-gray-500'">
+                  <span class="block truncate text-[0.9375rem] font-bold text-texto-fuerte">{{ socio.nombre }}</span>
+                  <span class="block truncate text-xs" :class="socio.marcado > 0 ? 'text-marca-tinta font-semibold' : 'text-texto-suave'">
                     {{ socio.marcado > 0 ? socio.textoMarcado : socio.textoPendiente }}
                   </span>
                 </span>
                 <ChevronDownIcon
-                  class="h-4 w-4 flex-shrink-0 text-gray-400 transition-transform motion-reduce:transition-none"
+                  class="h-4 w-4 flex-shrink-0 text-texto-tenue transition-transform motion-reduce:transition-none"
                   :class="{ 'rotate-180': abierto === socio.id }"
                   aria-hidden="true"
                 />
@@ -162,7 +162,7 @@
               <button
                 type="button"
                 class="my-1.5 flex min-h-[3rem] flex-shrink-0 touch-manipulation items-center gap-1.5 rounded-xl border px-3 text-sm font-bold transition-colors"
-                :class="socio.todoMarcado ? 'border-[#1B5E37] bg-[#1B5E37] text-white' : 'border-[#1B5E37]/25 bg-white text-[#1B5E37]'"
+                :class="socio.todoMarcado ? 'border-[#1B5E37] oscuro:border-marca-tinta bg-[#1B5E37] text-white' : 'border-[#1B5E37]/25 oscuro:border-marca-tinta/25 bg-superficie-tarjeta text-marca-tinta'"
                 :aria-pressed="socio.todoMarcado"
                 :aria-label="`${socio.todoMarcado ? 'Quitar' : 'Marcar'} todo lo de ${socio.nombre}: ${formatMoney(socio.deuda)}`"
                 @click="alternarTodoDelSocio(socio)"
@@ -173,13 +173,13 @@
             </div>
 
             <!-- Conceptos del socio: cada uno con su nombre y su valor -->
-            <div v-if="abierto === socio.id" class="space-y-3 bg-[#FAFCFA] px-4 pb-4 pt-1 sm:px-6">
+            <div v-if="abierto === socio.id" class="space-y-3 bg-[#FAFCFA] oscuro:bg-superficie-suave px-4 pb-4 pt-1 sm:px-6">
               <div v-if="socio.meses.length > 0">
                 <div class="mb-1.5 flex items-center justify-between gap-2">
                   <p class="cr-titulo">Cuotas</p>
                   <button
                     type="button"
-                    class="min-h-[2.25rem] touch-manipulation rounded-full px-2 text-xs font-bold text-[#1B5E37] hover:bg-[#E8F5E9]"
+                    class="min-h-[2.25rem] touch-manipulation rounded-full px-2 text-xs font-bold text-marca-tinta hover:bg-marca-suave"
                     @click="alternarFila(socio.id)"
                   >
                     {{ socio.todasMarcadas ? 'Quitar todas' : 'Marcar todas' }}
@@ -203,7 +203,7 @@
                     <span v-else-if="m.parcial" class="cr-chip__nota">media</span>
                   </button>
                 </div>
-                <p v-if="hayMultas" class="mt-1.5 text-[0.6875rem] text-gray-500">
+                <p v-if="hayMultas" class="mt-1.5 text-[0.6875rem] text-texto-suave">
                   Toca otra vez una cuota si la pagó con multa.
                 </p>
               </div>
@@ -245,10 +245,10 @@
                     <span class="tabular-nums opacity-80">${{ formatMoney(cp.valor_pendiente) }}</span>
                   </button>
                 </div>
-                <p class="mt-1.5 text-[0.6875rem] text-gray-500">Se pagan en orden, de la más vieja a la más nueva.</p>
+                <p class="mt-1.5 text-[0.6875rem] text-texto-suave">Se pagan en orden, de la más vieja a la más nueva.</p>
               </div>
 
-              <p v-if="socio.necesitaCuota" class="rounded-xl bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
+              <p v-if="socio.necesitaCuota" class="rounded-xl bg-amber-50 oscuro:bg-amber-500/15 px-3 py-2 text-xs leading-relaxed text-amber-800 oscuro:text-amber-300">
                 Marca también una cuota: la actividad o el préstamo se registran junto a ese pago.
               </p>
             </div>
@@ -260,7 +260,7 @@
     </div>
 
     <div
-      class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-3 sm:px-6"
+      class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 pt-3 sm:px-6"
       :style="{ paddingBottom: `calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
     >
       <template v-if="resultado">
@@ -270,21 +270,21 @@
         <!-- Total arriba y el detalle en una línea (en el celular se recorta: la cuadrícula manda) -->
         <div class="mb-3 flex items-center justify-between gap-3">
           <div class="min-w-0">
-            <p class="truncate text-sm font-semibold text-gray-700 sm:whitespace-normal">
+            <p class="truncate text-sm font-semibold text-texto-medio sm:whitespace-normal">
               {{ hayAlgo ? resumen.join(' · ') : 'Nada marcado todavía' }}
             </p>
           </div>
           <button
             v-if="hayAlgo"
             type="button"
-            class="min-h-[44px] flex-shrink-0 touch-manipulation rounded-full px-3 text-sm font-semibold text-[#1B5E37] hover:bg-[#E8F5E9]"
+            class="min-h-[44px] flex-shrink-0 touch-manipulation rounded-full px-3 text-sm font-semibold text-marca-tinta hover:bg-marca-suave"
             @click="limpiar"
           >
             Quitar marcas
           </button>
         </div>
         <!-- Actividades y préstamo se registran junto a un pago de cuota, como en el pago normal -->
-        <p v-if="sinPortador.length" class="mb-3 rounded-xl bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
+        <p v-if="sinPortador.length" class="mb-3 rounded-xl bg-amber-50 oscuro:bg-amber-500/15 px-3 py-2 text-xs leading-relaxed text-amber-800 oscuro:text-amber-300">
           Marca también una cuota de {{ sinPortador.join(', ') }}: su actividad o préstamo se registra junto a ese pago.
         </p>
         <div class="flex gap-3">
@@ -982,5 +982,13 @@ const { tapado } = useTapadoInferior()
 }
 @media (prefers-reduced-motion: reduce) {
   .cr-chip { transition: none; }
+}
+
+/* Modo oscuro (skill natillerapp-modo-oscuro): los chips activos son sólidos con
+   texto blanco y valen igual; cambian el título y el chip apagado. */
+:where([data-tema=oscuro]) .cr-titulo { color: var(--texto-suave); }
+:where([data-tema=oscuro]) .cr-chip--off { border-color: var(--borde-fuerte); background: var(--superficie-tarjeta); color: var(--texto-secundario); }
+@media (hover: hover) {
+  :where([data-tema=oscuro]) .cr-chip--off:hover { border-color: var(--marca-tinta-borde); background: var(--superficie-suave); }
 }
 </style>

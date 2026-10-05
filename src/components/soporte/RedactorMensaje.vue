@@ -4,7 +4,7 @@
     direcciones inferior, que no es safe-area); fuera de un modal vale 0.
   -->
   <div
-    class="flex-shrink-0 border-t border-gray-200 bg-white px-3 pt-3 pb-[calc(max(0.75rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]"
+    class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-3 pt-3 pb-[calc(max(0.75rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]"
   >
     <!--
       Solo lectura: se explica el motivo en lugar de dejar un campo muerto
@@ -13,15 +13,15 @@
       en él: un campo bloqueado sin alternativa deja al usuario sin saber qué
       hacer con lo que venía a contar.
     -->
-    <div v-if="bloqueado" class="rounded-xl bg-gray-50 px-3 py-3 ring-1 ring-gray-200">
-      <div class="flex items-start gap-2 text-xs text-gray-600">
-        <LockClosedIcon class="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+    <div v-if="bloqueado" class="rounded-xl bg-superficie-suave px-3 py-3 ring-1 ring-borde">
+      <div class="flex items-start gap-2 text-xs text-texto-secundario">
+        <LockClosedIcon class="mt-0.5 h-4 w-4 shrink-0 text-texto-tenue" />
         <p class="min-w-0 flex-1">{{ motivoBloqueo }}</p>
       </div>
       <button
         v-if="textoAccion"
         type="button"
-        class="mt-2.5 inline-flex min-h-[2.75rem] w-full items-center justify-center rounded-full border border-[#1B5E37] px-4 text-sm font-semibold text-[#1B5E37] transition hover:bg-[#1B5E37]/5 touch-manipulation sm:w-auto"
+        class="mt-2.5 inline-flex min-h-[2.75rem] w-full items-center justify-center rounded-full border border-marca-tinta px-4 text-sm font-semibold text-marca-tinta transition hover:bg-[#1B5E37]/5 touch-manipulation sm:w-auto"
         @click="$emit('accion')"
       >
         <PlusIcon class="mr-1.5 h-4 w-4" />
@@ -31,7 +31,7 @@
 
     <template v-else>
       <!-- Sin conexión: se avisa antes de escribir, no después de fallar -->
-      <div v-if="sinConexion" class="mb-2 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 ring-1 ring-amber-200">
+      <div v-if="sinConexion" class="mb-2 flex items-center gap-2 rounded-lg bg-amber-50 oscuro:bg-amber-500/15 px-3 py-2 text-xs text-amber-800 oscuro:text-amber-300 ring-1 ring-amber-200 oscuro:ring-amber-500/30">
         <ExclamationTriangleIcon class="h-4 w-4 shrink-0" />
         <span>Sin conexión. Lo que escribas se enviará solo cuando vuelva la red.</span>
       </div>
@@ -49,7 +49,7 @@
         >
           <div
             v-if="elegido.previa"
-            class="relative h-16 w-16 overflow-hidden rounded-xl ring-1 ring-gray-200"
+            class="relative h-16 w-16 overflow-hidden rounded-xl ring-1 ring-borde"
           >
             <img
               :src="elegido.previa"
@@ -69,9 +69,9 @@
           </div>
           <div
             v-else
-            class="flex h-16 max-w-[10rem] items-center gap-1.5 rounded-xl bg-gray-100 px-2.5 text-xs text-gray-700 ring-1 ring-gray-200"
+            class="flex h-16 max-w-[10rem] items-center gap-1.5 rounded-xl bg-superficie-hundida px-2.5 text-xs text-texto-medio ring-1 ring-borde"
           >
-            <PaperClipIcon class="h-4 w-4 shrink-0 text-gray-500" />
+            <PaperClipIcon class="h-4 w-4 shrink-0 text-texto-suave" />
             <span class="min-w-0 flex-1 truncate">{{ elegido.archivo.name }}</span>
           </div>
 
@@ -80,22 +80,112 @@
                miniatura. -->
           <button
             type="button"
-            class="absolute -right-2 -top-2 flex h-11 w-11 items-center justify-center text-gray-500 touch-manipulation"
+            class="absolute -right-2 -top-2 flex h-11 w-11 items-center justify-center text-texto-suave touch-manipulation"
             :aria-label="`Quitar ${elegido.archivo.name}`"
             @click="quitarArchivo(indice)"
           >
-            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-white shadow ring-1 ring-gray-200 transition hover:bg-gray-100">
+            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-superficie-tarjeta shadow ring-1 ring-borde transition hover:bg-superficie-hundida">
               <XMarkIcon class="h-3.5 w-3.5" />
             </span>
           </button>
         </li>
       </ul>
 
-      <div class="flex items-end gap-2">
+      <div class="relative flex items-end gap-2">
+        <!--
+          Respuestas predefinidas (solo soporte): al escribir «/» se abre la lista
+          de comandos y, al elegir uno, sus variantes. @mousedown.prevent mantiene
+          el foco en el campo: en iOS, perderlo cierra el teclado a cada toque.
+        -->
+        <div
+          v-if="menuAbierto"
+          ref="menu"
+          id="menu-respuestas"
+          role="listbox"
+          :aria-label="comandoElegido ? `Variantes de /${comandoElegido.comando}` : 'Respuestas predefinidas'"
+          class="absolute inset-x-0 bottom-full z-20 mb-2 max-h-72 overflow-y-auto overscroll-contain rounded-2xl bg-superficie-tarjeta py-1.5 shadow-lg ring-1 ring-borde [-webkit-overflow-scrolling:touch]"
+        >
+          <template v-if="!comandoElegido">
+            <p class="px-3 pb-1 pt-0.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-texto-tenue">Respuestas predefinidas</p>
+            <p v-if="!comandosFiltrados.length" class="px-3 py-2.5 text-sm text-texto-suave">
+              Ningún comando empieza por «/{{ consultaBarra }}».
+            </p>
+            <button
+              v-for="(respuesta, indice) in comandosFiltrados"
+              :key="respuesta.comando"
+              type="button"
+              role="option"
+              :aria-selected="indice === indiceActivo"
+              :data-indice="indice"
+              :class="[
+                'flex min-h-[2.75rem] w-full items-center gap-2 px-3 py-2 text-left transition touch-manipulation',
+                indice === indiceActivo ? 'bg-[#1B5E37]/10' : 'hover:bg-superficie-suave',
+              ]"
+              @mousedown.prevent
+              @mouseenter="indiceActivo = indice"
+              @click="elegirComando(respuesta)"
+            >
+              <span class="shrink-0 font-mono text-sm font-semibold text-marca-tinta">/{{ respuesta.comando }}</span>
+              <span class="min-w-0 flex-1 truncate text-xs text-texto-suave">{{ respuesta.descripcion }}</span>
+              <span class="shrink-0 text-[0.6875rem] text-texto-tenue">{{ respuesta.variantes.length }}</span>
+            </button>
+          </template>
+
+          <template v-else>
+            <div class="flex items-center gap-1 px-1.5 pb-1">
+              <button
+                type="button"
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-texto-suave transition hover:bg-superficie-hundida touch-manipulation"
+                aria-label="Volver a los comandos"
+                @mousedown.prevent
+                @click="volverAComandos"
+              >
+                <ChevronLeftIcon class="h-4 w-4" />
+              </button>
+              <p class="min-w-0 flex-1 truncate text-xs text-texto-suave">
+                <span class="font-mono font-semibold text-marca-tinta">/{{ comandoElegido.comando }}</span>
+                · elige una variante
+              </p>
+            </div>
+            <button
+              v-for="(variante, indice) in variantesRellenas"
+              :key="indice"
+              type="button"
+              role="option"
+              :aria-selected="indice === indiceActivo"
+              :data-indice="indice"
+              :class="[
+                'block min-h-[2.75rem] w-full border-t border-borde-suave px-3 py-2.5 text-left transition touch-manipulation',
+                indice === indiceActivo ? 'bg-[#1B5E37]/10' : 'hover:bg-superficie-suave',
+              ]"
+              @mousedown.prevent
+              @mouseenter="indiceActivo = indice"
+              @click="insertarRespuesta(variante)"
+            >
+              <span class="block text-[0.6875rem] font-semibold text-texto-tenue">Variante {{ indice + 1 }}</span>
+              <span class="mt-0.5 block text-sm leading-snug text-texto">{{ variante }}</span>
+            </button>
+          </template>
+        </div>
+
+        <button
+          v-if="respuestas.length"
+          type="button"
+          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-texto-suave transition hover:bg-superficie-hundida disabled:opacity-40 touch-manipulation"
+          :class="menuAbierto ? 'bg-[#1B5E37]/10 text-marca-tinta' : ''"
+          aria-label="Respuestas predefinidas"
+          title="Respuestas predefinidas (escribe /)"
+          :disabled="enviando"
+          @mousedown.prevent
+          @click="abrirRespuestas"
+        >
+          <BoltIcon class="h-5 w-5" />
+        </button>
+
         <button
           v-if="permiteAdjuntos"
           type="button"
-          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 disabled:opacity-40 touch-manipulation"
+          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-texto-suave transition hover:bg-superficie-hundida disabled:opacity-40 touch-manipulation"
           aria-label="Adjuntar archivo"
           :disabled="enviando || archivos.length >= MAX_ADJUNTOS"
           @click="entradaArchivos?.click()"
@@ -127,12 +217,18 @@
           rows="1"
           :maxlength="MAX_CUERPO"
           :placeholder="marcador"
-          class="max-h-32 min-h-[2.75rem] flex-1 resize-none rounded-2xl border border-gray-300 bg-white px-4 py-2.5 text-base leading-snug text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#1B5E37] focus:ring-2 focus:ring-[#1B5E37]/30"
+          class="max-h-32 min-h-[2.75rem] flex-1 resize-none rounded-2xl border border-borde-fuerte bg-superficie-tarjeta px-4 py-2.5 text-base leading-snug text-texto-fuerte outline-none transition placeholder:text-texto-tenue focus:border-[#1B5E37] oscuro:focus:border-marca-tinta focus:ring-2 focus:ring-[#1B5E37]/30"
           enterkeyhint="send"
           :readonly="enviando"
           :aria-busy="enviando ? 'true' : 'false'"
+          :aria-expanded="menuAbierto ? 'true' : 'false'"
+          :aria-controls="menuAbierto ? 'menu-respuestas' : undefined"
+          :aria-autocomplete="respuestas.length ? 'list' : undefined"
           @input="alEscribir"
-          @keydown.enter.exact.prevent="intentarEnviar"
+          @keydown="alTecla"
+          @click="detectarBarra"
+          @focus="cancelarCierreMenu"
+          @blur="cerrarMenuAlSalir"
         />
 
         <button
@@ -147,7 +243,7 @@
         </button>
       </div>
 
-      <p v-if="cercaDelLimite" class="mt-1 px-1 text-right text-[0.6875rem] text-gray-500">
+      <p v-if="cercaDelLimite" class="mt-1 px-1 text-right text-[0.6875rem] text-texto-suave">
         {{ modelValue.length }} / {{ MAX_CUERPO }}
       </p>
     </template>
@@ -158,12 +254,13 @@
 import CargaBoton from '../carga/CargaBoton.vue'
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import {
-  ExclamationTriangleIcon, LockClosedIcon, PaperAirplaneIcon,
+  BoltIcon, ChevronLeftIcon, ExclamationTriangleIcon, LockClosedIcon, PaperAirplaneIcon,
   PaperClipIcon, PlusIcon, XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import { MAX_ADJUNTOS, MIMES_SELECTOR, useSoporteStore } from '../../stores/soporte'
 import { comprimirImagen, crearVistaPrevia, esHeic, esImagen, revocarVistasPrevias } from '../../utils/adjuntosSoporte'
 import { useNotificationStore } from '../../stores/notifications'
+import { filtrarComandos, rellenarRespuesta } from '../../utils/respuestasSoporte'
 
 const MAX_CUERPO = 4000
 
@@ -177,6 +274,10 @@ const props = defineProps({
   permiteAdjuntos: { type: Boolean, default: true },
   marcador: { type: String, default: 'Escribe tu mensaje…' },
   minimo: { type: Number, default: 1 },
+  /** Respuestas predefinidas (`/comando`). Vacío = sin comandos: así queda en la pantalla del usuario. */
+  respuestas: { type: Array, default: () => [] },
+  /** Valores de los marcadores de las respuestas, p. ej. { nombre: 'María' }. */
+  variablesRespuesta: { type: Object, default: () => ({}) },
 })
 
 const emit = defineEmits(['update:modelValue', 'enviar', 'accion'])
@@ -210,10 +311,162 @@ const cercaDelLimite = computed(() => props.modelValue.length > MAX_CUERPO - 200
 
 function alEscribir(evento) {
   emit('update:modelValue', evento.target.value)
-  // El campo crece con el texto hasta el máximo de la clase (max-h-32).
-  const el = evento.target
+  ajustarAlto(evento.target)
+  comandoElegido.value = null
+  detectarBarra()
+}
+
+// El campo crece con el texto hasta el máximo de la clase (max-h-32).
+function ajustarAlto(el) {
+  if (!el) return
   el.style.height = 'auto'
   el.style.height = `${el.scrollHeight}px`
+}
+
+// ---- Respuestas predefinidas ----------------------------------------------
+
+const menu = ref(null)
+/** Lo escrito tras la «/» junto al cursor; null si el cursor no está en un comando. */
+const consultaBarra = ref(null)
+const comandoElegido = ref(null)
+const indiceActivo = ref(0)
+
+const comandosFiltrados = computed(() => filtrarComandos(consultaBarra.value || ''))
+const variantesRellenas = computed(() =>
+  (comandoElegido.value?.variantes ?? []).map((v) => rellenarRespuesta(v, props.variablesRespuesta)))
+const opcionesMenu = computed(() => (comandoElegido.value ? variantesRellenas.value : comandosFiltrados.value))
+const menuAbierto = computed(() =>
+  props.respuestas.length > 0 && !props.bloqueado && consultaBarra.value !== null)
+
+/** Posición de la «/» del comando que se está escribiendo, o -1. */
+function inicioBarra() {
+  const el = campo.value
+  if (!el) return -1
+  const antes = el.value.slice(0, el.selectionStart ?? el.value.length)
+  const encontrado = antes.match(/(^|\s)\/([\p{L}\p{N}]*)$/u)
+  return encontrado ? antes.length - encontrado[2].length - 1 : -1
+}
+
+function detectarBarra() {
+  if (!props.respuestas.length) return
+  const inicio = inicioBarra()
+  const el = campo.value
+  const nueva = inicio < 0 ? null : el.value.slice(inicio + 1, el.selectionStart ?? el.value.length)
+  if (nueva !== consultaBarra.value) indiceActivo.value = 0
+  consultaBarra.value = nueva
+}
+
+function cerrarMenu() {
+  cancelarCierreMenu()
+  consultaBarra.value = null
+  comandoElegido.value = null
+}
+
+// Al salir del campo el menú se cierra con un respiro: en Safari de iOS el toque
+// en una opción puede quitarle el foco al campo antes de que llegue el clic, y
+// cerrar en el acto se comería la elección.
+let temporizadorCierre = null
+function cerrarMenuAlSalir() {
+  cancelarCierreMenu()
+  temporizadorCierre = setTimeout(cerrarMenu, 200)
+}
+function cancelarCierreMenu() {
+  clearTimeout(temporizadorCierre)
+  temporizadorCierre = null
+}
+
+// Enviado o vaciado desde fuera: no queda ningún comando que completar.
+watch(() => props.modelValue, (texto) => { if (!texto) cerrarMenu() })
+
+function elegirComando(respuesta) {
+  comandoElegido.value = respuesta
+  indiceActivo.value = 0
+  if (menu.value) menu.value.scrollTop = 0
+}
+
+function volverAComandos() {
+  comandoElegido.value = null
+  indiceActivo.value = 0
+}
+
+/** Cambia «/comando» por el texto elegido y deja el cursor al final de lo insertado. */
+function insertarRespuesta(texto) {
+  const el = campo.value
+  const inicio = inicioBarra()
+  if (!el || inicio < 0) return
+  const fin = el.selectionStart ?? el.value.length
+  const nuevo = el.value.slice(0, inicio) + texto + el.value.slice(fin)
+  emit('update:modelValue', nuevo.slice(0, MAX_CUERPO))
+  cerrarMenu()
+  nextTick(() => {
+    const posicion = Math.min(inicio + texto.length, MAX_CUERPO)
+    el.focus()
+    el.setSelectionRange(posicion, posicion)
+    ajustarAlto(el)
+  })
+}
+
+/** Botón del rayo: escribe la «/» donde está el cursor para abrir el menú. */
+function abrirRespuestas() {
+  const el = campo.value
+  if (!el) return
+  if (menuAbierto.value) {
+    el.focus()
+    return
+  }
+  const cursor = el.selectionStart ?? el.value.length
+  const antes = el.value.slice(0, cursor)
+  const separador = antes && !/\s$/.test(antes) ? ' ' : ''
+  const nuevo = `${antes}${separador}/${el.value.slice(cursor)}`
+  emit('update:modelValue', nuevo)
+  nextTick(() => {
+    const posicion = antes.length + separador.length + 1
+    el.focus()
+    el.setSelectionRange(posicion, posicion)
+    detectarBarra()
+  })
+}
+
+function moverActivo(paso) {
+  const total = opcionesMenu.value.length
+  if (!total) return
+  indiceActivo.value = (indiceActivo.value + paso + total) % total
+  nextTick(() => {
+    // Desplazamiento manual dentro del menú: scrollIntoView movería también la
+    // página o el modal en Safari de iOS.
+    const lista = menu.value
+    const fila = lista?.querySelector(`[data-indice="${indiceActivo.value}"]`)
+    if (!lista || !fila) return
+    if (fila.offsetTop < lista.scrollTop) lista.scrollTop = fila.offsetTop
+    else if (fila.offsetTop + fila.offsetHeight > lista.scrollTop + lista.clientHeight) {
+      lista.scrollTop = fila.offsetTop + fila.offsetHeight - lista.clientHeight
+    }
+  })
+}
+
+function alTecla(evento) {
+  if (menuAbierto.value) {
+    if (evento.key === 'ArrowDown') { evento.preventDefault(); moverActivo(1); return }
+    if (evento.key === 'ArrowUp') { evento.preventDefault(); moverActivo(-1); return }
+    if (evento.key === 'Escape') {
+      evento.preventDefault()
+      if (comandoElegido.value) volverAComandos()
+      else cerrarMenu()
+      return
+    }
+    if ((evento.key === 'Enter' || evento.key === 'Tab') && !evento.shiftKey && opcionesMenu.value.length) {
+      evento.preventDefault()
+      if (comandoElegido.value) insertarRespuesta(variantesRellenas.value[indiceActivo.value])
+      else elegirComando(comandosFiltrados.value[indiceActivo.value])
+      return
+    }
+  }
+  // Las flechas mueven el cursor: puede entrar o salir de un «/comando».
+  if (evento.key === 'ArrowLeft' || evento.key === 'ArrowRight') nextTick(detectarBarra)
+  if (evento.key === 'Enter' && !evento.shiftKey && !evento.ctrlKey && !evento.altKey && !evento.metaKey) {
+    evento.preventDefault()
+    intentarEnviar()
+  }
 }
 
 /*
@@ -305,6 +558,7 @@ function soltarVistasPrevias() {
 // quedan hasta recargar la página. Y los listeners de conexión se retiran aquí
 // para que no se acumulen en cada apertura del redactor.
 onBeforeUnmount(() => {
+  cancelarCierreMenu()
   soltarVistasPrevias()
   if (typeof window !== 'undefined') {
     window.removeEventListener('online', alConectar)

@@ -3,8 +3,8 @@
     <!-- ── Cabecera de la pantalla ── -->
     <div class="mb-3 flex items-center gap-3">
       <div class="min-w-0 flex-1">
-        <h1 class="truncate font-display text-xl font-bold text-gray-900 sm:text-2xl">Soporte</h1>
-        <p class="mt-0.5 truncate text-xs text-gray-500 sm:text-sm">
+        <h1 class="truncate font-display text-xl font-bold text-texto-fuerte sm:text-2xl">Soporte</h1>
+        <p class="mt-0.5 truncate text-xs text-texto-suave sm:text-sm">
           Escríbenos y te respondemos por aquí mismo
         </p>
       </div>

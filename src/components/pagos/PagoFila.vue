@@ -1,8 +1,8 @@
 <template>
-  <li class="flex items-start gap-2.5 rounded-xl bg-white px-3 py-2">
+  <li class="flex items-start gap-2.5 rounded-xl bg-superficie-tarjeta px-3 py-2">
     <span class="w-9 flex-shrink-0 pt-0.5 text-center">
-      <span class="block font-display text-sm font-bold leading-none text-gray-800">{{ dia }}</span>
-      <span class="mt-0.5 block text-[0.625rem] uppercase tracking-wide text-gray-400">{{ mes }}</span>
+      <span class="block font-display text-sm font-bold leading-none text-texto">{{ dia }}</span>
+      <span class="mt-0.5 block text-[0.625rem] uppercase tracking-wide text-texto-tenue">{{ mes }}</span>
     </span>
 
     <span class="min-w-0 flex-1">
@@ -10,19 +10,19 @@
         <span class="rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold" :class="claseTipo(pago.tipo, pago.esParcial)">
           {{ etiquetaTipo(pago.tipo) }}
         </span>
-        <span v-if="pago.esParcial" class="text-[0.6875rem] font-semibold text-orange-700">Abono parcial</span>
+        <span v-if="pago.esParcial" class="text-[0.6875rem] font-semibold text-orange-700 oscuro:text-orange-300">Abono parcial</span>
       </span>
-      <span class="mt-1 block break-words text-sm leading-snug text-gray-800">{{ pago.concepto }}</span>
-      <span class="mt-0.5 block text-xs text-gray-500">
+      <span class="mt-1 block break-words text-sm leading-snug text-texto">{{ pago.concepto }}</span>
+      <span class="mt-0.5 block text-xs text-texto-suave">
         <span v-if="pago.periodo">Período {{ pago.periodo }} · </span>
         {{ pago.formaPago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
         <!-- El libro marca cuándo la fecha no es la del pago sino la última vez que se
              tocó la fila; callarlo haría pasar un sucedáneo por dato. -->
-        <span v-if="pago.fechaEstimada" class="text-amber-700"> · fecha aproximada</span>
+        <span v-if="pago.fechaEstimada" class="text-amber-700 oscuro:text-amber-300"> · fecha aproximada</span>
       </span>
     </span>
 
-    <span class="flex-shrink-0 font-display text-sm font-bold tabular-nums text-gray-900">
+    <span class="flex-shrink-0 font-display text-sm font-bold tabular-nums text-texto-fuerte">
       {{ formatMoney(pago.monto) }}
     </span>
   </li>

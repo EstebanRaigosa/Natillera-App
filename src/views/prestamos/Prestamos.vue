@@ -29,7 +29,7 @@
           <button
             type="button"
             data-guia="boton-recorrido"
-            class="flex h-11 min-w-[2.75rem] flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#166534]/25 bg-white text-[#166534] shadow-sm transition-colors hover:bg-[#f0fdf4] active:bg-[#dcfce7] sm:h-auto sm:px-3 sm:py-2 sm:rounded-lg [-webkit-tap-highlight-color:transparent]"
+            class="flex h-11 min-w-[2.75rem] flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#166534]/25 oscuro:border-marca-tinta/25 bg-superficie-tarjeta text-[#166534] oscuro:text-marca-tinta shadow-sm transition-colors hover:bg-[#f0fdf4] oscuro:hover:bg-green-500/15 oscuro:hover:bg-marca-suave active:bg-[#dcfce7] oscuro:active:bg-green-500/15 oscuro:active:bg-marca-suave sm:h-auto sm:px-3 sm:py-2 sm:rounded-lg [-webkit-tap-highlight-color:transparent]"
             title="¿Cómo funciona esta pantalla?"
             aria-label="¿Cómo funciona esta pantalla? Ver el recorrido guiado"
             @click="abrirGuiaPrestamos({ manual: true })"
@@ -181,13 +181,13 @@
           v-if="prestamosFiltrados.length === 0"
           class="prestamos-panel__empty"
         >
-          <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-[color:var(--brand-primary-soft)] text-[color:var(--brand-primary)] flex items-center justify-center">
+          <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-[color:var(--brand-primary-soft)] text-[color:var(--brand-primary)] oscuro:text-marca-tinta flex items-center justify-center">
             <BanknotesIcon class="w-6 h-6" />
           </div>
-          <p class="font-display font-semibold text-gray-700">
+          <p class="font-display font-semibold text-texto-medio">
             {{ tabPrestamos === 'pagados' ? 'No hay préstamos pagados' : 'No hay préstamos por cobrar' }}
           </p>
-          <p class="text-sm text-gray-500 mt-1">
+          <p class="text-sm text-texto-suave mt-1">
             {{ tabPrestamos === 'pagados'
               ? 'Los préstamos saldados aparecerán aquí.'
               : '¡Todo al día! Aún no hay préstamos pendientes de cobro.' }}
@@ -234,11 +234,11 @@
           <!-- 1. Identidad y estado -->
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
-              <p class="truncate font-display text-lg font-extrabold leading-tight text-slate-900 sm:text-xl">
+              <p class="truncate font-display text-lg font-extrabold leading-tight text-slate-900 oscuro:text-texto-fuerte sm:text-xl">
                 {{ prestamo.socio_natillera?.socio?.nombre || 'Socio' }}
               </p>
               <!-- En activos el progreso va bajo el saldo; aquí solo el resumen del plan saldado -->
-              <p v-if="prestamo.estado === 'pagado' && prestamo.cuotasTotales > 0" class="mt-0.5 text-sm text-slate-500 tabular-nums">
+              <p v-if="prestamo.estado === 'pagado' && prestamo.cuotasTotales > 0" class="mt-0.5 text-sm text-slate-500 oscuro:text-texto-suave tabular-nums">
                 {{ prestamo.cuotasTotales }} {{ prestamo.cuotasTotales === 1 ? 'cuota' : 'cuotas' }}
               </p>
             </div>
@@ -261,20 +261,20 @@
                Un préstamo pagado no tiene saldo que mostrar. -->
           <div v-if="prestamo.estado !== 'pagado'" data-guia-parte="saldo">
             <div class="flex items-baseline justify-between gap-3">
-              <span class="text-sm text-slate-500">Saldo</span>
+              <span class="text-sm text-slate-500 oscuro:text-texto-suave">Saldo</span>
               <span
                 class="font-display text-2xl font-extrabold leading-none tabular-nums"
-                :class="prestamo.enMora ? 'text-[color:var(--brand-danger)]' : 'text-slate-900'"
+                :class="prestamo.enMora ? 'text-[color:var(--brand-danger)] oscuro:text-peligro' : 'text-slate-900 oscuro:text-texto-fuerte'"
               >
                 ${{ formatMoney(saldoConMora(prestamo)) }}
               </span>
             </div>
             <!-- El saldo lleva sus dos intereses: los del plan y los de mora -->
-            <p v-if="desgloseSaldoPrestamo(prestamo.id)" class="mt-0.5 text-right text-xs tabular-nums text-slate-500">
+            <p v-if="desgloseSaldoPrestamo(prestamo.id)" class="mt-0.5 text-right text-xs tabular-nums text-slate-500 oscuro:text-texto-suave">
               Capital ${{ formatMoney(desgloseSaldoPrestamo(prestamo.id).capital) }}
-              · Intereses <span class="font-semibold text-[color:var(--brand-warning)]">${{ formatMoney(desgloseSaldoPrestamo(prestamo.id).interes) }}</span>
+              · Intereses <span class="font-semibold text-[color:var(--brand-warning)] oscuro:text-alerta">${{ formatMoney(desgloseSaldoPrestamo(prestamo.id).interes) }}</span>
               <template v-if="desgloseSaldoPrestamo(prestamo.id).mora > 0">
-                · Mora <span class="font-semibold text-[color:var(--brand-danger)]">${{ formatMoney(desgloseSaldoPrestamo(prestamo.id).mora) }}</span>
+                · Mora <span class="font-semibold text-[color:var(--brand-danger)] oscuro:text-peligro">${{ formatMoney(desgloseSaldoPrestamo(prestamo.id).mora) }}</span>
               </template>
             </p>
             <div v-if="prestamo.cuotasTotales > 0" class="mt-2">
@@ -284,7 +284,7 @@
                   :style="{ width: porcentajePagadoPrestamo(prestamo) + '%' }"
                 ></div>
               </div>
-              <p class="mt-1 flex items-baseline justify-between gap-2 text-xs text-slate-500 tabular-nums">
+              <p class="mt-1 flex items-baseline justify-between gap-2 text-xs text-slate-500 oscuro:text-texto-suave tabular-nums">
                 <span>{{ prestamo.cuotasPagadas }} de {{ prestamo.cuotasTotales }} cuotas</span>
                 <span>{{ porcentajePagadoPrestamo(prestamo) }}% pagado</span>
               </p>
@@ -296,7 +296,7 @@
           <div v-if="prestamo.enMora" class="ds-callout prestamo-callout--mora !block tabular-nums">
             <div class="flex items-baseline justify-between gap-2">
               <span class="font-semibold">Para ponerse al día</span>
-              <span class="font-display text-base font-bold text-[color:var(--brand-danger)]">
+              <span class="font-display text-base font-bold text-[color:var(--brand-danger)] oscuro:text-peligro">
                 ${{ formatMoney((prestamo.valorCuotasEnDeuda || 0) + (prestamo.moraAcumulada || 0)) }}
               </span>
             </div>
@@ -346,26 +346,26 @@
           <!-- 4. Condiciones del crédito: referencia, no protagonismo -->
           <div data-guia-parte="cifras" class="grid grid-cols-2 gap-2">
             <div class="flex min-w-0 flex-col">
-              <span class="text-[0.6875rem] uppercase tracking-wide text-slate-400">Monto</span>
-              <span class="truncate text-sm font-semibold tabular-nums text-slate-700">${{ formatMoney(prestamo.monto) }}</span>
+              <span class="text-[0.6875rem] uppercase tracking-wide text-slate-400 oscuro:text-texto-tenue">Monto</span>
+              <span class="truncate text-sm font-semibold tabular-nums text-slate-700 oscuro:text-texto-medio">${{ formatMoney(prestamo.monto) }}</span>
             </div>
             <div class="flex min-w-0 flex-col">
-              <span class="text-[0.6875rem] uppercase tracking-wide text-slate-400">Interés</span>
-              <span class="truncate text-sm font-semibold tabular-nums text-slate-700">{{ prestamo.interes }}%</span>
+              <span class="text-[0.6875rem] uppercase tracking-wide text-slate-400 oscuro:text-texto-tenue">Interés</span>
+              <span class="truncate text-sm font-semibold tabular-nums text-slate-700 oscuro:text-texto-medio">{{ prestamo.interes }}%</span>
             </div>
             <!--
               Lo que el préstamo le deja al fondo, en pesos. La tasa sola no dice nada:
               un 5 % a una cuota y un 5 % a seis dejan cosas muy distintas.
             -->
             <div class="flex min-w-0 flex-col">
-              <span class="text-[0.6875rem] uppercase tracking-wide text-slate-400">Intereses</span>
-              <span class="truncate text-sm font-semibold tabular-nums text-amber-700">
+              <span class="text-[0.6875rem] uppercase tracking-wide text-slate-400 oscuro:text-texto-tenue">Intereses</span>
+              <span class="truncate text-sm font-semibold tabular-nums text-amber-700 oscuro:text-amber-300">
                 ${{ formatMoney(calcularInteresesGeneradosDetalle(prestamo)) }}
               </span>
             </div>
             <div class="flex min-w-0 flex-col">
-              <span class="text-[0.6875rem] uppercase tracking-wide text-slate-400">Pagado</span>
-              <span class="truncate text-sm font-semibold tabular-nums text-[color:var(--brand-primary)]">${{ formatMoney(calcularValorPagadoDetalle(prestamo)) }}</span>
+              <span class="text-[0.6875rem] uppercase tracking-wide text-slate-400 oscuro:text-texto-tenue">Pagado</span>
+              <span class="truncate text-sm font-semibold tabular-nums text-[color:var(--brand-primary)] oscuro:text-marca-tinta">${{ formatMoney(calcularValorPagadoDetalle(prestamo)) }}</span>
             </div>
           </div>
 
@@ -455,8 +455,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="requestCloseTopModal"
     >
@@ -507,20 +507,20 @@
         </div>
 
         <!-- Barra de progreso paso a paso -->
-        <div class="px-3 sm:px-5 pt-3 sm:pt-4 pb-2 sm:pb-3 flex-shrink-0 bg-white border-b border-gray-100">
+        <div class="px-3 sm:px-5 pt-3 sm:pt-4 pb-2 sm:pb-3 flex-shrink-0 bg-superficie-tarjeta border-b border-borde-suave">
           <div class="flex gap-0.5 sm:gap-1">
             <template v-for="(label, idx) in ['Monto', 'Plazo', 'Resumen']" :key="idx">
               <div class="flex-1 flex flex-col items-center min-w-0">
                 <div
                   :class="[
                     'h-1 sm:h-1.5 w-full rounded-full transition-all duration-300',
-                    idx <= pasoNuevoPrestamo ? 'bg-emerald-500' : 'bg-gray-100'
+                    idx <= pasoNuevoPrestamo ? 'bg-emerald-500' : 'bg-superficie-hundida'
                   ]"
                 ></div>
                 <span
                   :class="[
                     'text-[10px] sm:text-[11px] font-medium mt-1.5 sm:mt-2 truncate w-full text-center',
-                    idx <= pasoNuevoPrestamo ? 'text-gray-800' : 'text-gray-400'
+                    idx <= pasoNuevoPrestamo ? 'text-texto' : 'text-texto-tenue'
                   ]"
                 >{{ label }}</span>
               </div>
@@ -532,7 +532,7 @@
         <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="modalNuevoPrestamoScrollRef"
-          class="scrollbar-thin flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          class="scrollbar-thin flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch]"
           @scroll.passive="actualizarIndicadorScrollModalNuevoPrestamo"
         >
           <form @submit.prevent="pasoNuevoPrestamo < 2 ? pasoNuevoPrestamo++ : handleCrearPrestamo()" class="px-4 sm:px-6 pt-4 sm:pt-5 pb-0">
@@ -540,16 +540,16 @@
           <div v-show="pasoNuevoPrestamo === 0" class="space-y-4 sm:space-y-5">
           <!-- Selector de Socio -->
           <div class="relative selector-socio-container">
-            <label class="block text-sm font-medium text-gray-600 mb-1.5">Socio</label>
+            <label class="block text-sm font-medium text-texto-secundario mb-1.5">Socio</label>
             <div class="relative">
               <button
                 type="button"
                 @click="mostrarSelectorSocio = !mostrarSelectorSocio"
                 :class="[
-                  'w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 bg-white',
+                  'w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 bg-superficie-tarjeta',
                   formPrestamo.socio_natillera_id 
-                    ? 'border-emerald-300 text-gray-800' 
-                    : 'border-gray-200 text-gray-500 hover:border-gray-300',
+                    ? 'border-emerald-300 oscuro:border-emerald-500/30 text-texto' 
+                    : 'border-borde text-texto-suave hover:border-borde-fuerte',
                   mostrarSelectorSocio ? 'border-emerald-400 ring-2 ring-emerald-500/20' : ''
                 ]"
               >
@@ -557,22 +557,22 @@
                   <img 
                     :src="getAvatarUrl(socioSeleccionado.socio?.nombre || socioSeleccionado.id, socioSeleccionado.socio?.avatar_seed, socioSeleccionado.socio?.avatar_style)" 
                     :alt="socioSeleccionado.socio?.nombre"
-                    class="w-10 h-10 rounded-lg border border-gray-200 flex-shrink-0 object-cover"
+                    class="w-10 h-10 rounded-lg border border-borde flex-shrink-0 object-cover"
                   />
                   <div class="flex-1 min-w-0 text-left">
-                    <p class="font-semibold text-gray-800 truncate">{{ socioSeleccionado.socio?.nombre }}</p>
-                    <p v-if="socioSeleccionado.socio?.telefono" class="text-xs text-gray-500 truncate">{{ socioSeleccionado.socio.telefono }}</p>
+                    <p class="font-semibold text-texto truncate">{{ socioSeleccionado.socio?.nombre }}</p>
+                    <p v-if="socioSeleccionado.socio?.telefono" class="text-xs text-texto-suave truncate">{{ socioSeleccionado.socio.telefono }}</p>
                   </div>
                 </div>
-                <div v-else class="flex items-center gap-3 flex-1 text-gray-500">
-                  <div class="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0">
-                    <UserIcon class="w-5 h-5 text-gray-400" />
+                <div v-else class="flex items-center gap-3 flex-1 text-texto-suave">
+                  <div class="w-10 h-10 rounded-lg bg-superficie-hundida border border-borde flex items-center justify-center flex-shrink-0">
+                    <UserIcon class="w-5 h-5 text-texto-tenue" />
                   </div>
                   <span>Selecciona un socio...</span>
                 </div>
                 <ChevronDownIcon 
                   :class="[
-                    'w-5 h-5 text-gray-400 flex-shrink-0 transition-transform',
+                    'w-5 h-5 text-texto-tenue flex-shrink-0 transition-transform',
                     mostrarSelectorSocio ? 'transform rotate-180' : ''
                   ]"
                 />
@@ -582,14 +582,14 @@
               <div 
                 v-if="mostrarSelectorSocio"
                 @click.stop
-                class="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-80 overflow-hidden"
+                class="absolute z-50 w-full mt-2 bg-superficie-tarjeta border border-borde rounded-xl shadow-xl max-h-80 overflow-hidden"
               >
-                <div class="p-2.5 border-b border-gray-100 sticky top-0 bg-white">
+                <div class="p-2.5 border-b border-borde-suave sticky top-0 bg-superficie-tarjeta">
                   <input
                     v-model="busquedaSocio"
                     type="text"
                     placeholder="Buscar socio..."
-                    class="w-full px-3 py-2 text-base border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none transition-colors"
+                    class="w-full px-3 py-2 text-base border border-borde rounded-lg focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none transition-colors"
                     @click.stop
                   />
                 </div>
@@ -599,18 +599,18 @@
                     :key="socio.id"
                     type="button"
                     @click="seleccionarSocio(socio)"
-                    class="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 transition-colors text-left border-b border-gray-50 last:border-b-0"
-                    :class="formPrestamo.socio_natillera_id === socio.id ? 'bg-emerald-50/80' : ''"
+                    class="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-superficie-suave transition-colors text-left border-b border-gray-50 oscuro:border-borde-suave last:border-b-0"
+                    :class="formPrestamo.socio_natillera_id === socio.id ? 'bg-emerald-50/80 oscuro:bg-emerald-500/15' : ''"
                   >
                     <img 
                       :src="getAvatarUrl(socio.socio?.nombre || socio.id, socio.socio?.avatar_seed, socio.socio?.avatar_style)" 
                       :alt="socio.socio?.nombre"
-                      class="w-9 h-9 rounded-lg border border-gray-200 flex-shrink-0 object-cover"
+                      class="w-9 h-9 rounded-lg border border-borde flex-shrink-0 object-cover"
                     />
                     <div class="flex-1 min-w-0">
-                      <p class="font-semibold text-gray-800 truncate">{{ socio.socio?.nombre }}</p>
-                      <p v-if="socio.socio?.telefono" class="text-xs text-gray-500 truncate">{{ socio.socio.telefono }}</p>
-                      <p v-else-if="socio.socio?.email" class="text-xs text-gray-500 truncate">{{ socio.socio.email }}</p>
+                      <p class="font-semibold text-texto truncate">{{ socio.socio?.nombre }}</p>
+                      <p v-if="socio.socio?.telefono" class="text-xs text-texto-suave truncate">{{ socio.socio.telefono }}</p>
+                      <p v-else-if="socio.socio?.email" class="text-xs text-texto-suave truncate">{{ socio.socio.email }}</p>
                     </div>
                     <div v-if="formPrestamo.socio_natillera_id === socio.id" class="flex-shrink-0">
                       <div class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
@@ -620,7 +620,7 @@
                       </div>
                     </div>
                   </button>
-                  <div v-if="sociosFiltrados.length === 0" class="p-4 text-center text-gray-500 text-sm">
+                  <div v-if="sociosFiltrados.length === 0" class="p-4 text-center text-texto-suave text-sm">
                     No se encontraron socios
                   </div>
                 </div>
@@ -628,28 +628,28 @@
             </div>
             <div
               v-if="formPrestamo.socio_natillera_id && !cargandoTotalAhorradoSocio && totalAhorradoInformativoSocio !== null"
-              class="mt-3.5 rounded-xl border border-emerald-200 bg-emerald-50/90 px-4 py-3.5 shadow-sm ring-1 ring-emerald-500/15 sm:px-5 sm:py-4"
+              class="mt-3.5 rounded-xl border border-emerald-200 oscuro:border-emerald-500/30 bg-emerald-50/90 oscuro:bg-emerald-500/15 px-4 py-3.5 shadow-sm ring-1 ring-emerald-500/15 sm:px-5 sm:py-4"
             >
               <div class="flex items-center justify-between gap-3">
-                <span class="text-base font-semibold text-gray-700">Total ahorrado por el socio</span>
-                <span class="text-lg font-bold tabular-nums text-emerald-800 shrink-0">${{ formatMoney(totalAhorradoInformativoSocio) }}</span>
+                <span class="text-base font-semibold text-texto-medio">Total ahorrado por el socio</span>
+                <span class="text-lg font-bold tabular-nums text-emerald-800 oscuro:text-emerald-300 shrink-0">${{ formatMoney(totalAhorradoInformativoSocio) }}</span>
               </div>
             </div>
             <div
               v-else-if="formPrestamo.socio_natillera_id && cargandoTotalAhorradoSocio"
-              class="mt-3.5 rounded-xl border border-emerald-200 bg-emerald-50/90 px-4 py-3.5 shadow-sm ring-1 ring-emerald-500/15 sm:px-5 sm:py-4"
+              class="mt-3.5 rounded-xl border border-emerald-200 oscuro:border-emerald-500/30 bg-emerald-50/90 oscuro:bg-emerald-500/15 px-4 py-3.5 shadow-sm ring-1 ring-emerald-500/15 sm:px-5 sm:py-4"
               aria-busy="true"
             >
               <div class="flex items-center justify-between gap-3">
-                <span class="text-base font-semibold text-gray-700">Total ahorrado por el socio</span>
-                <span class="h-6 w-28 rounded-md bg-emerald-200/70 animate-pulse shrink-0" aria-hidden="true" />
+                <span class="text-base font-semibold text-texto-medio">Total ahorrado por el socio</span>
+                <span class="h-6 w-28 rounded-md bg-emerald-200/70 oscuro:bg-emerald-500/25 animate-pulse shrink-0" aria-hidden="true" />
               </div>
             </div>
           </div>
 
           <!-- Periodicidad de pago -->
           <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1.5">Periodicidad</label>
+            <label class="block text-sm font-medium text-texto-secundario mb-1.5">Periodicidad</label>
             <div class="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -657,17 +657,17 @@
                 :class="[
                   'p-3 rounded-xl border text-left transition-all duration-200',
                   formPrestamo.periodicidad === 'mensual'
-                    ? 'border-emerald-400 bg-emerald-50/80 ring-1 ring-emerald-500/20'
-                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/80'
+                    ? 'border-emerald-400 bg-emerald-50/80 oscuro:bg-emerald-500/15 ring-1 ring-emerald-500/20'
+                    : 'border-borde bg-superficie-tarjeta hover:border-borde-fuerte hover:bg-superficie-suave/80'
                 ]"
               >
                 <div class="flex items-center gap-2">
-                  <div :class="['w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0', formPrestamo.periodicidad === 'mensual' ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500']">
+                  <div :class="['w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0', formPrestamo.periodicidad === 'mensual' ? 'bg-emerald-500 text-white' : 'bg-superficie-hundida text-texto-suave']">
                     <CalendarDaysIcon class="w-5 h-5" />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <span :class="['font-semibold text-sm block', formPrestamo.periodicidad === 'mensual' ? 'text-emerald-800' : 'text-gray-700']">Mensual</span>
-                    <span class="text-xs text-gray-500">Una cuota por mes</span>
+                    <span :class="['font-semibold text-sm block', formPrestamo.periodicidad === 'mensual' ? 'text-emerald-800 oscuro:text-emerald-300' : 'text-texto-medio']">Mensual</span>
+                    <span class="text-xs text-texto-suave">Una cuota por mes</span>
                   </div>
                   <div v-if="formPrestamo.periodicidad === 'mensual'" class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
                     <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
@@ -680,17 +680,17 @@
                 :class="[
                   'p-3 rounded-xl border text-left transition-all duration-200',
                   formPrestamo.periodicidad === 'quincenal'
-                    ? 'border-emerald-400 bg-emerald-50/80 ring-1 ring-emerald-500/20'
-                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/80'
+                    ? 'border-emerald-400 bg-emerald-50/80 oscuro:bg-emerald-500/15 ring-1 ring-emerald-500/20'
+                    : 'border-borde bg-superficie-tarjeta hover:border-borde-fuerte hover:bg-superficie-suave/80'
                 ]"
               >
                 <div class="flex items-center gap-2">
-                  <div :class="['w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0', formPrestamo.periodicidad === 'quincenal' ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500']">
+                  <div :class="['w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0', formPrestamo.periodicidad === 'quincenal' ? 'bg-emerald-500 text-white' : 'bg-superficie-hundida text-texto-suave']">
                     <ClockIcon class="w-5 h-5" />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <span :class="['font-semibold text-sm block', formPrestamo.periodicidad === 'quincenal' ? 'text-emerald-800' : 'text-gray-700']">Quincenal</span>
-                    <span class="text-xs text-gray-500">Dos cuotas por mes</span>
+                    <span :class="['font-semibold text-sm block', formPrestamo.periodicidad === 'quincenal' ? 'text-emerald-800 oscuro:text-emerald-300' : 'text-texto-medio']">Quincenal</span>
+                    <span class="text-xs text-texto-suave">Dos cuotas por mes</span>
                   </div>
                   <div v-if="formPrestamo.periodicidad === 'quincenal'" class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
                     <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
@@ -702,9 +702,9 @@
 
           <!-- Monto del préstamo -->
           <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1.5">Monto del préstamo</label>
+            <label class="block text-sm font-medium text-texto-secundario mb-1.5">Monto del préstamo</label>
             <div class="relative">
-              <div class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium text-lg z-10" aria-hidden="true">$</div>
+              <div class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-texto-tenue font-medium text-lg z-10" aria-hidden="true">$</div>
               <input 
                 :value="montoFormateado"
                 @input="actualizarMonto"
@@ -713,15 +713,15 @@
                 @click="alTocarMonto"
                 type="text" 
                 inputmode="numeric"
-                class="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 text-lg font-semibold placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none transition-shadow"
+                class="w-full pl-9 pr-4 py-3 rounded-xl border border-borde bg-superficie-tarjeta text-texto text-lg font-semibold placeholder:text-texto-tenue focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none transition-shadow"
                 placeholder="100.000"
                 required
               />
             </div>
-            <p v-if="formPrestamo.monto >= 10000" class="mt-1.5 text-sm text-gray-500">
-              <span class="font-medium text-emerald-600">${{ formatMoney(formPrestamo.monto) }}</span> pesos colombianos
+            <p v-if="formPrestamo.monto >= 10000" class="mt-1.5 text-sm text-texto-suave">
+              <span class="font-medium text-emerald-600 oscuro:text-emerald-300">${{ formatMoney(formPrestamo.monto) }}</span> pesos colombianos
             </p>
-            <p v-else-if="formPrestamo.monto > 0" class="mt-1.5 text-sm text-amber-600">
+            <p v-else-if="formPrestamo.monto > 0" class="mt-1.5 text-sm text-amber-600 oscuro:text-amber-300">
               Monto mínimo ${{ formatMoney(10000) }}
             </p>
           </div>
@@ -731,29 +731,29 @@
           <div v-show="pasoNuevoPrestamo === 1" class="space-y-4 sm:space-y-5">
           <!-- Tipo de interés -->
           <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1.5">Tipo de interés</label>
+            <label class="block text-sm font-medium text-texto-secundario mb-1.5">Tipo de interés</label>
             <div class="grid grid-cols-2 gap-2">
-              <label :class="['flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-all duration-200', formPrestamo.tipo_interes === 'simple' ? 'border-emerald-400 bg-emerald-50/80 ring-1 ring-emerald-500/20' : 'border-gray-200 bg-white hover:border-gray-300']">
+              <label :class="['flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-all duration-200', formPrestamo.tipo_interes === 'simple' ? 'border-emerald-400 bg-emerald-50/80 oscuro:bg-emerald-500/15 ring-1 ring-emerald-500/20' : 'border-borde bg-superficie-tarjeta hover:border-borde-fuerte']">
                 <input type="radio" v-model="formPrestamo.tipo_interes" value="simple" class="sr-only" required />
-                <div :class="['w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0', formPrestamo.tipo_interes === 'simple' ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-400']">
+                <div :class="['w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0', formPrestamo.tipo_interes === 'simple' ? 'bg-emerald-500 text-white' : 'bg-superficie-hundida text-texto-tenue']">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <span :class="['font-semibold text-sm block', formPrestamo.tipo_interes === 'simple' ? 'text-emerald-800' : 'text-gray-700']">Simple</span>
-                  <span class="text-xs text-gray-500">Interés fijo sobre el monto</span>
+                  <span :class="['font-semibold text-sm block', formPrestamo.tipo_interes === 'simple' ? 'text-emerald-800 oscuro:text-emerald-300' : 'text-texto-medio']">Simple</span>
+                  <span class="text-xs text-texto-suave">Interés fijo sobre el monto</span>
                 </div>
                 <div v-if="formPrestamo.tipo_interes === 'simple'" class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                 </div>
               </label>
-              <label :class="['flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-all duration-200', formPrestamo.tipo_interes === 'compuesto' ? 'border-emerald-400 bg-emerald-50/80 ring-1 ring-emerald-500/20' : 'border-gray-200 bg-white hover:border-gray-300']">
+              <label :class="['flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-all duration-200', formPrestamo.tipo_interes === 'compuesto' ? 'border-emerald-400 bg-emerald-50/80 oscuro:bg-emerald-500/15 ring-1 ring-emerald-500/20' : 'border-borde bg-superficie-tarjeta hover:border-borde-fuerte']">
                 <input type="radio" v-model="formPrestamo.tipo_interes" value="compuesto" class="sr-only" required />
-                <div :class="['w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0', formPrestamo.tipo_interes === 'compuesto' ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-400']">
+                <div :class="['w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0', formPrestamo.tipo_interes === 'compuesto' ? 'bg-emerald-500 text-white' : 'bg-superficie-hundida text-texto-tenue']">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <span :class="['font-semibold text-sm block', formPrestamo.tipo_interes === 'compuesto' ? 'text-emerald-800' : 'text-gray-700']">Compuesto</span>
-                  <span class="text-xs text-gray-500">Cuota fija, interés sobre saldo</span>
+                  <span :class="['font-semibold text-sm block', formPrestamo.tipo_interes === 'compuesto' ? 'text-emerald-800 oscuro:text-emerald-300' : 'text-texto-medio']">Compuesto</span>
+                  <span class="text-xs text-texto-suave">Cuota fija, interés sobre saldo</span>
                 </div>
                 <div v-if="formPrestamo.tipo_interes === 'compuesto'" class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
@@ -762,7 +762,7 @@
             </div>
             <button
               type="button"
-              class="mt-1 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-1 text-sm font-semibold text-[#1B5E37] underline-offset-2 hover:underline touch-manipulation"
+              class="mt-1 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-1 text-sm font-semibold text-marca-tinta underline-offset-2 hover:underline touch-manipulation"
               @click="abrirAyudaInteres('crear')"
             >
               <QuestionMarkCircleIcon class="h-5 w-5 flex-shrink-0" />
@@ -773,11 +773,11 @@
           <!-- Número de cuotas e Interés -->
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-sm font-medium text-gray-600 mb-1.5">Nº de cuotas</label>
+              <label class="block text-sm font-medium text-texto-secundario mb-1.5">Nº de cuotas</label>
               <input 
                 v-model.number="formPrestamo.numero_cuotas"
                 type="number" 
-                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-800 text-center font-semibold placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none"
+                class="w-full px-4 py-2.5 rounded-xl border border-borde bg-superficie-tarjeta text-texto text-center font-semibold placeholder:text-texto-tenue focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none"
                 :placeholder="String(plazoMaximoCuotasCrear)"
                 min="1"
                 :max="plazoMaximoCuotasCrear"
@@ -788,11 +788,11 @@
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-600 mb-1.5">Tasa % (mensual)</label>
+              <label class="block text-sm font-medium text-texto-secundario mb-1.5">Tasa % (mensual)</label>
               <input 
                 v-model.number="formPrestamo.interes"
                 type="number" 
-                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-800 text-center font-semibold placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none"
+                class="w-full px-4 py-2.5 rounded-xl border border-borde bg-superficie-tarjeta text-texto text-center font-semibold placeholder:text-texto-tenue focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none"
                 :placeholder="String(reglasInteresNatillera.porcentaje)"
                 min="0"
                 max="100"
@@ -805,47 +805,47 @@
           </div>
           <p
             v-if="Number(formPrestamo.numero_cuotas) > plazoMaximoCuotasCrear"
-            class="text-xs text-red-600 font-medium mt-1.5"
+            class="text-xs text-red-600 oscuro:text-red-300 font-medium mt-1.5"
           >
             El plazo máximo permitido es {{ plazoMaximoCuotasCrear }} cuotas según la configuración de la natillera. Reduce el número de cuotas.
           </p>
 
           <!-- Fecha de pago (primera cuota) -->
           <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1.5">Primera cuota</label>
+            <label class="block text-sm font-medium text-texto-secundario mb-1.5">Primera cuota</label>
             <DateInput
               v-model="formPrestamo.fecha_pago"
               placeholder="dd/MM/yyyy"
-              input-class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-800 font-medium focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none"
+              input-class="w-full px-4 py-2.5 rounded-xl border border-borde bg-superficie-tarjeta text-texto font-medium focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none"
               :required="true"
             />
-            <p class="mt-1 text-xs text-gray-500">Siguientes cuotas {{ formPrestamo.periodicidad === 'quincenal' ? 'cada quincena (si eliges el 15 o fin de mes: el 15 y el último día de cada mes)' : 'cada mes' }}.</p>
+            <p class="mt-1 text-xs text-texto-suave">Siguientes cuotas {{ formPrestamo.periodicidad === 'quincenal' ? 'cada quincena (si eliges el 15 o fin de mes: el 15 y el último día de cada mes)' : 'cada mes' }}.</p>
           </div>
 
           <!-- Medio de entrega -->
           <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1.5">Medio de entrega</label>
+            <label class="block text-sm font-medium text-texto-secundario mb-1.5">Medio de entrega</label>
             <div class="flex gap-2">
               <button
                 type="button"
                 @click="formPrestamo.medio_entrega = 'efectivo'"
-                :class="['flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all', formPrestamo.medio_entrega === 'efectivo' ? 'border-emerald-400 bg-emerald-50/80 text-emerald-800' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300']"
+                :class="['flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all', formPrestamo.medio_entrega === 'efectivo' ? 'border-emerald-400 bg-emerald-50/80 oscuro:bg-emerald-500/15 text-emerald-800 oscuro:text-emerald-300' : 'border-borde bg-superficie-tarjeta text-texto-secundario hover:border-borde-fuerte']"
               >Efectivo</button>
               <button
                 type="button"
                 @click="formPrestamo.medio_entrega = 'transferencia'"
-                :class="['flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all', formPrestamo.medio_entrega === 'transferencia' ? 'border-emerald-400 bg-emerald-50/80 text-emerald-800' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300']"
+                :class="['flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all', formPrestamo.medio_entrega === 'transferencia' ? 'border-emerald-400 bg-emerald-50/80 oscuro:bg-emerald-500/15 text-emerald-800 oscuro:text-emerald-300' : 'border-borde bg-superficie-tarjeta text-texto-secundario hover:border-borde-fuerte']"
               >Transferencia</button>
             </div>
           </div>
 
           <!-- Toggle Interés Normal / Anticipado -->
           <div v-if="formPrestamo.monto && formPrestamo.interes && formPrestamo.numero_cuotas">
-            <label class="block text-sm font-medium text-gray-600 mb-1.5">Cobro del interés</label>
-            <p class="text-xs text-gray-500 mb-1.5">El socio recibe y paga lo mismo. Anticipado: el interés entra a las utilidades al crear el préstamo. Normal: entra con cada cuota pagada.</p>
-            <div class="rounded-xl border border-gray-200 bg-white p-1.5 flex gap-1">
-              <button type="button" @click="mostrarInteresAnticipado = false" :class="['flex-1 py-2 rounded-lg text-sm font-medium transition-all', !mostrarInteresAnticipado ? 'bg-gray-800 text-white' : 'text-gray-600 hover:bg-gray-50']">Normal</button>
-              <button type="button" @click="mostrarInteresAnticipado = true" :class="['flex-1 py-2 rounded-lg text-sm font-medium transition-all', mostrarInteresAnticipado ? 'bg-amber-500 text-white' : 'text-gray-600 hover:bg-gray-50']">Anticipado</button>
+            <label class="block text-sm font-medium text-texto-secundario mb-1.5">Cobro del interés</label>
+            <p class="text-xs text-texto-suave mb-1.5">El socio recibe y paga lo mismo. Anticipado: el interés entra a las utilidades al crear el préstamo. Normal: entra con cada cuota pagada.</p>
+            <div class="rounded-xl border border-borde bg-superficie-tarjeta p-1.5 flex gap-1">
+              <button type="button" @click="mostrarInteresAnticipado = false" :class="['flex-1 py-2 rounded-lg text-sm font-medium transition-all', !mostrarInteresAnticipado ? 'bg-gray-800 oscuro:bg-texto-fuerte text-white oscuro:text-superficie-tarjeta' : 'text-texto-secundario hover:bg-superficie-suave']">Normal</button>
+              <button type="button" @click="mostrarInteresAnticipado = true" :class="['flex-1 py-2 rounded-lg text-sm font-medium transition-all', mostrarInteresAnticipado ? 'bg-amber-500 text-white' : 'text-texto-secundario hover:bg-superficie-suave']">Anticipado</button>
             </div>
           </div>
           </div>
@@ -854,39 +854,39 @@
           <div v-show="pasoNuevoPrestamo === 2" class="space-y-3 sm:space-y-4">
             <!-- Vista antes de generar: sin comprobante; confirmar desde el footer -->
             <template v-if="!prestamoRecienCreado">
-              <div class="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4 space-y-3">
-                <p class="text-sm font-semibold text-gray-800">Resumen</p>
-                <p class="text-lg font-bold text-gray-900 leading-tight">{{ socioSeleccionado?.socio?.nombre || 'Socio' }}</p>
-                <dl class="space-y-2 text-sm text-gray-700">
+              <div class="rounded-xl border border-emerald-100 oscuro:border-emerald-500/30 bg-emerald-50/60 oscuro:bg-emerald-500/15 p-4 space-y-3">
+                <p class="text-sm font-semibold text-texto">Resumen</p>
+                <p class="text-lg font-bold text-texto-fuerte leading-tight">{{ socioSeleccionado?.socio?.nombre || 'Socio' }}</p>
+                <dl class="space-y-2 text-sm text-texto-medio">
                   <div class="flex justify-between gap-3">
-                    <dt class="text-gray-600">Valor del préstamo</dt>
-                    <dd class="font-semibold text-gray-900 tabular-nums">${{ formatMoney(formPrestamo.monto) }}</dd>
+                    <dt class="text-texto-secundario">Valor del préstamo</dt>
+                    <dd class="font-semibold text-texto-fuerte tabular-nums">${{ formatMoney(formPrestamo.monto) }}</dd>
                   </div>
                   <div class="flex justify-between gap-3">
-                    <dt class="text-gray-600">Intereses (total)</dt>
-                    <dd class="font-semibold text-amber-800 tabular-nums">${{ formatMoney(Math.round(interesTotal)) }}</dd>
+                    <dt class="text-texto-secundario">Intereses (total)</dt>
+                    <dd class="font-semibold text-amber-800 oscuro:text-amber-300 tabular-nums">${{ formatMoney(Math.round(interesTotal)) }}</dd>
                   </div>
                   <div class="flex justify-between gap-3">
-                    <dt class="text-gray-600">Tasa mensual</dt>
-                    <dd class="font-semibold text-gray-900">{{ formPrestamo.interes }}%</dd>
+                    <dt class="text-texto-secundario">Tasa mensual</dt>
+                    <dd class="font-semibold text-texto-fuerte">{{ formPrestamo.interes }}%</dd>
                   </div>
                   <div class="flex justify-between gap-3">
-                    <dt class="text-gray-600">Nº cuotas</dt>
-                    <dd class="font-semibold text-gray-900">{{ formPrestamo.numero_cuotas }}</dd>
+                    <dt class="text-texto-secundario">Nº cuotas</dt>
+                    <dd class="font-semibold text-texto-fuerte">{{ formPrestamo.numero_cuotas }}</dd>
                   </div>
-                  <div class="flex justify-between gap-3 border-t border-emerald-200/80 pt-2 mt-1">
-                    <dt class="text-gray-800 font-medium">Total a pagar</dt>
-                    <dd class="font-bold text-emerald-700 tabular-nums">${{ formatMoney(Math.round(montoTotal)) }}</dd>
+                  <div class="flex justify-between gap-3 border-t border-emerald-200/80 oscuro:border-emerald-500/30 pt-2 mt-1">
+                    <dt class="text-texto font-medium">Total a pagar</dt>
+                    <dd class="font-bold text-emerald-700 oscuro:text-emerald-300 tabular-nums">${{ formatMoney(Math.round(montoTotal)) }}</dd>
                   </div>
                   <div class="flex justify-between gap-3">
-                    <dt class="text-gray-600">Primera cuota</dt>
-                    <dd class="font-medium text-gray-900">{{ formPrestamo.fecha_pago ? formatDate(formPrestamo.fecha_pago) : '—' }}</dd>
+                    <dt class="text-texto-secundario">Primera cuota</dt>
+                    <dd class="font-medium text-texto-fuerte">{{ formPrestamo.fecha_pago ? formatDate(formPrestamo.fecha_pago) : '—' }}</dd>
                   </div>
                 </dl>
-                <p class="text-xs text-gray-500">Cuota estimada: ${{ formatMoney(cuotaMensual) }}</p>
+                <p class="text-xs text-texto-suave">Cuota estimada: ${{ formatMoney(cuotaMensual) }}</p>
               </div>
-              <p class="text-xs text-gray-500 text-center">Revisa los datos antes de confirmar.</p>
-              <div class="flex items-center gap-2 text-gray-400 text-xs">
+              <p class="text-xs text-texto-suave text-center">Revisa los datos antes de confirmar.</p>
+              <div class="flex items-center gap-2 text-texto-tenue text-xs">
                 <LockClosedIcon class="w-4 h-4 flex-shrink-0" />
                 <span>Transacción segura y encriptada</span>
               </div>
@@ -904,7 +904,7 @@
 
             <!-- Vista después de generar: comprobante con opciones Descargar y Enviar por WhatsApp -->
             <template v-else>
-              <div v-if="datosComprobanteCreado" ref="resumenPrestamoNuevoRef" class="comprobante-prestamo-nuevo rounded-2xl overflow-hidden border border-gray-200 bg-white shadow-sm" style="min-width: 280px;">
+              <div v-if="datosComprobanteCreado" ref="resumenPrestamoNuevoRef" data-tema="claro" class="comprobante-prestamo-nuevo rounded-2xl overflow-hidden border border-borde bg-superficie-tarjeta shadow-sm" style="min-width: 280px;">
                 <div class="comprobante-content" style="background: #ecfdf5; padding: 14px 12px; color: #1f2937;">
                   <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 14px; padding-bottom: 4px;">
                     <div style="width: 44px; height: 44px; background: #059669; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -959,7 +959,7 @@
                   </div>
                 </div>
               </div>
-              <p class="text-xs text-gray-500 text-center">Préstamo creado. Puedes descargar o compartir el comprobante.</p>
+              <p class="text-xs text-texto-suave text-center">Préstamo creado. Puedes descargar o compartir el comprobante.</p>
               <div class="flex gap-3">
                 <button
                   type="button"
@@ -983,7 +983,7 @@
           </div>
 
           <!-- Acciones por paso (dentro del scroll; pie fijo eliminado) -->
-          <div class="mt-6 pt-4 border-t border-gray-100 space-y-3 pb-[calc(max(1rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))]">
+          <div class="mt-6 pt-4 border-t border-borde-suave space-y-3 pb-[calc(max(1rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))]">
             <div v-if="pasoNuevoPrestamo === 0" class="flex gap-2">
               <button type="button" @click="requestCloseTopModal" class="btn-modal-secondary flex-1">Cancelar</button>
               <button type="button" @click="pasoNuevoPrestamo++" :disabled="!formPrestamo.socio_natillera_id || formPrestamo.monto < 10000" class="btn-modal-primary flex-1 inline-flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">Siguiente <ChevronRightIcon class="w-4 h-4" /></button>
@@ -1010,7 +1010,7 @@
           >
             <!-- Sombrita / velo inferior: detrás del hint (z-0) -->
             <div
-              class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+              class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent"
               aria-hidden="true"
             />
             <!-- Pastilla siempre por encima de la sombra -->
@@ -1038,8 +1038,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="requestCloseTopModal"
     >
@@ -1091,50 +1091,50 @@
         <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="modalAbonoScrollRef"
-          class="scrollbar-thin flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          class="scrollbar-thin flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch]"
           @scroll.passive="actualizarIndicadorScrollModalAbono"
         >
           <form @submit.prevent="handleRegistrarAbono" class="px-4 sm:px-6 pt-4 sm:pt-5 pb-0 space-y-4 sm:space-y-5">
-            <div class="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4 space-y-3">
+            <div class="rounded-xl border border-emerald-100 oscuro:border-emerald-500/30 bg-emerald-50/60 oscuro:bg-emerald-500/15 p-4 space-y-3">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center flex-shrink-0 shadow-sm">
                   <UserIcon class="w-5 h-5 text-white" />
                 </div>
                 <div class="min-w-0 flex-1">
-                  <p class="font-semibold text-gray-800 truncate">{{ prestamoSeleccionado?.socio_natillera?.socio?.nombre }}</p>
-                  <p class="text-xs text-gray-600">Socio</p>
+                  <p class="font-semibold text-texto truncate">{{ prestamoSeleccionado?.socio_natillera?.socio?.nombre }}</p>
+                  <p class="text-xs text-texto-secundario">Socio</p>
                 </div>
               </div>
-              <dl class="space-y-2 text-sm text-gray-700 border-t border-emerald-200/70 pt-3">
+              <dl class="space-y-2 text-sm text-texto-medio border-t border-emerald-200/70 oscuro:border-emerald-500/30 pt-3">
                 <div class="flex justify-between gap-3">
-                  <dt class="text-gray-600">Saldo actual</dt>
-                  <dd class="font-bold text-emerald-800 tabular-nums">${{ formatMoney(prestamoSeleccionado?.saldo_actual) }}</dd>
+                  <dt class="text-texto-secundario">Saldo actual</dt>
+                  <dd class="font-bold text-emerald-800 oscuro:text-emerald-300 tabular-nums">${{ formatMoney(prestamoSeleccionado?.saldo_actual) }}</dd>
                 </div>
                 <div v-if="moraPrestamoAbono > 0" class="flex justify-between gap-3">
-                  <dt class="text-rose-600">Interés de mora</dt>
-                  <dd class="font-bold text-rose-700 tabular-nums">${{ formatMoney(moraPrestamoAbono) }}</dd>
+                  <dt class="text-rose-600 oscuro:text-rose-300">Interés de mora</dt>
+                  <dd class="font-bold text-rose-700 oscuro:text-rose-300 tabular-nums">${{ formatMoney(moraPrestamoAbono) }}</dd>
                 </div>
-                <div v-if="moraPrestamoAbono > 0" class="flex justify-between gap-3 border-t border-emerald-200/70 pt-2">
-                  <dt class="text-gray-800 font-semibold">Total a pagar</dt>
-                  <dd class="font-bold text-gray-900 tabular-nums">${{ formatMoney(totalAPagarConMora) }}</dd>
+                <div v-if="moraPrestamoAbono > 0" class="flex justify-between gap-3 border-t border-emerald-200/70 oscuro:border-emerald-500/30 pt-2">
+                  <dt class="text-texto font-semibold">Total a pagar</dt>
+                  <dd class="font-bold text-texto-fuerte tabular-nums">${{ formatMoney(totalAPagarConMora) }}</dd>
                 </div>
                 <div class="grid grid-cols-2 gap-2 pt-1">
-                  <div class="rounded-lg border border-white/80 bg-white/70 px-3 py-2">
-                    <p class="text-[10px] font-medium uppercase tracking-wide text-gray-500">Cuota</p>
-                    <p class="text-sm font-bold text-gray-900 tabular-nums">${{ formatMoney(calcularCuotaMensualDetalle(prestamoSeleccionado)) }}</p>
+                  <div class="rounded-lg border border-white/80 oscuro:border-borde bg-superficie-tarjeta/70 px-3 py-2">
+                    <p class="text-[10px] font-medium uppercase tracking-wide text-texto-suave">Cuota</p>
+                    <p class="text-sm font-bold text-texto-fuerte tabular-nums">${{ formatMoney(calcularCuotaMensualDetalle(prestamoSeleccionado)) }}</p>
                   </div>
-                  <div class="rounded-lg border border-white/80 bg-white/70 px-3 py-2">
-                    <p class="text-[10px] font-medium uppercase tracking-wide text-gray-500">Restantes</p>
-                    <p class="text-sm font-bold text-gray-900">{{ calcularCuotasRestantes(prestamoSeleccionado) }}</p>
+                  <div class="rounded-lg border border-white/80 oscuro:border-borde bg-superficie-tarjeta/70 px-3 py-2">
+                    <p class="text-[10px] font-medium uppercase tracking-wide text-texto-suave">Restantes</p>
+                    <p class="text-sm font-bold text-texto-fuerte">{{ calcularCuotasRestantes(prestamoSeleccionado) }}</p>
                   </div>
                 </div>
               </dl>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-600 mb-1.5">Valor del abono *</label>
+              <label class="block text-sm font-medium text-texto-secundario mb-1.5">Valor del abono *</label>
               <div class="relative group">
-                <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-lg z-10 pointer-events-none">$</div>
+                <div class="absolute left-4 top-1/2 -translate-y-1/2 text-texto-tenue font-semibold text-lg z-10 pointer-events-none">$</div>
                 <input
                   ref="inputValorAbonoRef"
                   :value="valorAbonoFormateado"
@@ -1142,53 +1142,53 @@
                   @focus="$event.target.select()"
                   type="text"
                   inputmode="numeric"
-                  class="w-full pl-9 pr-11 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 text-lg font-semibold placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none transition-shadow"
+                  class="w-full pl-9 pr-11 py-3 rounded-xl border border-borde bg-superficie-tarjeta text-texto text-lg font-semibold placeholder:text-texto-tenue focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none transition-shadow"
                   placeholder="0"
                   required
                 />
                 <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <PencilIcon class="w-5 h-5 text-gray-400 group-hover:text-emerald-600 transition-colors" />
+                  <PencilIcon class="w-5 h-5 text-texto-tenue group-hover:text-emerald-600 oscuro:group-hover:text-emerald-300 transition-colors" />
                 </div>
               </div>
-              <p class="mt-1.5 text-xs text-gray-500">Puedes modificar el valor a mano.</p>
+              <p class="mt-1.5 text-xs text-texto-suave">Puedes modificar el valor a mano.</p>
 
 
               <div
                 v-if="prestamoSeleccionado?.saldo_actual && formAbono.valor"
-                class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/80 px-3 py-3"
+                class="mt-3 rounded-xl border border-emerald-200 oscuro:border-emerald-500/30 bg-emerald-50/80 oscuro:bg-emerald-500/15 px-3 py-3"
               >
-                <div v-if="moraPagadaAbono > 0" class="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-emerald-200/70">
-                  <span class="text-sm text-rose-600">Se cobra de mora</span>
-                  <span class="text-sm font-bold tabular-nums text-rose-700">${{ formatMoney(moraPagadaAbono) }}</span>
+                <div v-if="moraPagadaAbono > 0" class="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-emerald-200/70 oscuro:border-emerald-500/30">
+                  <span class="text-sm text-rose-600 oscuro:text-rose-300">Se cobra de mora</span>
+                  <span class="text-sm font-bold tabular-nums text-rose-700 oscuro:text-rose-300">${{ formatMoney(moraPagadaAbono) }}</span>
                 </div>
                 <div v-if="moraPagadaAbono > 0" class="flex items-center justify-between gap-2 mb-2">
-                  <span class="text-sm text-gray-600">Abono al préstamo</span>
-                  <span class="text-sm font-bold tabular-nums text-gray-800">${{ formatMoney(abonoACapitalAbono) }}</span>
+                  <span class="text-sm text-texto-secundario">Abono al préstamo</span>
+                  <span class="text-sm font-bold tabular-nums text-texto">${{ formatMoney(abonoACapitalAbono) }}</span>
                 </div>
                 <div class="flex items-center justify-between gap-2">
-                  <span class="text-sm font-medium text-gray-700">Saldo después del abono</span>
-                  <span class="text-base font-bold tabular-nums text-emerald-800">
+                  <span class="text-sm font-medium text-texto-medio">Saldo después del abono</span>
+                  <span class="text-base font-bold tabular-nums text-emerald-800 oscuro:text-emerald-300">
                     ${{ formatMoney(saldoDespuesAbono) }}
                   </span>
                 </div>
-                <div v-if="saldoDespuesAbono <= 0" class="mt-2 pt-2 border-t border-emerald-200/80">
-                  <p class="text-xs font-semibold text-emerald-800 flex items-center gap-1">
+                <div v-if="saldoDespuesAbono <= 0" class="mt-2 pt-2 border-t border-emerald-200/80 oscuro:border-emerald-500/30">
+                  <p class="text-xs font-semibold text-emerald-800 oscuro:text-emerald-300 flex items-center gap-1">
                     <CheckCircleIcon class="w-4 h-4 flex-shrink-0" />
                     El préstamo quedará pagado
                   </p>
                 </div>
               </div>
 
-              <div v-if="formAbono.valor && formAbono.valor < 1000" class="mt-2 text-xs text-amber-600 font-medium">
+              <div v-if="formAbono.valor && formAbono.valor < 1000" class="mt-2 text-xs text-amber-600 oscuro:text-amber-300 font-medium">
                 El valor mínimo del abono es $1.000
               </div>
-              <div v-if="formAbono.valor && parseFloat(formAbono.valor) > totalAPagarConMora" class="mt-2 text-xs text-red-600 font-medium">
+              <div v-if="formAbono.valor && parseFloat(formAbono.valor) > totalAPagarConMora" class="mt-2 text-xs text-red-600 oscuro:text-red-300 font-medium">
                 El abono no puede superar el total a pagar (máx. ${{ formatMoney(totalAPagarConMora) }})
               </div>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-600 mb-1.5">Forma de pago</label>
+              <label class="block text-sm font-medium text-texto-secundario mb-1.5">Forma de pago</label>
               <div class="flex gap-2">
                 <button
                   type="button"
@@ -1196,8 +1196,8 @@
                   :class="[
                     'flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all',
                     formAbono.tipo_pago === 'efectivo'
-                      ? 'border-emerald-400 bg-emerald-50/80 text-emerald-800'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                      ? 'border-emerald-400 bg-emerald-50/80 oscuro:bg-emerald-500/15 text-emerald-800 oscuro:text-emerald-300'
+                      : 'border-borde bg-superficie-tarjeta text-texto-secundario hover:border-borde-fuerte'
                   ]"
                 >Efectivo</button>
                 <button
@@ -1206,25 +1206,25 @@
                   :class="[
                     'flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all',
                     formAbono.tipo_pago === 'transferencia'
-                      ? 'border-emerald-400 bg-emerald-50/80 text-emerald-800'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                      ? 'border-emerald-400 bg-emerald-50/80 oscuro:bg-emerald-500/15 text-emerald-800 oscuro:text-emerald-300'
+                      : 'border-borde bg-superficie-tarjeta text-texto-secundario hover:border-borde-fuerte'
                   ]"
                 >Transferencia</button>
               </div>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-600 mb-1.5">Fecha de pago *</label>
+              <label class="block text-sm font-medium text-texto-secundario mb-1.5">Fecha de pago *</label>
               <DateInput
                 v-model="formAbono.fecha_pago"
                 placeholder="dd/MM/yyyy"
-                input-class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-800 font-medium focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none"
+                input-class="w-full px-4 py-2.5 rounded-xl border border-borde bg-superficie-tarjeta text-texto font-medium focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none"
                 :required="true"
               />
-              <p class="mt-1 text-xs text-gray-500">Fecha en que se hizo el pago.</p>
+              <p class="mt-1 text-xs text-texto-suave">Fecha en que se hizo el pago.</p>
             </div>
 
-            <div class="mt-6 pt-4 border-t border-gray-100 space-y-3 pb-[calc(max(1rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))]">
+            <div class="mt-6 pt-4 border-t border-borde-suave space-y-3 pb-[calc(max(1rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))]">
               <div class="flex gap-2">
                 <button
                   type="button"
@@ -1253,7 +1253,7 @@
             aria-hidden="true"
           >
             <div
-              class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+              class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent"
               aria-hidden="true"
             />
             <div
@@ -1280,8 +1280,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="requestCloseTopModal"
     >
@@ -1328,10 +1328,10 @@
         </div>
 
         <!-- Contenido con scroll -->
-        <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-4 sm:p-6" style="background: #eef1f4;">
+        <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-4 sm:p-6 bg-[#eef1f4] oscuro:bg-superficie-hundida">
           <!-- Wrapper de captura: el padding da aire a las muescas laterales para que toPng no recorte los bordes -->
           <div
-            ref="comprobanteRef"
+            ref="comprobanteRef" data-tema="claro"
             style="max-width: 388px; margin: 0 auto; padding: 14px; background: #eef1f4; border-radius: 28px;"
           >
           <!-- Comprobante estilo ticket -->
@@ -1457,7 +1457,7 @@
 
         <!-- Footer fijo: Descargar y WhatsApp en una fila. Sin botón «Cerrar»: la X de la
              cabecera ya lo hace. WhatsApp solo en celular; en escritorio Descargar ocupa la fila. -->
-        <div class="border-t border-gray-200 bg-white px-4 pt-4 pb-[calc(max(1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex-shrink-0 space-y-3">
+        <div class="border-t border-borde bg-superficie-tarjeta px-4 pt-4 pb-[calc(max(1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex-shrink-0 space-y-3">
           <div class="flex gap-3">
             <button
               type="button"
@@ -1480,7 +1480,7 @@
             </button>
           </div>
 
-          <p class="hidden sm:block text-xs text-gray-400 text-center">
+          <p class="hidden sm:block text-xs text-texto-tenue text-center">
             💡 En celular podrás enviar la imagen directamente a WhatsApp
           </p>
         </div>
@@ -1494,8 +1494,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="requestCloseTopModal"
     >
@@ -1542,10 +1542,10 @@
         </div>
 
         <!-- Cuerpo con scroll -->
-        <div v-if="comprobantePagado" class="flex-1 min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-4 sm:p-6" style="background: #eef1f4;">
+        <div v-if="comprobantePagado" class="flex-1 min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-4 sm:p-6 bg-[#eef1f4] oscuro:bg-superficie-hundida">
           <!-- Wrapper de captura: el padding da aire a las muescas laterales para que toPng no recorte los bordes -->
           <div
-            ref="comprobantePagadoRef"
+            ref="comprobantePagadoRef" data-tema="claro"
             style="max-width: 388px; margin: 0 auto; padding: 14px; background: #eef1f4; border-radius: 28px;"
           >
           <div
@@ -1619,7 +1619,7 @@
         </div>
 
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[calc(max(1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-3">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 pt-4 pb-[calc(max(1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-3">
           <!-- WhatsApp comparte la imagen con Web Share: solo en celular; en escritorio Descargar ocupa la fila -->
           <div class="flex gap-3">
             <button
@@ -1642,7 +1642,7 @@
             </button>
           </div>
 
-          <p class="hidden sm:block text-xs text-gray-400 text-center">
+          <p class="hidden sm:block text-xs text-texto-tenue text-center">
             💡 En celular podrás enviar la imagen directamente a WhatsApp
           </p>
         </div>
@@ -1656,8 +1656,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="32rem"
       @close="requestCloseTopModal"
     >
@@ -1704,20 +1704,20 @@
         </div>
 
         <!-- Contenido con scroll -->
-        <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] bg-gradient-to-br from-gray-50 via-white to-gray-50">
+        <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] bg-gradient-to-br from-superficie-suave via-superficie-tarjeta to-superficie-suave">
           <form @submit.prevent="guardarAbonoEditado" class="p-5 sm:p-6 space-y-6">
             <!-- Información del abono actual -->
-            <div class="relative bg-white border-2 border-blue-200 rounded-2xl p-5 shadow-lg overflow-hidden">
-              <div class="absolute top-0 right-0 w-32 h-32 bg-blue-100/30 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+            <div class="relative bg-superficie-tarjeta border-2 border-blue-200 oscuro:border-blue-500/30 rounded-2xl p-5 shadow-lg overflow-hidden">
+              <div class="absolute top-0 right-0 w-32 h-32 bg-blue-100/30 oscuro:bg-blue-500/15 rounded-full -mr-16 -mt-16 blur-2xl"></div>
               <div class="relative z-10">
                 <div class="flex items-center gap-3 mb-3">
                   <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-md">
                     <CurrencyDollarIcon class="w-5 h-5 text-white" />
                   </div>
-                  <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Abono Actual</p>
+                  <p class="text-xs font-semibold text-texto-suave uppercase tracking-wide">Abono Actual</p>
                 </div>
-                <p class="text-3xl font-bold text-blue-700 mb-1">${{ formatMoney(abonoAEditar?.valorOriginal || abonoAEditar?.valor) }}</p>
-                <p class="text-sm text-gray-500 flex items-center gap-1.5">
+                <p class="text-3xl font-bold text-blue-700 oscuro:text-blue-300 mb-1">${{ formatMoney(abonoAEditar?.valorOriginal || abonoAEditar?.valor) }}</p>
+                <p class="text-sm text-texto-suave flex items-center gap-1.5">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
@@ -1735,7 +1735,7 @@
                 <span class="font-bold">Nuevo valor del abono *</span>
               </label>
               <div class="relative">
-                <div class="absolute left-5 top-1/2 -translate-y-1/2 text-natillera-600 font-bold text-2xl z-10">
+                <div class="absolute left-5 top-1/2 -translate-y-1/2 text-natillera-600 oscuro:text-natillera-300 font-bold text-2xl z-10">
                   $
                 </div>
                 <input 
@@ -1744,7 +1744,7 @@
                   @focus="$event.target.select()"
                   type="text" 
                   inputmode="numeric"
-                  class="w-full pl-14 pr-5 py-4 text-2xl font-bold text-natillera-700 bg-white border-2 border-natillera-200 rounded-xl focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500 transition-all shadow-sm hover:shadow-md"
+                  class="w-full pl-14 pr-5 py-4 text-2xl font-bold text-natillera-700 oscuro:text-natillera-300 bg-superficie-tarjeta border-2 border-natillera-200 oscuro:border-natillera-500/30 rounded-xl focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500 transition-all shadow-sm hover:shadow-md"
                   placeholder="0"
                   required
                 />
@@ -1753,10 +1753,10 @@
               <!-- Información del cambio -->
               <div 
                 v-if="abonoAEditar?.valor && abonoAEditar.valor !== parseFloat(abonoAEditar.valorOriginal || abonoAEditar.valor)" 
-                class="mt-4 p-4 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 border-2 border-amber-300 rounded-xl shadow-sm"
+                class="mt-4 p-4 bg-gradient-to-br from-amber-50 oscuro:from-amber-500/15 via-orange-50 oscuro:via-orange-500/10 to-amber-50 oscuro:to-amber-500/10 border-2 border-amber-300 oscuro:border-amber-500/30 rounded-xl shadow-sm"
               >
                 <div class="flex items-center justify-between mb-3">
-                  <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <span class="text-sm font-semibold text-texto-medio flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                     </svg>
@@ -1764,12 +1764,12 @@
                   </span>
                   <span :class="[
                     'text-xl font-bold',
-                    (abonoAEditar.valor - parseFloat(abonoAEditar.valorOriginal || abonoAEditar.valor)) > 0 ? 'text-green-700' : 'text-red-700'
+                    (abonoAEditar.valor - parseFloat(abonoAEditar.valorOriginal || abonoAEditar.valor)) > 0 ? 'text-green-700 oscuro:text-green-300' : 'text-red-700 oscuro:text-red-300'
                   ]">
                     {{ (abonoAEditar.valor - parseFloat(abonoAEditar.valorOriginal || abonoAEditar.valor)) > 0 ? '+' : '' }}${{ formatMoney(Math.abs(abonoAEditar.valor - parseFloat(abonoAEditar.valorOriginal || abonoAEditar.valor))) }}
                   </span>
                 </div>
-                <div class="flex items-center gap-2 text-sm text-amber-800 bg-white/60 rounded-lg px-3 py-2">
+                <div class="flex items-center gap-2 text-sm text-amber-800 oscuro:text-amber-300 bg-superficie-tarjeta/60 rounded-lg px-3 py-2">
                   <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -1782,7 +1782,7 @@
               </div>
               
               <!-- Validaciones -->
-              <div v-if="abonoAEditar?.valor && abonoAEditar.valor < 1000" class="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2 text-sm text-amber-700">
+              <div v-if="abonoAEditar?.valor && abonoAEditar.valor < 1000" class="mt-2 p-3 bg-amber-50 oscuro:bg-amber-500/15 border border-amber-200 oscuro:border-amber-500/30 rounded-lg flex items-center gap-2 text-sm text-amber-700 oscuro:text-amber-300">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
@@ -1793,7 +1793,7 @@
         </div>
 
         <!-- Footer fijo -->
-        <div class="border-t border-gray-200 bg-white px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex-shrink-0">
+        <div class="border-t border-borde bg-superficie-tarjeta px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex-shrink-0">
           <div class="flex gap-3">
             <button
               type="button"
@@ -1823,8 +1823,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="32rem"
       @close="requestCloseTopModal"
     >
@@ -1873,7 +1873,7 @@
         <!-- Contenido con scroll -->
         <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
           <!-- Pestañas -->
-          <div class="border-b border-gray-200 bg-gray-50">
+          <div class="border-b border-borde bg-superficie-suave">
             <div class="flex">
               <button
                 type="button"
@@ -1881,8 +1881,8 @@
                 :class="[
                   'flex-1 px-4 py-3 text-sm font-semibold transition-all',
                   formRefinanciar.tabActual === 'refinanciar'
-                    ? 'border-b-2 border-purple-500 text-purple-600 bg-white'
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                    ? 'border-b-2 border-purple-500 text-purple-600 oscuro:text-purple-300 bg-superficie-tarjeta'
+                    : 'text-texto-secundario hover:text-texto hover:bg-superficie-hundida'
                 ]"
               >
                 Refinanciar
@@ -1894,27 +1894,27 @@
           <div v-if="formRefinanciar.tabActual === 'refinanciar'">
           <form @submit.prevent="handleRefinanciar" class="p-4 sm:p-6 space-y-6">
             <!-- Información del préstamo actual -->
-            <div v-if="prestamoSeleccionado" class="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl p-4">
-              <h4 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <BanknotesIcon class="w-5 h-5 text-purple-600" />
+            <div v-if="prestamoSeleccionado" class="bg-gradient-to-br from-purple-50 oscuro:from-purple-500/15 to-indigo-50 oscuro:to-indigo-500/10 border-2 border-purple-200 oscuro:border-purple-500/30 rounded-xl p-4">
+              <h4 class="font-semibold text-texto mb-3 flex items-center gap-2">
+                <BanknotesIcon class="w-5 h-5 text-purple-600 oscuro:text-purple-300" />
                 Información del Préstamo
               </h4>
               <div class="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <p class="text-gray-600 mb-1">Saldo Actual</p>
-                  <p class="font-bold text-gray-800">${{ formatMoney(prestamoSeleccionado.saldo_actual) }}</p>
+                  <p class="text-texto-secundario mb-1">Saldo Actual</p>
+                  <p class="font-bold text-texto">${{ formatMoney(prestamoSeleccionado.saldo_actual) }}</p>
                 </div>
                 <div>
-                  <p class="text-gray-600 mb-1">Interés</p>
-                  <p class="font-bold text-gray-800">{{ prestamoSeleccionado.interes }}%</p>
+                  <p class="text-texto-secundario mb-1">Interés</p>
+                  <p class="font-bold text-texto">{{ prestamoSeleccionado.interes }}%</p>
                 </div>
                 <div>
-                  <p class="text-gray-600 mb-1">Tipo de Interés</p>
-                  <p class="font-bold text-gray-800 capitalize">{{ prestamoSeleccionado.tipo_interes || 'simple' }}</p>
+                  <p class="text-texto-secundario mb-1">Tipo de Interés</p>
+                  <p class="font-bold text-texto capitalize">{{ prestamoSeleccionado.tipo_interes || 'simple' }}</p>
                 </div>
                 <div>
-                  <p class="text-gray-600 mb-1">Periodicidad</p>
-                  <p class="font-bold text-gray-800 capitalize">{{ prestamoSeleccionado.periodicidad || 'mensual' }}</p>
+                  <p class="text-texto-secundario mb-1">Periodicidad</p>
+                  <p class="font-bold text-texto capitalize">{{ prestamoSeleccionado.periodicidad || 'mensual' }}</p>
                 </div>
               </div>
             </div>
@@ -1922,7 +1922,7 @@
             <!-- Campo de nueva fecha de pago -->
             <div>
               <label class="label mb-2 flex items-center gap-2">
-                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-purple-600 oscuro:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <span>Nueva fecha de pago *</span>
@@ -1933,7 +1933,7 @@
                 input-class="text-base font-semibold"
                 :required="true"
               />
-              <p class="mt-2 text-xs text-gray-500 flex items-center gap-1">
+              <p class="mt-2 text-xs text-texto-suave flex items-center gap-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
@@ -1953,7 +1953,7 @@
                 placeholder="1"
                 required
               />
-              <p class="mt-2 text-xs text-gray-500">
+              <p class="mt-2 text-xs text-texto-suave">
                 Número de cuotas del nuevo plan. El interés nuevo se calcula solo sobre el capital pendiente.
               </p>
             </div>
@@ -1966,8 +1966,8 @@
                   :class="[
                     'relative flex flex-row items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all duration-200',
                     formRefinanciar.tipo_interes_nuevo === 'simple'
-                      ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-indigo-50 shadow-lg shadow-purple-500/20'
-                      : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-gray-50'
+                      ? 'border-purple-500 bg-gradient-to-br from-purple-50 oscuro:from-purple-500/15 to-indigo-50 oscuro:to-indigo-500/10 shadow-lg shadow-purple-500/20'
+                      : 'border-borde bg-superficie-tarjeta hover:border-purple-300 oscuro:hover:border-purple-500/30 hover:bg-superficie-suave'
                   ]"
                 >
                   <input 
@@ -1981,7 +1981,7 @@
                       'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200',
                       formRefinanciar.tipo_interes_nuevo === 'simple'
                         ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30'
-                        : 'bg-gray-100 border-2 border-gray-200'
+                        : 'bg-superficie-hundida border-2 border-borde'
                     ]"
                   >
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1990,7 +1990,7 @@
                   </div>
                   <div class="flex-1 min-w-0">
                     <span class="font-bold text-xs block">Simple</span>
-                    <span class="text-[0.6875rem] text-gray-500 block leading-tight">Fijo sobre el capital</span>
+                    <span class="text-[0.6875rem] text-texto-suave block leading-tight">Fijo sobre el capital</span>
                   </div>
                   <div 
                     v-if="formRefinanciar.tipo_interes_nuevo === 'simple'"
@@ -2006,8 +2006,8 @@
                   :class="[
                     'relative flex flex-row items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all duration-200',
                     formRefinanciar.tipo_interes_nuevo === 'compuesto'
-                      ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-indigo-50 shadow-lg shadow-purple-500/20'
-                      : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-gray-50'
+                      ? 'border-purple-500 bg-gradient-to-br from-purple-50 oscuro:from-purple-500/15 to-indigo-50 oscuro:to-indigo-500/10 shadow-lg shadow-purple-500/20'
+                      : 'border-borde bg-superficie-tarjeta hover:border-purple-300 oscuro:hover:border-purple-500/30 hover:bg-superficie-suave'
                   ]"
                 >
                   <input 
@@ -2021,7 +2021,7 @@
                       'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200',
                       formRefinanciar.tipo_interes_nuevo === 'compuesto'
                         ? 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg shadow-purple-500/30'
-                        : 'bg-gray-100 border-2 border-gray-200'
+                        : 'bg-superficie-hundida border-2 border-borde'
                     ]"
                   >
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2030,7 +2030,7 @@
                   </div>
                   <div class="flex-1 min-w-0">
                     <span class="font-bold text-xs block">Compuesto</span>
-                    <span class="text-[0.6875rem] text-gray-500 block leading-tight">Cuota fija, sobre saldo</span>
+                    <span class="text-[0.6875rem] text-texto-suave block leading-tight">Cuota fija, sobre saldo</span>
                   </div>
                   <div 
                     v-if="formRefinanciar.tipo_interes_nuevo === 'compuesto'"
@@ -2046,7 +2046,7 @@
 
             <button
               type="button"
-              class="-mt-4 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-1 text-sm font-semibold text-[#1B5E37] underline-offset-2 hover:underline touch-manipulation"
+              class="-mt-4 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-1 text-sm font-semibold text-marca-tinta underline-offset-2 hover:underline touch-manipulation"
               @click="abrirAyudaInteres('refinanciar')"
             >
               <QuestionMarkCircleIcon class="h-5 w-5 flex-shrink-0" />
@@ -2065,15 +2065,15 @@
                 class="input-field text-center text-lg font-semibold"
                 :placeholder="`Dejar vacío para usar ${prestamoSeleccionado?.interes || 0}%`"
               />
-              <p class="mt-2 text-xs text-gray-500">
+              <p class="mt-2 text-xs text-texto-suave">
                 Si se deja vacío, se usará la tasa de interés original ({{ prestamoSeleccionado?.interes || 0 }}%)
               </p>
             </div>
 
             <!-- Vista previa: qué se refinancia (capital, interés vencido, interés futuro, mora) -->
-            <div v-if="vistaPreviaRefinanciacion" class="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4">
-              <h4 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div v-if="vistaPreviaRefinanciacion" class="bg-gradient-to-br from-green-50 oscuro:from-green-500/15 to-emerald-50 oscuro:to-emerald-500/10 border-2 border-green-200 oscuro:border-green-500/30 rounded-xl p-4">
+              <h4 class="font-semibold text-texto mb-3 flex items-center gap-2">
+                <svg class="w-5 h-5 text-green-600 oscuro:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
@@ -2081,48 +2081,48 @@
               </h4>
               <dl class="space-y-2 text-sm tabular-nums">
                 <div class="flex justify-between gap-3">
-                  <dt class="text-gray-600">Saldo actual</dt>
-                  <dd class="font-semibold text-gray-800">${{ formatMoney(vistaPreviaRefinanciacion.saldoActual) }}</dd>
+                  <dt class="text-texto-secundario">Saldo actual</dt>
+                  <dd class="font-semibold text-texto">${{ formatMoney(vistaPreviaRefinanciacion.saldoActual) }}</dd>
                 </div>
                 <div class="flex justify-between gap-3">
-                  <dt class="text-gray-600">Capital pendiente</dt>
-                  <dd class="font-bold text-gray-800">${{ formatMoney(vistaPreviaRefinanciacion.capitalPendiente) }}</dd>
+                  <dt class="text-texto-secundario">Capital pendiente</dt>
+                  <dd class="font-bold text-texto">${{ formatMoney(vistaPreviaRefinanciacion.capitalPendiente) }}</dd>
                 </div>
                 <div v-if="vistaPreviaRefinanciacion.interesVencido > 0" class="flex justify-between gap-3">
-                  <dt class="text-gray-600">Interés vencido sin pagar <span class="block text-xs text-gray-500">Se cobra en las cuotas, sin intereses</span></dt>
-                  <dd class="font-semibold text-gray-800">${{ formatMoney(vistaPreviaRefinanciacion.interesVencido) }}</dd>
+                  <dt class="text-texto-secundario">Interés vencido sin pagar <span class="block text-xs text-texto-suave">Se cobra en las cuotas, sin intereses</span></dt>
+                  <dd class="font-semibold text-texto">${{ formatMoney(vistaPreviaRefinanciacion.interesVencido) }}</dd>
                 </div>
                 <div v-if="vistaPreviaRefinanciacion.interesFuturo > 0" class="flex justify-between gap-3">
-                  <dt class="text-gray-600">Interés futuro que se elimina</dt>
-                  <dd class="font-semibold text-gray-500">− ${{ formatMoney(vistaPreviaRefinanciacion.interesFuturo) }}</dd>
+                  <dt class="text-texto-secundario">Interés futuro que se elimina</dt>
+                  <dd class="font-semibold text-texto-suave">− ${{ formatMoney(vistaPreviaRefinanciacion.interesFuturo) }}</dd>
                 </div>
                 <div class="flex justify-between gap-3">
-                  <dt class="text-gray-600">Interés nuevo <span class="block text-xs text-gray-500">{{ vistaPreviaRefinanciacion.tasaInteres }}% · {{ vistaPreviaRefinanciacion.totalCuotas }} cuotas · {{ vistaPreviaRefinanciacion.tipoInteres === 'compuesto' ? 'compuesto' : 'simple' }}</span></dt>
-                  <dd class="font-bold text-orange-600">${{ formatMoney(vistaPreviaRefinanciacion.interesNuevo) }}</dd>
+                  <dt class="text-texto-secundario">Interés nuevo <span class="block text-xs text-texto-suave">{{ vistaPreviaRefinanciacion.tasaInteres }}% · {{ vistaPreviaRefinanciacion.totalCuotas }} cuotas · {{ vistaPreviaRefinanciacion.tipoInteres === 'compuesto' ? 'compuesto' : 'simple' }}</span></dt>
+                  <dd class="font-bold text-orange-600 oscuro:text-orange-300">${{ formatMoney(vistaPreviaRefinanciacion.interesNuevo) }}</dd>
                 </div>
-                <div class="flex justify-between gap-3 border-t border-green-200 pt-2">
-                  <dt class="font-semibold text-gray-800">Total a pagar</dt>
-                  <dd class="font-bold text-green-600">${{ formatMoney(vistaPreviaRefinanciacion.totalAPagar) }}</dd>
+                <div class="flex justify-between gap-3 border-t border-green-200 oscuro:border-green-500/30 pt-2">
+                  <dt class="font-semibold text-texto">Total a pagar</dt>
+                  <dd class="font-bold text-green-600 oscuro:text-green-300">${{ formatMoney(vistaPreviaRefinanciacion.totalAPagar) }}</dd>
                 </div>
                 <div class="flex justify-between gap-3">
-                  <dt class="font-semibold text-gray-800">Valor de cuota</dt>
-                  <dd class="font-bold text-lg text-green-700">${{ formatMoney(vistaPreviaRefinanciacion.valorCuota) }}</dd>
+                  <dt class="font-semibold text-texto">Valor de cuota</dt>
+                  <dd class="font-bold text-lg text-green-700 oscuro:text-green-300">${{ formatMoney(vistaPreviaRefinanciacion.valorCuota) }}</dd>
                 </div>
               </dl>
-              <p v-if="vistaPreviaRefinanciacion.moraPendiente > 0" class="mt-3 rounded-lg bg-amber-100/70 px-3 py-2 text-xs text-amber-800">
+              <p v-if="vistaPreviaRefinanciacion.moraPendiente > 0" class="mt-3 rounded-lg bg-amber-100/70 oscuro:bg-amber-500/15 px-3 py-2 text-xs text-amber-800 oscuro:text-amber-300">
                 Mora pendiente: <strong>${{ formatMoney(vistaPreviaRefinanciacion.moraPendiente) }}</strong>. No se suma al préstamo refinanciado; si la vas a cobrar, registra el abono antes de refinanciar.
               </p>
             </div>
 
             <!-- Advertencia -->
-            <div class="bg-amber-50 border-2 border-amber-200 rounded-xl p-4">
+            <div class="bg-amber-50 oscuro:bg-amber-500/15 border-2 border-amber-200 oscuro:border-amber-500/30 rounded-xl p-4">
               <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-amber-600 oscuro:text-amber-300 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 <div class="flex-1">
-                  <p class="font-semibold text-amber-800 mb-1">Advertencia</p>
-                  <p class="text-sm text-amber-700">
+                  <p class="font-semibold text-amber-800 oscuro:text-amber-300 mb-1">Advertencia</p>
+                  <p class="text-sm text-amber-700 oscuro:text-amber-300">
                     Al refinanciar se reemplaza el plan de pagos. El nuevo plan parte del capital pendiente, el interés vencido se cobra en las nuevas cuotas sin intereses adicionales y el interés futuro del plan anterior se cambia por el de las nuevas condiciones.
                   </p>
                 </div>
@@ -2133,7 +2133,7 @@
         </div>
 
         <!-- Footer fijo -->
-        <div class="border-t border-gray-200 bg-white px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex-shrink-0">
+        <div class="border-t border-borde bg-superficie-tarjeta px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex-shrink-0">
           <div class="flex gap-3">
             <button
               type="button"
@@ -2163,8 +2163,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-3xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-3xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="48rem"
       @close="requestCloseTopModal"
     >
@@ -2212,7 +2212,7 @@
         <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="modalDetalleScrollRef"
-          class="scrollbar-thin flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-[#f6f8f6] overscroll-contain [-webkit-overflow-scrolling:touch]"
+          class="scrollbar-thin flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-[#f6f8f6] oscuro:bg-superficie-hundida overscroll-contain [-webkit-overflow-scrolling:touch]"
           @scroll.passive="actualizarIndicadorScrollModalDetalle"
         >
           <!--
@@ -2232,10 +2232,10 @@
                   prestamoDetalle.socio_natillera?.socio?.avatar_style
                 )"
                 :alt="prestamoDetalle.socio_natillera?.socio?.nombre || 'Socio'"
-                class="h-12 w-12 flex-shrink-0 rounded-full border border-gray-200 bg-[#E8F5E9] object-cover"
+                class="h-12 w-12 flex-shrink-0 rounded-full border border-borde bg-marca-suave object-cover"
               />
               <div class="min-w-0 flex-1">
-                <p class="truncate font-display text-base font-extrabold leading-tight text-gray-900 sm:text-lg">
+                <p class="truncate font-display text-base font-extrabold leading-tight text-texto-fuerte sm:text-lg">
                   {{ prestamoDetalle.socio_natillera?.socio?.nombre || '—' }}
                 </p>
                 <span :class="['ds-badge mt-1 max-w-full whitespace-normal text-left leading-snug', estadoResumenDetalle.clase]">
@@ -2255,60 +2255,60 @@
             </section>
 
             <!-- 2. Las tres cifras del préstamo -->
-            <section class="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm">
-              <dl class="grid grid-cols-3 divide-x divide-gray-100">
+            <section class="overflow-hidden rounded-2xl border border-borde/80 bg-superficie-tarjeta shadow-sm">
+              <dl class="grid grid-cols-3 divide-x divide-borde-suave">
                 <!-- En 360 px caben tres cifras de 7 dígitos: letra 15 px y relleno corto -->
                 <div class="min-w-0 px-1.5 py-3 text-center sm:px-3">
-                  <dt class="text-[10px] font-bold uppercase tracking-wide text-gray-500 sm:text-[11px]">Prestado</dt>
-                  <dd class="mt-0.5 font-display text-[15px] font-extrabold tabular-nums text-gray-900 sm:text-lg">${{ formatMoney(prestamoDetalle.monto) }}</dd>
-                  <dd class="text-[10px] leading-tight tabular-nums text-gray-500 sm:text-[11px]">+ interés ${{ formatMoney(calcularInteresGeneradoDetalle(prestamoDetalle)) }}</dd>
+                  <dt class="text-[10px] font-bold uppercase tracking-wide text-texto-suave sm:text-[11px]">Prestado</dt>
+                  <dd class="mt-0.5 font-display text-[15px] font-extrabold tabular-nums text-texto-fuerte sm:text-lg">${{ formatMoney(prestamoDetalle.monto) }}</dd>
+                  <dd class="text-[10px] leading-tight tabular-nums text-texto-suave sm:text-[11px]">+ interés ${{ formatMoney(calcularInteresGeneradoDetalle(prestamoDetalle)) }}</dd>
                 </div>
                 <div class="min-w-0 px-1.5 py-3 text-center sm:px-3">
-                  <dt class="text-[10px] font-bold uppercase tracking-wide text-gray-500 sm:text-[11px]">Pagado</dt>
-                  <dd class="mt-0.5 font-display text-[15px] font-extrabold tabular-nums text-[#1B5E37] sm:text-lg">${{ formatMoney(calcularValorPagadoDetalle(prestamoDetalle)) }}</dd>
-                  <dd class="text-[10px] leading-tight tabular-nums text-gray-500 sm:text-[11px]">{{ pagosCicloActual.length }} {{ pagosCicloActual.length === 1 ? 'abono' : 'abonos' }}</dd>
+                  <dt class="text-[10px] font-bold uppercase tracking-wide text-texto-suave sm:text-[11px]">Pagado</dt>
+                  <dd class="mt-0.5 font-display text-[15px] font-extrabold tabular-nums text-marca-tinta sm:text-lg">${{ formatMoney(calcularValorPagadoDetalle(prestamoDetalle)) }}</dd>
+                  <dd class="text-[10px] leading-tight tabular-nums text-texto-suave sm:text-[11px]">{{ pagosCicloActual.length }} {{ pagosCicloActual.length === 1 ? 'abono' : 'abonos' }}</dd>
                 </div>
                 <div class="min-w-0 px-1.5 py-3 text-center sm:px-3">
-                  <dt class="text-[10px] font-bold uppercase tracking-wide text-gray-500 sm:text-[11px]">Saldo</dt>
+                  <dt class="text-[10px] font-bold uppercase tracking-wide text-texto-suave sm:text-[11px]">Saldo</dt>
                   <dd
                     class="mt-0.5 font-display text-[15px] font-extrabold tabular-nums sm:text-lg"
-                    :class="prestamoDetalle.estado === 'pagado' ? 'text-gray-400' : (estadoResumenDetalle.alerta ? 'text-[color:var(--brand-danger)]' : 'text-gray-900')"
+                    :class="prestamoDetalle.estado === 'pagado' ? 'text-texto-tenue' : (estadoResumenDetalle.alerta ? 'text-[color:var(--brand-danger)] oscuro:text-peligro' : 'text-texto-fuerte')"
                   >${{ formatMoney(prestamoDetalle.estado === 'pagado' ? 0 : saldoConMora(prestamoDetalle)) }}</dd>
-                  <dd v-if="prestamoDetalle.estado !== 'pagado' && prestamoDetalle.moraAcumulada > 0" class="text-[10px] leading-tight tabular-nums text-[color:var(--brand-danger)] sm:text-[11px]">
+                  <dd v-if="prestamoDetalle.estado !== 'pagado' && prestamoDetalle.moraAcumulada > 0" class="text-[10px] leading-tight tabular-nums text-[color:var(--brand-danger)] oscuro:text-peligro sm:text-[11px]">
                     incluye mora ${{ formatMoney(prestamoDetalle.moraAcumulada) }}
                   </dd>
-                  <dd v-else class="text-[10px] leading-tight text-gray-500 sm:text-[11px]">{{ prestamoDetalle.estado === 'pagado' ? 'Pagado' : 'por pagar' }}</dd>
+                  <dd v-else class="text-[10px] leading-tight text-texto-suave sm:text-[11px]">{{ prestamoDetalle.estado === 'pagado' ? 'Pagado' : 'por pagar' }}</dd>
                 </div>
               </dl>
-              <div class="border-t border-gray-100 px-4 py-3">
-                <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+              <div class="border-t border-borde-suave px-4 py-3">
+                <div class="h-2 w-full overflow-hidden rounded-full bg-borde">
                   <div class="h-full rounded-full bg-[#1B5E37]" :style="{ width: porcentajePagadoPrestamo(prestamoDetalle) + '%' }" />
                 </div>
-                <p class="mt-1.5 flex justify-between gap-2 text-xs tabular-nums text-gray-600">
+                <p class="mt-1.5 flex justify-between gap-2 text-xs tabular-nums text-texto-secundario">
                   <span>{{ porcentajePagadoPrestamo(prestamoDetalle) }}% pagado</span>
                   <span v-if="planPagosPrestamo.length > 0">{{ cuotasPagadasDetalle }} de {{ planPagosPrestamo.length }} cuotas</span>
                 </p>
               </div>
 
               <!-- En mora: lo que hay que pagar hoy para ponerse al día -->
-              <div v-if="prestamoDetalle.estado !== 'pagado' && (prestamoDetalle.moraAcumulada > 0 || cuotasVencidasDetalle > 0)" class="border-t border-red-100 bg-red-50 px-4 py-3 tabular-nums">
+              <div v-if="prestamoDetalle.estado !== 'pagado' && (prestamoDetalle.moraAcumulada > 0 || cuotasVencidasDetalle > 0)" class="border-t border-red-100 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 px-4 py-3 tabular-nums">
                 <div class="flex items-center justify-between gap-3">
-                  <span class="text-sm font-bold text-red-900">Para ponerse al día</span>
-                  <span class="font-display text-lg font-extrabold text-[color:var(--brand-danger)]">
+                  <span class="text-sm font-bold text-red-900 oscuro:text-red-300">Para ponerse al día</span>
+                  <span class="font-display text-lg font-extrabold text-[color:var(--brand-danger)] oscuro:text-peligro">
                     ${{ formatMoney((prestamoDetalle.valorCuotasEnDeuda || 0) + (prestamoDetalle.moraAcumulada || 0)) }}
                   </span>
                 </div>
-                <p class="text-xs text-red-800">
+                <p class="text-xs text-red-800 oscuro:text-red-300">
                   Cuotas vencidas ${{ formatMoney(prestamoDetalle.valorCuotasEnDeuda || 0) }} + mora ${{ formatMoney(prestamoDetalle.moraAcumulada || 0) }}
                 </p>
               </div>
               <!-- Al día: cuándo toca la próxima -->
-              <div v-else-if="prestamoDetalle.estado !== 'pagado' && proximaCuotaPago" class="flex items-center justify-between gap-3 border-t border-gray-100 bg-[#f6fbf7] px-4 py-3">
+              <div v-else-if="prestamoDetalle.estado !== 'pagado' && proximaCuotaPago" class="flex items-center justify-between gap-3 border-t border-borde-suave bg-[#f6fbf7] oscuro:bg-superficie-suave px-4 py-3">
                 <span class="min-w-0">
-                  <span class="block text-xs text-gray-500">Próxima cuota · #{{ proximaCuotaPago.numero_cuota }}</span>
-                  <span class="block text-sm font-bold text-gray-900">{{ formatDate(proximaCuotaPago.fecha_proyectada) }}</span>
+                  <span class="block text-xs text-texto-suave">Próxima cuota · #{{ proximaCuotaPago.numero_cuota }}</span>
+                  <span class="block text-sm font-bold text-texto-fuerte">{{ formatDate(proximaCuotaPago.fecha_proyectada) }}</span>
                 </span>
-                <span class="font-display text-base font-extrabold tabular-nums text-[#1B5E37]">
+                <span class="font-display text-base font-extrabold tabular-nums text-marca-tinta">
                   ${{ formatMoney(Math.max(0, (parseFloat(proximaCuotaPago.valor_cuota) || 0) - (parseFloat(proximaCuotaPago.valor_pagado) || 0))) }}
                 </span>
               </div>
@@ -2321,16 +2321,16 @@
             <section
               v-if="pestanaDetalle === 'plan'"
               ref="modalDetallePlanPagosSectionRef"
-              class="scroll-mt-4 overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm"
+              class="scroll-mt-4 overflow-hidden rounded-2xl border border-borde/80 bg-superficie-tarjeta shadow-sm"
               tabindex="-1"
             >
-              <p v-if="planPagosPrestamo.length === 0" class="px-4 py-5 text-sm text-gray-500">Este préstamo no tiene plan de pagos.</p>
-              <ul v-else class="divide-y divide-gray-100">
+              <p v-if="planPagosPrestamo.length === 0" class="px-4 py-5 text-sm text-texto-suave">Este préstamo no tiene plan de pagos.</p>
+              <ul v-else class="divide-y divide-borde-suave">
                 <li
                   v-for="cuota in planPagosPrestamo"
                   :key="cuota.id"
                   class="flex items-center gap-3 px-4 py-3"
-                  :class="proximaCuotaPago && cuota.id === proximaCuotaPago.id ? 'bg-[#f6fbf7]' : ''"
+                  :class="proximaCuotaPago && cuota.id === proximaCuotaPago.id ? 'bg-[#f6fbf7] oscuro:bg-superficie-suave' : ''"
                 >
                   <span
                     :class="[
@@ -2339,25 +2339,25 @@
                     ]"
                   >{{ cuota.numero_cuota }}</span>
                   <span class="min-w-0 flex-1">
-                    <span class="block text-sm font-semibold text-gray-900">
+                    <span class="block text-sm font-semibold text-texto-fuerte">
                       {{ formatDate(cuota.fecha_proyectada) }}
-                      <span v-if="proximaCuotaPago && cuota.id === proximaCuotaPago.id" class="ml-1 text-[11px] font-bold text-[#1B5E37]">· próxima</span>
+                      <span v-if="proximaCuotaPago && cuota.id === proximaCuotaPago.id" class="ml-1 text-[11px] font-bold text-marca-tinta">· próxima</span>
                     </span>
-                    <span class="block text-xs tabular-nums text-gray-500">
+                    <span class="block text-xs tabular-nums text-texto-suave">
                       Capital ${{ formatMoney(cuota.capital) }} · Interés ${{ formatMoney(cuota.interes) }}
                     </span>
                     <span
                       v-if="!cuota.pagada && (parseFloat(cuota.valor_pagado) || 0) > 0"
-                      class="mt-0.5 block text-xs font-semibold tabular-nums text-amber-800"
+                      class="mt-0.5 block text-xs font-semibold tabular-nums text-amber-800 oscuro:text-amber-300"
                     >
                       Pagó ${{ formatMoney(cuota.valor_pagado) }} · faltan ${{ formatMoney((parseFloat(cuota.valor_cuota) || 0) - (parseFloat(cuota.valor_pagado) || 0)) }}
                     </span>
-                    <span v-if="!cuota.pagada && moraCuotaComprobante(cuota) > 0" class="mt-0.5 block text-xs font-semibold tabular-nums text-rose-700">
+                    <span v-if="!cuota.pagada && moraCuotaComprobante(cuota) > 0" class="mt-0.5 block text-xs font-semibold tabular-nums text-rose-700 oscuro:text-rose-300">
                       Mora a hoy ${{ formatMoney(moraCuotaComprobante(cuota)) }}
                     </span>
                   </span>
                   <span class="flex flex-shrink-0 flex-col items-end gap-1">
-                    <span class="font-display text-sm font-extrabold tabular-nums text-gray-900">${{ formatMoney(cuota.valor_cuota) }}</span>
+                    <span class="font-display text-sm font-extrabold tabular-nums text-texto-fuerte">${{ formatMoney(cuota.valor_cuota) }}</span>
                     <span :class="['ds-badge', estadoCuotaDetalle(cuota).clase]">{{ estadoCuotaDetalle(cuota).texto }}</span>
                   </span>
                 </li>
@@ -2365,9 +2365,9 @@
             </section>
 
             <!-- Abonos -->
-            <section v-if="pestanaDetalle === 'abonos'" class="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm">
-              <p v-if="pagosCicloActual.length === 0" class="px-4 py-5 text-sm text-gray-500">Todavía no hay abonos registrados.</p>
-              <ul v-else class="divide-y divide-gray-100">
+            <section v-if="pestanaDetalle === 'abonos'" class="overflow-hidden rounded-2xl border border-borde/80 bg-superficie-tarjeta shadow-sm">
+              <p v-if="pagosCicloActual.length === 0" class="px-4 py-5 text-sm text-texto-suave">Todavía no hay abonos registrados.</p>
+              <ul v-else class="divide-y divide-borde-suave">
                 <!--
                   Móvil primero: valor y fecha arriba, periodo en una etiqueta, forma de pago y
                   origen como texto (antes eran tres etiquetas que se amontonaban), y las acciones
@@ -2377,12 +2377,12 @@
                   <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
                       <!-- Lo que pagó el socio. Si incluyó mora, se separa: esa parte fue a utilidades y no bajó el saldo. -->
-                      <p class="font-display text-lg font-extrabold leading-tight tabular-nums text-gray-900">${{ formatMoney((parseFloat(pago.valor) || 0) + (parseFloat(pago.mora_cobrada) || 0)) }}</p>
-                      <p v-if="(parseFloat(pago.mora_cobrada) || 0) > 0" class="text-xs tabular-nums text-gray-600">
-                        ${{ formatMoney(pago.valor) }} al préstamo · <span class="font-semibold text-rose-700">${{ formatMoney(pago.mora_cobrada) }} mora</span>
+                      <p class="font-display text-lg font-extrabold leading-tight tabular-nums text-texto-fuerte">${{ formatMoney((parseFloat(pago.valor) || 0) + (parseFloat(pago.mora_cobrada) || 0)) }}</p>
+                      <p v-if="(parseFloat(pago.mora_cobrada) || 0) > 0" class="text-xs tabular-nums text-texto-secundario">
+                        ${{ formatMoney(pago.valor) }} al préstamo · <span class="font-semibold text-rose-700 oscuro:text-rose-300">${{ formatMoney(pago.mora_cobrada) }} mora</span>
                       </p>
                     </div>
-                    <span class="flex-shrink-0 pt-1 text-xs font-semibold text-gray-500">{{ formatDate(pago.fecha) }}</span>
+                    <span class="flex-shrink-0 pt-1 text-xs font-semibold text-texto-suave">{{ formatDate(pago.fecha) }}</span>
                   </div>
 
                   <div class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -2390,11 +2390,11 @@
                       <span
                         v-for="(periodo, idx) in periodosDeNumerosCuota(pago.numeros_cuota)"
                         :key="`${pago.id}-periodo-${idx}`"
-                        class="inline-flex items-center whitespace-nowrap rounded-full bg-[#E8F5E9] px-2 py-0.5 text-[11px] font-bold text-[#1B5E37]"
+                        class="inline-flex items-center whitespace-nowrap rounded-full bg-marca-suave px-2 py-0.5 text-[11px] font-bold text-marca-tinta"
                         :title="`Cuota correspondiente al período ${periodo}`"
                       >{{ periodo }}</span>
                     </template>
-                    <span class="text-[11px] text-gray-500">
+                    <span class="text-[11px] text-texto-suave">
                       <template v-if="formaPagoAbono(pago)">{{ FORMA_PAGO_ABONO_ESTILO[formaPagoAbono(pago)].label }} · </template>{{ pago.origen === 'cuota_natillera' ? 'desde Cuotas' : 'desde Préstamos' }}
                     </span>
                   </div>
@@ -2403,7 +2403,7 @@
                     <button
                       v-if="pago.codigo_comprobante"
                       type="button"
-                      class="inline-flex min-h-[44px] touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#1B5E37]/30 bg-white px-2 text-xs font-bold text-[#1B5E37] hover:bg-[#E8F5E9] active:bg-[#E8F5E9]"
+                      class="inline-flex min-h-[44px] touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#1B5E37]/30 oscuro:border-marca-tinta/30 bg-superficie-tarjeta px-2 text-xs font-bold text-marca-tinta hover:bg-marca-suave active:bg-marca-suave"
                       aria-label="Reenviar comprobante"
                       @click.stop="reenviarComprobanteAbono(pago)"
                     >
@@ -2413,7 +2413,7 @@
                     <button
                       v-if="!soloLectura"
                       type="button"
-                      class="inline-flex min-h-[44px] touch-manipulation items-center justify-center gap-1.5 rounded-full border border-gray-300 bg-white px-2 text-xs font-bold text-gray-700 hover:bg-gray-50 active:bg-gray-100"
+                      class="inline-flex min-h-[44px] touch-manipulation items-center justify-center gap-1.5 rounded-full border border-borde-fuerte bg-superficie-tarjeta px-2 text-xs font-bold text-texto-medio hover:bg-superficie-suave active:bg-superficie-hundida"
                       aria-label="Editar abono"
                       @click.stop="abrirModalEditarAbono(pago)"
                     >
@@ -2423,7 +2423,7 @@
                     <button
                       v-if="!soloLectura"
                       type="button"
-                      class="inline-flex min-h-[44px] touch-manipulation items-center justify-center gap-1.5 rounded-full border border-red-200 bg-white px-2 text-xs font-bold text-red-700 hover:bg-red-50 active:bg-red-50"
+                      class="inline-flex min-h-[44px] touch-manipulation items-center justify-center gap-1.5 rounded-full border border-red-200 oscuro:border-red-500/30 bg-superficie-tarjeta px-2 text-xs font-bold text-red-700 oscuro:text-red-300 hover:bg-red-50 oscuro:hover:bg-red-500/15 active:bg-red-50 oscuro:active:bg-red-500/15"
                       aria-label="Eliminar abono"
                       @click.stop="confirmarEliminarAbono(pago)"
                     >
@@ -2437,52 +2437,52 @@
 
             <!-- Condiciones del crédito y refinanciaciones: referencia -->
             <template v-if="pestanaDetalle === 'condiciones'">
-              <section class="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm">
+              <section class="rounded-2xl border border-borde/80 bg-superficie-tarjeta p-4 shadow-sm">
                 <dl class="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
                   <div>
-                    <dt class="text-[11px] uppercase tracking-wide text-gray-500">Monto prestado</dt>
-                    <dd class="font-bold tabular-nums text-gray-900">${{ formatMoney(prestamoDetalle.monto) }}</dd>
+                    <dt class="text-[11px] uppercase tracking-wide text-texto-suave">Monto prestado</dt>
+                    <dd class="font-bold tabular-nums text-texto-fuerte">${{ formatMoney(prestamoDetalle.monto) }}</dd>
                   </div>
                   <div>
-                    <dt class="text-[11px] uppercase tracking-wide text-gray-500">Interés mensual</dt>
-                    <dd class="font-bold tabular-nums text-gray-900">{{ prestamoDetalle.interes }}%</dd>
+                    <dt class="text-[11px] uppercase tracking-wide text-texto-suave">Interés mensual</dt>
+                    <dd class="font-bold tabular-nums text-texto-fuerte">{{ prestamoDetalle.interes }}%</dd>
                   </div>
                   <div>
-                    <dt class="text-[11px] uppercase tracking-wide text-gray-500">Tipo de interés</dt>
-                    <dd class="font-bold text-gray-900">{{ prestamoDetalle.tipo_interes === 'compuesto' ? 'Compuesto' : 'Simple' }}</dd>
+                    <dt class="text-[11px] uppercase tracking-wide text-texto-suave">Tipo de interés</dt>
+                    <dd class="font-bold text-texto-fuerte">{{ prestamoDetalle.tipo_interes === 'compuesto' ? 'Compuesto' : 'Simple' }}</dd>
                   </div>
                   <!-- Anticipado: el interés se descontó al entregar el préstamo; si no, va dentro de cada cuota -->
                   <div>
-                    <dt class="text-[11px] uppercase tracking-wide text-gray-500">Cobro del interés</dt>
-                    <dd class="font-bold" :class="interesAnticipadoDetalle ? 'text-[color:var(--brand-warning)]' : 'text-gray-900'">
+                    <dt class="text-[11px] uppercase tracking-wide text-texto-suave">Cobro del interés</dt>
+                    <dd class="font-bold" :class="interesAnticipadoDetalle ? 'text-[color:var(--brand-warning)] oscuro:text-alerta' : 'text-texto-fuerte'">
                       {{ interesAnticipadoDetalle ? 'Anticipado' : 'Con cada cuota' }}
                     </dd>
-                    <dd class="text-[11px] leading-tight text-gray-500">
+                    <dd class="text-[11px] leading-tight text-texto-suave">
                       {{ interesAnticipadoDetalle ? 'Se descontó al entregar el préstamo' : 'Normal: va dentro de cada cuota' }}
                     </dd>
                   </div>
                   <div>
-                    <dt class="text-[11px] uppercase tracking-wide text-gray-500">Interés generado</dt>
-                    <dd class="font-bold tabular-nums text-[color:var(--brand-warning)]">${{ formatMoney(calcularInteresGeneradoDetalle(prestamoDetalle)) }}</dd>
+                    <dt class="text-[11px] uppercase tracking-wide text-texto-suave">Interés generado</dt>
+                    <dd class="font-bold tabular-nums text-[color:var(--brand-warning)] oscuro:text-alerta">${{ formatMoney(calcularInteresGeneradoDetalle(prestamoDetalle)) }}</dd>
                   </div>
                   <div>
-                    <dt class="text-[11px] uppercase tracking-wide text-gray-500">Total a pagar</dt>
-                    <dd class="font-bold tabular-nums text-gray-900">${{ formatMoney((prestamoDetalle.monto || 0) + (calcularInteresGeneradoDetalle(prestamoDetalle) || 0)) }}</dd>
+                    <dt class="text-[11px] uppercase tracking-wide text-texto-suave">Total a pagar</dt>
+                    <dd class="font-bold tabular-nums text-texto-fuerte">${{ formatMoney((prestamoDetalle.monto || 0) + (calcularInteresGeneradoDetalle(prestamoDetalle) || 0)) }}</dd>
                   </div>
                   <div>
-                    <dt class="text-[11px] uppercase tracking-wide text-gray-500">Cuotas</dt>
-                    <dd class="font-bold tabular-nums text-gray-900">
+                    <dt class="text-[11px] uppercase tracking-wide text-texto-suave">Cuotas</dt>
+                    <dd class="font-bold tabular-nums text-texto-fuerte">
                       {{ prestamoDetalle.numero_cuotas || 1 }} × ${{ formatMoney(calcularCuotaMensualDetalle(prestamoDetalle)) }}
-                      <span v-if="prestamoDetalle.periodicidad" class="font-normal text-gray-500">· {{ prestamoDetalle.periodicidad }}</span>
+                      <span v-if="prestamoDetalle.periodicidad" class="font-normal text-texto-suave">· {{ prestamoDetalle.periodicidad }}</span>
                     </dd>
                   </div>
                   <div>
-                    <dt class="text-[11px] uppercase tracking-wide text-gray-500">Creado el</dt>
-                    <dd class="font-semibold text-gray-700">{{ formatDate(prestamoDetalle.created_at) }}</dd>
+                    <dt class="text-[11px] uppercase tracking-wide text-texto-suave">Creado el</dt>
+                    <dd class="font-semibold text-texto-medio">{{ formatDate(prestamoDetalle.created_at) }}</dd>
                   </div>
                   <div v-if="prestamoDetalle.medio_entrega">
-                    <dt class="text-[11px] uppercase tracking-wide text-gray-500">Entregado en</dt>
-                    <dd class="font-semibold text-gray-700">{{ prestamoDetalle.medio_entrega === 'efectivo' ? 'Efectivo' : 'Transferencia' }}</dd>
+                    <dt class="text-[11px] uppercase tracking-wide text-texto-suave">Entregado en</dt>
+                    <dd class="font-semibold text-texto-medio">{{ prestamoDetalle.medio_entrega === 'efectivo' ? 'Efectivo' : 'Transferencia' }}</dd>
                   </div>
                 </dl>
               </section>
@@ -2494,40 +2494,40 @@
               class="scroll-mt-4 space-y-3"
               tabindex="-1"
             >
-              <h4 class="px-1 font-display text-sm font-extrabold text-gray-900">
-                Refinanciaciones <span class="font-normal text-gray-500">· {{ historialRefinanciaciones.length }}</span>
+              <h4 class="px-1 font-display text-sm font-extrabold text-texto-fuerte">
+                Refinanciaciones <span class="font-normal text-texto-suave">· {{ historialRefinanciaciones.length }}</span>
               </h4>
               <div
                 v-for="(historial, index) in historialRefinanciaciones"
                 :key="historial.id"
-                class="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm"
+                class="rounded-2xl border border-borde/80 bg-superficie-tarjeta p-4 shadow-sm"
               >
                 <div class="mb-3 flex items-center gap-3">
-                  <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#E8F5E9] text-[#1B5E37]">
+                  <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-marca-suave text-marca-tinta">
                     <ArrowPathIcon class="h-4 w-4" />
                   </span>
                   <span class="min-w-0">
-                    <span class="block text-sm font-bold text-gray-900">Refinanciación #{{ historialRefinanciaciones.length - index }}</span>
-                    <span class="block text-xs text-gray-500">{{ formatDate(historial.fecha_refinanciacion) }}</span>
+                    <span class="block text-sm font-bold text-texto-fuerte">Refinanciación #{{ historialRefinanciaciones.length - index }}</span>
+                    <span class="block text-xs text-texto-suave">{{ formatDate(historial.fecha_refinanciacion) }}</span>
                   </span>
                 </div>
 
-                <p class="mb-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500">Valores anteriores</p>
-                <dl class="divide-y divide-gray-100 rounded-xl border border-gray-200 text-sm tabular-nums">
-                  <div class="flex justify-between gap-3 px-3 py-2"><dt class="text-gray-600">Monto</dt><dd class="font-bold text-gray-900">${{ formatMoney(historial.monto_anterior) }}</dd></div>
-                  <div class="flex justify-between gap-3 px-3 py-2"><dt class="text-gray-600">Interés</dt><dd class="font-bold text-gray-900">{{ historial.interes_anterior }}% · {{ historial.tipo_interes_anterior || '—' }}</dd></div>
-                  <div class="flex justify-between gap-3 px-3 py-2"><dt class="text-gray-600">Interés generado</dt><dd class="font-bold text-[color:var(--brand-warning)]">${{ formatMoney(historial.interes_generado_anterior || 0) }}</dd></div>
-                  <div class="flex justify-between gap-3 px-3 py-2"><dt class="text-gray-600">Cuotas</dt><dd class="font-bold text-gray-900">{{ historial.numero_cuotas_anterior || '—' }}</dd></div>
-                  <div class="flex justify-between gap-3 px-3 py-2"><dt class="text-gray-600">Total a pagar</dt><dd class="font-bold text-gray-900">${{ formatMoney((historial.monto_anterior || 0) + (historial.interes_generado_anterior || 0)) }}</dd></div>
-                  <div class="flex justify-between gap-3 px-3 py-2"><dt class="text-gray-600">Total pagado</dt><dd class="font-bold text-[#1B5E37]">${{ formatMoney(historial.total_pagado_anterior || 0) }}</dd></div>
-                  <div class="flex justify-between gap-3 px-3 py-2"><dt class="text-gray-600">Saldo pendiente</dt><dd class="font-bold text-red-700">${{ formatMoney(historial.saldo_actual_anterior) }}</dd></div>
+                <p class="mb-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-texto-suave">Valores anteriores</p>
+                <dl class="divide-y divide-borde-suave rounded-xl border border-borde text-sm tabular-nums">
+                  <div class="flex justify-between gap-3 px-3 py-2"><dt class="text-texto-secundario">Monto</dt><dd class="font-bold text-texto-fuerte">${{ formatMoney(historial.monto_anterior) }}</dd></div>
+                  <div class="flex justify-between gap-3 px-3 py-2"><dt class="text-texto-secundario">Interés</dt><dd class="font-bold text-texto-fuerte">{{ historial.interes_anterior }}% · {{ historial.tipo_interes_anterior || '—' }}</dd></div>
+                  <div class="flex justify-between gap-3 px-3 py-2"><dt class="text-texto-secundario">Interés generado</dt><dd class="font-bold text-[color:var(--brand-warning)] oscuro:text-alerta">${{ formatMoney(historial.interes_generado_anterior || 0) }}</dd></div>
+                  <div class="flex justify-between gap-3 px-3 py-2"><dt class="text-texto-secundario">Cuotas</dt><dd class="font-bold text-texto-fuerte">{{ historial.numero_cuotas_anterior || '—' }}</dd></div>
+                  <div class="flex justify-between gap-3 px-3 py-2"><dt class="text-texto-secundario">Total a pagar</dt><dd class="font-bold text-texto-fuerte">${{ formatMoney((historial.monto_anterior || 0) + (historial.interes_generado_anterior || 0)) }}</dd></div>
+                  <div class="flex justify-between gap-3 px-3 py-2"><dt class="text-texto-secundario">Total pagado</dt><dd class="font-bold text-marca-tinta">${{ formatMoney(historial.total_pagado_anterior || 0) }}</dd></div>
+                  <div class="flex justify-between gap-3 px-3 py-2"><dt class="text-texto-secundario">Saldo pendiente</dt><dd class="font-bold text-red-700 oscuro:text-red-300">${{ formatMoney(historial.saldo_actual_anterior) }}</dd></div>
                   <div v-if="historial.periodicidad_anterior || historial.periodicidad_nueva" class="flex justify-between gap-3 px-3 py-2">
-                    <dt class="text-gray-600">Periodicidad</dt>
-                    <dd class="font-semibold capitalize text-gray-900">{{ historial.periodicidad_anterior || '—' }} → {{ historial.periodicidad_nueva || '—' }}</dd>
+                    <dt class="text-texto-secundario">Periodicidad</dt>
+                    <dd class="font-semibold capitalize text-texto-fuerte">{{ historial.periodicidad_anterior || '—' }} → {{ historial.periodicidad_nueva || '—' }}</dd>
                   </div>
                   <div v-if="historial.fecha_inicio_anterior || historial.fecha_inicio_nueva" class="flex justify-between gap-3 px-3 py-2">
-                    <dt class="text-gray-600">Fecha de inicio</dt>
-                    <dd class="font-semibold text-gray-900">
+                    <dt class="text-texto-secundario">Fecha de inicio</dt>
+                    <dd class="font-semibold text-texto-fuerte">
                       {{ historial.fecha_inicio_anterior ? formatDate(historial.fecha_inicio_anterior) : '—' }} → {{ formatDate(historial.fecha_inicio_nueva) }}
                     </dd>
                   </div>
@@ -2536,25 +2536,25 @@
                 <div v-if="Array.isArray(historial.plan_pagos_anterior) && historial.plan_pagos_anterior.length > 0" class="mt-2">
                   <button
                     type="button"
-                    class="flex min-h-[44px] w-full touch-manipulation items-center justify-between gap-2 text-sm font-bold text-[#1B5E37]"
+                    class="flex min-h-[44px] w-full touch-manipulation items-center justify-between gap-2 text-sm font-bold text-marca-tinta"
                     :aria-expanded="historialPlanExpandido.has(historial.id)"
                     @click="toggleHistorialPlan(historial.id)"
                   >
                     Plan de pagos anterior ({{ historial.plan_pagos_anterior.length }})
                     <ChevronDownIcon :class="['h-4 w-4 transition-transform', historialPlanExpandido.has(historial.id) ? 'rotate-180' : '']" />
                   </button>
-                  <ul v-if="historialPlanExpandido.has(historial.id)" class="divide-y divide-gray-100 rounded-xl border border-gray-200">
+                  <ul v-if="historialPlanExpandido.has(historial.id)" class="divide-y divide-borde-suave rounded-xl border border-borde">
                     <li
                       v-for="(cuota, cidx) in historial.plan_pagos_anterior"
                       :key="`plan-ant-${historial.id}-${cidx}`"
                       class="flex items-center justify-between gap-2 px-3 py-2"
                     >
                       <span class="min-w-0">
-                        <span class="block text-xs font-semibold text-gray-800">Cuota {{ cuota.numero_cuota }}</span>
-                        <span v-if="cuota.fecha_proyectada" class="block text-[11px] text-gray-500">{{ formatDate(cuota.fecha_proyectada) }}</span>
+                        <span class="block text-xs font-semibold text-texto">Cuota {{ cuota.numero_cuota }}</span>
+                        <span v-if="cuota.fecha_proyectada" class="block text-[11px] text-texto-suave">{{ formatDate(cuota.fecha_proyectada) }}</span>
                       </span>
                       <span class="flex flex-shrink-0 items-center gap-2">
-                        <span class="text-xs font-bold tabular-nums text-gray-800">${{ formatMoney(cuota.valor_cuota) }}</span>
+                        <span class="text-xs font-bold tabular-nums text-texto">${{ formatMoney(cuota.valor_cuota) }}</span>
                         <span :class="['ds-badge', cuota.pagada ? 'ds-badge--success' : ((cuota.valor_pagado || 0) > 0 ? 'ds-badge--warning' : 'ds-badge--muted')]">
                           {{ cuota.pagada ? 'Pagada' : ((cuota.valor_pagado || 0) > 0 ? 'Parcial' : 'Pendiente') }}
                         </span>
@@ -2566,18 +2566,18 @@
                 <div v-if="abonosDeRefinanciacion(historial.id).length > 0" class="mt-1">
                   <button
                     type="button"
-                    class="flex min-h-[44px] w-full touch-manipulation items-center justify-between gap-2 text-sm font-bold text-[#1B5E37]"
+                    class="flex min-h-[44px] w-full touch-manipulation items-center justify-between gap-2 text-sm font-bold text-marca-tinta"
                     :aria-expanded="historialAbonosExpandido.has(historial.id)"
                     @click="toggleHistorialAbonos(historial.id)"
                   >
                     Abonos de ese ciclo ({{ abonosDeRefinanciacion(historial.id).length }})
                     <ChevronDownIcon :class="['h-4 w-4 transition-transform', historialAbonosExpandido.has(historial.id) ? 'rotate-180' : '']" />
                   </button>
-                  <ul v-if="historialAbonosExpandido.has(historial.id)" class="divide-y divide-gray-100 rounded-xl border border-gray-200">
+                  <ul v-if="historialAbonosExpandido.has(historial.id)" class="divide-y divide-borde-suave rounded-xl border border-borde">
                     <li v-for="pago in abonosDeRefinanciacion(historial.id)" :key="pago.id" class="flex items-center justify-between gap-2 px-3 py-2">
                       <span class="min-w-0">
-                        <span class="block text-xs font-bold tabular-nums text-gray-800">${{ formatMoney(pago.valor) }}</span>
-                        <span class="block text-[11px] text-gray-500">{{ formatDate(pago.fecha) }}</span>
+                        <span class="block text-xs font-bold tabular-nums text-texto">${{ formatMoney(pago.valor) }}</span>
+                        <span class="block text-[11px] text-texto-suave">{{ formatDate(pago.fecha) }}</span>
                       </span>
                       <span v-if="formaPagoAbono(pago)" class="ds-badge ds-badge--muted">{{ FORMA_PAGO_ABONO_ESTILO[formaPagoAbono(pago)].label }}</span>
                     </li>
@@ -2596,7 +2596,7 @@
             aria-hidden="true"
           >
             <div
-              class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-[#f6f8f6]/90 via-[#f6f8f6]/40 to-transparent"
+              class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-[#f6f8f6]/90 oscuro:from-superficie-hundida/90 via-[#f6f8f6]/40 oscuro:via-superficie-hundida/40 to-transparent"
               aria-hidden="true"
             />
             <div
@@ -2615,7 +2615,7 @@
         </div>
         <!-- Acciones fijas: siempre a la vista, sin bajar hasta el final -->
         <div
-          class="flex flex-shrink-0 flex-col-reverse gap-2 border-t border-gray-200 bg-white px-4 pt-3 sm:flex-row sm:px-6"
+          class="flex flex-shrink-0 flex-col-reverse gap-2 border-t border-borde bg-superficie-tarjeta px-4 pt-3 sm:flex-row sm:px-6"
           :style="{ paddingBottom: `calc(max(1rem, env(safe-area-inset-bottom, 0px)) + ${tapadoDetalle}px)` }"
         >
           <button type="button" class="btn-modal-secondary w-full sm:flex-1" @click="requestCloseTopModal">
@@ -2640,8 +2640,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="requestCloseTopModal"
     >
@@ -2691,12 +2691,12 @@
         <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
           <div
             ref="modalCompartirPrestamoScrollRef"
-            class="scrollbar-thin flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch] space-y-4 px-4 pb-0 pt-4 sm:px-6 sm:pt-5"
+            class="scrollbar-thin flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch] space-y-4 px-4 pb-0 pt-4 sm:px-6 sm:pt-5"
             @scroll.passive="onScrollModalCompartirPrestamo"
           >
             <!-- Wrapper de captura: el padding da aire para que toPng no recorte los bordes -->
             <div
-              ref="prestamoRef"
+              ref="prestamoRef" data-tema="claro"
               style="max-width: 404px; margin: 0 auto; padding: 14px; background: #eef1f4; border-radius: 28px;"
             >
             <div
@@ -2901,7 +2901,7 @@
             </div>
             </div>
 
-            <div class="space-y-3 border-t border-gray-200 pt-4 pb-[calc(max(1rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))]">
+            <div class="space-y-3 border-t border-borde pt-4 pb-[calc(max(1rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))]">
               <div class="flex gap-3">
                 <button
                   type="button"
@@ -2922,7 +2922,7 @@
                   {{ generandoImagenPrestamo ? 'Preparando…' : 'WhatsApp' }}
                 </button>
               </div>
-              <p class="text-center text-xs text-gray-500">
+              <p class="text-center text-xs text-texto-suave">
                 En celular puedes enviar la imagen directamente desde el menú compartir.
               </p>
             </div>
@@ -2934,7 +2934,7 @@
             aria-hidden="true"
           >
             <div
-              class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+              class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent"
               aria-hidden="true"
             />
             <div
@@ -2961,8 +2961,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="requestCloseTopModal"
     >
@@ -3012,12 +3012,12 @@
         <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="modalCompartirPrestamoNuevoScrollRef"
-          class="scrollbar-thin flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch] space-y-4 px-4 pb-0 pt-4 sm:px-6 sm:pt-5"
+          class="scrollbar-thin flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch] space-y-4 px-4 pb-0 pt-4 sm:px-6 sm:pt-5"
           @scroll.passive="onScrollModalCompartirPrestamoNuevo"
         >
           <div
-            ref="prestamoNuevoRef"
-            class="comprobante-prestamo-nuevo bg-white rounded-2xl overflow-hidden"
+            ref="prestamoNuevoRef" data-tema="claro"
+            class="comprobante-prestamo-nuevo bg-superficie-tarjeta rounded-2xl overflow-hidden"
             style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); min-width: 280px;"
           >
             <div class="comprobante-content" style="background: #ecfdf5; padding: 14px 12px; color: #1f2937;">
@@ -3119,7 +3119,7 @@
             aria-hidden="true"
           >
             <div
-              class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+              class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent"
               aria-hidden="true"
             />
             <div
@@ -3146,8 +3146,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="requestCloseTopModal"
     >
@@ -3194,18 +3194,18 @@
         </div>
 
         <!-- Cuerpo scrolleable (confirm corto: sin natiscroll manual; footer fijo asegura la CTA visible) -->
-        <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-4 pb-4">
-          <p class="text-gray-700 mb-3">
-            ¿Estás seguro de que deseas eliminar el abono de <strong class="text-gray-900">${{ formatMoney(abonoAEliminar?.valor) }}</strong>?
+        <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-4 pb-4">
+          <p class="text-texto-medio mb-3">
+            ¿Estás seguro de que deseas eliminar el abono de <strong class="text-texto-fuerte">${{ formatMoney(abonoAEliminar?.valor) }}</strong>?
           </p>
-          <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <div class="bg-amber-50 oscuro:bg-amber-500/15 border border-amber-200 oscuro:border-amber-500/30 rounded-xl p-4">
             <div class="flex items-start gap-3">
-              <div class="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span class="text-amber-600 text-lg">⚠️</span>
+              <div class="w-8 h-8 bg-amber-100 oscuro:bg-amber-500/15 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span class="text-amber-600 oscuro:text-amber-300 text-lg">⚠️</span>
               </div>
               <div class="flex-1">
-                <p class="font-bold text-amber-800 mb-2 text-sm">Al eliminar este abono:</p>
-                <ul class="space-y-2 text-sm text-amber-700">
+                <p class="font-bold text-amber-800 oscuro:text-amber-300 mb-2 text-sm">Al eliminar este abono:</p>
+                <ul class="space-y-2 text-sm text-amber-700 oscuro:text-amber-300">
                   <li class="flex items-center gap-2">
                     <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
                     <span>Se sumará ${{ formatMoney(abonoAEliminar?.valor) }} al saldo del préstamo</span>
@@ -3225,7 +3225,7 @@
         </div>
 
         <!-- Footer de acciones fijo (destructivo → botón ámbar, excepción de color permitida) -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex gap-3">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex gap-3">
           <button type="button" class="btn-modal-secondary flex-1" @click="requestCloseTopModal">Cancelar</button>
           <button
             type="button"
@@ -3247,8 +3247,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="requestCloseTopModal"
     >
@@ -3295,18 +3295,18 @@
         </div>
 
         <!-- Cuerpo scrolleable (confirm corto: sin natiscroll manual; footer fijo asegura la CTA visible) -->
-        <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-4 pb-4">
-          <p class="text-gray-700 mb-3">
-            ¿Estás seguro de que deseas eliminar el préstamo de <strong class="text-gray-900">{{ prestamoAEliminar?.socio_natillera?.socio?.nombre || 'este socio' }}</strong>?
+        <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-4 pb-4">
+          <p class="text-texto-medio mb-3">
+            ¿Estás seguro de que deseas eliminar el préstamo de <strong class="text-texto-fuerte">{{ prestamoAEliminar?.socio_natillera?.socio?.nombre || 'este socio' }}</strong>?
           </p>
-          <div class="bg-red-50 border border-red-200 rounded-xl p-4">
+          <div class="bg-red-50 oscuro:bg-red-500/15 border border-red-200 oscuro:border-red-500/30 rounded-xl p-4">
             <div class="flex items-start gap-3">
-              <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span class="text-red-600 text-lg">⚠️</span>
+              <div class="w-8 h-8 bg-red-100 oscuro:bg-red-500/15 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span class="text-red-600 oscuro:text-red-300 text-lg">⚠️</span>
               </div>
               <div class="flex-1">
-                <p class="font-bold text-red-800 mb-2 text-sm">Se perderá permanentemente:</p>
-                <ul class="space-y-2 text-sm text-red-700">
+                <p class="font-bold text-red-800 oscuro:text-red-300 mb-2 text-sm">Se perderá permanentemente:</p>
+                <ul class="space-y-2 text-sm text-red-700 oscuro:text-red-300">
                   <li class="flex items-center gap-2">
                     <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
                     <span>El registro completo del préstamo</span>
@@ -3320,7 +3320,7 @@
                     <span>Todo el historial de transacciones</span>
                   </li>
                 </ul>
-                <p class="mt-3 text-xs text-red-600 font-semibold bg-white/60 rounded-lg p-2">
+                <p class="mt-3 text-xs text-red-600 oscuro:text-red-300 font-semibold bg-superficie-tarjeta/60 rounded-lg p-2">
                   💡 Esta acción es irreversible. Asegúrate de que realmente deseas eliminar este préstamo.
                 </p>
               </div>
@@ -3329,7 +3329,7 @@
         </div>
 
         <!-- Footer de acciones fijo (destructivo → botón rojo, excepción de color permitida) -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex gap-3">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex gap-3">
           <button type="button" class="btn-modal-secondary flex-1" @click="requestCloseTopModal">Cancelar</button>
           <button
             type="button"
@@ -4343,9 +4343,9 @@ function formaPagoAbono(pago) {
 }
 
 const FORMA_PAGO_ABONO_ESTILO = {
-  efectivo: { label: 'Efectivo', icon: '💵', clase: 'bg-green-50 text-green-700 border-green-200/70' },
-  transferencia: { label: 'Transferencia', icon: '🏦', clase: 'bg-blue-50 text-blue-700 border-blue-200/70' },
-  mixto: { label: 'Mixto', icon: '🔀', clase: 'bg-purple-50 text-purple-700 border-purple-200/70' }
+  efectivo: { label: 'Efectivo', icon: '💵', clase: 'bg-green-50 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300 border-green-200/70 oscuro:border-green-500/30' },
+  transferencia: { label: 'Transferencia', icon: '🏦', clase: 'bg-blue-50 oscuro:bg-blue-500/15 text-blue-700 oscuro:text-blue-300 border-blue-200/70 oscuro:border-blue-500/30' },
+  mixto: { label: 'Mixto', icon: '🔀', clase: 'bg-purple-50 oscuro:bg-purple-500/15 text-purple-700 oscuro:text-purple-300 border-purple-200/70 oscuro:border-purple-500/30' }
 }
 
 const cuotaPorNumeroMap = computed(() => {
@@ -4680,10 +4680,10 @@ const opcionesPestanaDetalle = computed(() => [
 ])
 
 function estadoCuotaDetalle(cuota) {
-  if (cuota.pagada) return { texto: 'Pagada', clase: 'ds-badge--success', circulo: 'bg-[#E8F5E9] text-[#1B5E37]' }
-  if (parseFloat(cuota.valor_pagado || 0) > 0) return { texto: 'Parcial', clase: 'ds-badge--warning', circulo: 'bg-amber-100 text-amber-800' }
-  if (esFechaVencida(cuota.fecha_proyectada)) return { texto: 'Vencida', clase: 'ds-badge--danger', circulo: 'bg-red-100 text-red-700' }
-  return { texto: 'Pendiente', clase: 'ds-badge--muted', circulo: 'bg-gray-100 text-gray-600' }
+  if (cuota.pagada) return { texto: 'Pagada', clase: 'ds-badge--success', circulo: 'bg-marca-suave text-marca-tinta' }
+  if (parseFloat(cuota.valor_pagado || 0) > 0) return { texto: 'Parcial', clase: 'ds-badge--warning', circulo: 'bg-amber-100 oscuro:bg-amber-500/15 text-amber-800 oscuro:text-amber-300' }
+  if (esFechaVencida(cuota.fecha_proyectada)) return { texto: 'Vencida', clase: 'ds-badge--danger', circulo: 'bg-red-100 oscuro:bg-red-500/15 text-red-700 oscuro:text-red-300' }
+  return { texto: 'Pendiente', clase: 'ds-badge--muted', circulo: 'bg-superficie-hundida text-texto-secundario' }
 }
 
 function cuotaPagadaCompletaComprobante(cuota) {
@@ -8531,6 +8531,50 @@ function compartirPrestamoNuevoWhatsApp() {
   --fp-label: hsl(220 50% 35%);
   --fp-value: hsl(220 65% 28%);
   border-color: hsl(220 60% 75% / 0.55);
+}
+
+/* ==========================================================================
+   Modo oscuro: solo lo que cambia (skill natillerapp-modo-oscuro §2.5)
+   ========================================================================== */
+:where([data-tema=oscuro]) .prestamo-card__eliminar { color: var(--peligro); }
+:where([data-tema=oscuro]) .prestamo-card__eliminar:hover:not(:disabled) { background: var(--peligro-suave); }
+:where([data-tema=oscuro]) .prestamo-callout--mora { background: var(--peligro-suave); color: var(--peligro); }
+:where([data-tema=oscuro]) .prestamo-callout--proximo { background: var(--marca-suave); color: var(--texto); }
+:where([data-tema=oscuro]) .prestamo-callout--proximo-urgente { background: var(--alerta-suave); color: var(--alerta); }
+
+:where([data-tema=oscuro]) .prestamos-panel { background: var(--superficie-tarjeta); border-color: var(--borde); }
+:where([data-tema=oscuro]) .prestamos-panel__head {
+  border-bottom-color: var(--borde);
+  background: linear-gradient(180deg, var(--superficie-suave) 0%, var(--superficie-tarjeta) 100%);
+}
+:where([data-tema=oscuro]) .prestamos-panel__summary-label { color: var(--texto-tenue); }
+:where([data-tema=oscuro]) .prestamos-panel__summary-value { color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .prestamos-panel__body {
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(110, 231, 160, 0.06) 0%, transparent 60%),
+    var(--superficie-hundida);
+}
+:where([data-tema=oscuro]) .prestamos-panel__empty { background: var(--superficie-tarjeta); border-color: var(--borde); }
+
+:where([data-tema=oscuro]) .prestamos-tabs { background: var(--superficie-hundida); }
+:where([data-tema=oscuro]) .prestamos-tab { color: var(--texto-suave); }
+:where([data-tema=oscuro]) .prestamos-tab:hover { color: var(--texto-medio); }
+:where([data-tema=oscuro]) .prestamos-tab--active { color: var(--marca-tinta); background: var(--superficie-elevada); }
+:where([data-tema=oscuro]) .prestamos-tab__count { background: var(--borde); color: var(--texto-secundario); }
+:where([data-tema=oscuro]) .prestamos-tab--active .prestamos-tab__count { background: var(--marca-suave); color: var(--marca-tinta); }
+
+:where([data-tema=oscuro]) .forma-pago-badge { background: var(--superficie-tarjeta); }
+:where([data-tema=oscuro]) .forma-pago-badge--efectivo {
+  --fp-bg-grad: linear-gradient(135deg, hsl(152 60% 40% / 0.22) 0%, hsl(152 60% 30% / 0.14) 100%);
+  --fp-label: var(--exito);
+  --fp-value: hsl(152 60% 80%);
+  border-color: hsl(152 50% 55% / 0.35);
+}
+:where([data-tema=oscuro]) .forma-pago-badge--transferencia {
+  --fp-bg-grad: linear-gradient(135deg, hsl(214 80% 55% / 0.2) 0%, hsl(230 70% 50% / 0.14) 100%);
+  --fp-label: var(--info);
+  --fp-value: hsl(220 85% 85%);
+  border-color: hsl(220 60% 60% / 0.35);
 }
 </style>
 

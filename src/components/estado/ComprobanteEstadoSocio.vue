@@ -33,6 +33,10 @@
                   v-if="seccion.items.length > 0"
                   style="font-size: 11px; font-weight: 700; color: #94a3b8;"
                 >· {{ seccion.items.length }}</span>
+                <span
+                  v-if="seccion.etiqueta"
+                  style="flex-shrink: 0; padding: 2px 7px; border-radius: 9999px; background: #fdf3e4; color: #a86b1f; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.4;"
+                >{{ seccion.etiqueta }}</span>
               </span>
               <span :style="{ fontSize: '15px', fontWeight: 800, whiteSpace: 'nowrap', color: seccion.color }">${{ formatMoney(seccion.total) }}</span>
             </div>
@@ -110,13 +114,15 @@ const margen = computed(() => (props.fluido ? '16px' : '20px'))
 const nombre = computed(() => props.estado?.socio?.nombre || 'Socio')
 const fecha = new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })
 
-// Orden: lo más urgente primero. Solo salen las secciones con saldo.
+// Orden cronológico en las cuotas: primero lo que ya está en mora y debajo lo pendiente,
+// que es la cuota actual; por eso va en un ámbar tenue (no es deuda vencida) y con la
+// marca «Actual». Después el resto. Solo salen las secciones con saldo.
 const secciones = computed(() => {
   const e = props.estado || {}
   return [
     { clave: 'mora', titulo: 'Cuotas en mora', color: '#b91c1c', total: e.totalMora, items: e.cuotasMoraList },
+    { clave: 'pendiente', titulo: 'Cuotas pendientes', etiqueta: 'Actual', color: '#c98f45', total: e.totalPendiente, items: e.cuotasPendientesList },
     { clave: 'sanciones', titulo: 'Sanciones', color: '#be123c', total: e.totalSancionesPendientes, items: e.sancionesDesglose },
-    { clave: 'pendiente', titulo: 'Cuotas pendientes', color: '#b45309', total: e.totalPendiente, items: e.cuotasPendientesList },
     { clave: 'prestamos', titulo: 'Préstamos', color: '#1B5E37', total: e.totalPrestamosPendiente, items: e.prestamosPendientesDesglose },
     { clave: 'actividades', titulo: 'Actividades', color: '#1d4ed8', total: e.actividadesPendientesTotal, items: e.actividadesPendientesDesglose }
   ]

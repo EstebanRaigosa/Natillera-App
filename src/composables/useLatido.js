@@ -1,6 +1,7 @@
 import { onMounted, onUnmounted } from 'vue'
 import { supabase } from '../lib/supabase'
 import { detectIosPlatform } from './useIsIos'
+import { dispositivoActualDetallado } from '../utils/dispositivo'
 
 /**
  * Latido de presencia: deja constancia de que este usuario está usando la app.
@@ -23,6 +24,17 @@ import { detectIosPlatform } from './useIsIos'
 
 const INTERVALO_MS = 2 * 60 * 1000
 
+/*
+ * El dispositivo no cambia mientras la app está abierta: se describe una vez y se reutiliza.
+ * Solo se guarda al abrir un ingreso nuevo (ver `registrar_latido`), así que mandarlo en
+ * cada latido no escribe nada de más.
+ */
+let dispositivoPromesa = null
+function dispositivo() {
+  if (!dispositivoPromesa) dispositivoPromesa = dispositivoActualDetallado().catch(() => null)
+  return dispositivoPromesa
+}
+
 export function useLatido(estaAutenticado) {
   let temporizador = null
   let latiendo = false
@@ -36,7 +48,8 @@ export function useLatido(estaAutenticado) {
     try {
       await supabase.rpc('registrar_latido', {
         p_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
-        p_plataforma: detectIosPlatform() ? 'ios' : (typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent) ? 'android' : 'escritorio')
+        p_plataforma: detectIosPlatform() ? 'ios' : (typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent) ? 'android' : 'escritorio'),
+        p_dispositivo: await dispositivo()
       })
     } catch {
       // Telemetría: un fallo aquí no puede afectar a lo que el usuario está haciendo.

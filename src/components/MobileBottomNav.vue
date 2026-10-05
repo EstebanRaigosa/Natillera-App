@@ -98,9 +98,9 @@
         class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation"
         :class="isActive(`/natilleras/${natilleraId}`) ? 'nav-item--active' : 'nav-item--inactive'"
       >
-        <div
+        <!-- tema-fijo: punto blanco sobre la barra verde de navegación -->
+        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
           v-if="isActive(`/natilleras/${natilleraId}`)"
-          class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
           aria-hidden="true"
         />
         <HomeIconSolid
@@ -126,9 +126,9 @@
         class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation"
         :class="isActive(`/natilleras/${natilleraId}/socios`) ? 'nav-item--active' : 'nav-item--inactive'"
       >
-        <div
+        <!-- tema-fijo: punto blanco sobre la barra verde de navegación -->
+        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
           v-if="isActive(`/natilleras/${natilleraId}/socios`)"
-          class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
           aria-hidden="true"
         />
         <UsersIconSolid
@@ -163,9 +163,9 @@
         class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation"
         :class="isActive(`/natilleras/${natilleraId}/cuotas`) ? 'nav-item--active' : 'nav-item--inactive'"
       >
-        <div
+        <!-- tema-fijo: punto blanco sobre la barra verde de navegación -->
+        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
           v-if="isActive(`/natilleras/${natilleraId}/cuotas`)"
-          class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
           aria-hidden="true"
         />
         <CurrencyDollarIconSolid
@@ -200,9 +200,9 @@
         :class="isActive(`/natilleras/${natilleraId}/prestamos`) ? 'nav-item--active' : 'nav-item--inactive'"
         @click="irAPrestamosDesdeNav"
       >
-        <div
+        <!-- tema-fijo: punto blanco sobre la barra verde de navegación -->
+        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
           v-if="isActive(`/natilleras/${natilleraId}/prestamos`)"
-          class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
           aria-hidden="true"
         />
         <BanknotesIconSolid
@@ -236,9 +236,9 @@
         class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation"
         :class="isActive(`/natilleras/${natilleraId}/actividades`) ? 'nav-item--active' : 'nav-item--inactive'"
       >
-        <div
+        <!-- tema-fijo: punto blanco sobre la barra verde de navegación -->
+        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
           v-if="isActive(`/natilleras/${natilleraId}/actividades`)"
-          class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
           aria-hidden="true"
         />
         <CalendarIconSolid
@@ -282,9 +282,9 @@
         :aria-expanded="menuCajaAbierto"
         @click.stop="alternarMenu('caja')"
       >
-        <div
+        <!-- tema-fijo: punto blanco sobre la barra verde de navegación -->
+        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
           v-if="cajaActiva"
-          class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
           aria-hidden="true"
         />
         <WalletIconSolid
@@ -325,9 +325,9 @@
         :aria-expanded="menuAccionesAbierto"
         @click.stop="alternarMenu('acciones')"
       >
-        <div
+        <!-- tema-fijo: punto blanco sobre la barra verde de navegación -->
+        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
           v-if="accionesActiva"
-          class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
           aria-hidden="true"
         />
         <WrenchScrewdriverIconSolid
@@ -349,9 +349,9 @@
         class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation"
         :class="isActive('/configuracion') ? 'nav-item--active' : 'nav-item--inactive'"
       >
-        <div
+        <!-- tema-fijo: punto blanco sobre la barra verde de navegación -->
+        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
           v-if="isActive('/configuracion')"
-          class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
           aria-hidden="true"
         />
         <Cog6ToothIconSolid
@@ -717,6 +717,7 @@ function navegarAPrimeraNatillera(seccion) {
 </script>
 
 <style scoped>
+/* tema-fijo-inicio: barra de navegación verde, igual en los dos modos */
 /* Ítem activo = mismo verde que el botón principal del login (token --primary) */
 .mobile-bottom-nav {
   isolation: isolate;
@@ -842,4 +843,5 @@ function navegarAPrimeraNatillera(seccion) {
     opacity: 0;
   }
 }
+/* tema-fijo-fin */
 </style>

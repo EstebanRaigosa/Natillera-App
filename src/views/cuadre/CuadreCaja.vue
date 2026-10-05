@@ -3,13 +3,13 @@
     <RecorridoInteractivo :pasos="pasosGuiaCuadre" :activo="guiaCuadreActiva" @terminar="cerrarGuiaCuadre" />
     <!-- Efectos decorativos de fondo -->
     <div class="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-      <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-natillera-200/30 to-emerald-200/20 rounded-full blur-3xl"></div>
-      <div class="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-200/30 to-natillera-200/20 rounded-full blur-3xl"></div>
+      <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-natillera-200/30 oscuro:from-natillera-500/15 to-emerald-200/20 oscuro:to-emerald-500/10 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-200/30 oscuro:from-teal-500/15 to-natillera-200/20 oscuro:to-natillera-500/10 rounded-full blur-3xl"></div>
     </div>
 
     <!-- Header -->
     <div>
-      <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
+      <div class="bg-gradient-to-br from-superficie-tarjeta via-emerald-50/50 oscuro:via-emerald-500/10 to-teal-100/70 oscuro:to-teal-500/10 rounded-2xl p-4 sm:p-6 border border-borde/80 shadow-sm">
         <div class="flex flex-wrap items-center gap-4">
           <div class="flex items-center gap-3 min-w-0 w-full sm:w-auto sm:flex-1">
             <BackButton :to="`/natilleras/${id}`" :inline="true" />
@@ -17,14 +17,14 @@
               <CalculatorIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div class="min-w-0 flex-1">
-              <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 leading-tight">Totales generales</h1>
-              <p class="text-gray-500 mt-0.5 text-xs sm:text-sm leading-snug">Cuenta el dinero y contrasta con lo que debería haber</p>
+              <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-texto leading-tight">Totales generales</h1>
+              <p class="text-texto-suave mt-0.5 text-xs sm:text-sm leading-snug">Cuenta el dinero y contrasta con lo que debería haber</p>
             </div>
             <!-- Relanza el recorrido guiado a voluntad; no gasta las visitas en que sale solo. -->
             <button
               type="button"
               data-guia="boton-recorrido"
-              class="flex h-11 min-w-[2.75rem] flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#166534]/25 bg-white text-[#166534] shadow-sm transition-colors hover:bg-[#f0fdf4] active:bg-[#dcfce7] sm:h-auto sm:px-3 sm:py-2 sm:rounded-lg [-webkit-tap-highlight-color:transparent]"
+              class="flex h-11 min-w-[2.75rem] flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#166534]/25 oscuro:border-marca-tinta/25 bg-superficie-tarjeta text-[#166534] oscuro:text-marca-tinta shadow-sm transition-colors hover:bg-[#f0fdf4] oscuro:hover:bg-green-500/15 active:bg-[#dcfce7] oscuro:active:bg-green-500/15 sm:h-auto sm:px-3 sm:py-2 sm:rounded-lg [-webkit-tap-highlight-color:transparent]"
               title="¿Cómo funciona esta pantalla?"
               aria-label="¿Cómo funciona esta pantalla? Ver el recorrido guiado"
               @click="abrirGuiaCuadre({ manual: true })"
@@ -39,15 +39,15 @@
 
     <!-- Pestañas: Totales | Simulador de cierre -->
     <div v-if="!loading" class="relative">
-      <div data-guia="cuadre-pestanas" class="flex rounded-xl bg-gray-100 p-1 border border-gray-200/80 shadow-inner">
+      <div data-guia="cuadre-pestanas" class="flex rounded-xl bg-superficie-hundida p-1 border border-borde/80 shadow-inner">
         <button
           type="button"
           @click="tabActiva = 'totales'"
           :class="[
             'flex-1 sm:flex-none min-w-0 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200',
             tabActiva === 'totales'
-              ? 'bg-white text-teal-700 shadow-md border border-gray-200'
-              : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+              ? 'bg-superficie-tarjeta text-teal-700 oscuro:text-teal-300 shadow-md border border-borde'
+              : 'text-texto-secundario hover:text-texto hover:bg-superficie-suave'
           ]"
         >
           Totales
@@ -58,8 +58,8 @@
           :class="[
             'flex-1 sm:flex-none min-w-0 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200',
             tabActiva === 'simulador'
-              ? 'bg-white text-teal-700 shadow-md border border-gray-200'
-              : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+              ? 'bg-superficie-tarjeta text-teal-700 oscuro:text-teal-300 shadow-md border border-borde'
+              : 'text-texto-secundario hover:text-texto hover:bg-superficie-suave'
           ]"
         >
           Simulador de cierre
@@ -79,20 +79,20 @@
         <!-- Efectivo esperado -->
         <div
           data-guia="cuadre-efectivo"
-          class="text-left bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-5 sm:p-6 border-2 border-green-200 shadow-sm"
+          class="text-left bg-gradient-to-br from-green-50 oscuro:from-green-500/15 to-emerald-50 oscuro:to-emerald-500/10 rounded-2xl p-5 sm:p-6 border-2 border-green-200 oscuro:border-green-500/30 shadow-sm"
         >
           <div class="flex items-center gap-3 mb-4">
             <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
               <BanknotesIcon class="w-7 h-7 text-white" />
             </div>
             <div>
-              <p class="text-gray-700 font-semibold">EFECTIVO</p>
+              <p class="text-texto-medio font-semibold">EFECTIVO</p>
             </div>
           </div>
-          <p class="text-green-700 text-2xl sm:text-3xl font-extrabold tabular-nums">
+          <p class="text-green-700 oscuro:text-green-300 text-2xl sm:text-3xl font-extrabold tabular-nums">
             ${{ formatMoney(totalEsperadoEfectivo) }}
           </p>
-          <div class="mt-3 pt-3 border-t border-green-200/60 text-xs text-gray-600 space-y-0.5">
+          <div class="mt-3 pt-3 border-t border-green-200/60 oscuro:border-green-500/30 text-xs text-texto-secundario space-y-0.5">
             <p>• Cuotas + Cuotas préstamos + Sanciones + Actividades: ${{ formatMoney(recaudadoEfectivo - utilidadInteresAnticipadoEfectivo) }}</p>
             <p v-if="utilidadInteresAnticipadoEfectivo > 0">• + Utilidad por interés anticipado: ${{ formatMoney(utilidadInteresAnticipadoEfectivo) }}</p>
             <p>• − Préstamos entregados: ${{ formatMoney(prestamosEfectivo) }}</p>
@@ -105,20 +105,20 @@
         <!-- Transferencia esperada -->
         <div
           data-guia="cuadre-transferencia"
-          class="text-left bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-5 sm:p-6 border-2 border-blue-200 shadow-sm"
+          class="text-left bg-gradient-to-br from-blue-50 oscuro:from-blue-500/15 to-cyan-50 oscuro:to-cyan-500/10 rounded-2xl p-5 sm:p-6 border-2 border-blue-200 oscuro:border-blue-500/30 shadow-sm"
         >
           <div class="flex items-center gap-3 mb-4">
             <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
               <ArrowPathIcon class="w-7 h-7 text-white" />
             </div>
             <div>
-              <p class="text-gray-700 font-semibold">TRANSFERENCIA</p>
+              <p class="text-texto-medio font-semibold">TRANSFERENCIA</p>
             </div>
           </div>
-          <p class="text-blue-700 text-2xl sm:text-3xl font-extrabold tabular-nums">
+          <p class="text-blue-700 oscuro:text-blue-300 text-2xl sm:text-3xl font-extrabold tabular-nums">
             ${{ formatMoney(totalEsperadoTransferencia) }}
           </p>
-          <div class="mt-3 pt-3 border-t border-blue-200/60 text-xs text-gray-600 space-y-0.5">
+          <div class="mt-3 pt-3 border-t border-blue-200/60 oscuro:border-blue-500/30 text-xs text-texto-secundario space-y-0.5">
             <p>• Cuotas + Cuotas préstamos + Sanciones + Actividades: ${{ formatMoney(recaudadoTransferencia - utilidadInteresAnticipadoTransferencia - recaudadoGmf4x1000) }}</p>
             <p v-if="recaudadoGmf4x1000 > 0">• GMF 4×1000 (por transferencias): ${{ formatMoney(recaudadoGmf4x1000) }}</p>
             <p v-if="utilidadInteresAnticipadoTransferencia > 0">• + Utilidad por interés anticipado: ${{ formatMoney(utilidadInteresAnticipadoTransferencia) }}</p>
@@ -130,17 +130,17 @@
         </div>
 
         <!-- Total general (efectivo + transferencia) -->
-        <div data-guia="cuadre-total-general" class="md:col-span-2 bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl p-5 sm:p-6 border-2 border-teal-200 shadow-sm">
+        <div data-guia="cuadre-total-general" class="md:col-span-2 bg-gradient-to-br from-teal-50 oscuro:from-teal-500/15 to-emerald-50 oscuro:to-emerald-500/10 rounded-2xl p-5 sm:p-6 border-2 border-teal-200 oscuro:border-teal-500/30 shadow-sm">
           <div class="flex items-center gap-3 mb-2">
             <div class="w-12 h-12 bg-teal-500 rounded-xl flex items-center justify-center">
               <CalculatorIcon class="w-7 h-7 text-white" />
             </div>
             <div>
-              <p class="text-gray-700 font-semibold">TOTAL GENERAL</p>
-              <p class="text-gray-500 text-xs">Efectivo + Transferencia</p>
+              <p class="text-texto-medio font-semibold">TOTAL GENERAL</p>
+              <p class="text-texto-suave text-xs">Efectivo + Transferencia</p>
             </div>
           </div>
-          <p class="text-teal-700 text-2xl sm:text-3xl font-extrabold tabular-nums">
+          <p class="text-teal-700 oscuro:text-teal-300 text-2xl sm:text-3xl font-extrabold tabular-nums">
             ${{ formatMoney(totalEsperadoGeneral) }}
           </p>
         </div>
@@ -150,98 +150,98 @@
               <!-- Modal desglose efectivo/transferencia eliminado por solicitud -->
               <div class="flex-1 overflow-y-auto p-6 space-y-4">
                 <!-- Recaudado (cuotas ahorro) -->
-                <div class="rounded-xl p-4 border-2" :class="modalDesgloseFormaPago === 'efectivo' ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'">
-                  <p class="text-sm font-semibold text-gray-700 mb-1">Recaudado (cuotas)</p>
-                  <p class="text-2xl font-bold tabular-nums" :class="modalDesgloseFormaPago === 'efectivo' ? 'text-green-700' : 'text-blue-700'">
+                <div class="rounded-xl p-4 border-2" :class="modalDesgloseFormaPago === 'efectivo' ? 'bg-green-50 oscuro:bg-green-500/15 border-green-200 oscuro:border-green-500/30' : 'bg-blue-50 oscuro:bg-blue-500/15 border-blue-200 oscuro:border-blue-500/30'">
+                  <p class="text-sm font-semibold text-texto-medio mb-1">Recaudado (cuotas)</p>
+                  <p class="text-2xl font-bold tabular-nums" :class="modalDesgloseFormaPago === 'efectivo' ? 'text-green-700 oscuro:text-green-300' : 'text-blue-700 oscuro:text-blue-300'">
                     ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? recaudadoCuotasEfectivo : recaudadoCuotasTransferencia) }}
                   </p>
-                  <p class="text-xs text-gray-500 mt-0.5">Aportes de socios (valor cuota)</p>
+                  <p class="text-xs text-texto-suave mt-0.5">Aportes de socios (valor cuota)</p>
                 </div>
                 <!-- Cuotas préstamos (pagos de cuotas de préstamos) -->
-                <div v-if="(modalDesgloseFormaPago === 'efectivo' ? recaudadoCuotasPrestamoEfectivo : recaudadoCuotasPrestamoTransferencia) > 0" class="rounded-xl p-4 border-2 bg-teal-50 border-teal-200">
-                  <p class="text-sm font-semibold text-gray-700 mb-1">Cuotas préstamos</p>
-                  <p class="text-2xl font-bold tabular-nums text-teal-700">
+                <div v-if="(modalDesgloseFormaPago === 'efectivo' ? recaudadoCuotasPrestamoEfectivo : recaudadoCuotasPrestamoTransferencia) > 0" class="rounded-xl p-4 border-2 bg-teal-50 oscuro:bg-teal-500/15 border-teal-200 oscuro:border-teal-500/30">
+                  <p class="text-sm font-semibold text-texto-medio mb-1">Cuotas préstamos</p>
+                  <p class="text-2xl font-bold tabular-nums text-teal-700 oscuro:text-teal-300">
                     ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? recaudadoCuotasPrestamoEfectivo : recaudadoCuotasPrestamoTransferencia) }}
                   </p>
-                  <p class="text-xs text-gray-500 mt-0.5">Pagos de cuotas de préstamos según forma de pago</p>
+                  <p class="text-xs text-texto-suave mt-0.5">Pagos de cuotas de préstamos según forma de pago</p>
                 </div>
                 <!-- Utilidad por interés anticipado (préstamos) -->
-                <div v-if="(modalDesgloseFormaPago === 'efectivo' ? utilidadInteresAnticipadoEfectivo : utilidadInteresAnticipadoTransferencia) > 0" class="rounded-xl p-4 border-2 bg-amber-50 border-amber-200">
-                  <p class="text-sm font-semibold text-gray-700 mb-1">+ Utilidad por interés anticipado</p>
-                  <p class="text-2xl font-bold tabular-nums text-amber-700">
+                <div v-if="(modalDesgloseFormaPago === 'efectivo' ? utilidadInteresAnticipadoEfectivo : utilidadInteresAnticipadoTransferencia) > 0" class="rounded-xl p-4 border-2 bg-amber-50 oscuro:bg-amber-500/15 border-amber-200 oscuro:border-amber-500/30">
+                  <p class="text-sm font-semibold text-texto-medio mb-1">+ Utilidad por interés anticipado</p>
+                  <p class="text-2xl font-bold tabular-nums text-amber-700 oscuro:text-amber-300">
                     ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? utilidadInteresAnticipadoEfectivo : utilidadInteresAnticipadoTransferencia) }}
                   </p>
-                  <p class="text-xs text-gray-500 mt-0.5">Intereses cobrados por adelantado en préstamos (suma a la forma de pago)</p>
+                  <p class="text-xs text-texto-suave mt-0.5">Intereses cobrados por adelantado en préstamos (suma a la forma de pago)</p>
                 </div>
                 <!-- Utilidad (sanciones + actividades) -->
-                <div class="rounded-xl p-4 border-2" :class="modalDesgloseFormaPago === 'efectivo' ? 'bg-amber-50 border-amber-200' : 'bg-indigo-50 border-indigo-200'">
-                  <p class="text-sm font-semibold text-gray-700 mb-1">Utilidad (sanciones + actividades)</p>
-                  <p class="text-2xl font-bold tabular-nums text-violet-700">
+                <div class="rounded-xl p-4 border-2" :class="modalDesgloseFormaPago === 'efectivo' ? 'bg-amber-50 oscuro:bg-amber-500/15 border-amber-200 oscuro:border-amber-500/30' : 'bg-indigo-50 oscuro:bg-indigo-500/15 border-indigo-200 oscuro:border-indigo-500/30'">
+                  <p class="text-sm font-semibold text-texto-medio mb-1">Utilidad (sanciones + actividades)</p>
+                  <p class="text-2xl font-bold tabular-nums text-violet-700 oscuro:text-violet-300">
                     ${{ formatMoney(Math.max(0, (modalDesgloseFormaPago === 'efectivo' ? utilidadEfectivo : utilidadTransferencia) - (modalDesgloseFormaPago === 'efectivo' ? egresosUtilidadesEfectivo : egresosUtilidadesTransferencia) + (modalDesgloseFormaPago === 'efectivo' ? ingresosUtilidadesEfectivo : ingresosUtilidadesTransferencia))) }}
                   </p>
-                  <p class="text-xs text-gray-500 mt-0.5">Multas y actividades extraordinarias</p>
-                  <p v-if="(modalDesgloseFormaPago === 'efectivo' ? egresosUtilidadesEfectivo : egresosUtilidadesTransferencia) > 0" class="text-xs text-red-600 mt-0.5">(egresos de utilidades descontados: − ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? egresosUtilidadesEfectivo : egresosUtilidadesTransferencia) }})</p>
-                  <p v-if="(modalDesgloseFormaPago === 'efectivo' ? ingresosUtilidadesEfectivo : ingresosUtilidadesTransferencia) > 0" class="text-xs text-green-600 mt-0.5">(ingresos sumados a utilidades: + ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? ingresosUtilidadesEfectivo : ingresosUtilidadesTransferencia) }})</p>
+                  <p class="text-xs text-texto-suave mt-0.5">Multas y actividades extraordinarias</p>
+                  <p v-if="(modalDesgloseFormaPago === 'efectivo' ? egresosUtilidadesEfectivo : egresosUtilidadesTransferencia) > 0" class="text-xs text-red-600 oscuro:text-red-300 mt-0.5">(egresos de utilidades descontados: − ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? egresosUtilidadesEfectivo : egresosUtilidadesTransferencia) }})</p>
+                  <p v-if="(modalDesgloseFormaPago === 'efectivo' ? ingresosUtilidadesEfectivo : ingresosUtilidadesTransferencia) > 0" class="text-xs text-green-600 oscuro:text-green-300 mt-0.5">(ingresos sumados a utilidades: + ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? ingresosUtilidadesEfectivo : ingresosUtilidadesTransferencia) }})</p>
                 </div>
                 <!-- Egresos salidos de recaudado (restan del indicador recaudado) -->
-                <div v-if="(modalDesgloseFormaPago === 'efectivo' ? egresosRecaudadoEfectivo : egresosRecaudadoTransferencia) > 0" class="rounded-xl p-4 border-2 bg-red-50 border-red-200">
-                  <p class="text-sm font-semibold text-gray-700 mb-1">− Egresos salidos de recaudado</p>
-                  <p class="text-xl font-bold tabular-nums text-red-700">
+                <div v-if="(modalDesgloseFormaPago === 'efectivo' ? egresosRecaudadoEfectivo : egresosRecaudadoTransferencia) > 0" class="rounded-xl p-4 border-2 bg-red-50 oscuro:bg-red-500/15 border-red-200 oscuro:border-red-500/30">
+                  <p class="text-sm font-semibold text-texto-medio mb-1">− Egresos salidos de recaudado</p>
+                  <p class="text-xl font-bold tabular-nums text-red-700 oscuro:text-red-300">
                     − ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? egresosRecaudadoEfectivo : egresosRecaudadoTransferencia) }}
                   </p>
-                  <p class="text-xs text-gray-500 mt-0.5">Egresos registrados como “sale de recaudado”</p>
+                  <p class="text-xs text-texto-suave mt-0.5">Egresos registrados como “sale de recaudado”</p>
                 </div>
                 <!-- Ingresos sumados a recaudado -->
-                <div v-if="(modalDesgloseFormaPago === 'efectivo' ? ingresosRecaudadoEfectivo : ingresosRecaudadoTransferencia) > 0" class="rounded-xl p-4 border-2 bg-green-50 border-green-200">
-                  <p class="text-sm font-semibold text-gray-700 mb-1">+ Ingresos sumados a recaudado</p>
-                  <p class="text-xl font-bold tabular-nums text-green-700">
+                <div v-if="(modalDesgloseFormaPago === 'efectivo' ? ingresosRecaudadoEfectivo : ingresosRecaudadoTransferencia) > 0" class="rounded-xl p-4 border-2 bg-green-50 oscuro:bg-green-500/15 border-green-200 oscuro:border-green-500/30">
+                  <p class="text-sm font-semibold text-texto-medio mb-1">+ Ingresos sumados a recaudado</p>
+                  <p class="text-xl font-bold tabular-nums text-green-700 oscuro:text-green-300">
                     + ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? ingresosRecaudadoEfectivo : ingresosRecaudadoTransferencia) }}
                   </p>
-                  <p class="text-xs text-gray-500 mt-0.5">Ingresos registrados como “va a recaudado”</p>
+                  <p class="text-xs text-texto-suave mt-0.5">Ingresos registrados como “va a recaudado”</p>
                 </div>
                 <!-- Total recaudado y resta de préstamos -->
-                <div class="rounded-xl p-4 bg-gray-50 border-2 border-gray-200 space-y-2">
-                  <p class="text-sm font-semibold text-gray-700">Total recaudado (cuotas + utilidad)</p>
-                  <p class="text-xl font-bold tabular-nums text-gray-800">
+                <div class="rounded-xl p-4 bg-superficie-suave border-2 border-borde space-y-2">
+                  <p class="text-sm font-semibold text-texto-medio">Total recaudado (cuotas + utilidad)</p>
+                  <p class="text-xl font-bold tabular-nums text-texto">
                     ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? recaudadoEfectivo : recaudadoTransferencia) }}
                   </p>
-                  <p class="text-sm text-red-600 font-medium">− Préstamos entregados: ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? prestamosEfectivo : prestamosTransferencia) }}</p>
-                  <p v-if="(modalDesgloseFormaPago === 'efectivo' ? premiosEfectivo : premiosTransferencia) > 0" class="text-sm text-red-600 font-medium">− Premios rifa: ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? premiosEfectivo : premiosTransferencia) }}</p>
-                  <p v-if="(modalDesgloseFormaPago === 'efectivo' ? gastosActividadEfectivo : gastosActividadTransferencia) > 0" class="text-sm text-red-600 font-medium">− Gastos de actividades: ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? gastosActividadEfectivo : gastosActividadTransferencia) }}</p>
-                  <p class="text-sm font-semibold text-gray-700 pt-2 border-t border-gray-200">
+                  <p class="text-sm text-red-600 oscuro:text-red-300 font-medium">− Préstamos entregados: ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? prestamosEfectivo : prestamosTransferencia) }}</p>
+                  <p v-if="(modalDesgloseFormaPago === 'efectivo' ? premiosEfectivo : premiosTransferencia) > 0" class="text-sm text-red-600 oscuro:text-red-300 font-medium">− Premios rifa: ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? premiosEfectivo : premiosTransferencia) }}</p>
+                  <p v-if="(modalDesgloseFormaPago === 'efectivo' ? gastosActividadEfectivo : gastosActividadTransferencia) > 0" class="text-sm text-red-600 oscuro:text-red-300 font-medium">− Gastos de actividades: ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? gastosActividadEfectivo : gastosActividadTransferencia) }}</p>
+                  <p class="text-sm font-semibold text-texto-medio pt-2 border-t border-borde">
                     Neto (recaudado − préstamos − premios − gastos): ${{ formatMoney(Math.max(0, (modalDesgloseFormaPago === 'efectivo' ? recaudadoEfectivo : recaudadoTransferencia) - (modalDesgloseFormaPago === 'efectivo' ? prestamosEfectivo : prestamosTransferencia) - (modalDesgloseFormaPago === 'efectivo' ? premiosEfectivo : premiosTransferencia) - (modalDesgloseFormaPago === 'efectivo' ? gastosActividadEfectivo : gastosActividadTransferencia))) }}
                   </p>
                 </div>
                 <!-- Movimientos -->
-                <div v-if="(modalDesgloseFormaPago === 'efectivo' ? movimientosEfectivoNeto : movimientosTransferenciaNeto) !== 0" class="text-sm text-gray-600">
+                <div v-if="(modalDesgloseFormaPago === 'efectivo' ? movimientosEfectivoNeto : movimientosTransferenciaNeto) !== 0" class="text-sm text-texto-secundario">
                   <p>{{ (modalDesgloseFormaPago === 'efectivo' ? movimientosEfectivoNeto : movimientosTransferenciaNeto) >= 0 ? '+' : '' }} Movimientos: ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? movimientosEfectivoNeto : movimientosTransferenciaNeto) }}</p>
                 </div>
-                <p class="pt-3 border-t-2 border-gray-300 font-bold text-lg">
+                <p class="pt-3 border-t-2 border-borde-fuerte font-bold text-lg">
                   Total: ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? totalEsperadoEfectivo : totalEsperadoTransferencia) }}
                 </p>
               </div>
       </template>
 
       <!-- Detalle por concepto: Cuotas, Sanciones, Actividades, Préstamos -->
-      <div data-guia="cuadre-detalle" class="bg-white rounded-2xl p-5 sm:p-6 border-2 border-gray-200 shadow-sm">
+      <div data-guia="cuadre-detalle" class="bg-superficie-tarjeta rounded-2xl p-5 sm:p-6 border-2 border-borde shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
           <div class="flex items-center gap-3">
             <button
               @click="detalleExpandido = !detalleExpandido"
-              class="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              class="p-2 rounded-lg hover:bg-superficie-hundida transition-colors"
               :title="detalleExpandido ? 'Ocultar detalle' : 'Mostrar detalle'"
             >
               <ChevronDownIcon
-                :class="['w-5 h-5 text-gray-600 transition-transform', detalleExpandido && 'rotate-180']"
+                :class="['w-5 h-5 text-texto-secundario transition-transform', detalleExpandido && 'rotate-180']"
               />
             </button>
           <div>
-            <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <TableCellsIcon class="w-5 h-5 text-teal-600" />
+            <h2 class="text-lg font-bold text-texto flex items-center gap-2">
+              <TableCellsIcon class="w-5 h-5 text-teal-600 oscuro:text-teal-300" />
               Detalle por concepto
-                <span class="text-sm font-normal text-gray-500">({{ detalleFiltrado.length }} registros)</span>
+                <span class="text-sm font-normal text-texto-suave">({{ detalleFiltrado.length }} registros)</span>
             </h2>
-            <p class="text-sm text-gray-500 mt-0.5">Cuotas, sanciones, actividades, GMF 4×1000 (transferencias) y más, con socio y forma de pago.</p>
+            <p class="text-sm text-texto-suave mt-0.5">Cuotas, sanciones, actividades, GMF 4×1000 (transferencias) y más, con socio y forma de pago.</p>
             </div>
           </div>
           <button
@@ -269,24 +269,24 @@
         <div class="flex flex-col gap-4 mb-4">
           <!-- Barra de búsqueda -->
           <!-- Lupa por flex, no por `absolute`: en iOS el search cambia de alto al enfocar y la lupa se descolocaba -->
-          <div class="flex items-center rounded-xl border-2 border-gray-200 bg-white focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-200">
-            <span class="flex-shrink-0 pl-3 text-gray-400"><MagnifyingGlassIcon class="w-5 h-5" aria-hidden="true" /></span>
+          <div class="flex items-center rounded-xl border-2 border-borde bg-superficie-tarjeta focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-200 oscuro:focus-within:ring-teal-500/30">
+            <span class="flex-shrink-0 pl-3 text-texto-tenue"><MagnifyingGlassIcon class="w-5 h-5" aria-hidden="true" /></span>
             <input
               v-model.trim="filtroDetalleBusqueda"
               type="search"
               placeholder="Buscar por concepto o socio..."
               aria-label="Buscar por concepto o socio"
-              class="min-w-0 flex-1 border-none bg-transparent pl-2 pr-4 py-2.5 text-sm placeholder-gray-400 outline-none focus:ring-0"
+              class="min-w-0 flex-1 border-none bg-transparent pl-2 pr-4 py-2.5 text-sm placeholder-texto-tenue outline-none focus:ring-0"
               autocomplete="off"
             />
           </div>
           <!-- Filtro por mes (solo meses que existen en la natillera) -->
           <div class="flex flex-col sm:flex-row gap-2 sm:items-center flex-wrap">
-            <label class="text-sm font-semibold text-gray-700 shrink-0">Mes:</label>
+            <label class="text-sm font-semibold text-texto-medio shrink-0">Mes:</label>
             <div class="flex items-center gap-2 flex-wrap">
               <select
                 v-model="filtroDetalleMes"
-                class="px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-sm bg-white min-w-[11rem]"
+                class="px-4 py-2.5 rounded-xl border-2 border-borde focus:border-teal-500 focus:ring-2 focus:ring-teal-200 oscuro:focus:ring-teal-500/30 text-sm bg-superficie-tarjeta min-w-[11rem]"
               >
                 <option value="">Todos los meses</option>
                 <option
@@ -300,14 +300,14 @@
           <div class="flex flex-col sm:flex-row gap-4 flex-wrap">
           <!-- Filtro categoría (dropdown con checkboxes) -->
           <div ref="dropdownCategoriasRef" class="relative flex flex-col gap-2 min-w-0">
-            <label class="text-sm font-semibold text-gray-700 shrink-0">Categoría:</label>
+            <label class="text-sm font-semibold text-texto-medio shrink-0">Categoría:</label>
             <button
               type="button"
               @click="dropdownCategoriasAbierto = !dropdownCategoriasAbierto"
-              class="flex items-center justify-between gap-2 min-w-[11rem] px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-sm text-left bg-white hover:bg-gray-50 transition-colors"
+              class="flex items-center justify-between gap-2 min-w-[11rem] px-4 py-2.5 rounded-xl border-2 border-borde focus:border-teal-500 focus:ring-2 focus:ring-teal-200 oscuro:focus:ring-teal-500/30 text-sm text-left bg-superficie-tarjeta hover:bg-superficie-suave transition-colors"
             >
               <span class="truncate">{{ etiquetaFiltroCategorias }}</span>
-              <ChevronDownIcon :class="['w-5 h-5 text-gray-500 shrink-0 transition-transform', dropdownCategoriasAbierto && 'rotate-180']" />
+              <ChevronDownIcon :class="['w-5 h-5 text-texto-suave shrink-0 transition-transform', dropdownCategoriasAbierto && 'rotate-180']" />
             </button>
             <Transition
               enter-active-class="transition duration-150 ease-out"
@@ -319,29 +319,29 @@
             >
               <div
                 v-show="dropdownCategoriasAbierto"
-                class="absolute top-full left-0 mt-1 z-50 py-2 rounded-xl bg-white border-2 border-gray-200 shadow-xl min-w-[11rem] max-h-[16rem] overflow-y-auto"
+                class="absolute top-full left-0 mt-1 z-50 py-2 rounded-xl bg-superficie-tarjeta border-2 border-borde shadow-xl min-w-[11rem] max-h-[16rem] overflow-y-auto"
               >
                 <button
                   type="button"
                   @click="filtroDetalleCategorias = []; dropdownCategoriasAbierto = false"
-                  class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-teal-50/80 transition-colors"
-                  :class="filtroDetalleCategorias.length === 0 ? 'bg-teal-50 text-teal-700 font-semibold' : 'text-gray-700'"
+                  class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-teal-50/80 oscuro:hover:bg-teal-500/15 transition-colors"
+                  :class="filtroDetalleCategorias.length === 0 ? 'bg-teal-50 oscuro:bg-teal-500/15 text-teal-700 oscuro:text-teal-300 font-semibold' : 'text-texto-medio'"
                 >
-                  <span class="w-5 h-5 rounded border-2 flex items-center justify-center shrink-0" :class="filtroDetalleCategorias.length === 0 ? 'border-teal-500 bg-teal-500' : 'border-gray-300'">
+                  <span class="w-5 h-5 rounded border-2 flex items-center justify-center shrink-0" :class="filtroDetalleCategorias.length === 0 ? 'border-teal-500 bg-teal-500' : 'border-borde-fuerte'">
                     <CheckIcon v-if="filtroDetalleCategorias.length === 0" class="w-3.5 h-3.5 text-white" />
                   </span>
                   Todas
                 </button>
-                <div class="border-t border-gray-100 my-1" />
+                <div class="border-t border-borde-suave my-1" />
                 <button
                   v-for="cat in CATEGORIAS_DETALLE"
                   :key="cat.value"
                   type="button"
                   @click="toggleFiltroCategoria(cat.value)"
-                  class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-teal-50/80 transition-colors"
-                  :class="filtroDetalleCategorias.includes(cat.value) ? 'bg-teal-50/80 text-teal-800 font-medium' : 'text-gray-700'"
+                  class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-teal-50/80 oscuro:hover:bg-teal-500/15 transition-colors"
+                  :class="filtroDetalleCategorias.includes(cat.value) ? 'bg-teal-50/80 oscuro:bg-teal-500/15 text-teal-800 oscuro:text-teal-300 font-medium' : 'text-texto-medio'"
                 >
-                  <span class="w-5 h-5 rounded border-2 flex items-center justify-center shrink-0" :class="filtroDetalleCategorias.includes(cat.value) ? 'border-teal-500 bg-teal-500' : 'border-gray-300'">
+                  <span class="w-5 h-5 rounded border-2 flex items-center justify-center shrink-0" :class="filtroDetalleCategorias.includes(cat.value) ? 'border-teal-500 bg-teal-500' : 'border-borde-fuerte'">
                     <CheckIcon v-if="filtroDetalleCategorias.includes(cat.value)" class="w-3.5 h-3.5 text-white" />
                   </span>
                   {{ cat.label }}
@@ -353,28 +353,28 @@
           <div class="flex items-center gap-2 flex-wrap">
             <button
               @click="filtroDetalleFormaPago = 'todos'"
-              :class="['px-3 py-1.5 rounded-lg text-sm font-semibold transition-all', filtroDetalleFormaPago === 'todos' ? 'bg-teal-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200']"
+              :class="['px-3 py-1.5 rounded-lg text-sm font-semibold transition-all', filtroDetalleFormaPago === 'todos' ? 'bg-teal-500 text-white' : 'bg-superficie-hundida text-texto-secundario hover:bg-borde']"
             >Todos</button>
             <button
               @click="filtroDetalleFormaPago = 'efectivo'"
-              :class="['px-3 py-1.5 rounded-lg text-sm font-semibold transition-all', filtroDetalleFormaPago === 'efectivo' ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200']"
+              :class="['px-3 py-1.5 rounded-lg text-sm font-semibold transition-all', filtroDetalleFormaPago === 'efectivo' ? 'bg-green-500 text-white' : 'bg-superficie-hundida text-texto-secundario hover:bg-borde']"
             >Efectivo</button>
             <button
               @click="filtroDetalleFormaPago = 'transferencia'"
-              :class="['px-3 py-1.5 rounded-lg text-sm font-semibold transition-all', filtroDetalleFormaPago === 'transferencia' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200']"
+              :class="['px-3 py-1.5 rounded-lg text-sm font-semibold transition-all', filtroDetalleFormaPago === 'transferencia' ? 'bg-blue-500 text-white' : 'bg-superficie-hundida text-texto-secundario hover:bg-borde']"
             >Transferencia</button>
           </div>
           <!-- Ordenar por (varios criterios, prioridad de arriba a abajo en la lista) -->
           <div ref="dropdownOrdenarRef" class="relative flex flex-col gap-2 min-w-0">
-            <label class="text-sm font-semibold text-gray-700 shrink-0">Ordenar por:</label>
+            <label class="text-sm font-semibold text-texto-medio shrink-0">Ordenar por:</label>
             <button
               type="button"
               @click="dropdownOrdenarAbierto = !dropdownOrdenarAbierto"
-              class="flex items-center justify-between gap-2 min-w-[10rem] max-w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-sm text-left bg-white hover:bg-gray-50 transition-colors"
+              class="flex items-center justify-between gap-2 min-w-[10rem] max-w-full px-4 py-2.5 rounded-xl border-2 border-borde focus:border-teal-500 focus:ring-2 focus:ring-teal-200 oscuro:focus:ring-teal-500/30 text-sm text-left bg-superficie-tarjeta hover:bg-superficie-suave transition-colors"
               :title="etiquetaOrdenDetalle"
             >
               <span class="truncate">{{ etiquetaOrdenDetalle }}</span>
-              <ChevronDownIcon :class="['w-5 h-5 text-gray-500 shrink-0 transition-transform', dropdownOrdenarAbierto && 'rotate-180']" />
+              <ChevronDownIcon :class="['w-5 h-5 text-texto-suave shrink-0 transition-transform', dropdownOrdenarAbierto && 'rotate-180']" />
             </button>
             <Transition
               enter-active-class="transition duration-150 ease-out"
@@ -386,9 +386,9 @@
             >
               <div
                 v-show="dropdownOrdenarAbierto"
-                class="absolute top-full left-0 mt-1 z-50 py-2 rounded-xl bg-white border-2 border-gray-200 shadow-xl min-w-[15rem] max-w-[min(100vw-2rem,22rem)] overflow-hidden"
+                class="absolute top-full left-0 mt-1 z-50 py-2 rounded-xl bg-superficie-tarjeta border-2 border-borde shadow-xl min-w-[15rem] max-w-[min(100vw-2rem,22rem)] overflow-hidden"
               >
-                <p class="px-3 pb-2 text-[11px] text-gray-500 leading-snug">
+                <p class="px-3 pb-2 text-[11px] text-texto-suave leading-snug">
                   Marca uno o más criterios. El número indica la prioridad; usa las flechas para cambiar el orden.
                 </p>
                 <div
@@ -399,25 +399,25 @@
                   <button
                     type="button"
                     class="flex flex-1 items-center gap-2 min-w-0 text-left text-sm rounded-lg px-2 py-2 transition-colors"
-                    :class="ordenarDetalleCriterios.includes(opt.value) ? 'bg-teal-50 text-teal-800 font-medium' : 'text-gray-700 hover:bg-gray-50'"
+                    :class="ordenarDetalleCriterios.includes(opt.value) ? 'bg-teal-50 oscuro:bg-teal-500/15 text-teal-800 oscuro:text-teal-300 font-medium' : 'text-texto-medio hover:bg-superficie-suave'"
                     @click="toggleCriterioOrden(opt.value)"
                   >
                     <span
                       class="w-5 h-5 rounded border-2 flex items-center justify-center shrink-0"
-                      :class="ordenarDetalleCriterios.includes(opt.value) ? 'border-teal-500 bg-teal-500' : 'border-gray-300'"
+                      :class="ordenarDetalleCriterios.includes(opt.value) ? 'border-teal-500 bg-teal-500' : 'border-borde-fuerte'"
                     >
                       <CheckIcon v-if="ordenarDetalleCriterios.includes(opt.value)" class="w-3.5 h-3.5 text-white" />
                     </span>
-                    <span v-if="indiceCriterioOrden(opt.value) >= 0" class="text-xs text-teal-600 font-semibold tabular-nums w-4 shrink-0">{{ indiceCriterioOrden(opt.value) + 1 }}.</span>
+                    <span v-if="indiceCriterioOrden(opt.value) >= 0" class="text-xs text-teal-600 oscuro:text-teal-300 font-semibold tabular-nums w-4 shrink-0">{{ indiceCriterioOrden(opt.value) + 1 }}.</span>
                     <span class="truncate">{{ opt.label }}</span>
                   </button>
                   <div
                     v-if="ordenarDetalleCriterios.includes(opt.value) && ordenarDetalleCriterios.length > 1"
-                    class="flex flex-col justify-center shrink-0 border-l border-gray-100 pl-0.5"
+                    class="flex flex-col justify-center shrink-0 border-l border-borde-suave pl-0.5"
                   >
                     <button
                       type="button"
-                      class="p-0.5 rounded hover:bg-gray-100 text-gray-600 disabled:opacity-30 disabled:pointer-events-none"
+                      class="p-0.5 rounded hover:bg-superficie-hundida text-texto-secundario disabled:opacity-30 disabled:pointer-events-none"
                       :disabled="indiceCriterioOrden(opt.value) <= 0"
                       aria-label="Subir prioridad"
                       @click.stop="moverCriterioOrden(opt.value, -1)"
@@ -426,7 +426,7 @@
                     </button>
                     <button
                       type="button"
-                      class="p-0.5 rounded hover:bg-gray-100 text-gray-600 disabled:opacity-30 disabled:pointer-events-none"
+                      class="p-0.5 rounded hover:bg-superficie-hundida text-texto-secundario disabled:opacity-30 disabled:pointer-events-none"
                       :disabled="indiceCriterioOrden(opt.value) >= ordenarDetalleCriterios.length - 1"
                       aria-label="Bajar prioridad"
                       @click.stop="moverCriterioOrden(opt.value, 1)"
@@ -441,7 +441,7 @@
           </div>
         </div>
             <!-- Grid desktop / Cards móvil -->
-            <div v-if="detalleFiltrado.length === 0" class="text-center py-8 text-gray-500 rounded-xl bg-gray-50 border border-dashed border-gray-200">
+            <div v-if="detalleFiltrado.length === 0" class="text-center py-8 text-texto-suave rounded-xl bg-superficie-suave border border-dashed border-borde">
               <p class="font-medium">No hay registros para mostrar</p>
             </div>
             <div v-else>
@@ -449,7 +449,7 @@
               <div class="hidden sm:block overflow-x-auto -mx-1 mb-4">
                 <table class="w-full min-w-[640px] text-sm">
                   <thead>
-                    <tr class="border-b-2 border-gray-200 text-left text-gray-600 font-semibold">
+                    <tr class="border-b-2 border-borde text-left text-texto-secundario font-semibold">
                       <th class="py-3 px-2">Concepto</th>
                       <th class="py-3 px-2">Socio</th>
                       <th class="py-3 px-2 whitespace-nowrap">Fecha mov.</th>
@@ -462,32 +462,32 @@
                     <tr
                       v-for="(item, idx) in detallePaginado"
                       :key="`${item.tipo}-${idx}-${item.socio}-${item.monto}`"
-                      class="border-b border-gray-100 hover:bg-gray-50/80 transition-colors"
+                      class="border-b border-borde-suave hover:bg-superficie-suave/80 transition-colors"
                     >
                       <td class="py-2.5 px-2">
                         <span :class="['inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-medium max-w-[200px] truncate', getConceptoClass(item.tipo, item.esParcial)]" :title="item.concepto">
                           {{ item.concepto }}
                         </span>
-                        <span v-if="item.mes" class="text-gray-500 ml-1">{{ getMesLabel(item.mes) }} {{ item.anio }}</span>
+                        <span v-if="item.mes" class="text-texto-suave ml-1">{{ getMesLabel(item.mes) }} {{ item.anio }}</span>
                       </td>
-                      <td class="py-2.5 px-2 font-medium text-gray-800">{{ item.socio || '—' }}</td>
-                      <td class="py-2.5 px-2 text-gray-600 whitespace-nowrap tabular-nums">{{ formatDate(item.fecha_movimiento) }}</td>
+                      <td class="py-2.5 px-2 font-medium text-texto">{{ item.socio || '—' }}</td>
+                      <td class="py-2.5 px-2 text-texto-secundario whitespace-nowrap tabular-nums">{{ formatDate(item.fecha_movimiento) }}</td>
                       <td class="py-2.5 px-2">
-                        <span :class="item.forma_pago === 'transferencia' ? 'text-blue-600' : 'text-green-600'">{{ item.forma_pago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}</span>
+                        <span :class="item.forma_pago === 'transferencia' ? 'text-blue-600 oscuro:text-blue-300' : 'text-green-600 oscuro:text-green-300'">{{ item.forma_pago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}</span>
                       </td>
-                      <td class="py-2.5 px-2 text-gray-600 max-w-[260px]">
+                      <td class="py-2.5 px-2 text-texto-secundario max-w-[260px]">
                         <span v-if="item.observaciones" class="truncate block" :title="item.observaciones">{{ item.observaciones }}</span>
-                        <span v-else class="text-gray-300">—</span>
+                        <span v-else class="text-gray-300 oscuro:text-texto-tenue">—</span>
                       </td>
-                      <td class="py-2.5 px-2 text-right font-semibold" :class="item.monto >= 0 ? 'text-green-600' : 'text-red-600'">
+                      <td class="py-2.5 px-2 text-right font-semibold" :class="item.monto >= 0 ? 'text-green-600 oscuro:text-green-300' : 'text-red-600 oscuro:text-red-300'">
                         {{ item.monto >= 0 ? '+' : '' }}${{ formatMoney(item.monto) }}
                       </td>
                     </tr>
                   </tbody>
-                  <tfoot class="border-t-2 border-gray-200">
-                    <tr class="font-bold text-gray-800">
+                  <tfoot class="border-t-2 border-borde">
+                    <tr class="font-bold text-texto">
                       <td colspan="5" class="py-3 px-2">Total (filtrado)</td>
-                      <td class="py-3 px-2 text-right" :class="totalDetalleFiltrado >= 0 ? 'text-green-600' : 'text-red-600'">
+                      <td class="py-3 px-2 text-right" :class="totalDetalleFiltrado >= 0 ? 'text-green-600 oscuro:text-green-300' : 'text-red-600 oscuro:text-red-300'">
                         {{ totalDetalleFiltrado >= 0 ? '+' : '' }}${{ formatMoney(totalDetalleFiltrado) }}
                       </td>
                     </tr>
@@ -500,57 +500,57 @@
                 <div
                   v-for="(item, idx) in detallePaginado"
                   :key="`mob-${item.tipo}-${idx}-${item.socio}-${item.monto}`"
-                  class="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50/50"
+                  class="flex items-center justify-between gap-3 p-3 rounded-xl border border-borde bg-superficie-suave/50"
                 >
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
                       <span :class="['inline-flex px-2 py-0.5 rounded-lg text-xs font-medium shrink-0 max-w-full truncate', getConceptoClass(item.tipo, item.esParcial)]" :title="item.concepto">
                         {{ item.concepto }}
                       </span>
-                      <span v-if="item.mes" class="text-gray-500 text-xs shrink-0">{{ getMesLabel(item.mes) }} {{ item.anio }}</span>
+                      <span v-if="item.mes" class="text-texto-suave text-xs shrink-0">{{ getMesLabel(item.mes) }} {{ item.anio }}</span>
                     </div>
-                    <p class="font-medium text-gray-800 truncate mt-0.5">{{ item.socio || '—' }}</p>
-                    <p class="text-xs text-gray-500 tabular-nums">{{ formatDate(item.fecha_movimiento) }}</p>
-                    <p class="text-xs" :class="item.forma_pago === 'transferencia' ? 'text-blue-600' : 'text-green-600'">
+                    <p class="font-medium text-texto truncate mt-0.5">{{ item.socio || '—' }}</p>
+                    <p class="text-xs text-texto-suave tabular-nums">{{ formatDate(item.fecha_movimiento) }}</p>
+                    <p class="text-xs" :class="item.forma_pago === 'transferencia' ? 'text-blue-600 oscuro:text-blue-300' : 'text-green-600 oscuro:text-green-300'">
                       {{ item.forma_pago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
                     </p>
-                    <p v-if="item.observaciones" class="text-xs text-gray-500 mt-0.5 line-clamp-2" :title="item.observaciones">
+                    <p v-if="item.observaciones" class="text-xs text-texto-suave mt-0.5 line-clamp-2" :title="item.observaciones">
                       {{ item.observaciones }}
                     </p>
                   </div>
-                  <span class="font-bold shrink-0 tabular-nums" :class="item.monto >= 0 ? 'text-green-600' : 'text-red-600'">
+                  <span class="font-bold shrink-0 tabular-nums" :class="item.monto >= 0 ? 'text-green-600 oscuro:text-green-300' : 'text-red-600 oscuro:text-red-300'">
                     {{ item.monto >= 0 ? '+' : '' }}${{ formatMoney(item.monto) }}
                   </span>
                 </div>
-                <div class="flex items-center justify-between p-3 rounded-xl border-2 border-teal-200 bg-teal-50/50 font-bold">
-                  <span class="text-gray-800">Total</span>
-                  <span :class="totalDetalleFiltrado >= 0 ? 'text-green-600' : 'text-red-600'">
+                <div class="flex items-center justify-between p-3 rounded-xl border-2 border-teal-200 oscuro:border-teal-500/30 bg-teal-50/50 oscuro:bg-teal-500/15 font-bold">
+                  <span class="text-texto">Total</span>
+                  <span :class="totalDetalleFiltrado >= 0 ? 'text-green-600 oscuro:text-green-300' : 'text-red-600 oscuro:text-red-300'">
                     {{ totalDetalleFiltrado >= 0 ? '+' : '' }}${{ formatMoney(totalDetalleFiltrado) }}
                   </span>
                 </div>
               </div>
 
               <!-- Paginación -->
-              <div v-if="totalPaginas > 1" class="flex items-center justify-between gap-4 pt-4 border-t border-gray-200">
-                <div class="text-sm text-gray-600">
+              <div v-if="totalPaginas > 1" class="flex items-center justify-between gap-4 pt-4 border-t border-borde">
+                <div class="text-sm text-texto-secundario">
                   Mostrando {{ inicioPagina }} - {{ finPagina }} de {{ detalleFiltrado.length }} registros
                 </div>
                 <div class="flex items-center gap-2">
                   <button
                     @click="paginaActual = Math.max(1, paginaActual - 1)"
                     :disabled="paginaActual === 1"
-                    class="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    class="p-2 rounded-lg border border-borde-fuerte hover:bg-superficie-suave disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     title="Página anterior"
                   >
                     <ChevronLeftIcon class="w-5 h-5" />
                   </button>
-                  <span class="px-4 py-2 text-sm font-semibold text-gray-700">
+                  <span class="px-4 py-2 text-sm font-semibold text-texto-medio">
                     Página {{ paginaActual }} de {{ totalPaginas }}
                   </span>
                   <button
                     @click="paginaActual = Math.min(totalPaginas, paginaActual + 1)"
                     :disabled="paginaActual === totalPaginas"
-                    class="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    class="p-2 rounded-lg border border-borde-fuerte hover:bg-superficie-suave disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     title="Página siguiente"
                   >
                     <ChevronRightIcon class="w-5 h-5" />
@@ -563,14 +563,14 @@
       </div>
 
       <!-- Lista de movimientos -->
-      <div data-guia="cuadre-movimientos" class="bg-white rounded-2xl p-5 sm:p-6 border-2 border-gray-200 shadow-sm">
+      <div data-guia="cuadre-movimientos" class="bg-superficie-tarjeta rounded-2xl p-5 sm:p-6 border-2 border-borde shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
           <div>
-            <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-          <ListBulletIcon class="w-5 h-5 text-teal-600" />
+            <h2 class="text-lg font-bold text-texto flex items-center gap-2">
+          <ListBulletIcon class="w-5 h-5 text-teal-600 oscuro:text-teal-300" />
           Movimientos de caja
         </h2>
-            <p class="text-sm text-gray-500 mt-0.5">Entradas y salidas manuales (depósitos, retiros, gastos operativos).</p>
+            <p class="text-sm text-texto-suave mt-0.5">Entradas y salidas manuales (depósitos, retiros, gastos operativos).</p>
           </div>
           <button
             data-guia="cuadre-nuevo-movimiento"
@@ -581,7 +581,7 @@
             Nuevo Movimiento
           </button>
         </div>
-        <div v-if="movimientos.length === 0" class="text-center py-8 text-gray-500 rounded-xl bg-gray-50 border border-dashed border-gray-200">
+        <div v-if="movimientos.length === 0" class="text-center py-8 text-texto-suave rounded-xl bg-superficie-suave border border-dashed border-borde">
           <p class="font-medium">No hay movimientos registrados</p>
           <p class="text-sm mt-1">Los movimientos se suman o restan del total esperado.</p>
         </div>
@@ -591,8 +591,8 @@
             :key="item.tipo === 'traslado' ? `traslado-${item.salida.id}` : item.movimiento.id"
             class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border-2 hover:shadow-md transition-all"
             :class="item.tipo === 'traslado'
-              ? 'border-teal-300 bg-gradient-to-r from-teal-50/80 to-cyan-50/50'
-              : (item.movimiento.tipo === 'entrada' ? 'border-green-200 bg-green-50/30' : 'border-red-200 bg-red-50/30')"
+              ? 'border-teal-300 oscuro:border-teal-500/30 bg-gradient-to-r from-teal-50/80 oscuro:from-teal-500/15 to-cyan-50/50 oscuro:to-cyan-500/10'
+              : (item.movimiento.tipo === 'entrada' ? 'border-green-200 oscuro:border-green-500/30 bg-green-50/30 oscuro:bg-green-500/15' : 'border-red-200 oscuro:border-red-500/30 bg-red-50/30 oscuro:bg-red-500/15')"
           >
             <div class="flex items-start sm:items-center gap-3 flex-1 min-w-0">
               <!-- Icono: traslado (una tarjeta) o entrada/salida -->
@@ -618,29 +618,29 @@
                 <!-- Traslado: una sola tarjeta con salida y entrada bien visibles -->
                 <template v-if="item.tipo === 'traslado'">
                   <div class="flex items-center gap-2 flex-wrap mb-2">
-                    <span class="px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg text-xs font-bold shrink-0 bg-teal-100 text-teal-800 border-2 border-teal-400">
+                    <span class="px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg text-xs font-bold shrink-0 bg-teal-100 oscuro:bg-teal-500/15 text-teal-800 oscuro:text-teal-300 border-2 border-teal-400">
                       🔄 Traslado
                     </span>
                   </div>
                   <!-- Salida y entrada en dos líneas claras -->
                   <div class="space-y-1.5 text-sm">
                     <div class="flex items-center gap-2 flex-wrap">
-                      <span class="text-red-600 font-semibold shrink-0">Salida</span>
-                      <span class="px-1.5 py-0.5 rounded bg-green-100 text-green-800 font-medium text-xs border border-green-300 shrink-0">
+                      <span class="text-red-600 oscuro:text-red-300 font-semibold shrink-0">Salida</span>
+                      <span class="px-1.5 py-0.5 rounded bg-green-100 oscuro:bg-green-500/15 text-green-800 oscuro:text-green-300 font-medium text-xs border border-green-300 oscuro:border-green-500/30 shrink-0">
                         {{ item.salida.forma_pago === 'efectivo' ? 'Efectivo' : 'Transferencia' }}
                       </span>
-                      <span class="text-red-600 font-bold tabular-nums">−${{ formatMoney(item.salida.monto) }}</span>
+                      <span class="text-red-600 oscuro:text-red-300 font-bold tabular-nums">−${{ formatMoney(item.salida.monto) }}</span>
                     </div>
                     <div class="flex items-center gap-2 flex-wrap">
-                      <span class="text-green-600 font-semibold shrink-0">Entrada</span>
-                      <span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-medium text-xs border border-blue-300 shrink-0">
+                      <span class="text-green-600 oscuro:text-green-300 font-semibold shrink-0">Entrada</span>
+                      <span class="px-1.5 py-0.5 rounded bg-blue-100 oscuro:bg-blue-500/15 text-blue-800 oscuro:text-blue-300 font-medium text-xs border border-blue-300 oscuro:border-blue-500/30 shrink-0">
                         {{ item.entrada.forma_pago === 'efectivo' ? 'Efectivo' : 'Transferencia' }}
                       </span>
-                      <span class="text-green-600 font-bold tabular-nums">+${{ formatMoney(item.entrada.monto) }}</span>
+                      <span class="text-green-600 oscuro:text-green-300 font-bold tabular-nums">+${{ formatMoney(item.entrada.monto) }}</span>
                     </div>
                   </div>
-                  <p v-if="(item.salida.descripcion || '').trim()" class="font-medium text-gray-700 text-sm mt-1.5 break-words">{{ item.salida.descripcion }}</p>
-                  <p class="text-xs text-gray-500 font-medium mt-1">{{ formatDate(item.salida.fecha) }}</p>
+                  <p v-if="(item.salida.descripcion || '').trim()" class="font-medium text-texto-medio text-sm mt-1.5 break-words">{{ item.salida.descripcion }}</p>
+                  <p class="text-xs text-texto-suave font-medium mt-1">{{ formatDate(item.salida.fecha) }}</p>
                 </template>
                 <!-- Movimiento normal -->
                 <template v-else>
@@ -649,18 +649,18 @@
                       :class="[
                         'px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg text-xs font-bold shrink-0',
                         item.movimiento.forma_pago === 'efectivo'
-                          ? 'bg-green-100 text-green-800 border-2 border-green-400'
-                          : 'bg-blue-100 text-blue-800 border-2 border-blue-400'
+                          ? 'bg-green-100 oscuro:bg-green-500/15 text-green-800 oscuro:text-green-300 border-2 border-green-400'
+                          : 'bg-blue-100 oscuro:bg-blue-500/15 text-blue-800 oscuro:text-blue-300 border-2 border-blue-400'
                       ]"
                     >
                       {{ item.movimiento.forma_pago === 'efectivo' ? '💵 Efectivo' : '🏦 Transferencia' }}
                     </span>
                   </div>
                   <div class="space-y-1">
-                    <p class="font-semibold text-gray-900 text-sm sm:text-base leading-tight break-words">
+                    <p class="font-semibold text-texto-fuerte text-sm sm:text-base leading-tight break-words">
                       {{ obtenerDescripcionLimpia(item.movimiento) }}
                     </p>
-                    <p class="text-xs text-gray-500 font-medium">{{ formatDate(item.movimiento.fecha) }}</p>
+                    <p class="text-xs text-texto-suave font-medium">{{ formatDate(item.movimiento.fecha) }}</p>
                   </div>
                 </template>
               </div>
@@ -668,7 +668,7 @@
             <div class="flex items-center justify-between sm:justify-end gap-2 sm:gap-2 flex-shrink-0 sm:flex-shrink-0">
               <span
                 v-if="item.tipo === 'traslado'"
-                class="text-base sm:text-lg font-extrabold tabular-nums text-teal-700"
+                class="text-base sm:text-lg font-extrabold tabular-nums text-teal-700 oscuro:text-teal-300"
               >
                 ${{ formatMoney(item.salida.monto) }}
               </span>
@@ -676,7 +676,7 @@
                 v-else
                 :class="[
                   'text-base sm:text-lg font-extrabold tabular-nums',
-                  item.movimiento.tipo === 'entrada' ? 'text-green-600' : 'text-red-600'
+                  item.movimiento.tipo === 'entrada' ? 'text-green-600 oscuro:text-green-300' : 'text-red-600 oscuro:text-red-300'
                 ]"
               >
                 {{ item.movimiento.tipo === 'entrada' ? '+' : '−' }}${{ formatMoney(item.movimiento.monto) }}
@@ -685,7 +685,7 @@
                 <button
                   v-if="puedeGestionarCuotas"
                   @click="abrirModalEditarMovimiento(item.tipo === 'traslado' ? item.salida : item.movimiento)"
-                  class="p-1.5 sm:p-2 hover:bg-teal-50 rounded-lg text-teal-500 hover:text-teal-600 transition-colors"
+                  class="p-1.5 sm:p-2 hover:bg-teal-50 oscuro:hover:bg-teal-500/15 rounded-lg text-teal-500 hover:text-teal-600 oscuro:hover:text-teal-300 transition-colors"
                   :title="item.tipo === 'traslado' ? 'Editar traslado' : 'Editar movimiento'"
                 >
                   <PencilIcon class="w-4 h-4 sm:w-5 sm:h-5" />
@@ -693,7 +693,7 @@
                 <button
                   v-if="puedeGestionarCuotas"
                   @click="confirmarEliminarMovimiento(item.tipo === 'traslado' ? item.salida : item.movimiento)"
-                  class="p-1.5 sm:p-2 hover:bg-red-50 rounded-lg text-red-500 hover:text-red-600 transition-colors"
+                  class="p-1.5 sm:p-2 hover:bg-red-50 oscuro:hover:bg-red-500/15 rounded-lg text-red-500 hover:text-red-600 oscuro:hover:text-red-300 transition-colors"
                   :title="item.tipo === 'traslado' ? 'Eliminar traslado' : 'Eliminar movimiento'"
                 >
                   <TrashIcon class="w-4 h-4 sm:w-5 sm:h-5" />
@@ -710,14 +710,14 @@
       :show="!!movimientoAEliminar"
       :z-index="50"
       overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      card-class="relative max-w-sm w-full bg-white rounded-2xl shadow-2xl border border-gray-200 p-6"
+      card-class="relative max-w-sm w-full bg-superficie-tarjeta rounded-2xl shadow-2xl border border-borde p-6"
       card-max-width="24rem"
       @close="movimientoAEliminar = null"
     >
-        <h3 class="text-lg font-bold text-gray-800 mb-2">{{ movimientoAEliminar && esParteDeTraslado(movimientoAEliminar) ? '¿Eliminar traslado?' : '¿Eliminar movimiento?' }}</h3>
-        <p class="text-gray-600 text-sm mb-4">{{ movimientoAEliminar && esParteDeTraslado(movimientoAEliminar) ? 'Traslado entre formas de pago' : (movimientoAEliminar?.descripcion || (movimientoAEliminar?.tipo === 'entrada' ? 'Entrada' : 'Salida')) }} — ${{ formatMoney(movimientoAEliminar?.monto) }}</p>
+        <h3 class="text-lg font-bold text-texto mb-2">{{ movimientoAEliminar && esParteDeTraslado(movimientoAEliminar) ? '¿Eliminar traslado?' : '¿Eliminar movimiento?' }}</h3>
+        <p class="text-texto-secundario text-sm mb-4">{{ movimientoAEliminar && esParteDeTraslado(movimientoAEliminar) ? 'Traslado entre formas de pago' : (movimientoAEliminar?.descripcion || (movimientoAEliminar?.tipo === 'entrada' ? 'Entrada' : 'Salida')) }} — ${{ formatMoney(movimientoAEliminar?.monto) }}</p>
         <div class="flex gap-3">
-          <button @click="movimientoAEliminar = null" class="flex-1 py-2.5 rounded-xl border-2 border-gray-200 font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
+          <button @click="movimientoAEliminar = null" class="flex-1 py-2.5 rounded-xl border-2 border-borde font-semibold text-texto-secundario hover:bg-superficie-suave">Cancelar</button>
           <button @click="eliminarMovimientoConfirmado" :disabled="eliminandoMovimiento" class="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 disabled:opacity-50">
             {{ eliminandoMovimiento ? 'Eliminando...' : 'Sí, Eliminar' }}
           </button>
@@ -730,7 +730,7 @@
       :z-index="50"
       align="bottom"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="relative w-full sm:max-w-lg max-h-[90vh] supports-[height:100dvh]:max-h-[90dvh] min-h-0 bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      card-class="relative w-full sm:max-w-lg max-h-[90vh] supports-[height:100dvh]:max-h-[90dvh] min-h-0 bg-superficie-tarjeta rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-borde"
       card-max-width="32rem"
       @close="cerrarModalMovimiento"
     >
@@ -754,25 +754,25 @@
             <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-6 space-y-6">
               <!-- Tipo de movimiento (solo si no está editando) -->
               <div v-if="!editandoMovimiento">
-                <label class="block text-sm font-semibold text-gray-700 mb-3">Tipo de movimiento</label>
+                <label class="block text-sm font-semibold text-texto-medio mb-3">Tipo de movimiento</label>
                 <div class="grid grid-cols-3 gap-2">
                   <button
                     @click="tipoMovimiento = 'transferencia'"
-                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all', tipoMovimiento === 'transferencia' ? 'bg-teal-50 border-teal-500 text-teal-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all', tipoMovimiento === 'transferencia' ? 'bg-teal-50 oscuro:bg-teal-500/15 border-teal-500 text-teal-700 oscuro:text-teal-300' : 'bg-superficie-suave border-borde text-texto-secundario hover:bg-superficie-hundida']"
                   >
                     <ArrowPathIcon class="w-5 h-5 mx-auto mb-1" />
                     Transferencia
                   </button>
                   <button
                     @click="tipoMovimiento = 'ingreso'"
-                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all', tipoMovimiento === 'ingreso' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all', tipoMovimiento === 'ingreso' ? 'bg-green-50 oscuro:bg-green-500/15 border-green-500 text-green-700 oscuro:text-green-300' : 'bg-superficie-suave border-borde text-texto-secundario hover:bg-superficie-hundida']"
                   >
                     <BanknotesIcon class="w-5 h-5 mx-auto mb-1" />
                     Ingreso
                   </button>
                   <button
                     @click="tipoMovimiento = 'egreso'"
-                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all', tipoMovimiento === 'egreso' ? 'bg-red-50 border-red-500 text-red-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all', tipoMovimiento === 'egreso' ? 'bg-red-50 oscuro:bg-red-500/15 border-red-500 text-red-700 oscuro:text-red-300' : 'bg-superficie-suave border-borde text-texto-secundario hover:bg-superficie-hundida']"
                   >
                     <ArrowDownTrayIcon class="w-5 h-5 mx-auto mb-1 rotate-180" />
                     Egreso
@@ -781,14 +781,14 @@
               </div>
               
               <!-- Información del movimiento (solo si está editando) -->
-              <div v-if="editandoMovimiento" class="rounded-xl p-4 bg-gray-50 border-2 border-gray-200">
-                <p class="text-sm font-semibold text-gray-700 mb-1">Movimiento actual:</p>
-                <p class="text-sm text-gray-600">
-                  <span :class="movimientoEditando?.tipo === 'entrada' ? 'text-green-600 font-bold' : 'text-red-600 font-bold'">
+              <div v-if="editandoMovimiento" class="rounded-xl p-4 bg-superficie-suave border-2 border-borde">
+                <p class="text-sm font-semibold text-texto-medio mb-1">Movimiento actual:</p>
+                <p class="text-sm text-texto-secundario">
+                  <span :class="movimientoEditando?.tipo === 'entrada' ? 'text-green-600 oscuro:text-green-300 font-bold' : 'text-red-600 oscuro:text-red-300 font-bold'">
                     {{ movimientoEditando?.tipo === 'entrada' ? 'Entrada' : 'Salida' }}
                   </span>
                   · 
-                  <span :class="movimientoEditando?.forma_pago === 'efectivo' ? 'text-green-600' : 'text-blue-600'">
+                  <span :class="movimientoEditando?.forma_pago === 'efectivo' ? 'text-green-600 oscuro:text-green-300' : 'text-blue-600 oscuro:text-blue-300'">
                     {{ movimientoEditando?.forma_pago === 'efectivo' ? 'Efectivo' : 'Transferencia' }}
                   </span>
                   · ${{ formatMoney(movimientoEditando?.monto) }}
@@ -797,11 +797,11 @@
 
               <!-- Transferencia entre formas de pago (solo si no está editando) -->
               <div v-if="!editandoMovimiento && tipoMovimiento === 'transferencia'">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Dirección de transferencia</label>
+                <label class="block text-sm font-semibold text-texto-medio mb-2">Dirección de transferencia</label>
                 <div class="space-y-2">
                   <button
                     @click="formMovimiento.direccionTransferencia = 'efectivo_transferencia'"
-                    :class="['w-full px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.direccionTransferencia === 'efectivo_transferencia' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                    :class="['w-full px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.direccionTransferencia === 'efectivo_transferencia' ? 'bg-green-50 oscuro:bg-green-500/15 border-green-500 text-green-700 oscuro:text-green-300' : 'bg-superficie-suave border-borde text-texto-secundario hover:bg-superficie-hundida']"
                   >
                     <BanknotesIcon class="w-5 h-5" />
                     <span>Efectivo</span>
@@ -811,7 +811,7 @@
                   </button>
                   <button
                     @click="formMovimiento.direccionTransferencia = 'transferencia_efectivo'"
-                    :class="['w-full px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.direccionTransferencia === 'transferencia_efectivo' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                    :class="['w-full px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.direccionTransferencia === 'transferencia_efectivo' ? 'bg-blue-50 oscuro:bg-blue-500/15 border-blue-500 text-blue-700 oscuro:text-blue-300' : 'bg-superficie-suave border-borde text-texto-secundario hover:bg-superficie-hundida']"
                   >
                     <ArrowPathIcon class="w-5 h-5" />
                     <span>Transferencia</span>
@@ -824,18 +824,18 @@
 
               <!-- Forma de pago (para ingresos/egresos o cuando está editando) -->
               <div v-if="editandoMovimiento || tipoMovimiento === 'ingreso' || tipoMovimiento === 'egreso'">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Forma de pago</label>
+                <label class="block text-sm font-semibold text-texto-medio mb-2">Forma de pago</label>
                 <div class="grid grid-cols-2 gap-2">
                   <button
                     @click="formMovimiento.formaPago = 'efectivo'"
-                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.formaPago === 'efectivo' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.formaPago === 'efectivo' ? 'bg-green-50 oscuro:bg-green-500/15 border-green-500 text-green-700 oscuro:text-green-300' : 'bg-superficie-suave border-borde text-texto-secundario hover:bg-superficie-hundida']"
                   >
                     <BanknotesIcon class="w-5 h-5" />
                     Efectivo
                   </button>
                   <button
                     @click="formMovimiento.formaPago = 'transferencia'"
-                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.formaPago === 'transferencia' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.formaPago === 'transferencia' ? 'bg-blue-50 oscuro:bg-blue-500/15 border-blue-500 text-blue-700 oscuro:text-blue-300' : 'bg-superficie-suave border-borde text-texto-secundario hover:bg-superficie-hundida']"
                   >
                     <ArrowPathIcon class="w-5 h-5" />
                     Transferencia
@@ -845,60 +845,60 @@
 
               <!-- Origen del egreso: de dónde sale el dinero (solo para egresos) -->
               <div v-if="(editandoMovimiento && movimientoEditando?.tipo === 'salida') || (!editandoMovimiento && tipoMovimiento === 'egreso')">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">¿De dónde sale el dinero?</label>
+                <label class="block text-sm font-semibold text-texto-medio mb-2">¿De dónde sale el dinero?</label>
                 <div class="grid grid-cols-2 gap-2">
                   <button
                     @click="formMovimiento.origenEgreso = 'recaudado'"
-                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.origenEgreso === 'recaudado' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.origenEgreso === 'recaudado' ? 'bg-green-50 oscuro:bg-green-500/15 border-green-500 text-green-700 oscuro:text-green-300' : 'bg-superficie-suave border-borde text-texto-secundario hover:bg-superficie-hundida']"
                   >
                     <BanknotesIcon class="w-5 h-5" />
                     Recaudado
                   </button>
                   <button
                     @click="formMovimiento.origenEgreso = 'utilidades'"
-                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.origenEgreso === 'utilidades' ? 'bg-amber-50 border-amber-500 text-amber-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.origenEgreso === 'utilidades' ? 'bg-amber-50 oscuro:bg-amber-500/15 border-amber-500 text-amber-700 oscuro:text-amber-300' : 'bg-superficie-suave border-borde text-texto-secundario hover:bg-superficie-hundida']"
                   >
                     <span class="text-lg">📊</span>
                     Utilidades
                   </button>
                 </div>
-                <p class="text-xs text-gray-500 mt-1">Se descontará del indicador correspondiente en el desglose</p>
+                <p class="text-xs text-texto-suave mt-1">Se descontará del indicador correspondiente en el desglose</p>
               </div>
 
               <!-- Destino del ingreso: a dónde va el dinero (solo para ingresos) -->
               <div v-if="(editandoMovimiento && movimientoEditando?.tipo === 'entrada') || (!editandoMovimiento && tipoMovimiento === 'ingreso')">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">¿A dónde va el dinero?</label>
+                <label class="block text-sm font-semibold text-texto-medio mb-2">¿A dónde va el dinero?</label>
                 <div class="grid grid-cols-2 gap-2">
                   <button
                     @click="formMovimiento.destinoIngreso = 'recaudado'"
-                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.destinoIngreso === 'recaudado' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.destinoIngreso === 'recaudado' ? 'bg-green-50 oscuro:bg-green-500/15 border-green-500 text-green-700 oscuro:text-green-300' : 'bg-superficie-suave border-borde text-texto-secundario hover:bg-superficie-hundida']"
                   >
                     <BanknotesIcon class="w-5 h-5" />
                     Recaudado
                   </button>
                   <button
                     @click="formMovimiento.destinoIngreso = 'utilidades'"
-                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.destinoIngreso === 'utilidades' ? 'bg-amber-50 border-amber-500 text-amber-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.destinoIngreso === 'utilidades' ? 'bg-amber-50 oscuro:bg-amber-500/15 border-amber-500 text-amber-700 oscuro:text-amber-300' : 'bg-superficie-suave border-borde text-texto-secundario hover:bg-superficie-hundida']"
                   >
                     <span class="text-lg">📊</span>
                     Utilidades
                   </button>
                 </div>
-                <p class="text-xs text-gray-500 mt-1">Se sumará al indicador correspondiente en el detalle de la natillera</p>
+                <p class="text-xs text-texto-suave mt-1">Se sumará al indicador correspondiente en el detalle de la natillera</p>
               </div>
 
               <!-- Monto -->
               <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Monto <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-semibold text-texto-medio mb-2">Monto <span class="text-red-500">*</span></label>
                 <div class="relative">
-                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">$</span>
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-texto-suave font-semibold">$</span>
                   <input
                     v-model="montoFormateado"
                     type="text"
                     @input="handleMontoInput"
                     @blur="handleMontoBlur"
                     placeholder="0"
-                    class="w-full pl-8 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-lg font-semibold"
+                    class="w-full pl-8 pr-4 py-3 rounded-xl border-2 border-borde focus:border-teal-500 focus:ring-2 focus:ring-teal-200 oscuro:focus:ring-teal-500/30 text-lg font-semibold"
                     :class="erroresFormulario.monto ? 'border-red-500' : ''"
                   />
                 </div>
@@ -907,33 +907,33 @@
 
               <!-- Descripción -->
               <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción</label>
+                <label class="block text-sm font-semibold text-texto-medio mb-2">Descripción</label>
                 <textarea
                   v-model.trim="formMovimiento.descripcion"
                   rows="3"
                   placeholder="Ej: Transferencia para pagar gastos, Depósito adicional, etc."
-                  class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-sm resize-none"
+                  class="w-full px-4 py-3 rounded-xl border-2 border-borde focus:border-teal-500 focus:ring-2 focus:ring-teal-200 oscuro:focus:ring-teal-500/30 text-sm resize-none"
                 ></textarea>
               </div>
 
               <!-- Fecha -->
               <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Fecha</label>
+                <label class="block text-sm font-semibold text-texto-medio mb-2">Fecha</label>
                 <input
                   v-model="formMovimiento.fecha"
                   type="date"
-                  class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-sm"
+                  class="w-full px-4 py-3 rounded-xl border-2 border-borde focus:border-teal-500 focus:ring-2 focus:ring-teal-200 oscuro:focus:ring-teal-500/30 text-sm"
                 />
               </div>
             </div>
 
             <!-- Footer: en iOS la hoja ya no lleva padding inferior; la safe-area y lo que tape
                  la barra de Safari los pone este pie. -->
-            <div class="flex flex-shrink-0 gap-3 border-t border-gray-200 px-6 pt-6 pb-[calc(max(1.5rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+            <div class="flex flex-shrink-0 gap-3 border-t border-borde px-6 pt-6 pb-[calc(max(1.5rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
               <button
                 @click="cerrarModalMovimiento"
                 :disabled="guardandoMovimiento"
-                class="flex-1 py-2.5 rounded-xl border-2 border-gray-200 font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                class="flex-1 py-2.5 rounded-xl border-2 border-borde font-semibold text-texto-secundario hover:bg-superficie-suave disabled:opacity-50"
               >
                 Cancelar
               </button>
@@ -950,18 +950,18 @@
       <!-- Simulador de cierre -->
       <div v-show="tabActiva === 'simulador'">
         <div class="space-y-6">
-          <div data-guia="cuadre-simulador" class="bg-white rounded-2xl p-5 sm:p-6 border-2 border-teal-200 shadow-sm">
-            <h2 class="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
-              <CalculatorIcon class="w-5 h-5 text-teal-600" />
+          <div data-guia="cuadre-simulador" class="bg-superficie-tarjeta rounded-2xl p-5 sm:p-6 border-2 border-teal-200 oscuro:border-teal-500/30 shadow-sm">
+            <h2 class="text-lg font-bold text-texto mb-2 flex items-center gap-2">
+              <CalculatorIcon class="w-5 h-5 text-teal-600 oscuro:text-teal-300" />
               Simulador de cierre
             </h2>
-            <p class="text-sm text-gray-500 mb-4">Valores estimados por socio a la fecha, sin ejecutar el cierre definitivo.</p>
+            <p class="text-sm text-texto-suave mb-4">Valores estimados por socio a la fecha, sin ejecutar el cierre definitivo.</p>
             <div class="flex flex-wrap items-center gap-3 mb-4">
-              <label class="text-sm font-semibold text-gray-700">Fecha de corte:</label>
+              <label class="text-sm font-semibold text-texto-medio">Fecha de corte:</label>
               <input
                 v-model="simuladorFechaCorte"
                 type="date"
-                class="px-3 py-2 rounded-xl border-2 border-gray-200 focus:border-teal-500 text-sm"
+                class="px-3 py-2 rounded-xl border-2 border-borde focus:border-teal-500 text-sm"
               />
               <button
                 type="button"
@@ -972,11 +972,11 @@
                 {{ simuladorLoading ? 'Calculando...' : 'Calcular' }}
               </button>
             </div>
-            <div v-if="simuladorError" class="text-sm text-red-600 mb-4">{{ simuladorError }}            </div>
+            <div v-if="simuladorError" class="text-sm text-red-600 oscuro:text-red-300 mb-4">{{ simuladorError }}            </div>
           </div>
           <div v-if="simuladorSocios.length > 0" class="space-y-4">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <p class="text-sm font-semibold text-gray-700">Resumen por socio ({{ simuladorSocios.length }})</p>
+              <p class="text-sm font-semibold text-texto-medio">Resumen por socio ({{ simuladorSocios.length }})</p>
               <button
                 type="button"
                 @click="exportarSimuladorAExcel"
@@ -989,14 +989,14 @@
             </div>
             
             <!-- Total General -->
-            <div class="bg-gradient-to-r from-teal-50 to-teal-100 rounded-xl p-4 border-2 border-teal-200 shadow-sm">
+            <div class="bg-gradient-to-r from-teal-50 oscuro:from-teal-500/15 to-teal-100 oscuro:to-teal-500/10 rounded-xl p-4 border-2 border-teal-200 oscuro:border-teal-500/30 shadow-sm">
               <div class="flex items-center justify-between">
                 <div>
-                  <p class="text-sm font-semibold text-teal-800 mb-1">Total a entregar</p>
-                  <p class="text-xs text-teal-600">Dinero total que se debe tener disponible</p>
+                  <p class="text-sm font-semibold text-teal-800 oscuro:text-teal-300 mb-1">Total a entregar</p>
+                  <p class="text-xs text-teal-600 oscuro:text-teal-300">Dinero total que se debe tener disponible</p>
                 </div>
                 <div class="text-right">
-                  <p class="text-2xl sm:text-3xl font-extrabold text-teal-700 tabular-nums">
+                  <p class="text-2xl sm:text-3xl font-extrabold text-teal-700 oscuro:text-teal-300 tabular-nums">
                     ${{ formatMoney(totalSimuladorGeneral) }}
                   </p>
                 </div>
@@ -1004,67 +1004,67 @@
             </div>
             
             <!-- Vista Desktop: Tabla -->
-            <div class="hidden sm:block overflow-x-auto bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div class="hidden sm:block overflow-x-auto bg-superficie-tarjeta rounded-xl border border-borde shadow-sm">
               <table class="w-full text-sm text-left">
-                <thead class="bg-gray-50 text-gray-700 font-semibold border-b border-gray-200">
+                <thead class="bg-superficie-suave text-texto-medio font-semibold border-b border-borde">
                   <tr>
                     <th class="px-4 py-3">Socio</th>
                     <th class="px-4 py-3 text-right">Ahorro</th>
                     <th class="px-4 py-3 text-right">Utilidades</th>
                     <th class="px-4 py-3 text-right">Total (Antes de desc.)</th>
-                    <th class="px-4 py-3 text-right text-red-600">Descuentos</th>
+                    <th class="px-4 py-3 text-right text-red-600 oscuro:text-red-300">Descuentos</th>
                     <th class="px-4 py-3 text-right font-bold">A Entregar</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
+                <tbody class="divide-y divide-borde-suave">
                   <template v-for="(dato, idx) in simuladorSociosFiltrados" :key="dato.socio?.id || dato.socioNatillera?.id || idx">
-                    <tr class="hover:bg-gray-50/50 transition-colors">
+                    <tr class="hover:bg-superficie-suave/50 transition-colors">
                       <td class="px-4 py-3">
                         <button
                           type="button"
                           @click="simuladorDetalleId = simuladorDetalleId === (dato.socioNatillera?.id || dato.socio?.id) ? null : (dato.socioNatillera?.id || dato.socio?.id)"
-                          class="flex items-center gap-2 text-left w-full hover:text-teal-600 transition-colors focus:outline-none"
+                          class="flex items-center gap-2 text-left w-full hover:text-teal-600 oscuro:hover:text-teal-300 transition-colors focus:outline-none"
                         >
-                          <ChevronRightIcon :class="['w-4 h-4 text-gray-400 transition-transform flex-shrink-0', simuladorDetalleId === (dato.socioNatillera?.id || dato.socio?.id) && 'rotate-90']" />
+                          <ChevronRightIcon :class="['w-4 h-4 text-texto-tenue transition-transform flex-shrink-0', simuladorDetalleId === (dato.socioNatillera?.id || dato.socio?.id) && 'rotate-90']" />
                           <div>
-                            <span class="font-bold text-gray-800">{{ dato.socio?.nombre || 'Socio' }}</span>
-                            <span v-if="dato.socio?.telefono" class="block text-xs text-gray-500 font-normal mt-0.5">{{ dato.socio.telefono }}</span>
+                            <span class="font-bold text-texto">{{ dato.socio?.nombre || 'Socio' }}</span>
+                            <span v-if="dato.socio?.telefono" class="block text-xs text-texto-suave font-normal mt-0.5">{{ dato.socio.telefono }}</span>
                           </div>
                         </button>
                       </td>
-                      <td class="px-4 py-3 text-right font-medium text-sky-600 tabular-nums">${{ formatMoney(dato.ahorro) }}</td>
-                      <td class="px-4 py-3 text-right font-medium text-purple-600 tabular-nums">${{ formatMoney(dato.utilidadesTotal) }}</td>
-                      <td class="px-4 py-3 text-right font-medium text-gray-600 tabular-nums">${{ formatMoney(dato.totalAEntregar) }}</td>
-                      <td class="px-4 py-3 text-right font-medium text-red-600 tabular-nums">${{ formatMoney(dato.descuentos) }}</td>
+                      <td class="px-4 py-3 text-right font-medium text-sky-600 oscuro:text-sky-300 tabular-nums">${{ formatMoney(dato.ahorro) }}</td>
+                      <td class="px-4 py-3 text-right font-medium text-purple-600 oscuro:text-purple-300 tabular-nums">${{ formatMoney(dato.utilidadesTotal) }}</td>
+                      <td class="px-4 py-3 text-right font-medium text-texto-secundario tabular-nums">${{ formatMoney(dato.totalAEntregar) }}</td>
+                      <td class="px-4 py-3 text-right font-medium text-red-600 oscuro:text-red-300 tabular-nums">${{ formatMoney(dato.descuentos) }}</td>
                       <td class="px-4 py-3 text-right">
-                        <div class="tabular-nums font-bold" :class="dato.totalFinal >= 0 ? 'text-teal-600' : ''">
+                        <div class="tabular-nums font-bold" :class="dato.totalFinal >= 0 ? 'text-teal-600 oscuro:text-teal-300' : ''">
                           ${{ formatMoney(dato.totalFinal >= 0 ? dato.totalFinal : 0) }}
                         </div>
-                        <div v-if="dato.totalFinal < 0" class="text-xs font-semibold text-red-600 mt-0.5">
+                        <div v-if="dato.totalFinal < 0" class="text-xs font-semibold text-red-600 oscuro:text-red-300 mt-0.5">
                           Debe: ${{ formatMoney(-dato.totalFinal) }}
                         </div>
                       </td>
                     </tr>
-                    <tr v-show="simuladorDetalleId === (dato.socioNatillera?.id || dato.socio?.id)" class="bg-gray-50/80">
-                      <td colspan="6" class="px-4 py-3 border-t border-gray-100/50">
+                    <tr v-show="simuladorDetalleId === (dato.socioNatillera?.id || dato.socio?.id)" class="bg-superficie-suave/80">
+                      <td colspan="6" class="px-4 py-3 border-t border-borde-suave/50">
                         <div class="pl-6 space-y-3 text-xs">
                           <div v-if="dato.descuentos > 0 && dato.descuentosDesglose" class="flex flex-wrap items-center gap-4">
-                            <span class="font-semibold text-red-600">Detalle del descuento (sanción):</span>
-                            <span v-if="(dato.descuentosDesglose.prestamosPendientes || 0) > 0" class="flex items-center gap-1.5 bg-red-50 px-2.5 py-1 rounded border border-red-200">
-                              <span class="text-red-700">Préstamos pendientes:</span>
-                              <span class="font-bold text-red-800">${{ formatMoney(dato.descuentosDesglose.prestamosPendientes || 0) }}</span>
+                            <span class="font-semibold text-red-600 oscuro:text-red-300">Detalle del descuento (sanción):</span>
+                            <span v-if="(dato.descuentosDesglose.prestamosPendientes || 0) > 0" class="flex items-center gap-1.5 bg-red-50 oscuro:bg-red-500/15 px-2.5 py-1 rounded border border-red-200 oscuro:border-red-500/30">
+                              <span class="text-red-700 oscuro:text-red-300">Préstamos pendientes:</span>
+                              <span class="font-bold text-red-800 oscuro:text-red-300">${{ formatMoney(dato.descuentosDesglose.prestamosPendientes || 0) }}</span>
                             </span>
-                            <span v-if="(dato.descuentosDesglose.cuotasSinPagar || 0) > 0" class="flex items-center gap-1.5 bg-red-50 px-2.5 py-1 rounded border border-red-200">
-                              <span class="text-red-700">Cuotas sin pagar (en mora):</span>
-                              <span class="font-bold text-red-800">${{ formatMoney(dato.descuentosDesglose.cuotasSinPagar || 0) }}</span>
+                            <span v-if="(dato.descuentosDesglose.cuotasSinPagar || 0) > 0" class="flex items-center gap-1.5 bg-red-50 oscuro:bg-red-500/15 px-2.5 py-1 rounded border border-red-200 oscuro:border-red-500/30">
+                              <span class="text-red-700 oscuro:text-red-300">Cuotas sin pagar (en mora):</span>
+                              <span class="font-bold text-red-800 oscuro:text-red-300">${{ formatMoney(dato.descuentosDesglose.cuotasSinPagar || 0) }}</span>
                             </span>
                           </div>
                           <div class="flex items-center gap-4 flex-wrap">
-                            <span class="font-semibold text-gray-600">Desglose de utilidades:</span>
+                            <span class="font-semibold text-texto-secundario">Desglose de utilidades:</span>
                             <template v-for="tipo in TIPOS_UTILIDAD_SIMULADOR" :key="tipo">
-                              <span v-show="(dato.utilidadesPorConcepto[tipo] || 0) > 0" class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded border border-gray-200">
-                                <span class="text-gray-500">{{ LABELS_UTILIDAD_SIMULADOR[tipo] || tipo }}:</span>
-                                <span class="font-bold text-gray-800">${{ formatMoney(dato.utilidadesPorConcepto[tipo] || 0) }}</span>
+                              <span v-show="(dato.utilidadesPorConcepto[tipo] || 0) > 0" class="flex items-center gap-1.5 bg-superficie-tarjeta px-2.5 py-1 rounded border border-borde">
+                                <span class="text-texto-suave">{{ LABELS_UTILIDAD_SIMULADOR[tipo] || tipo }}:</span>
+                                <span class="font-bold text-texto">${{ formatMoney(dato.utilidadesPorConcepto[tipo] || 0) }}</span>
                               </span>
                             </template>
                           </div>
@@ -1081,28 +1081,28 @@
               <div
                 v-for="(dato, idx) in simuladorSociosFiltrados"
                 :key="'m-'+(dato.socio?.id || dato.socioNatillera?.id || idx)"
-                class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-200"
-                :class="simuladorDetalleId === (dato.socioNatillera?.id || dato.socio?.id) ? 'ring-2 ring-teal-500/20 border-teal-200' : ''"
+                class="bg-superficie-tarjeta rounded-xl border border-borde shadow-sm overflow-hidden transition-all duration-200"
+                :class="simuladorDetalleId === (dato.socioNatillera?.id || dato.socio?.id) ? 'ring-2 ring-teal-500/20 border-teal-200 oscuro:border-teal-500/30' : ''"
               >
                 <!-- Cabecera de la Card (Siempre visible) -->
                 <button
                   type="button"
                   @click="simuladorDetalleId = simuladorDetalleId === (dato.socioNatillera?.id || dato.socio?.id) ? null : (dato.socioNatillera?.id || dato.socio?.id)"
-                  class="w-full text-left p-3.5 bg-gray-50/50 hover:bg-teal-50/30 transition-colors flex items-center justify-between gap-3 border-b border-gray-100"
+                  class="w-full text-left p-3.5 bg-superficie-suave/50 hover:bg-teal-50/30 oscuro:hover:bg-teal-500/15 transition-colors flex items-center justify-between gap-3 border-b border-borde-suave"
                 >
                   <div class="min-w-0">
-                    <span class="font-bold text-gray-800 text-sm truncate block">{{ dato.socio?.nombre || 'Socio' }}</span>
+                    <span class="font-bold text-texto text-sm truncate block">{{ dato.socio?.nombre || 'Socio' }}</span>
                     <div class="flex items-center gap-2 mt-1">
-                      <span class="text-[11px] font-semibold text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded">Ah: ${{ formatMoney(dato.ahorro) }}</span>
-                      <span class="text-[11px] font-semibold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">Ut: ${{ formatMoney(dato.utilidadesTotal) }}</span>
+                      <span class="text-[11px] font-semibold text-sky-600 oscuro:text-sky-300 bg-sky-50 oscuro:bg-sky-500/15 px-1.5 py-0.5 rounded">Ah: ${{ formatMoney(dato.ahorro) }}</span>
+                      <span class="text-[11px] font-semibold text-purple-600 oscuro:text-purple-300 bg-purple-50 oscuro:bg-purple-500/15 px-1.5 py-0.5 rounded">Ut: ${{ formatMoney(dato.utilidadesTotal) }}</span>
                     </div>
                   </div>
                   <div class="flex flex-col items-end flex-shrink-0">
-                    <span class="text-xs text-gray-500 mb-0.5">A entregar</span>
-                    <span class="font-bold text-[15px]" :class="dato.totalFinal >= 0 ? 'text-teal-600' : ''">
+                    <span class="text-xs text-texto-suave mb-0.5">A entregar</span>
+                    <span class="font-bold text-[15px]" :class="dato.totalFinal >= 0 ? 'text-teal-600 oscuro:text-teal-300' : ''">
                       ${{ formatMoney(dato.totalFinal >= 0 ? dato.totalFinal : 0) }}
                     </span>
-                    <span v-if="dato.totalFinal < 0" class="text-[11px] font-semibold text-red-600 mt-0.5">
+                    <span v-if="dato.totalFinal < 0" class="text-[11px] font-semibold text-red-600 oscuro:text-red-300 mt-0.5">
                       Debe: ${{ formatMoney(-dato.totalFinal) }}
                     </span>
                   </div>
@@ -1115,42 +1115,42 @@
                 >
                   <!-- Resumen Financiero Completo -->
                   <div class="grid grid-cols-2 gap-2 text-xs">
-                    <div class="bg-gray-50 p-2 rounded-lg border border-gray-100">
-                      <span class="text-gray-500 block mb-0.5">Total (antes desc.)</span>
-                      <span class="font-semibold text-gray-700">${{ formatMoney(dato.totalAEntregar) }}</span>
+                    <div class="bg-superficie-suave p-2 rounded-lg border border-borde-suave">
+                      <span class="text-texto-suave block mb-0.5">Total (antes desc.)</span>
+                      <span class="font-semibold text-texto-medio">${{ formatMoney(dato.totalAEntregar) }}</span>
                     </div>
-                    <div class="bg-red-50 p-2 rounded-lg border border-red-100">
+                    <div class="bg-red-50 oscuro:bg-red-500/15 p-2 rounded-lg border border-red-100 oscuro:border-red-500/30">
                       <span class="text-red-500/80 block mb-0.5">Descuentos</span>
-                      <span class="font-semibold text-red-600">-${{ formatMoney(dato.descuentos) }}</span>
+                      <span class="font-semibold text-red-600 oscuro:text-red-300">-${{ formatMoney(dato.descuentos) }}</span>
                     </div>
                   </div>
 
                   <!-- Detalle del descuento (sanción) cuando hay descuento -->
                   <div v-if="dato.descuentos > 0 && dato.descuentosDesglose" class="space-y-2">
-                    <p class="text-[11px] font-bold text-red-600 uppercase tracking-wider">Detalle del descuento (sanción)</p>
+                    <p class="text-[11px] font-bold text-red-600 oscuro:text-red-300 uppercase tracking-wider">Detalle del descuento (sanción)</p>
                     <div class="grid grid-cols-2 gap-2">
-                      <div v-if="(dato.descuentosDesglose.prestamosPendientes || 0) > 0" class="bg-red-50 p-2 rounded-lg border border-red-200">
-                        <span class="text-[11px] text-red-700 block mb-0.5">Préstamos pendientes</span>
-                        <span class="font-semibold text-red-800 text-[11px]">${{ formatMoney(dato.descuentosDesglose.prestamosPendientes || 0) }}</span>
+                      <div v-if="(dato.descuentosDesglose.prestamosPendientes || 0) > 0" class="bg-red-50 oscuro:bg-red-500/15 p-2 rounded-lg border border-red-200 oscuro:border-red-500/30">
+                        <span class="text-[11px] text-red-700 oscuro:text-red-300 block mb-0.5">Préstamos pendientes</span>
+                        <span class="font-semibold text-red-800 oscuro:text-red-300 text-[11px]">${{ formatMoney(dato.descuentosDesglose.prestamosPendientes || 0) }}</span>
                       </div>
-                      <div v-if="(dato.descuentosDesglose.cuotasSinPagar || 0) > 0" class="bg-red-50 p-2 rounded-lg border border-red-200">
-                        <span class="text-[11px] text-red-700 block mb-0.5">Cuotas sin pagar (en mora)</span>
-                        <span class="font-semibold text-red-800 text-[11px]">${{ formatMoney(dato.descuentosDesglose.cuotasSinPagar || 0) }}</span>
+                      <div v-if="(dato.descuentosDesglose.cuotasSinPagar || 0) > 0" class="bg-red-50 oscuro:bg-red-500/15 p-2 rounded-lg border border-red-200 oscuro:border-red-500/30">
+                        <span class="text-[11px] text-red-700 oscuro:text-red-300 block mb-0.5">Cuotas sin pagar (en mora)</span>
+                        <span class="font-semibold text-red-800 oscuro:text-red-300 text-[11px]">${{ formatMoney(dato.descuentosDesglose.cuotasSinPagar || 0) }}</span>
                       </div>
                     </div>
                   </div>
 
                   <!-- Desglose de utilidades -->
                   <div v-if="dato.utilidadesPorConcepto && Object.keys(dato.utilidadesPorConcepto).some(t => dato.utilidadesPorConcepto[t] > 0)">
-                    <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Desglose de Utilidades</p>
+                    <p class="text-[11px] font-bold text-texto-suave uppercase tracking-wider mb-2">Desglose de Utilidades</p>
                     <div class="grid grid-cols-2 gap-2">
                       <template v-for="tipo in TIPOS_UTILIDAD_SIMULADOR" :key="tipo">
                         <div
                           v-show="(dato.utilidadesPorConcepto[tipo] || 0) > 0"
-                          class="flex justify-between items-center bg-purple-50/50 px-2 py-1.5 rounded border border-purple-100/50"
+                          class="flex justify-between items-center bg-purple-50/50 oscuro:bg-purple-500/15 px-2 py-1.5 rounded border border-purple-100/50 oscuro:border-purple-500/30"
                         >
-                          <span class="text-[11px] text-gray-600">{{ LABELS_UTILIDAD_SIMULADOR[tipo] || tipo }}</span>
-                          <span class="font-semibold text-purple-700 text-[11px]">${{ formatMoney(dato.utilidadesPorConcepto[tipo] || 0) }}</span>
+                          <span class="text-[11px] text-texto-secundario">{{ LABELS_UTILIDAD_SIMULADOR[tipo] || tipo }}</span>
+                          <span class="font-semibold text-purple-700 oscuro:text-purple-300 text-[11px]">${{ formatMoney(dato.utilidadesPorConcepto[tipo] || 0) }}</span>
                         </div>
                       </template>
                     </div>
@@ -1771,10 +1771,10 @@ function getConceptoLabel(tipo) {
 }
 function getConceptoClass(tipo, esParcial = false) {
   if (esParcial && (tipo === 'cuota' || tipo === 'cuota_prestamo')) {
-    return 'bg-orange-100 text-orange-800 border border-orange-300/60'
+    return 'bg-orange-100 oscuro:bg-orange-500/15 text-orange-800 oscuro:text-orange-300 border border-orange-300/60 oscuro:border-orange-500/30'
   }
-  const map = { cuota: 'bg-emerald-100 text-emerald-800', cuota_prestamo: 'bg-teal-100 text-teal-800', sancion: 'bg-red-100 text-red-800', actividad: 'bg-purple-100 text-purple-800', gasto_actividad: 'bg-fuchsia-100 text-fuchsia-800', gmf_4x1000: 'bg-sky-100 text-sky-900 border border-sky-300/60', interes_anticipado: 'bg-amber-100 text-amber-800', prestamo: 'bg-blue-100 text-blue-800', liquidacion_salida: 'bg-amber-100 text-amber-800', premio_rifa: 'bg-amber-100 text-amber-800', movimiento_ingreso: 'bg-lime-100 text-lime-800', movimiento_egreso: 'bg-rose-100 text-rose-800', movimiento_traslado: 'bg-indigo-100 text-indigo-800' }
-  return map[tipo] || 'bg-gray-100 text-gray-700'
+  const map = { cuota: 'bg-emerald-100 oscuro:bg-emerald-500/15 text-emerald-800 oscuro:text-emerald-300', cuota_prestamo: 'bg-teal-100 oscuro:bg-teal-500/15 text-teal-800 oscuro:text-teal-300', sancion: 'bg-red-100 oscuro:bg-red-500/15 text-red-800 oscuro:text-red-300', actividad: 'bg-purple-100 oscuro:bg-purple-500/15 text-purple-800 oscuro:text-purple-300', gasto_actividad: 'bg-fuchsia-100 oscuro:bg-fuchsia-500/15 text-fuchsia-800 oscuro:text-fuchsia-300', gmf_4x1000: 'bg-sky-100 oscuro:bg-sky-500/15 text-sky-900 oscuro:text-sky-300 border border-sky-300/60 oscuro:border-sky-500/30', interes_anticipado: 'bg-amber-100 oscuro:bg-amber-500/15 text-amber-800 oscuro:text-amber-300', prestamo: 'bg-blue-100 oscuro:bg-blue-500/15 text-blue-800 oscuro:text-blue-300', liquidacion_salida: 'bg-amber-100 oscuro:bg-amber-500/15 text-amber-800 oscuro:text-amber-300', premio_rifa: 'bg-amber-100 oscuro:bg-amber-500/15 text-amber-800 oscuro:text-amber-300', movimiento_ingreso: 'bg-lime-100 oscuro:bg-lime-500/15 text-lime-800 oscuro:text-lime-300', movimiento_egreso: 'bg-rose-100 oscuro:bg-rose-500/15 text-rose-800 oscuro:text-rose-300', movimiento_traslado: 'bg-indigo-100 oscuro:bg-indigo-500/15 text-indigo-800 oscuro:text-indigo-300' }
+  return map[tipo] || 'bg-superficie-hundida text-texto-medio'
 }
 function getMesLabel(mes) {
   const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']

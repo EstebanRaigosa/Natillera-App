@@ -131,4 +131,11 @@ function alTeclado(e) {
   .switch-seg__pulgar,
   .switch-seg__opcion { transition: none; }
 }
+
+/* Modo oscuro: solo lo que cambia (skill natillerapp-modo-oscuro §2.5). El pulgar verde
+   y el texto blanco de la opción activa valen igual en los dos modos. */
+:where([data-tema=oscuro]) .switch-seg__pista { background: var(--superficie-hundida); }
+:where([data-tema=oscuro]) .switch-seg__opcion { color: var(--texto-secundario); }
+:where([data-tema=oscuro]) .switch-seg__opcion:hover:not(.is-activa):not(:disabled) { color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .switch-seg__ayuda { color: var(--texto-suave); }
 </style>

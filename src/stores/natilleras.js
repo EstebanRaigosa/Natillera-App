@@ -190,7 +190,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
    * `transferirAdministracion`, `eliminarNatillera`): un minuto de configuración
    * vieja después de cambiar las sanciones sería un error visible.
    */
-  const COLUMNAS_CONFIG = 'id, nombre, mes_inicio, mes_fin, anio, anio_inicio, reglas_multas, periodicidad'
+  const COLUMNAS_CONFIG = 'id, nombre, mes_inicio, mes_fin, anio, anio_inicio, reglas_multas, reglas_interes, periodicidad'
   const VIDA_CONFIG_MS = 60 * 1000
   const configCache = new Map()   // id -> { fila, ts }
   const configEnVuelo = new Map() // id -> Promise

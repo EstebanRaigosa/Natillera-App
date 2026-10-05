@@ -68,7 +68,7 @@ const texto = computed(() => props.text || 'Cargando')
   overflow: hidden;
   color: #fff;
   /* Mismo degradado del hero de la portada */
-  background: linear-gradient(to bottom, #04110a 0%, #0b2a1a 55%, #1b5e37 100%);
+  background: linear-gradient(to bottom, #04110a 0%, #0b2a1a 55%, #1b5e37 100%); /* tema-fijo: la pantalla de carga es verde noche en los dos modos */
   touch-action: none;
   overscroll-behavior: contain;
 }
@@ -95,7 +95,7 @@ const texto = computed(() => props.text || 'Cargando')
   position: absolute;
   inset: -2.5rem;
   border-radius: 9999px;
-  background: radial-gradient(circle, rgba(111, 207, 151, 0.28) 0%, rgba(111, 207, 151, 0) 65%);
+  background: radial-gradient(circle, rgba(111, 207, 151, 0.28) 0%, rgba(111, 207, 151, 0) 65%); /* tema-fijo: brillo verde de la pantalla de carga, igual en los dos modos */
 }
 
 .carga__anillo {
@@ -127,7 +127,7 @@ const texto = computed(() => props.text || 'Cargando')
   max-width: 18rem;
   font-size: 0.875rem;
   line-height: 1.4;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.72); /* tema-fijo: texto sobre el fondo verde noche */
 }
 
 .carga__puntos span {

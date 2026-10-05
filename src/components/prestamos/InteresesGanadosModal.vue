@@ -11,15 +11,15 @@
     :persistent="true"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-2xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-2xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="42rem"
     @close="cerrar"
   >
     <!-- Cabecera marca compacta: móvil en fila, escritorio en columna; X por flex -->
     <div class="flex-shrink-0 bg-[#1B5E37] text-white">
       <div class="sm:hidden flex min-h-[4.2rem] items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
-        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm"><!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <CurrencyDollarIcon class="h-5 w-5 text-[#1B5E37]" />
         </div>
         <div class="min-w-0 flex-1 text-left">
@@ -38,7 +38,7 @@
       <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
         <div class="w-11 flex-shrink-0" aria-hidden="true" />
         <div class="flex min-w-0 flex-1 flex-col items-center text-center">
-          <div class="mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm">
+          <div class="mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm"><!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <CurrencyDollarIcon class="h-6 w-6 text-[#1B5E37]" />
           </div>
           <h3 class="font-display text-lg font-bold leading-tight">Intereses ganados</h3>
@@ -58,89 +58,89 @@
     <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
         ref="scrollRef"
-        class="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden bg-[#f6f8f6] px-4 pt-4 pb-6 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-6"
+        class="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden bg-[#f6f8f6] oscuro:bg-superficie-hundida px-4 pt-4 pb-6 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-6"
         @scroll.passive="onScroll"
       >
         <CargaCaja v-if="cargando" texto="Calculando intereses" detalle="Revisando cada préstamo y la mora cobrada." />
 
-        <p v-else-if="error" class="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">{{ error }}</p>
+        <p v-else-if="error" class="rounded-xl border border-red-200 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 px-3 py-2.5 text-sm text-red-700 oscuro:text-red-300">{{ error }}</p>
 
         <template v-else>
           <!-- Total y de qué se compone -->
-          <section class="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm">
+          <section class="overflow-hidden rounded-2xl border border-borde/80 bg-superficie-tarjeta shadow-sm">
             <div class="px-4 py-3 text-center">
-              <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500">Total intereses ganados</p>
-              <p class="mt-0.5 font-display text-3xl font-extrabold tabular-nums text-[#1B5E37]">${{ formatMoney(datos.total) }}</p>
+              <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-texto-suave">Total intereses ganados</p>
+              <p class="mt-0.5 font-display text-3xl font-extrabold tabular-nums text-marca-tinta">${{ formatMoney(datos.total) }}</p>
             </div>
-            <dl class="grid grid-cols-2 divide-x divide-gray-100 border-t border-gray-100 sm:grid-cols-3">
+            <dl class="grid grid-cols-2 divide-x divide-borde-suave border-t border-borde-suave sm:grid-cols-3">
               <div class="px-3 py-2.5 text-center">
-                <dt class="text-[10px] font-bold uppercase tracking-wide text-gray-500">Anticipado</dt>
-                <dd class="font-display text-sm font-extrabold tabular-nums text-gray-900">${{ formatMoney(totalAnticipado) }}</dd>
+                <dt class="text-[10px] font-bold uppercase tracking-wide text-texto-suave">Anticipado</dt>
+                <dd class="font-display text-sm font-extrabold tabular-nums text-texto-fuerte">${{ formatMoney(totalAnticipado) }}</dd>
               </div>
               <div class="px-3 py-2.5 text-center">
-                <dt class="text-[10px] font-bold uppercase tracking-wide text-gray-500">Con cada cuota</dt>
-                <dd class="font-display text-sm font-extrabold tabular-nums text-gray-900">${{ formatMoney(totalCorriente) }}</dd>
+                <dt class="text-[10px] font-bold uppercase tracking-wide text-texto-suave">Con cada cuota</dt>
+                <dd class="font-display text-sm font-extrabold tabular-nums text-texto-fuerte">${{ formatMoney(totalCorriente) }}</dd>
               </div>
-              <div class="col-span-2 border-t border-gray-100 px-3 py-2.5 text-center sm:col-span-1 sm:border-t-0">
-                <dt class="text-[10px] font-bold uppercase tracking-wide text-gray-500">Mora cobrada</dt>
-                <dd class="font-display text-sm font-extrabold tabular-nums text-[color:var(--brand-danger)]">${{ formatMoney(datos.mora.total) }}</dd>
+              <div class="col-span-2 border-t border-borde-suave px-3 py-2.5 text-center sm:col-span-1 sm:border-t-0">
+                <dt class="text-[10px] font-bold uppercase tracking-wide text-texto-suave">Mora cobrada</dt>
+                <dd class="font-display text-sm font-extrabold tabular-nums text-[color:var(--brand-danger)] oscuro:text-peligro">${{ formatMoney(datos.mora.total) }}</dd>
               </div>
             </dl>
           </section>
 
           <!-- Cómo se cuenta: una línea, no un tratado -->
-          <p class="flex items-start gap-2 rounded-xl border border-[#1B5E37]/10 bg-[#E8F5E9] px-3 py-2.5 text-xs leading-snug text-[#1B5E37]">
+          <p class="flex items-start gap-2 rounded-xl border border-[#1B5E37]/10 oscuro:border-marca-tinta/10 bg-marca-suave px-3 py-2.5 text-xs leading-snug text-marca-tinta">
             <InformationCircleIcon class="mt-0.5 h-4 w-4 flex-shrink-0" />
             <span>Anticipado cuenta el interés completo desde que se presta; con cada cuota, solo el de las cuotas pagadas. La mora cuenta solo cuando se cobra, en cualquier préstamo.</span>
           </p>
 
           <!-- Préstamo por préstamo -->
           <section>
-            <p class="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-gray-500">
+            <p class="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-texto-suave">
               {{ datos.prestamos.length }} {{ datos.prestamos.length === 1 ? 'préstamo' : 'préstamos' }}
             </p>
-            <p v-if="datos.prestamos.length === 0" class="rounded-xl bg-white px-4 py-5 text-center text-sm text-gray-500">No hay préstamos activos ni pagados.</p>
+            <p v-if="datos.prestamos.length === 0" class="rounded-xl bg-superficie-tarjeta px-4 py-5 text-center text-sm text-texto-suave">No hay préstamos activos ni pagados.</p>
             <ul v-else class="space-y-2">
-              <li v-for="p in prestamosOrdenados" :key="p.id" class="rounded-2xl border border-gray-200/80 bg-white px-4 py-3 shadow-sm">
+              <li v-for="p in prestamosOrdenados" :key="p.id" class="rounded-2xl border border-borde/80 bg-superficie-tarjeta px-4 py-3 shadow-sm">
                 <div class="flex items-start justify-between gap-3">
                   <div class="min-w-0">
-                    <p class="truncate text-sm font-extrabold text-gray-900">{{ p.socio }}</p>
-                    <p class="text-xs tabular-nums text-gray-500">
+                    <p class="truncate text-sm font-extrabold text-texto-fuerte">{{ p.socio }}</p>
+                    <p class="text-xs tabular-nums text-texto-suave">
                       ${{ formatMoney(p.monto) }} · {{ p.tasa }}% · {{ formatFecha(p.fecha) }}
                     </p>
                   </div>
-                  <p class="flex-shrink-0 font-display text-base font-extrabold tabular-nums text-[#1B5E37]">${{ formatMoney(p.interesGanado) }}</p>
+                  <p class="flex-shrink-0 font-display text-base font-extrabold tabular-nums text-marca-tinta">${{ formatMoney(p.interesGanado) }}</p>
                 </div>
                 <div class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span
                     class="inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-bold"
-                    :class="p.anticipado ? 'bg-amber-100 text-amber-800' : 'bg-[#E8F5E9] text-[#1B5E37]'"
+                    :class="p.anticipado ? 'bg-amber-100 oscuro:bg-amber-500/15 text-amber-800 oscuro:text-amber-300' : 'bg-marca-suave text-marca-tinta'"
                   >{{ p.anticipado ? 'Anticipado' : 'Con cada cuota' }}</span>
                   <span
                     class="inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-bold"
-                    :class="p.estado === 'pagado' ? 'bg-gray-100 text-gray-600' : 'bg-sky-50 text-sky-800'"
+                    :class="p.estado === 'pagado' ? 'bg-superficie-hundida text-texto-secundario' : 'bg-sky-50 oscuro:bg-sky-500/15 text-sky-800 oscuro:text-sky-300'"
                   >{{ p.estado === 'pagado' ? 'Pagado' : 'Activo' }}</span>
-                  <span class="text-[11px] tabular-nums text-gray-500">{{ p.cuotasPagadas }} de {{ p.cuotas }} cuotas</span>
+                  <span class="text-[11px] tabular-nums text-texto-suave">{{ p.cuotasPagadas }} de {{ p.cuotas }} cuotas</span>
                 </div>
                 <!-- Contado pero aún no recibido: solo en anticipados que siguen activos -->
-                <p class="mt-1 text-xs tabular-nums text-gray-600">
+                <p class="mt-1 text-xs tabular-nums text-texto-secundario">
                   Recibido en cuotas ${{ formatMoney(p.interesRecibido) }}
-                  <span v-if="p.porRecibir > 0" class="font-semibold text-amber-800"> · por recibir ${{ formatMoney(p.porRecibir) }}</span>
+                  <span v-if="p.porRecibir > 0" class="font-semibold text-amber-800 oscuro:text-amber-300"> · por recibir ${{ formatMoney(p.porRecibir) }}</span>
                 </p>
               </li>
             </ul>
           </section>
 
           <!-- La mora no queda asociada a un préstamo: va en su propia fila -->
-          <section v-if="datos.mora.total > 0" class="rounded-2xl border border-gray-200/80 bg-white px-4 py-3 shadow-sm">
+          <section v-if="datos.mora.total > 0" class="rounded-2xl border border-borde/80 bg-superficie-tarjeta px-4 py-3 shadow-sm">
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
-                <p class="text-sm font-extrabold text-gray-900">Interés de mora cobrado</p>
-                <p class="text-xs text-gray-500">Solo la ya pagada en abonos; la que se debe entra cuando se cobre</p>
+                <p class="text-sm font-extrabold text-texto-fuerte">Interés de mora cobrado</p>
+                <p class="text-xs text-texto-suave">Solo la ya pagada en abonos; la que se debe entra cuando se cobre</p>
               </div>
-              <p class="flex-shrink-0 font-display text-base font-extrabold tabular-nums text-[color:var(--brand-danger)]">${{ formatMoney(datos.mora.total) }}</p>
+              <p class="flex-shrink-0 font-display text-base font-extrabold tabular-nums text-[color:var(--brand-danger)] oscuro:text-peligro">${{ formatMoney(datos.mora.total) }}</p>
             </div>
-            <p class="mt-1 text-xs tabular-nums text-gray-600">
+            <p class="mt-1 text-xs tabular-nums text-texto-secundario">
               Efectivo ${{ formatMoney(datos.mora.efectivo) }} · Transferencia ${{ formatMoney(datos.mora.transferencia) }}
             </p>
           </section>
@@ -152,7 +152,7 @@
 
     <!-- Acciones fijas. La barra de Safari tapa el pie de una hoja inferior: se suma `tapado`. -->
     <div
-      class="flex flex-shrink-0 flex-col-reverse gap-2 border-t border-gray-200 bg-white px-4 pt-3 sm:flex-row sm:px-6"
+      class="flex flex-shrink-0 flex-col-reverse gap-2 border-t border-borde bg-superficie-tarjeta px-4 pt-3 sm:flex-row sm:px-6"
       :style="{ paddingBottom: `calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
     >
       <button type="button" class="btn-modal-secondary w-full sm:flex-1" @click="cerrar">Cerrar</button>

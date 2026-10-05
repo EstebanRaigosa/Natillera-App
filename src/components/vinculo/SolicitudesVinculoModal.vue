@@ -11,14 +11,15 @@
     align="bottom"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="cerrarMasTarde"
   >
     <div class="flex-shrink-0 bg-[color:var(--brand-primary)] text-white">
       <!-- Móvil: [icono | títulos | X] -->
       <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+        <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
         <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
           <UserPlusIcon class="w-5 h-5 text-[color:var(--brand-primary)]" />
         </div>
@@ -34,6 +35,7 @@
       <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
         <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
         <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm">
             <UserPlusIcon class="w-6 h-6 text-[color:var(--brand-primary)]" />
           </div>
@@ -49,7 +51,7 @@
     <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
         ref="areaScroll"
-        class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-4"
+        class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-4"
         @scroll.passive="programarNatiscroll"
       >
         <div class="ds-callout">
@@ -80,21 +82,21 @@
           porque es justo el momento en que se entiende para qué sirven.
         -->
         <div v-if="push.soportado.value && push.configurado.value && push.estado.value === 'sin_conceder'" class="solicitudes-modal__push">
-          <BellAlertIcon class="w-5 h-5 shrink-0 text-[color:var(--brand-primary)]" aria-hidden="true" />
-          <p class="min-w-0 flex-1 text-sm text-slate-700">Recibe un aviso en el celular cuando alguien pida entrar.</p>
+          <BellAlertIcon class="w-5 h-5 shrink-0 text-[color:var(--brand-primary)] oscuro:text-marca-tinta" aria-hidden="true" />
+          <p class="min-w-0 flex-1 text-sm text-slate-700 oscuro:text-texto-medio">Recibe un aviso en el celular cuando alguien pida entrar.</p>
           <!-- Sin await antes: en Safari el permiso solo se pide pegado al toque -->
           <button type="button" class="solicitudes-modal__push-boton" :disabled="push.ocupado.value" @click="push.activar()">
             {{ push.ocupado.value ? 'Activando…' : 'Activar' }}
           </button>
         </div>
-        <p v-else-if="push.estado.value === 'requiere_instalar'" class="text-xs text-slate-500">
+        <p v-else-if="push.estado.value === 'requiere_instalar'" class="text-xs text-slate-500 oscuro:text-texto-suave">
           Para recibir avisos en el iPhone, instala la app: Compartir → «Agregar a pantalla de inicio».
         </p>
       </div>
 
       <!-- Natiscroll -->
       <div v-show="hayNatiscroll" class="pointer-events-none absolute inset-x-0 bottom-0 z-10" aria-hidden="true">
-        <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent" />
+        <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent" />
         <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
           <div class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20">
             <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white">Desliza para ver más</p>
@@ -106,7 +108,7 @@
 
     <!-- Pie fijo. `align="bottom"`: la barra de Safari lo tapa, se suma lo que mide (§4.1) -->
     <div
-      class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 flex flex-row gap-2.5"
+      class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-superficie-tarjeta px-5 sm:px-6 pt-4 flex flex-row gap-2.5"
       :style="{ paddingBottom: `calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
     >
       <button type="button" class="btn-modal-secondary flex-1" :disabled="ocupado" @click="cerrarMasTarde">Más tarde</button>

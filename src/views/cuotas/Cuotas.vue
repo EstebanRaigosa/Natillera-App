@@ -32,14 +32,15 @@
     align="bottom"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="32rem"
     @close="requestCloseTopModal"
   >
     <!-- Cabecera móvil: fila (icono + títulos + X) -->
     <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
       <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+        <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
           <ExclamationTriangleIcon class="h-5 w-5 text-[#1B5E37]" />
         </div>
@@ -64,6 +65,7 @@
       <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
         <div class="w-11 shrink-0" aria-hidden="true" />
         <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
             <ExclamationTriangleIcon class="h-6 w-6 text-[#1B5E37]" />
           </div>
@@ -84,14 +86,14 @@
     </div>
 
     <!-- Cuerpo scrolleable (relative para el natiscroll como overlay) -->
-    <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
+    <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-superficie-tarjeta">
       <div
         ref="scrollPendientesAnterioresRef"
         class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-4 pb-4 [-webkit-overflow-scrolling:touch]"
         @scroll.passive="onScrollPendientesAnteriores"
       >
-        <div class="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5">
-          <p class="text-[0.8125rem] leading-snug text-amber-900">
+        <div class="rounded-xl border border-amber-300 oscuro:border-amber-500/30 bg-amber-50 oscuro:bg-amber-500/15 px-3 py-2.5">
+          <p class="text-[0.8125rem] leading-snug text-amber-900 oscuro:text-amber-300">
             <span class="font-bold">{{ cuotaBloqueada?.socio_natillera?.socio?.nombre || 'Este socio' }}</span>
             debe primero
             {{ pendientesAnteriores.length === 1 ? 'el periodo' : 'los periodos' }} de abajo.
@@ -104,15 +106,15 @@
           <li
             v-for="(fila, indice) in pendientesAnteriores"
             :key="`pendiente-${fila.id}`"
-            class="rounded-xl border border-gray-200 bg-white p-3 shadow-sm"
+            class="rounded-xl border border-borde bg-superficie-tarjeta p-3 shadow-sm"
             :class="indice === 0 ? 'ring-1 ring-[#1B5E37]/30' : ''"
           >
             <div class="flex items-start justify-between gap-2">
               <div class="min-w-0">
-                <p class="font-display text-sm font-bold leading-tight text-gray-800">
+                <p class="font-display text-sm font-bold leading-tight text-texto">
                   {{ fila.etiquetaMes }} {{ fila.anio }}
                 </p>
-                <p class="mt-0.5 text-[11px] leading-none text-gray-500">{{ fila.etiquetaPeriodo }}</p>
+                <p class="mt-0.5 text-[11px] leading-none text-texto-suave">{{ fila.etiquetaPeriodo }}</p>
               </div>
               <span
                 v-if="indice === 0"
@@ -122,33 +124,33 @@
 
             <dl class="mt-2 space-y-1">
               <div v-if="fila.valorCuota > 0" class="flex items-baseline justify-between gap-2 text-[0.8125rem]">
-                <dt class="text-gray-600">Cuota</dt>
-                <dd class="font-semibold tabular-nums text-gray-800">{{ formatMoney(fila.valorCuota) }}</dd>
+                <dt class="text-texto-secundario">Cuota</dt>
+                <dd class="font-semibold tabular-nums text-texto">{{ formatMoney(fila.valorCuota) }}</dd>
               </div>
               <div v-if="fila.sancion > 0" class="flex items-baseline justify-between gap-2 text-[0.8125rem]">
-                <dt class="text-red-600">Sanción</dt>
-                <dd class="font-semibold tabular-nums text-red-600">{{ formatMoney(fila.sancion) }}</dd>
+                <dt class="text-red-600 oscuro:text-red-300">Sanción</dt>
+                <dd class="font-semibold tabular-nums text-red-600 oscuro:text-red-300">{{ formatMoney(fila.sancion) }}</dd>
               </div>
               <div v-if="fila.actividades > 0" class="flex items-baseline justify-between gap-2 text-[0.8125rem]">
-                <dt class="text-amber-700">Actividades</dt>
-                <dd class="font-semibold tabular-nums text-amber-700">{{ formatMoney(fila.actividades) }}</dd>
+                <dt class="text-amber-700 oscuro:text-amber-300">Actividades</dt>
+                <dd class="font-semibold tabular-nums text-amber-700 oscuro:text-amber-300">{{ formatMoney(fila.actividades) }}</dd>
               </div>
               <div v-if="fila.prestamos > 0" class="flex items-baseline justify-between gap-2 text-[0.8125rem]">
-                <dt class="text-indigo-700">Cuota de préstamo</dt>
-                <dd class="font-semibold tabular-nums text-indigo-700">{{ formatMoney(fila.prestamos) }}</dd>
+                <dt class="text-indigo-700 oscuro:text-indigo-300">Cuota de préstamo</dt>
+                <dd class="font-semibold tabular-nums text-indigo-700 oscuro:text-indigo-300">{{ formatMoney(fila.prestamos) }}</dd>
               </div>
             </dl>
 
-            <div class="mt-2 flex items-baseline justify-between gap-2 border-t border-dashed border-gray-200 pt-2">
-              <span class="text-[0.8125rem] font-semibold text-gray-700">Total del periodo</span>
-              <span class="font-display text-sm font-bold tabular-nums text-[#1B5E37]">
+            <div class="mt-2 flex items-baseline justify-between gap-2 border-t border-dashed border-borde pt-2">
+              <span class="text-[0.8125rem] font-semibold text-texto-medio">Total del periodo</span>
+              <span class="font-display text-sm font-bold tabular-nums text-marca-tinta">
                 {{ formatMoney(fila.valorCuota + fila.sancion + fila.actividades + fila.prestamos) }}
               </span>
             </div>
           </li>
         </ul>
 
-        <p v-if="cargandoPendientesAnteriores" class="mt-3 text-center text-[11px] text-gray-500">
+        <p v-if="cargandoPendientesAnteriores" class="mt-3 text-center text-[11px] text-texto-suave">
           Calculando actividades y préstamos…
         </p>
       </div>
@@ -159,9 +161,9 @@
         class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
         aria-hidden="true"
       >
-        <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent"></div>
+        <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent"></div>
         <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
-          <span class="rounded-full bg-white/90 px-3 py-1 font-display text-[0.6875rem] font-semibold text-[#1B5E37] shadow-sm">
+          <span class="rounded-full bg-superficie-tarjeta/90 px-3 py-1 font-display text-[0.6875rem] font-semibold text-marca-tinta shadow-sm">
             Desliza para ver más
           </span>
         </div>
@@ -169,17 +171,17 @@
     </div>
 
     <!-- Footer de acciones fijo -->
-    <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 pt-3 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+    <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-5 pt-3 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
       <div class="mb-3 flex items-baseline justify-between gap-2">
-        <span class="font-display text-sm font-bold text-gray-800">Total atrasado</span>
-        <span class="font-display text-base font-bold tabular-nums text-[#1B5E37]">
+        <span class="font-display text-sm font-bold text-texto">Total atrasado</span>
+        <span class="font-display text-base font-bold tabular-nums text-marca-tinta">
           {{ formatMoney(totalPendientesAnteriores) }}
         </span>
       </div>
       <div class="flex gap-3">
         <button
           type="button"
-          class="min-h-[44px] flex-1 rounded-xl border border-gray-300 bg-white px-4 font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100 touch-manipulation"
+          class="min-h-[44px] flex-1 rounded-xl border border-borde-fuerte bg-superficie-tarjeta px-4 font-semibold text-texto-medio transition hover:bg-superficie-suave active:bg-superficie-hundida touch-manipulation"
           @click="requestCloseTopModal"
         >
           Cerrar
@@ -201,13 +203,14 @@
     align="bottom"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="requestCloseTopModal"
   >
     <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
       <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+        <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
           <CalendarDaysIcon class="h-5 w-5 text-[#1B5E37]" />
         </div>
@@ -229,6 +232,7 @@
       <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
         <div class="w-11 shrink-0" aria-hidden="true" />
         <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
             <CalendarDaysIcon class="h-6 w-6 text-[#1B5E37]" />
           </div>
@@ -245,8 +249,8 @@
         </button>
       </div>
     </div>
-    <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
-      <div class="mx-auto mt-3 mb-2 h-1 w-10 shrink-0 rounded-full bg-gray-300 sm:hidden" aria-hidden="true" />
+    <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-superficie-tarjeta">
+      <div class="mx-auto mt-3 mb-2 h-1 w-10 shrink-0 rounded-full bg-borde-fuerte sm:hidden" aria-hidden="true" />
       <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 sm:pt-5 pb-[calc(max(1rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))] [-webkit-overflow-scrolling:touch]">
         <!-- Cuadrícula de meses (config lista) -->
         <div v-if="configCargada" ref="rejillaMesesRef" class="grid grid-cols-3 gap-2.5">
@@ -260,38 +264,38 @@
             :class="[
               'group relative flex flex-col items-start text-left p-3 rounded-xl border shadow-sm transition-all duration-200 touch-manipulation hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm',
               mesSeleccionado === mes.value
-                ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-400/60 shadow-md'
+                ? 'bg-emerald-50 oscuro:bg-emerald-500/15 border-emerald-400 ring-2 ring-emerald-400/60 shadow-md'
                 : claseCardMes(mes.value),
-              esMesActualHoy(mes.value) && mesSeleccionado !== mes.value ? 'ring-1 ring-emerald-300/70' : ''
+              esMesActualHoy(mes.value) && mesSeleccionado !== mes.value ? 'ring-1 ring-emerald-300/70 oscuro:ring-emerald-500/30' : ''
             ]"
           >
             <span
-              class="absolute top-2 right-2 w-2.5 h-2.5 rounded-full ring-2 ring-white shadow-sm"
+              class="absolute top-2 right-2 w-2.5 h-2.5 rounded-full ring-2 ring-white oscuro:ring-superficie-tarjeta shadow-sm"
               :class="dotColorMes(mes.value)"
               aria-hidden="true"
             />
             <p
               data-mes-etiqueta
               class="text-sm font-bold leading-tight flex items-center gap-1.5 pr-4"
-              :class="mesSeleccionado === mes.value ? 'text-emerald-700' : 'text-gray-800'"
+              :class="mesSeleccionado === mes.value ? 'text-emerald-700 oscuro:text-emerald-300' : 'text-texto'"
             >
               <span data-mes-emoji class="text-lg leading-none" aria-hidden="true">{{ getMesEmoji(mes.value) }}</span>
               <!-- El nombre completo sigue anunciado en el aria-label del botón, así que
                    la abreviatura es solo visual y el lector de pantalla no pierde nada. -->
               <span class="truncate" aria-hidden="true">{{ etiquetaMesSelector(mes) }}</span>
             </p>
-            <p class="text-[11px] text-gray-500 mt-0.5">{{ anioParaMes(mes.value) }}</p>
+            <p class="text-[11px] text-texto-suave mt-0.5">{{ anioParaMes(mes.value) }}</p>
             <div class="flex items-center gap-2 mt-1.5 min-h-[16px] w-full">
               <span
                 v-if="resumenMesCarrusel(mes.value).enMora > 0"
-                class="inline-flex items-center gap-0.5 text-red-600"
+                class="inline-flex items-center gap-0.5 text-red-600 oscuro:text-red-300"
               >
                 <ExclamationTriangleIcon class="w-3 h-3" />
                 <span class="text-[10px] font-bold leading-none">{{ resumenMesCarrusel(mes.value).enMora }}</span>
               </span>
               <span
                 v-if="resumenMesCarrusel(mes.value).pendientes > 0"
-                class="inline-flex items-center gap-0.5 text-amber-600"
+                class="inline-flex items-center gap-0.5 text-amber-600 oscuro:text-amber-300"
               >
                 <ClockIcon class="w-3 h-3" />
                 <span class="text-[10px] font-bold leading-none">{{ resumenMesCarrusel(mes.value).pendientes }}</span>
@@ -308,11 +312,11 @@
           <div
             v-for="n in 6"
             :key="`mes-rapido-skel-${n}`"
-            class="flex flex-col gap-2 p-3 rounded-xl border border-gray-200 bg-white shadow-sm"
+            class="flex flex-col gap-2 p-3 rounded-xl border border-borde bg-superficie-tarjeta shadow-sm"
           >
-            <div class="h-4 w-16 rounded bg-gray-200 animate-pulse"></div>
-            <div class="h-3 w-10 rounded bg-gray-100 animate-pulse"></div>
-            <div class="h-2 w-8 rounded bg-gray-100 animate-pulse mt-1"></div>
+            <div class="h-4 w-16 rounded bg-borde animate-pulse"></div>
+            <div class="h-3 w-10 rounded bg-superficie-hundida animate-pulse"></div>
+            <div class="h-2 w-8 rounded bg-superficie-hundida animate-pulse mt-1"></div>
           </div>
         </div>
       </div>
@@ -336,7 +340,7 @@
           <button
             type="button"
             data-guia="boton-recorrido"
-            class="flex h-11 min-w-[2.75rem] flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#166534]/25 bg-white text-[#166534] shadow-sm transition-colors hover:bg-[#f0fdf4] active:bg-[#dcfce7] sm:h-auto sm:px-3 sm:py-2 sm:rounded-lg [-webkit-tap-highlight-color:transparent]"
+            class="flex h-11 min-w-[2.75rem] flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#166534]/25 oscuro:border-marca-tinta/25 bg-superficie-tarjeta text-[#166534] oscuro:text-marca-tinta shadow-sm transition-colors hover:bg-[#f0fdf4] oscuro:hover:bg-green-500/15 active:bg-[#dcfce7] oscuro:active:bg-green-500/15 sm:h-auto sm:px-3 sm:py-2 sm:rounded-lg [-webkit-tap-highlight-color:transparent]"
             title="¿Cómo funciona esta pantalla?"
             aria-label="¿Cómo funciona esta pantalla? Ver el recorrido guiado"
             @click="abrirGuiaCuotas({ manual: true })"
@@ -462,15 +466,15 @@
               :class="[
                 'tab-mes-folder relative flex-shrink-0 flex flex-col justify-between items-center text-center snap-center rounded-t-2xl border border-b-0 transition-all',
                 mesSeleccionado === mes.value
-                  ? 'w-[140px] h-[78px] px-3 py-2.5 bg-white border-gray-200 shadow-[0_-6px_16px_-6px_rgba(0,0,0,0.15)] z-[20]'
-                  : 'w-[120px] h-[62px] px-3 py-2 bg-natillera-50/70 border-gray-200/70 hover:bg-white'
+                  ? 'w-[140px] h-[78px] px-3 py-2.5 bg-superficie-tarjeta border-borde shadow-[0_-6px_16px_-6px_rgba(0,0,0,0.15)] z-[20]'
+                  : 'w-[120px] h-[62px] px-3 py-2 bg-natillera-50/70 oscuro:bg-natillera-500/15 border-borde/70 hover:bg-superficie-tarjeta'
               ]"
             >
               <div class="w-full min-w-0 flex items-center justify-center gap-1.5">
                 <span class="text-sm leading-none" aria-hidden="true">{{ getMesEmoji(mes.value) }}</span>
                 <p
                   class="text-sm font-bold leading-tight truncate"
-                  :class="mesSeleccionado === mes.value ? 'text-natillera-800' : 'text-gray-700'"
+                  :class="mesSeleccionado === mes.value ? 'text-natillera-800 oscuro:text-natillera-300' : 'text-texto-medio'"
                 >{{ mes.label }}</p>
               </div>
               <span class="flex items-center justify-center gap-2 min-h-[14px]">
@@ -481,21 +485,21 @@
                 -->
                 <span
                   v-if="resumenMesCarrusel(mes.value).enMora > 0"
-                  class="inline-flex items-center gap-0.5 text-red-600"
+                  class="inline-flex items-center gap-0.5 text-red-600 oscuro:text-red-300"
                 >
                   <ExclamationTriangleIcon class="w-3 h-3 flex-shrink-0" aria-hidden="true" />
                   <span class="text-[10px] font-bold leading-none tabular-nums">{{ resumenMesCarrusel(mes.value).enMora }}</span>
                 </span>
                 <span
                   v-if="resumenMesCarrusel(mes.value).pendientes > 0"
-                  class="inline-flex items-center gap-0.5 text-amber-600"
+                  class="inline-flex items-center gap-0.5 text-amber-600 oscuro:text-amber-300"
                 >
                   <ClockIcon class="w-3 h-3 flex-shrink-0" aria-hidden="true" />
                   <span class="text-[10px] font-bold leading-none tabular-nums">{{ resumenMesCarrusel(mes.value).pendientes }}</span>
                 </span>
                 <span
                   v-if="resumenMesCarrusel(mes.value).enMora === 0 && resumenMesCarrusel(mes.value).pendientes === 0"
-                  class="w-2.5 h-2.5 rounded-full ring-2 ring-white"
+                  class="w-2.5 h-2.5 rounded-full ring-2 ring-white oscuro:ring-superficie-tarjeta"
                   :class="dotColorMes(mes.value)"
                   aria-hidden="true"
                 />
@@ -534,15 +538,15 @@
               :class="[
                 'tab-mes-folder relative flex-shrink-0 flex flex-col justify-between items-center text-center snap-center rounded-t-2xl border border-b-0 touch-manipulation transition-all',
                 mesSeleccionado === mes.value
-                  ? 'w-[128px] h-[76px] px-3 py-2.5 bg-white border-gray-200 shadow-[0_-6px_16px_-6px_rgba(0,0,0,0.15)] z-[20]'
-                  : 'w-[110px] h-[60px] px-3 py-2 bg-natillera-50/70 border-gray-200/70 active:bg-white'
+                  ? 'w-[128px] h-[76px] px-3 py-2.5 bg-superficie-tarjeta border-borde shadow-[0_-6px_16px_-6px_rgba(0,0,0,0.15)] z-[20]'
+                  : 'w-[110px] h-[60px] px-3 py-2 bg-natillera-50/70 oscuro:bg-natillera-500/15 border-borde/70 active:bg-superficie-tarjeta'
               ]"
             >
               <div class="w-full min-w-0 flex items-center justify-center gap-1.5">
                 <span class="text-sm leading-none" aria-hidden="true">{{ getMesEmoji(mes.value) }}</span>
                 <p
                   class="text-sm font-bold leading-tight truncate"
-                  :class="mesSeleccionado === mes.value ? 'text-natillera-800' : 'text-gray-700'"
+                  :class="mesSeleccionado === mes.value ? 'text-natillera-800 oscuro:text-natillera-300' : 'text-texto-medio'"
                 >{{ mes.label }}</p>
               </div>
               <span class="flex items-center justify-center gap-2 min-h-[14px]">
@@ -553,21 +557,21 @@
                 -->
                 <span
                   v-if="resumenMesCarrusel(mes.value).enMora > 0"
-                  class="inline-flex items-center gap-0.5 text-red-600"
+                  class="inline-flex items-center gap-0.5 text-red-600 oscuro:text-red-300"
                 >
                   <ExclamationTriangleIcon class="w-3 h-3 flex-shrink-0" aria-hidden="true" />
                   <span class="text-[10px] font-bold leading-none tabular-nums">{{ resumenMesCarrusel(mes.value).enMora }}</span>
                 </span>
                 <span
                   v-if="resumenMesCarrusel(mes.value).pendientes > 0"
-                  class="inline-flex items-center gap-0.5 text-amber-600"
+                  class="inline-flex items-center gap-0.5 text-amber-600 oscuro:text-amber-300"
                 >
                   <ClockIcon class="w-3 h-3 flex-shrink-0" aria-hidden="true" />
                   <span class="text-[10px] font-bold leading-none tabular-nums">{{ resumenMesCarrusel(mes.value).pendientes }}</span>
                 </span>
                 <span
                   v-if="resumenMesCarrusel(mes.value).enMora === 0 && resumenMesCarrusel(mes.value).pendientes === 0"
-                  class="w-2.5 h-2.5 rounded-full ring-2 ring-white"
+                  class="w-2.5 h-2.5 rounded-full ring-2 ring-white oscuro:ring-superficie-tarjeta"
                   :class="dotColorMes(mes.value)"
                   aria-hidden="true"
                 />
@@ -615,17 +619,17 @@
 
       <!-- Contenedor de indicadores: está por encima de las tabs no-seleccionadas
            (las recubre por arriba) y la tab seleccionada (z-[20]) lo recubre a él. -->
-      <div data-guia="cuotas-resumen" class="relative z-10 -mt-1 bg-white rounded-2xl border border-gray-200/80 shadow-sm p-3 sm:p-5">
+      <div data-guia="cuotas-resumen" class="relative z-10 -mt-1 bg-superficie-tarjeta rounded-2xl border border-borde/80 shadow-sm p-3 sm:p-5">
         <!-- Resumen del mes seleccionado -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4">
           <!-- Mes + total recaudado + % -->
           <div data-guia="cuotas-resumen-total" class="flex items-center gap-2 sm:gap-2.5 flex-wrap min-w-0">
-            <span class="text-base sm:text-lg font-display font-bold text-natillera-800 whitespace-nowrap">
+            <span class="text-base sm:text-lg font-display font-bold text-natillera-800 oscuro:text-natillera-300 whitespace-nowrap">
               {{ mesSeleccionadoLabel }}
-              <span class="text-gray-400 font-semibold text-xs sm:text-sm">{{ anioParaMes(mesSeleccionado) }}</span>
+              <span class="text-texto-tenue font-semibold text-xs sm:text-sm">{{ anioParaMes(mesSeleccionado) }}</span>
             </span>
-            <span class="hidden sm:inline text-gray-300" aria-hidden="true">·</span>
-            <span class="text-base sm:text-lg font-bold text-gray-800 tabular-nums whitespace-nowrap">
+            <span class="hidden sm:inline text-gray-300 oscuro:text-texto-tenue" aria-hidden="true">·</span>
+            <span class="text-base sm:text-lg font-bold text-texto tabular-nums whitespace-nowrap">
               ${{ formatMoney(resumenMesActual.totalRecaudado || 0) }}
             </span>
             <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-natillera-700 text-white whitespace-nowrap">
@@ -633,7 +637,7 @@
             </span>
           </div>
           <!-- Desglose por estado -->
-          <div data-guia="cuotas-resumen-estados" class="flex items-center gap-3 sm:gap-4 flex-wrap text-xs sm:text-sm font-medium text-gray-600">
+          <div data-guia="cuotas-resumen-estados" class="flex items-center gap-3 sm:gap-4 flex-wrap text-xs sm:text-sm font-medium text-texto-secundario">
             <span class="inline-flex items-center gap-1.5 whitespace-nowrap">
               <span class="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true"></span>{{ resumenMesActual.pagadas }} pagadas
             </span>
@@ -644,7 +648,7 @@
               <span class="w-2 h-2 rounded-full bg-red-500" aria-hidden="true"></span>{{ resumenMesActual.enMora }} mora
             </span>
             <span class="inline-flex items-center gap-1.5 whitespace-nowrap">
-              <span class="w-2 h-2 rounded-full bg-gray-300" aria-hidden="true"></span>{{ resumenMesActual.pendientes }} pend
+              <span class="w-2 h-2 rounded-full bg-borde-fuerte" aria-hidden="true"></span>{{ resumenMesActual.pendientes }} pend
             </span>
           </div>
         </div>
@@ -734,19 +738,19 @@
     />
 
     <!-- Estado vacío: Sin cuotas generadas para el mes -->
-    <div v-else-if="cuotasMesActual.length === 0" class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-8 sm:p-12 border border-natillera-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
+    <div v-else-if="cuotasMesActual.length === 0" class="relative bg-gradient-to-br from-superficie-tarjeta via-natillera-50/30 oscuro:via-natillera-500/10 to-emerald-50/20 oscuro:to-emerald-500/10 rounded-3xl p-8 sm:p-12 border border-natillera-200/50 oscuro:border-natillera-500/30 shadow-xl backdrop-blur-sm text-center overflow-hidden">
       <!-- Círculos decorativos -->
       <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-natillera-400/20 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
       <div class="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-teal-400/20 to-natillera-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
       
       <div class="relative z-10">
-        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-natillera-100 to-emerald-100 mb-6">
-          <CurrencyDollarIcon class="w-10 h-10 text-natillera-600" />
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-natillera-100 oscuro:from-natillera-500/15 to-emerald-100 oscuro:to-emerald-500/10 mb-6">
+          <CurrencyDollarIcon class="w-10 h-10 text-natillera-600 oscuro:text-natillera-300" />
         </div>
-        <h3 class="font-display font-bold text-gray-800 text-xl sm:text-2xl mb-3">
+        <h3 class="font-display font-bold text-texto text-xl sm:text-2xl mb-3">
           No hay cuotas para {{ mesSeleccionadoLabel }}
         </h3>
-        <p class="text-gray-600 mt-2 mb-8 text-base">
+        <p class="text-texto-secundario mt-2 mb-8 text-base">
           Genera las cuotas de este mes para comenzar a registrar pagos
         </p>
         <button v-if="!esVisor && esUsuarioAdmin" @click="abrirModalGenerarCuotas" class="btn-primary inline-flex items-center gap-2 shadow-lg">
@@ -757,19 +761,19 @@
     </div>
 
     <!-- Estado vacío: Sin resultados con el filtro actual -->
-    <div v-else-if="cuotasFiltradas.length === 0" class="relative bg-gradient-to-br from-white via-amber-50/30 to-orange-50/20 rounded-3xl p-8 sm:p-12 border border-amber-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
+    <div v-else-if="cuotasFiltradas.length === 0" class="relative bg-gradient-to-br from-superficie-tarjeta via-amber-50/30 oscuro:via-amber-500/10 to-orange-50/20 oscuro:to-orange-500/10 rounded-3xl p-8 sm:p-12 border border-amber-200/50 oscuro:border-amber-500/30 shadow-xl backdrop-blur-sm text-center overflow-hidden">
       <!-- Círculos decorativos -->
       <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-amber-400/20 to-orange-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
       <div class="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-orange-400/20 to-amber-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
       
       <div class="relative z-10">
-        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 mb-6">
-          <FunnelIcon class="w-10 h-10 text-amber-600" />
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-amber-100 oscuro:from-amber-500/15 to-orange-100 oscuro:to-orange-500/10 mb-6">
+          <FunnelIcon class="w-10 h-10 text-amber-600 oscuro:text-amber-300" />
         </div>
-        <h3 class="font-display font-bold text-gray-800 text-xl sm:text-2xl mb-3">
+        <h3 class="font-display font-bold text-texto text-xl sm:text-2xl mb-3">
           No hay cuotas con los filtros seleccionados
         </h3>
-        <p class="text-gray-600 mt-2 mb-8 text-base">
+        <p class="text-texto-secundario mt-2 mb-8 text-base">
           No se encontraron cuotas que coincidan con los filtros aplicados
         </p>
         <button 
@@ -791,60 +795,60 @@
           <div 
             v-for="grupo in cuotasAgrupadasPorSocio" 
             :key="grupo.socioId"
-            class="relative overflow-hidden rounded-2xl border border-gray-200/60 shadow-lg bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20"
+            class="relative overflow-hidden rounded-2xl border border-borde/60 shadow-lg bg-gradient-to-br from-superficie-tarjeta via-natillera-50/30 oscuro:via-natillera-500/10 to-emerald-50/20 oscuro:to-emerald-500/10"
           >
             <!--
               Header del grupo (Socio) — MÓVIL.
               Se conserva tal cual: en pantalla estrecha los datos apilados
               funcionan y no había nada que arreglar.
             -->
-            <div class="sm:hidden bg-gradient-to-r from-natillera-500/10 via-emerald-500/10 to-teal-500/10 border-b border-gray-200/60 p-4">
+            <div class="sm:hidden bg-gradient-to-r from-natillera-500/10 via-emerald-500/10 to-teal-500/10 border-b border-borde/60 p-4">
               <div class="flex items-center gap-4">
                 <img 
                   :src="getAvatarUrl(grupo.socio?.nombre || grupo.socioId, grupo.socio?.avatar_seed, grupo.socio?.avatar_style)" 
                   :alt="grupo.socio?.nombre"
-                  class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border-2 border-natillera-300 shadow-md object-cover"
+                  class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border-2 border-natillera-300 oscuro:border-natillera-500/30 shadow-md object-cover"
                 />
                 <div class="flex-1 min-w-0">
-                  <h3 class="text-lg sm:text-xl font-display font-bold text-gray-800 truncate">
+                  <h3 class="text-lg sm:text-xl font-display font-bold text-texto truncate">
                     {{ grupo.socio?.nombre || 'Socio' }}
                   </h3>
                   <div class="flex items-center gap-3 mt-1 flex-wrap">
-                    <span class="text-sm text-gray-600 font-medium">
+                    <span class="text-sm text-texto-secundario font-medium">
                       {{ grupo.cuotas.length }} cuota{{ grupo.cuotas.length !== 1 ? 's' : '' }}
                     </span>
-                    <span class="text-sm font-semibold text-natillera-700">
+                    <span class="text-sm font-semibold text-natillera-700 oscuro:text-natillera-300">
                       Total: ${{ formatMoney(grupo.total) }}
                     </span>
-                    <span class="text-sm font-semibold text-green-600">
+                    <span class="text-sm font-semibold text-green-600 oscuro:text-green-300">
                       Pagado: ${{ formatMoney(grupo.pagado) }}
                     </span>
                     <span class="text-sm font-semibold"
-                      :class="grupo.pendiente > 0 ? 'text-red-600' : 'text-gray-500'"
+                      :class="grupo.pendiente > 0 ? 'text-red-600 oscuro:text-red-300' : 'text-texto-suave'"
                     >
                       Pendiente: ${{ formatMoney(grupo.pendiente) }}
                     </span>
                     <span 
                       v-if="grupo.actividadesPendientes > 0"
-                      class="text-sm font-semibold text-purple-600"
+                      class="text-sm font-semibold text-purple-600 oscuro:text-purple-300"
                     >
                       {{ getTextoActividadesGrupo(grupo) }}: ${{ formatMoney(grupo.actividadesPendientes) }}
                     </span>
                     <span 
                       v-if="grupo.cuotasPrestamosAbonado > 0"
-                      class="text-sm font-semibold text-sky-700"
+                      class="text-sm font-semibold text-sky-700 oscuro:text-sky-300"
                     >
                       Abonado préstamos: ${{ formatMoney(grupo.cuotasPrestamosAbonado) }}
                     </span>
                     <span 
                       v-if="grupo.cuotasPrestamosPendientes > 0"
-                      class="text-sm font-semibold text-blue-600"
+                      class="text-sm font-semibold text-blue-600 oscuro:text-blue-300"
                     >
                       Pendiente préstamos: ${{ formatMoney(grupo.cuotasPrestamosPendientes) }}
                     </span>
                     <span 
                       class="text-sm font-bold"
-                      :class="grupo.totalAPagar > 0 ? 'text-red-700' : 'text-gray-500'"
+                      :class="grupo.totalAPagar > 0 ? 'text-red-700 oscuro:text-red-300' : 'text-texto-suave'"
                     >
                       Total a Pagar: ${{ formatMoney(grupo.totalAPagar) }}
                     </span>
@@ -861,23 +865,23 @@
               una fila con salto, y sobraba espacio en blanco sin que ninguno
               destacara.
             -->
-            <div class="hidden sm:block bg-gradient-to-r from-natillera-500/10 via-emerald-500/10 to-teal-500/10 border-b border-gray-200/60 px-5 py-4">
+            <div class="hidden sm:block bg-gradient-to-r from-natillera-500/10 via-emerald-500/10 to-teal-500/10 border-b border-borde/60 px-5 py-4">
               <div class="flex items-center gap-4">
                 <!-- Avatar + estado: juntos, porque se leen juntos -->
                 <div class="flex shrink-0 flex-col items-center gap-1.5">
                   <img
                     :src="getAvatarUrl(grupo.socio?.nombre || grupo.socioId, grupo.socio?.avatar_seed, grupo.socio?.avatar_style)"
                     :alt="grupo.socio?.nombre"
-                    class="h-14 w-14 rounded-xl border-2 border-natillera-300 shadow-md object-cover"
+                    class="h-14 w-14 rounded-xl border-2 border-natillera-300 oscuro:border-natillera-500/30 shadow-md object-cover"
                   />
                   <span
                     class="inline-flex items-center gap-1 rounded-full px-2 py-[3px] text-[10px] font-semibold leading-none ring-1 ring-inset"
                     :class="[
-                      grupo.estado === 'pagada' ? 'bg-emerald-50/80 text-emerald-700 ring-emerald-200/70' :
-                      grupo.estado === 'mora' ? 'bg-rose-50/80 text-rose-700 ring-rose-200/70' :
-                      grupo.estado === 'parcial' ? 'bg-violet-50/80 text-violet-800 ring-violet-200/70' :
-                      grupo.estado === 'programada' ? 'bg-slate-50 text-slate-500 ring-slate-200' :
-                      'bg-orange-50/80 text-orange-800 ring-orange-200/70'
+                      grupo.estado === 'pagada' ? 'bg-emerald-50/80 oscuro:bg-emerald-500/15 text-emerald-700 oscuro:text-emerald-300 ring-emerald-200/70 oscuro:ring-emerald-500/30' :
+                      grupo.estado === 'mora' ? 'bg-rose-50/80 oscuro:bg-rose-500/15 text-rose-700 oscuro:text-rose-300 ring-rose-200/70 oscuro:ring-rose-500/30' :
+                      grupo.estado === 'parcial' ? 'bg-violet-50/80 oscuro:bg-violet-500/15 text-violet-800 oscuro:text-violet-300 ring-violet-200/70 oscuro:ring-violet-500/30' :
+                      grupo.estado === 'programada' ? 'bg-slate-50 oscuro:bg-superficie-suave text-slate-500 oscuro:text-texto-suave ring-slate-200 oscuro:ring-borde' :
+                      'bg-orange-50/80 oscuro:bg-orange-500/15 text-orange-800 oscuro:text-orange-300 ring-orange-200/70 oscuro:ring-orange-500/30'
                     ]"
                   >
                     <span
@@ -898,30 +902,30 @@
 
                 <!-- Nombre y resumen -->
                 <div class="min-w-0 flex-1">
-                  <h3 class="truncate font-display text-xl font-bold leading-tight text-gray-800">
+                  <h3 class="truncate font-display text-xl font-bold leading-tight text-texto">
                     {{ grupo.socio?.nombre || 'Socio' }}
                   </h3>
-                  <p class="mt-1 truncate text-sm text-gray-600">
+                  <p class="mt-1 truncate text-sm text-texto-secundario">
                     {{ grupo.cuotas.length }} cuota{{ grupo.cuotas.length !== 1 ? 's' : '' }}
-                    <span class="mx-1.5 text-gray-300">·</span>
-                    Pagado <span class="font-semibold text-green-600">${{ formatMoney(grupo.pagado) }}</span>
+                    <span class="mx-1.5 text-gray-300 oscuro:text-texto-tenue">·</span>
+                    Pagado <span class="font-semibold text-green-600 oscuro:text-green-300">${{ formatMoney(grupo.pagado) }}</span>
                     <template v-if="grupo.pendiente > 0">
-                      <span class="mx-1.5 text-gray-300">·</span>
-                      Cuotas <span class="font-semibold text-red-600">${{ formatMoney(grupo.pendiente) }}</span>
+                      <span class="mx-1.5 text-gray-300 oscuro:text-texto-tenue">·</span>
+                      Cuotas <span class="font-semibold text-red-600 oscuro:text-red-300">${{ formatMoney(grupo.pendiente) }}</span>
                     </template>
                   </p>
                   <!-- Conceptos extra: solo aparecen si existen, para no llenar de ceros -->
                   <p
                     v-if="grupo.actividadesPendientes > 0 || grupo.cuotasPrestamosPendientes > 0 || grupo.cuotasPrestamosAbonado > 0"
-                    class="mt-0.5 truncate text-xs text-gray-500"
+                    class="mt-0.5 truncate text-xs text-texto-suave"
                   >
-                    <span v-if="grupo.actividadesPendientes > 0" class="text-purple-600">
+                    <span v-if="grupo.actividadesPendientes > 0" class="text-purple-600 oscuro:text-purple-300">
                       {{ getTextoActividadesGrupo(grupo) }}: ${{ formatMoney(grupo.actividadesPendientes) }}
                     </span>
-                    <span v-if="grupo.cuotasPrestamosPendientes > 0" class="ml-2 text-blue-600">
+                    <span v-if="grupo.cuotasPrestamosPendientes > 0" class="ml-2 text-blue-600 oscuro:text-blue-300">
                       Préstamos: ${{ formatMoney(grupo.cuotasPrestamosPendientes) }}
                     </span>
-                    <span v-if="grupo.cuotasPrestamosAbonado > 0" class="ml-2 text-sky-700">
+                    <span v-if="grupo.cuotasPrestamosAbonado > 0" class="ml-2 text-sky-700 oscuro:text-sky-300">
                       Abonado: ${{ formatMoney(grupo.cuotasPrestamosAbonado) }}
                     </span>
                   </p>
@@ -929,16 +933,16 @@
 
                 <!-- La cifra que importa: lo que este socio debe hoy -->
                 <div class="shrink-0 text-right">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-texto-suave">
                     {{ grupo.totalAPagar > 0 ? 'Total a pagar' : 'Al día' }}
                   </p>
                   <p
                     class="font-display text-3xl font-bold leading-none"
-                    :class="grupo.totalAPagar > 0 ? 'text-red-700' : 'text-green-600'"
+                    :class="grupo.totalAPagar > 0 ? 'text-red-700 oscuro:text-red-300' : 'text-green-600 oscuro:text-green-300'"
                   >
                     ${{ formatMoney(grupo.totalAPagar) }}
                   </p>
-                  <p class="mt-1 text-xs text-gray-500">
+                  <p class="mt-1 text-xs text-texto-suave">
                     de ${{ formatMoney(grupo.total) }}
                   </p>
                 </div>
@@ -953,11 +957,11 @@
                 @click="abrirModalDetalleCuota(cuota)"
                 class="relative overflow-hidden rounded-2xl p-4 border cursor-pointer transition-all duration-200"
                 :class="[
-                  (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-50/95 border-2 border-green-300/85 shadow-md shadow-green-200/35' : 
-                  (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-rose-50/95 border-2 border-red-300/75 shadow-md shadow-red-200/30' : 
-                  (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-slate-50 border-2 border-slate-200/90 shadow-md shadow-slate-200/25' : 
-                  tienePagoParcialCuota(cuota) ? 'bg-violet-50/95 border-2 border-violet-300/80 shadow-md shadow-violet-200/30' :
-                  'bg-amber-50/90 border-2 border-amber-200/85 shadow-md shadow-amber-200/25'
+                  (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-50/95 oscuro:bg-green-500/15 border-2 border-green-300/85 oscuro:border-green-500/30 shadow-md shadow-green-200/35' : 
+                  (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-rose-50/95 oscuro:bg-rose-500/15 border-2 border-red-300/75 oscuro:border-red-500/30 shadow-md shadow-red-200/30' : 
+                  (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-slate-50 oscuro:bg-superficie-suave border-2 border-slate-200/90 oscuro:border-borde/90 shadow-md shadow-slate-200/25' : 
+                  tienePagoParcialCuota(cuota) ? 'bg-violet-50/95 oscuro:bg-violet-500/15 border-2 border-violet-300/80 oscuro:border-violet-500/30 shadow-md shadow-violet-200/30' :
+                  'bg-amber-50/90 oscuro:bg-amber-500/15 border-2 border-amber-200/85 oscuro:border-amber-500/30 shadow-md shadow-amber-200/25'
                 ]"
               >
                 <!-- Etiqueta PAGO PARCIAL (solo cuando hay abono pero no está totalmente pagado) -->
@@ -984,10 +988,10 @@
                       <div class="flex items-center gap-2">
                         <span class="text-2xl">{{ getMesEmoji(cuota.mes) }}</span>
                         <div>
-                          <p class="font-bold text-gray-800 text-sm sm:text-base">
+                          <p class="font-bold text-texto text-sm sm:text-base">
                             {{ getMesLabel(cuota.mes) }} {{ cuota.anio }}
                           </p>
-                          <p class="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                          <p class="text-xs text-texto-suave flex items-center gap-1 mt-0.5">
                             <CalendarDaysIcon class="w-3 h-3" />
                             Vence: {{ formatDate(cuota.fecha_vencimiento || cuota.fecha_limite) }}
                           </p>
@@ -996,18 +1000,18 @@
                       <!-- Badge de quincena -->
                       <span 
                         v-if="cuota.quincena === 1 || cuota.quincena === 2"
-                        class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-violet-100 text-violet-700 text-xs font-semibold rounded-md"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-violet-100 oscuro:bg-violet-500/15 text-violet-700 oscuro:text-violet-300 text-xs font-semibold rounded-md"
                       >
                         {{ cuota.quincena === 1 ? '1er' : '2da' }} Quincena
                       </span>
                       <span 
                         :class="[
                           'px-2.5 py-1 rounded-lg text-xs font-bold',
-                          (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-100 text-green-700' :
-                          (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 text-red-700' :
-                          (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-100 text-gray-700' :
-                          tienePagoParcialCuota(cuota) ? 'bg-violet-100 text-violet-800' :
-                          'bg-orange-100 text-orange-700'
+                          (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-100 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300' :
+                          (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 oscuro:bg-red-500/15 text-red-700 oscuro:text-red-300' :
+                          (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-superficie-hundida text-texto-medio' :
+                          tienePagoParcialCuota(cuota) ? 'bg-violet-100 oscuro:bg-violet-500/15 text-violet-800 oscuro:text-violet-300' :
+                          'bg-orange-100 oscuro:bg-orange-500/15 text-orange-700 oscuro:text-orange-300'
                         ]"
                       >
                         {{ (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' :
@@ -1019,14 +1023,14 @@
                       <!-- No calcular multa (solo raigo.16@gmail.com) -->
                       <label
                         v-if="esUsuarioAdmin"
-                        class="flex items-center gap-1.5 ml-2 text-xs text-amber-700 cursor-pointer"
+                        class="flex items-center gap-1.5 ml-2 text-xs text-amber-700 oscuro:text-amber-300 cursor-pointer"
                         @click.stop
                       >
                         <input
                           type="checkbox"
                           :checked="!!cuota.no_calcular_multa"
                           @change="toggleNoCalcularMultaCuota(cuota)"
-                          class="rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                          class="rounded border-amber-300 oscuro:border-amber-500/30 text-amber-600 oscuro:text-amber-300 focus:ring-amber-500"
                         />
                         <span>No calcular multa</span>
                       </label>
@@ -1036,36 +1040,36 @@
                     <div class="text-right flex-1 sm:flex-none">
                       <!-- Información de pago parcial (total pagado > 0 pero < total a pagar) -->
                       <template v-if="tienePagoParcialCuota(cuota)">
-                        <p class="text-xs text-gray-500 mb-0.5">Valor Pendiente</p>
-                        <p class="font-bold text-base sm:text-lg text-orange-600">
+                        <p class="text-xs text-texto-suave mb-0.5">Valor Pendiente</p>
+                        <p class="font-bold text-base sm:text-lg text-orange-600 oscuro:text-orange-300">
                           ${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}
                         </p>
-                        <p class="text-xs font-medium text-green-600 mt-1">
+                        <p class="text-xs font-medium text-green-600 oscuro:text-green-300 mt-1">
                           Pagado: ${{ formatMoney(getTotalPagadoConActividadesSocio(cuota)) }}
                         </p>
                         <!-- Desglose de lo pagado -->
-                        <div class="mt-1 pt-1 border-t border-green-200/50">
+                        <div class="mt-1 pt-1 border-t border-green-200/50 oscuro:border-green-500/30">
                           <p
                             v-if="(cuota.valor_pagado || 0) > 0"
-                            class="text-xs font-semibold text-green-600"
+                            class="text-xs font-semibold text-green-600 oscuro:text-green-300"
                           >
                             <span class="inline-block w-2 h-2 bg-green-500 rounded-sm rotate-45 mr-1.5"></span>Cuota ${{ formatMoney(cuota.valor_pagado || 0) }}
                           </p>
                           <p
                             v-if="(cuota.valor_pagado_sancion || 0) > 0"
-                            class="text-xs font-semibold text-green-600 mt-0.5"
+                            class="text-xs font-semibold text-green-600 oscuro:text-green-300 mt-0.5"
                           >
                             <span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>Multa ${{ formatMoney(cuota.valor_pagado_sancion || 0) }}
                           </p>
                           <p
                             v-if="getActividadesInfoSocio(cuota).pagadas > 0"
-                            class="text-xs font-semibold text-emerald-600 mt-0.5"
+                            class="text-xs font-semibold text-emerald-600 oscuro:text-emerald-300 mt-0.5"
                           >
                             <span class="inline-block w-2 h-2 bg-teal-500 rounded-sm mr-1.5"></span>{{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesInfoSocio(cuota).pagadas) }}
                           </p>
                           <p
                             v-if="getTotalAbonadoPrestamosCuotaSocioSync(cuota) > 0"
-                            class="text-xs font-semibold text-blue-600 mt-0.5"
+                            class="text-xs font-semibold text-blue-600 oscuro:text-blue-300 mt-0.5"
                           >
                             <span class="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span>Abonado préstamos ${{ formatMoney(getTotalAbonadoPrestamosCuotaSocioSync(cuota)) }}
                           </p>
@@ -1074,28 +1078,28 @@
                       <template v-else>
                         <!-- Cuota pagada: mostrar total pagado y desglose (cuota + multa + actividades) -->
                         <template v-if="(cuota.estadoReal || cuota.estado) === 'pagada'">
-                          <p class="text-xs text-gray-500 mb-0.5">Total pagado</p>
-                          <p class="font-bold text-base sm:text-lg text-green-600">
+                          <p class="text-xs text-texto-suave mb-0.5">Total pagado</p>
+                          <p class="font-bold text-base sm:text-lg text-green-600 oscuro:text-green-300">
                             ${{ formatMoney(getTotalPagadoConActividadesSocio(cuota)) }}
                           </p>
-                          <p class="text-xs font-semibold mt-0.5 text-green-600">
+                          <p class="text-xs font-semibold mt-0.5 text-green-600 oscuro:text-green-300">
                             <span class="inline-block w-2 h-2 bg-green-500 rounded-sm rotate-45 mr-1.5"></span>Cuota ${{ formatMoney(cuota.valor_cuota) }}
                           </p>
                           <p 
                             v-if="(cuota.valor_pagado_sancion || 0) > 0"
-                            class="text-xs font-semibold mt-0.5 text-green-600"
+                            class="text-xs font-semibold mt-0.5 text-green-600 oscuro:text-green-300"
                           >
                             <span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>Multa ${{ formatMoney(cuota.valor_pagado_sancion || 0) }}
                           </p>
                           <p 
                             v-if="getActividadesInfoSocio(cuota).pagadas > 0"
-                            class="text-xs font-semibold mt-0.5 text-emerald-600"
+                            class="text-xs font-semibold mt-0.5 text-emerald-600 oscuro:text-emerald-300"
                           >
                             <span class="inline-block w-2 h-2 bg-teal-500 rounded-sm mr-1.5"></span>{{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesInfoSocio(cuota).pagadas) }}
                           </p>
                           <p 
                             v-if="(getTotalAbonadoPrestamosCuotaSocioSync(cuota) || getTotalCuotasPrestamosPagadasSocioSync(cuota)) > 0"
-                            class="text-xs font-semibold mt-0.5 text-blue-600"
+                            class="text-xs font-semibold mt-0.5 text-blue-600 oscuro:text-blue-300"
                           >
                             <span class="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span>Abonado préstamos ${{ formatMoney(getTotalAbonadoPrestamosCuotaSocioSync(cuota) || getTotalCuotasPrestamosPagadasSocioSync(cuota)) }}
                           </p>
@@ -1104,49 +1108,49 @@
                         <template v-else>
                           <p 
                             v-if="getActividadesPendientesSocio(cuota) > 0 || getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0 || getSancionCuota(cuota) > 0"
-                            class="text-xs text-gray-500 mb-0.5"
+                            class="text-xs text-texto-suave mb-0.5"
                           >
                             Total a Pagar
                           </p>
                           <p class="font-bold text-base sm:text-lg"
-                            :class="(cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-600' : 
-                                    getActividadesPendientesSocio(cuota) > 0 || getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0 ? 'text-orange-600' : 'text-gray-800'"
+                            :class="(cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-600 oscuro:text-red-300' : 
+                                    getActividadesPendientesSocio(cuota) > 0 || getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0 ? 'text-orange-600 oscuro:text-orange-300' : 'text-texto'"
                           >
                             ${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}
                           </p>
                           <p 
                             v-if="getSancionCuota(cuota) > 0 || getActividadesPendientesSocio(cuota) > 0"
-                            class="text-xs font-semibold mt-0.5 text-gray-700"
+                            class="text-xs font-semibold mt-0.5 text-texto-medio"
                           >
                             <span class="inline-block w-2 h-2 bg-gray-600 rounded-sm rotate-45 mr-1.5"></span>Cuota ${{ formatMoney(cuota.valor_cuota) }}
                           </p>
                           <p 
                             v-if="getSancionCuota(cuota) > 0" 
-                            class="text-xs font-semibold mt-0.5 text-red-600"
+                            class="text-xs font-semibold mt-0.5 text-red-600 oscuro:text-red-300"
                           >
                             <span class="inline-block w-2 h-2 bg-red-600 rounded-full mr-1.5"></span>Sanción pendiente ${{ formatMoney(getSancionCuota(cuota)) }}
                           </p>
                           <p 
                             v-if="getActividadesPendientesSocio(cuota) > 0" 
-                            class="text-xs font-semibold mt-0.5 text-purple-600"
+                            class="text-xs font-semibold mt-0.5 text-purple-600 oscuro:text-purple-300"
                           >
                             <span class="inline-block w-2 h-2 bg-purple-600 rounded-sm mr-1.5"></span>{{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}
                           </p>
                           <p 
                             v-if="getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0" 
-                            class="text-xs font-semibold mt-0.5 text-blue-600"
+                            class="text-xs font-semibold mt-0.5 text-blue-600 oscuro:text-blue-300"
                           >
                             <span class="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span>Pendiente préstamos ${{ formatMoney(getTotalCuotasPrestamosPendientesSocioSync(cuota)) }}
                           </p>
                           <p 
                             v-if="getTotalAbonadoPrestamosCuotaSocioSync(cuota) > 0"
-                            class="text-xs font-semibold mt-0.5 text-blue-700"
+                            class="text-xs font-semibold mt-0.5 text-blue-700 oscuro:text-blue-300"
                           >
                             <span class="inline-block w-2 h-2 bg-sky-500 rounded-full mr-1.5"></span>Abonado préstamos ${{ formatMoney(getTotalAbonadoPrestamosCuotaSocioSync(cuota)) }}
                           </p>
                           <p 
                             class="text-xs mt-1"
-                            :class="getTotalPagadoConActividadesSocio(cuota) > 0 ? 'text-green-600 font-medium' : 'text-gray-500'"
+                            :class="getTotalPagadoConActividadesSocio(cuota) > 0 ? 'text-green-600 oscuro:text-green-300 font-medium' : 'text-texto-suave'"
                           >
                             Pagado: ${{ formatMoney(getTotalPagadoConActividadesSocio(cuota)) }}
                           </p>
@@ -1188,7 +1192,7 @@
                             v-if="puedeEliminarPago(cuota)"
                             type="button"
                             @click.stop="abrirModalEliminarPago(cuota)"
-                            class="flex-shrink-0 min-h-[44px] min-w-[44px] px-3 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-700 border border-red-200 font-semibold rounded-xl flex items-center justify-center"
+                            class="flex-shrink-0 min-h-[44px] min-w-[44px] px-3 bg-red-50 oscuro:bg-red-500/15 hover:bg-red-100 oscuro:hover:bg-red-500/15 active:bg-red-200 oscuro:active:bg-red-500/25 text-red-700 oscuro:text-red-300 border border-red-200 oscuro:border-red-500/30 font-semibold rounded-xl flex items-center justify-center"
                             style="touch-action: manipulation;"
                             title="Eliminar un pago registrado"
                             aria-label="Eliminar un pago registrado"
@@ -1233,7 +1237,7 @@
                           v-if="puedeEliminarPago(cuota)"
                           type="button"
                           @click.stop="abrirModalEliminarPago(cuota)"
-                          class="hidden sm:flex min-h-[44px] min-w-[44px] px-3 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-700 border border-red-200 font-semibold rounded-xl flex items-center justify-center"
+                          class="hidden sm:flex min-h-[44px] min-w-[44px] px-3 bg-red-50 oscuro:bg-red-500/15 hover:bg-red-100 oscuro:hover:bg-red-500/15 active:bg-red-200 oscuro:active:bg-red-500/25 text-red-700 oscuro:text-red-300 border border-red-200 oscuro:border-red-500/30 font-semibold rounded-xl flex items-center justify-center"
                           style="touch-action: manipulation;"
                           title="Eliminar un pago registrado"
                           aria-label="Eliminar un pago registrado"
@@ -1277,7 +1281,7 @@
                         v-if="puedeEliminarPago(cuota)"
                         type="button"
                         @click.stop="abrirModalEliminarPago(cuota)"
-                        class="flex-shrink-0 min-h-[44px] min-w-[44px] px-3 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-700 border border-red-200 font-semibold rounded-xl flex items-center justify-center"
+                        class="flex-shrink-0 min-h-[44px] min-w-[44px] px-3 bg-red-50 oscuro:bg-red-500/15 hover:bg-red-100 oscuro:hover:bg-red-500/15 active:bg-red-200 oscuro:active:bg-red-500/25 text-red-700 oscuro:text-red-300 border border-red-200 oscuro:border-red-500/30 font-semibold rounded-xl flex items-center justify-center"
                         style="touch-action: manipulation;"
                         title="Eliminar un pago registrado"
                         aria-label="Eliminar un pago registrado"
@@ -1315,7 +1319,7 @@
                     v-if="puedeEliminarPago(cuota)"
                     type="button"
                     @click.stop="abrirModalEliminarPago(cuota)"
-                    class="w-full min-h-[44px] px-6 py-3.5 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-700 border border-red-200 font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
+                    class="w-full min-h-[44px] px-6 py-3.5 bg-red-50 oscuro:bg-red-500/15 hover:bg-red-100 oscuro:hover:bg-red-500/15 active:bg-red-200 oscuro:active:bg-red-500/25 text-red-700 oscuro:text-red-300 border border-red-200 oscuro:border-red-500/30 font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
                     style="touch-action: manipulation;"
                   >
                     <TrashIcon class="w-5 h-5" />
@@ -1342,37 +1346,37 @@
             :data-guia-tarjeta-socio="grupo.socioId"
             :id="grupo.cuotas.some(c => esPrimerFlujoSocioCuota(c)) ? 'tour-primer-flujo-socio-cuota-card' : undefined"
             @click="abrirModalCuotasSocio(grupo)"
-            class="flex items-center gap-3 min-h-[56px] cursor-pointer rounded-xl border border-gray-200 border-l-[5px] bg-white px-3 py-2 active:bg-gray-50"
+            class="flex items-center gap-3 min-h-[56px] cursor-pointer rounded-xl border border-borde border-l-[5px] bg-superficie-tarjeta px-3 py-2 active:bg-superficie-suave"
             :class="[
               grupo.estado === 'pagada' ? 'border-l-green-500' :
               grupo.estado === 'mora' ? 'border-l-red-500' :
               grupo.estado === 'parcial' ? 'border-l-violet-500' :
               grupo.estado === 'pendiente' ? 'border-l-orange-400' :
-              'border-l-slate-300'
+              'border-l-slate-300 oscuro:border-l-borde-fuerte'
             ]"
             style="touch-action: manipulation;"
           >
             <img
               :src="getAvatarUrl(grupo.socio?.nombre || grupo.socioId, grupo.socio?.avatar_seed, grupo.socio?.avatar_style)"
               :alt="grupo.socio?.nombre"
-              class="h-10 w-10 flex-shrink-0 rounded-full border border-white object-cover shadow-sm"
+              class="h-10 w-10 flex-shrink-0 rounded-full border border-white oscuro:border-superficie-tarjeta object-cover shadow-sm"
             />
 
             <div class="min-w-0 flex-1">
               <!-- Nombre + estado -->
               <div class="flex items-start justify-between gap-2">
-                <h3 class="truncate text-sm font-semibold leading-tight text-gray-900">
+                <h3 class="truncate text-sm font-semibold leading-tight text-texto-fuerte">
                   {{ grupo.socio?.nombre || 'Socio' }}
                 </h3>
                 <!-- Badge de estado: punto de color, borde fino y fondo apenas teñido -->
                 <span
                   class="inline-flex flex-shrink-0 items-center gap-1.5 rounded-full px-2 py-[3px] text-[10px] font-semibold leading-none tracking-[0.01em] ring-1 ring-inset"
                   :class="[
-                    grupo.estado === 'pagada' ? 'bg-emerald-50/80 text-emerald-700 ring-emerald-200/70' :
-                    grupo.estado === 'mora' ? 'bg-rose-50/80 text-rose-700 ring-rose-200/70' :
-                    grupo.estado === 'parcial' ? 'bg-violet-50/80 text-violet-800 ring-violet-200/70' :
-                    grupo.estado === 'programada' ? 'bg-slate-50 text-slate-500 ring-slate-200' :
-                    'bg-orange-50/80 text-orange-800 ring-orange-200/70'
+                    grupo.estado === 'pagada' ? 'bg-emerald-50/80 oscuro:bg-emerald-500/15 text-emerald-700 oscuro:text-emerald-300 ring-emerald-200/70 oscuro:ring-emerald-500/30' :
+                    grupo.estado === 'mora' ? 'bg-rose-50/80 oscuro:bg-rose-500/15 text-rose-700 oscuro:text-rose-300 ring-rose-200/70 oscuro:ring-rose-500/30' :
+                    grupo.estado === 'parcial' ? 'bg-violet-50/80 oscuro:bg-violet-500/15 text-violet-800 oscuro:text-violet-300 ring-violet-200/70 oscuro:ring-violet-500/30' :
+                    grupo.estado === 'programada' ? 'bg-slate-50 oscuro:bg-superficie-suave text-slate-500 oscuro:text-texto-suave ring-slate-200 oscuro:ring-borde' :
+                    'bg-orange-50/80 oscuro:bg-orange-500/15 text-orange-800 oscuro:text-orange-300 ring-orange-200/70 oscuro:ring-orange-500/30'
                   ]"
                 >
                   <span
@@ -1393,12 +1397,12 @@
 
               <!-- Cuotas del mes + total -->
               <div class="mt-0.5 flex items-baseline justify-between gap-2">
-                <p class="truncate text-xs leading-tight text-gray-500 tabular-nums">
+                <p class="truncate text-xs leading-tight text-texto-suave tabular-nums">
                   {{ grupo.textoCuotas }}
                 </p>
                 <p
                   class="flex-shrink-0 text-[15px] font-bold leading-tight tabular-nums"
-                  :class="grupo.totalAPagar > 0 ? (grupo.estado === 'mora' ? 'text-rose-600' : 'text-gray-900') : 'text-emerald-600'"
+                  :class="grupo.totalAPagar > 0 ? (grupo.estado === 'mora' ? 'text-rose-600 oscuro:text-rose-300' : 'text-texto-fuerte') : 'text-emerald-600 oscuro:text-emerald-300'"
                 >
                   ${{ formatMoney(grupo.totalAPagar > 0 ? grupo.totalAPagar : grupo.montoTotal) }}
                 </p>
@@ -1428,20 +1432,20 @@
       <!-- Vista Lista: móvil = lista expandible (barra estado + badges estado/fpago + total); desktop = tabla -->
       <template v-else-if="vistaLista && !vistaExcel && !vistaAgrupada">
         <!-- Móvil: lista expandible al pie de la letra (SOCIO/ESTADO | TOTAL, barra de color, badges, chevron, expandir detalles) -->
-        <div class="md:hidden rounded-xl border border-gray-200 bg-white overflow-hidden">
-          <div class="flex justify-between items-center px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-            <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Socio / Estado</span>
-            <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Total</span>
+        <div class="md:hidden rounded-xl border border-borde bg-superficie-tarjeta overflow-hidden">
+          <div class="flex justify-between items-center px-4 py-2.5 border-b border-borde bg-superficie-suave">
+            <span class="text-xs font-medium text-texto-tenue uppercase tracking-wide">Socio / Estado</span>
+            <span class="text-xs font-medium text-texto-tenue uppercase tracking-wide">Total</span>
           </div>
-          <div class="divide-y divide-gray-200">
+          <div class="divide-y divide-borde">
             <div
               v-for="cuota in cuotasFiltradas"
               :key="cuota.id"
-              class="bg-white"
+              class="bg-superficie-tarjeta"
             >
               <div
                 @click="toggleListaExpandida(cuota.id)"
-                class="flex items-stretch cursor-pointer active:bg-gray-50 transition-colors"
+                class="flex items-stretch cursor-pointer active:bg-superficie-suave transition-colors"
               >
                 <!-- Barra vertical de estado: verde Pagado, naranja Pendiente, rojo Atrasado -->
                 <div
@@ -1454,7 +1458,7 @@
                 />
                 <div class="flex-1 min-w-0 flex items-center gap-2 py-3 px-3">
                   <div class="flex-1 min-w-0">
-                    <p class="font-bold text-gray-900 truncate">
+                    <p class="font-bold text-texto-fuerte truncate">
                       {{ cuota.socio_natillera?.socio?.nombre || 'Socio' }}
                     </p>
                     <div class="flex items-center gap-2 mt-1.5 flex-wrap">
@@ -1473,25 +1477,25 @@
                         :class="[
                           'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border',
                           (cuota.estadoReal || cuota.estado) === 'pagada'
-                            ? 'bg-green-100 text-green-800 border-green-200' :
+                            ? 'bg-green-100 oscuro:bg-green-500/15 text-green-800 oscuro:text-green-300 border-green-200 oscuro:border-green-500/30' :
                           (cuota.estadoReal || cuota.estado) === 'mora'
-                            ? 'bg-red-100 text-red-800 border-red-200' :
+                            ? 'bg-red-100 oscuro:bg-red-500/15 text-red-800 oscuro:text-red-300 border-red-200 oscuro:border-red-500/30' :
                           (cuota.estadoReal || cuota.estado) === 'programada'
-                            ? 'bg-gray-100 text-gray-700 border-gray-200' :
+                            ? 'bg-superficie-hundida text-texto-medio border-borde' :
                           tienePagoParcialCuota(cuota)
-                            ? 'bg-violet-100 text-violet-800 border-violet-200' :
-                          'bg-orange-100 text-orange-800 border-orange-200'
+                            ? 'bg-violet-100 oscuro:bg-violet-500/15 text-violet-800 oscuro:text-violet-300 border-violet-200 oscuro:border-violet-500/30' :
+                          'bg-orange-100 oscuro:bg-orange-500/15 text-orange-800 oscuro:text-orange-300 border-orange-200 oscuro:border-orange-500/30'
                         ]"
                       >
                         <CheckCircleIcon v-if="(cuota.estadoReal || cuota.estado) === 'pagada'" class="w-3.5 h-3.5 flex-shrink-0" />
                         <ExclamationCircleIcon v-else-if="(cuota.estadoReal || cuota.estado) === 'mora'" class="w-3.5 h-3.5 flex-shrink-0" />
-                        <CurrencyDollarIcon v-else-if="tienePagoParcialCuota(cuota)" class="w-3.5 h-3.5 flex-shrink-0 text-violet-600" title="Pago parcial" />
+                        <CurrencyDollarIcon v-else-if="tienePagoParcialCuota(cuota)" class="w-3.5 h-3.5 flex-shrink-0 text-violet-600 oscuro:text-violet-300" title="Pago parcial" />
                         <ClockIcon v-else class="w-3.5 h-3.5 flex-shrink-0" />
                         {{ (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagado' : (cuota.estadoReal || cuota.estado) === 'mora' ? 'Atrasado' : (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' : tienePagoParcialCuota(cuota) ? 'Pago Parcial' : 'Pendiente' }}
                       </span>
-                      <span class="text-gray-300">|</span>
+                      <span class="text-gray-300 oscuro:text-texto-tenue">|</span>
                       <!-- Badge Forma de pago con icono -->
-                      <span class="inline-flex items-center gap-1 text-xs text-gray-500">
+                      <span class="inline-flex items-center gap-1 text-xs text-texto-suave">
                         <BuildingOffice2Icon v-if="(cuota.estadoReal || cuota.estado) === 'pagada' && (cuota.tipo_pago || '').toLowerCase() === 'transferencia'" class="w-4 h-4 flex-shrink-0" />
                         <BanknotesIcon v-else-if="(cuota.estadoReal || cuota.estado) === 'pagada' && (cuota.tipo_pago || 'efectivo').toLowerCase() === 'efectivo'" class="w-4 h-4 flex-shrink-0" />
                         <CreditCardIcon v-else-if="(cuota.estadoReal || cuota.estado) === 'pagada' && (cuota.tipo_pago || '').toLowerCase() === 'tarjeta'" class="w-4 h-4 flex-shrink-0" />
@@ -1502,31 +1506,31 @@
                   </div>
                 </div>
                 <div class="flex items-center gap-1 pr-3 py-3 flex-shrink-0">
-                  <span class="font-bold text-gray-900 tabular-nums">
+                  <span class="font-bold text-texto-fuerte tabular-nums">
                     ${{ formatMoney((cuota.valor_pagado || 0) + (cuota.valor_pagado_sancion || 0) + (getActividadesInfoSocio(cuota).pagadas || 0) + (getTotalCuotasPrestamosPagadasSocioSync(cuota) || 0)) }}
                   </span>
                   <ChevronDownIcon
-                    :class="['w-5 h-5 text-gray-400 transition-transform', listaExpandidos.has(cuota.id) ? 'rotate-180' : '']"
+                    :class="['w-5 h-5 text-texto-tenue transition-transform', listaExpandidos.has(cuota.id) ? 'rotate-180' : '']"
                   />
                 </div>
               </div>
               <!-- Contenido expandido: cuota, sanción, actividad, préstamo, descripción -->
               <div
                 v-show="listaExpandidos.has(cuota.id)"
-                class="border-t border-gray-100 bg-gray-50/80 px-4 pb-3 pt-2"
+                class="border-t border-borde-suave bg-superficie-suave/80 px-4 pb-3 pt-2"
                 @click.stop
               >
-                <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm text-gray-600">
-                  <span>Cuota <span class="font-semibold text-gray-800">${{ formatMoney(cuota.valor_pagado || 0) }}</span></span>
-                  <span>Sanción <span class="font-semibold text-gray-800">${{ formatMoney(cuota.valor_pagado_sancion || 0) }}</span></span>
-                  <span>Actividad <span class="font-semibold text-gray-800">${{ formatMoney(getActividadesInfoSocio(cuota).pagadas || 0) }}</span></span>
-                  <span>Préstamo <span class="font-semibold text-gray-800">${{ formatMoney(getTotalCuotasPrestamosPagadasSocioSync(cuota) || 0) }}</span></span>
+                <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm text-texto-secundario">
+                  <span>Cuota <span class="font-semibold text-texto">${{ formatMoney(cuota.valor_pagado || 0) }}</span></span>
+                  <span>Sanción <span class="font-semibold text-texto">${{ formatMoney(cuota.valor_pagado_sancion || 0) }}</span></span>
+                  <span>Actividad <span class="font-semibold text-texto">${{ formatMoney(getActividadesInfoSocio(cuota).pagadas || 0) }}</span></span>
+                  <span>Préstamo <span class="font-semibold text-texto">${{ formatMoney(getTotalCuotasPrestamosPagadasSocioSync(cuota) || 0) }}</span></span>
                 </div>
-                <p class="mt-2 text-xs text-gray-500">Descripción: {{ getDescripcionLista(cuota) }}</p>
+                <p class="mt-2 text-xs text-texto-suave">Descripción: {{ getDescripcionLista(cuota) }}</p>
                 <button
                   type="button"
                   @click="abrirModalDetalleCuota(cuota)"
-                  class="mt-2 text-xs font-semibold text-[#1e3a5f] hover:underline"
+                  class="mt-2 text-xs font-semibold text-[#1e3a5f] oscuro:text-sky-300 hover:underline"
                 >
                   Ver detalle completo
                 </button>
@@ -1534,14 +1538,14 @@
             </div>
           </div>
           <!-- Totales móvil -->
-          <div class="flex justify-between items-center px-4 py-3 border-t-2 border-[#1e3a5f]/30 bg-[#1e3a5f]/10 font-bold text-gray-800 text-sm">
+          <div class="flex justify-between items-center px-4 py-3 border-t-2 border-[#1e3a5f]/30 oscuro:border-sky-500/30 bg-[#1e3a5f]/10 font-bold text-texto text-sm">
             <span>TOTAL ({{ cuotasFiltradas.length }})</span>
-            <span class="text-[#1e3a5f] tabular-nums">${{ formatMoney(totalesLista.totalTotal) }}</span>
+            <span class="text-[#1e3a5f] oscuro:text-sky-300 tabular-nums">${{ formatMoney(totalesLista.totalTotal) }}</span>
           </div>
         </div>
 
         <!-- Desktop: tabla compacta -->
-        <div class="hidden md:block rounded-xl border border-gray-200 shadow-md overflow-hidden bg-white">
+        <div class="hidden md:block rounded-xl border border-borde shadow-md overflow-hidden bg-superficie-tarjeta">
           <div class="overflow-x-auto">
             <table class="w-full min-w-[580px] border-collapse text-sm">
               <thead>
@@ -1563,14 +1567,14 @@
                   :key="cuota.id"
                   @click="abrirModalDetalleCuota(cuota)"
                   :class="[
-                    'border-b border-gray-200 cursor-pointer transition-colors hover:opacity-90',
-                    idx % 2 === 0 ? 'bg-white' : 'bg-emerald-50/70'
+                    'border-b border-borde cursor-pointer transition-colors hover:opacity-90',
+                    idx % 2 === 0 ? 'bg-superficie-tarjeta' : 'bg-emerald-50/70 oscuro:bg-emerald-500/15'
                   ]"
                 >
                   <td
                     :class="[
-                      'sticky left-0 z-10 min-w-[100px] w-[100px] sm:min-w-0 sm:w-auto px-2 py-1.5 sm:px-3 sm:py-2 text-gray-800 font-medium shadow-[2px_0_6px_rgba(0,0,0,0.08)]',
-                      idx % 2 === 0 ? 'bg-white' : 'bg-emerald-50/70'
+                      'sticky left-0 z-10 min-w-[100px] w-[100px] sm:min-w-0 sm:w-auto px-2 py-1.5 sm:px-3 sm:py-2 text-texto font-medium shadow-[2px_0_6px_rgba(0,0,0,0.08)]',
+                      idx % 2 === 0 ? 'bg-superficie-tarjeta' : 'bg-emerald-50/70 oscuro:bg-emerald-500/15'
                     ]"
                   >
                     {{ cuota.socio_natillera?.socio?.nombre || 'Socio' }}<span
@@ -1581,45 +1585,45 @@
                       <ExclamationTriangleIcon class="h-2.5 w-2.5 flex-shrink-0" aria-hidden="true" />{{ atrasosPorCuota.get(cuota.id) }}
                     </span>
                   </td>
-                  <td class="px-2 py-1.5 sm:px-3 sm:py-2 text-right text-gray-800 tabular-nums whitespace-nowrap">
+                  <td class="px-2 py-1.5 sm:px-3 sm:py-2 text-right text-texto tabular-nums whitespace-nowrap">
                     ${{ formatMoney(cuota.valor_pagado || 0) }}
                   </td>
-                  <td class="px-2 py-1.5 sm:px-3 sm:py-2 text-right text-gray-800 tabular-nums whitespace-nowrap">
+                  <td class="px-2 py-1.5 sm:px-3 sm:py-2 text-right text-texto tabular-nums whitespace-nowrap">
                     ${{ formatMoney(cuota.valor_pagado_sancion || 0) }}
                   </td>
-                  <td class="px-2 py-1.5 sm:px-3 sm:py-2 text-right text-gray-800 tabular-nums whitespace-nowrap">
+                  <td class="px-2 py-1.5 sm:px-3 sm:py-2 text-right text-texto tabular-nums whitespace-nowrap">
                     ${{ formatMoney(getActividadesInfoSocio(cuota).pagadas || 0) }}
                   </td>
-                  <td class="px-2 py-1.5 sm:px-3 sm:py-2 text-right text-gray-800 tabular-nums whitespace-nowrap">
+                  <td class="px-2 py-1.5 sm:px-3 sm:py-2 text-right text-texto tabular-nums whitespace-nowrap">
                     ${{ formatMoney(getTotalCuotasPrestamosPagadasSocioSync(cuota) || 0) }}
                   </td>
-                  <td class="px-2 py-1.5 sm:px-3 sm:py-2 text-gray-600 whitespace-nowrap">
+                  <td class="px-2 py-1.5 sm:px-3 sm:py-2 text-texto-secundario whitespace-nowrap">
                     {{ getDescripcionLista(cuota) }}
                   </td>
-                  <td class="px-2 py-1.5 sm:px-3 sm:py-2 text-gray-600 whitespace-nowrap">
+                  <td class="px-2 py-1.5 sm:px-3 sm:py-2 text-texto-secundario whitespace-nowrap">
                     {{ (cuota.estadoReal || cuota.estado) === 'pagada' ? ((cuota.tipo_pago || 'efectivo').toLowerCase() === 'transferencia' ? 'transferencia' : 'efectivo') : '—' }}
                   </td>
                   <td class="px-2 py-1.5 sm:px-3 sm:py-2 text-center whitespace-nowrap">
                     <span
                       :class="[
                         'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold',
-                        (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-100 text-green-800' :
-                        (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 text-red-800' :
-                        (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-100 text-gray-700' :
-                        tienePagoParcialCuota(cuota) ? 'bg-violet-100 text-violet-800' :
-                        'bg-orange-100 text-orange-800'
+                        (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-100 oscuro:bg-green-500/15 text-green-800 oscuro:text-green-300' :
+                        (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 oscuro:bg-red-500/15 text-red-800 oscuro:text-red-300' :
+                        (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-superficie-hundida text-texto-medio' :
+                        tienePagoParcialCuota(cuota) ? 'bg-violet-100 oscuro:bg-violet-500/15 text-violet-800 oscuro:text-violet-300' :
+                        'bg-orange-100 oscuro:bg-orange-500/15 text-orange-800 oscuro:text-orange-300'
                       ]"
                     >
                       {{ (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' : (cuota.estadoReal || cuota.estado) === 'parcial' ? 'Pago Parcial' : (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' : (cuota.estadoReal || cuota.estado) === 'mora' ? 'En Mora' : tienePagoParcialCuota(cuota) ? 'Pago Parcial' : 'Pendiente' }}
                     </span>
                   </td>
-                  <td class="px-2 py-1.5 sm:px-3 sm:py-2 text-right font-semibold text-gray-800 tabular-nums whitespace-nowrap">
+                  <td class="px-2 py-1.5 sm:px-3 sm:py-2 text-right font-semibold text-texto tabular-nums whitespace-nowrap">
                     ${{ formatMoney((cuota.valor_pagado || 0) + (cuota.valor_pagado_sancion || 0) + (getActividadesInfoSocio(cuota).pagadas || 0) + (getTotalCuotasPrestamosPagadasSocioSync(cuota) || 0)) }}
                   </td>
                 </tr>
               </tbody>
               <tfoot>
-                <tr class="bg-[#1e3a5f]/10 border-t-2 border-[#1e3a5f]/30 font-bold text-gray-800">
+                <tr class="bg-[#1e3a5f]/10 border-t-2 border-[#1e3a5f]/30 oscuro:border-sky-500/30 font-bold text-texto">
                   <td class="sticky left-0 z-10 min-w-[100px] w-[100px] sm:min-w-0 sm:w-auto px-2 py-2 sm:px-3 sm:py-2.5 text-left text-sm bg-[#1e3a5f]/10 shadow-[2px_0_6px_rgba(0,0,0,0.08)]">
                     TOTAL ({{ cuotasFiltradas.length }})
                   </td>
@@ -1636,7 +1640,7 @@
                     ${{ formatMoney(totalesLista.totalPrestamo) }}
                   </td>
                   <td class="px-2 py-2 sm:px-3 sm:py-2.5" colspan="3"></td>
-                  <td class="px-2 py-2 sm:px-3 sm:py-2.5 text-right text-sm tabular-nums text-[#1e3a5f] whitespace-nowrap">
+                  <td class="px-2 py-2 sm:px-3 sm:py-2.5 text-right text-sm tabular-nums text-[#1e3a5f] oscuro:text-sky-300 whitespace-nowrap">
                     ${{ formatMoney(totalesLista.totalTotal) }}
                   </td>
                 </tr>
@@ -1650,25 +1654,25 @@
       <div v-else-if="vistaExcel && !vistaLista && !vistaAgrupada" class="card overflow-x-auto shadow-xl">
         <table class="w-full border-collapse">
           <thead>
-            <tr class="bg-gradient-to-r from-natillera-50 via-emerald-50 to-teal-50 border-b-2 border-natillera-200">
-              <th class="px-4 py-3 text-left text-xs font-bold text-natillera-700 uppercase tracking-wider">Socio</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-natillera-700 uppercase tracking-wider">Descripción</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-natillera-700 uppercase tracking-wider">Periodicidad</th>
-              <th class="px-4 py-3 text-right text-xs font-bold text-natillera-700 uppercase tracking-wider">Valor Cuota</th>
-              <th class="px-4 py-3 text-right text-xs font-bold text-natillera-700 uppercase tracking-wider">Valor Pagado</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-natillera-700 uppercase tracking-wider">Fecha Límite</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-natillera-700 uppercase tracking-wider">Forma de pago</th>
-              <th class="px-4 py-3 text-center text-xs font-bold text-natillera-700 uppercase tracking-wider">Estado</th>
-              <th class="px-4 py-3 text-center text-xs font-bold text-natillera-700 uppercase tracking-wider">Acciones</th>
+            <tr class="bg-gradient-to-r from-natillera-50 oscuro:from-natillera-500/15 via-emerald-50 oscuro:via-emerald-500/10 to-teal-50 oscuro:to-teal-500/10 border-b-2 border-natillera-200 oscuro:border-natillera-500/30">
+              <th class="px-4 py-3 text-left text-xs font-bold text-natillera-700 oscuro:text-natillera-300 uppercase tracking-wider">Socio</th>
+              <th class="px-4 py-3 text-left text-xs font-bold text-natillera-700 oscuro:text-natillera-300 uppercase tracking-wider">Descripción</th>
+              <th class="px-4 py-3 text-left text-xs font-bold text-natillera-700 oscuro:text-natillera-300 uppercase tracking-wider">Periodicidad</th>
+              <th class="px-4 py-3 text-right text-xs font-bold text-natillera-700 oscuro:text-natillera-300 uppercase tracking-wider">Valor Cuota</th>
+              <th class="px-4 py-3 text-right text-xs font-bold text-natillera-700 oscuro:text-natillera-300 uppercase tracking-wider">Valor Pagado</th>
+              <th class="px-4 py-3 text-left text-xs font-bold text-natillera-700 oscuro:text-natillera-300 uppercase tracking-wider">Fecha Límite</th>
+              <th class="px-4 py-3 text-left text-xs font-bold text-natillera-700 oscuro:text-natillera-300 uppercase tracking-wider">Forma de pago</th>
+              <th class="px-4 py-3 text-center text-xs font-bold text-natillera-700 oscuro:text-natillera-300 uppercase tracking-wider">Estado</th>
+              <th class="px-4 py-3 text-center text-xs font-bold text-natillera-700 oscuro:text-natillera-300 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100">
+          <tbody class="divide-y divide-borde-suave">
             <tr 
               v-for="cuota in cuotasFiltradas" 
               :key="cuota.id"
-              class="hover:bg-natillera-50/50 transition-colors border-b border-gray-100"
+              class="hover:bg-natillera-50/50 oscuro:hover:bg-natillera-500/15 transition-colors border-b border-borde-suave"
             >
-              <td class="px-4 py-3 text-sm font-medium text-gray-800">
+              <td class="px-4 py-3 text-sm font-medium text-texto">
                 {{ cuota.socio_natillera?.socio?.nombre || 'Socio' }}<span
                   v-if="atrasosPorCuota.get(cuota.id)"
                   class="ml-1.5 inline-flex items-center gap-0.5 rounded-full bg-red-600 px-1.5 py-0.5 align-middle text-[10px] font-bold leading-none text-white"
@@ -1677,77 +1681,77 @@
                   <ExclamationTriangleIcon class="h-2.5 w-2.5 flex-shrink-0" aria-hidden="true" />{{ atrasosPorCuota.get(cuota.id) }}
                 </span>
               </td>
-              <td class="px-4 py-3 text-sm text-gray-600">
+              <td class="px-4 py-3 text-sm text-texto-secundario">
                 {{ cuota.descripcion || 'Cuota' }}
               </td>
               <td class="px-4 py-3">
                 <span 
                   v-if="cuota.quincena" 
-                  class="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full"
+                  class="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 oscuro:bg-purple-500/15 text-purple-700 oscuro:text-purple-300 text-xs font-semibold rounded-full"
                 >
                   Q{{ cuota.quincena }}
                 </span>
                 <span 
                   v-else
-                  class="inline-flex items-center gap-1 px-2 py-1 bg-natillera-100 text-natillera-700 text-xs font-semibold rounded-full"
+                  class="inline-flex items-center gap-1 px-2 py-1 bg-natillera-100 oscuro:bg-natillera-500/15 text-natillera-700 oscuro:text-natillera-300 text-xs font-semibold rounded-full"
                 >
                   Mensual
                 </span>
               </td>
-              <td class="px-4 py-3 text-sm font-semibold text-right" :class="cuota.estado === 'mora' ? 'text-red-600' : cuota.estado === 'pagada' ? 'text-green-600' : 'text-gray-800'">
+              <td class="px-4 py-3 text-sm font-semibold text-right" :class="cuota.estado === 'mora' ? 'text-red-600 oscuro:text-red-300' : cuota.estado === 'pagada' ? 'text-green-600 oscuro:text-green-300' : 'text-texto'">
                 <!-- Cuota pagada: desglose (cuota + multa + actividades) -->
                 <template v-if="cuota.estado === 'pagada'">
                   <div class="space-y-0.5">
                     <div class="font-bold">Total: ${{ formatMoney((cuota.valor_pagado || 0) + (cuota.valor_pagado_sancion || 0) + getActividadesInfoSocio(cuota).pagadas + getTotalCuotasPrestamosPagadasSocioSync(cuota)) }}</div>
-                    <div class="text-xs text-green-600 font-semibold">Cuota: ${{ formatMoney(cuota.valor_cuota) }}</div>
-                    <div v-if="(cuota.valor_pagado_sancion || 0) > 0" class="text-xs text-green-600 font-semibold">+ Multa: ${{ formatMoney(cuota.valor_pagado_sancion || 0) }}</div>
-                    <div v-if="getActividadesInfoSocio(cuota).pagadas > 0" class="text-xs text-emerald-600 font-semibold">+ {{ getTextoActividadesSocio(cuota) }}: ${{ formatMoney(getActividadesInfoSocio(cuota).pagadas) }}</div>
-                    <div v-if="getTotalCuotasPrestamosPagadasSocioSync(cuota) > 0" class="text-xs text-blue-600 font-semibold">+ Cuotas de préstamos: ${{ formatMoney(getTotalCuotasPrestamosPagadasSocioSync(cuota)) }}</div>
+                    <div class="text-xs text-green-600 oscuro:text-green-300 font-semibold">Cuota: ${{ formatMoney(cuota.valor_cuota) }}</div>
+                    <div v-if="(cuota.valor_pagado_sancion || 0) > 0" class="text-xs text-green-600 oscuro:text-green-300 font-semibold">+ Multa: ${{ formatMoney(cuota.valor_pagado_sancion || 0) }}</div>
+                    <div v-if="getActividadesInfoSocio(cuota).pagadas > 0" class="text-xs text-emerald-600 oscuro:text-emerald-300 font-semibold">+ {{ getTextoActividadesSocio(cuota) }}: ${{ formatMoney(getActividadesInfoSocio(cuota).pagadas) }}</div>
+                    <div v-if="getTotalCuotasPrestamosPagadasSocioSync(cuota) > 0" class="text-xs text-blue-600 oscuro:text-blue-300 font-semibold">+ Cuotas de préstamos: ${{ formatMoney(getTotalCuotasPrestamosPagadasSocioSync(cuota)) }}</div>
                   </div>
                 </template>
                 <!-- Estado mora con multa -->
                 <template v-else-if="cuota.estado === 'mora'">
                   <div class="space-y-0.5">
                     <div>${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}</div>
-                    <div class="text-xs text-gray-500 font-normal">Cuota: ${{ formatMoney(cuota.valor_cuota) }}</div>
+                    <div class="text-xs text-texto-suave font-normal">Cuota: ${{ formatMoney(cuota.valor_cuota) }}</div>
                     <div v-if="getSancionCuota(cuota) > 0" class="text-xs text-red-500 font-semibold">+ Multa: ${{ formatMoney(getSancionCuota(cuota)) }}</div>
-                    <div v-if="getActividadesPendientesSocio(cuota) > 0" class="text-xs text-purple-600 font-semibold">+ {{ getTextoActividadesSocio(cuota) }}: ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}</div>
-                    <div v-if="getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0" class="text-xs text-blue-600 font-semibold">+ Cuotas de préstamos: ${{ formatMoney(getTotalCuotasPrestamosPendientesSocioSync(cuota)) }}</div>
+                    <div v-if="getActividadesPendientesSocio(cuota) > 0" class="text-xs text-purple-600 oscuro:text-purple-300 font-semibold">+ {{ getTextoActividadesSocio(cuota) }}: ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}</div>
+                    <div v-if="getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0" class="text-xs text-blue-600 oscuro:text-blue-300 font-semibold">+ Cuotas de préstamos: ${{ formatMoney(getTotalCuotasPrestamosPendientesSocioSync(cuota)) }}</div>
                   </div>
                 </template>
                 <!-- Estado parcial -->
                 <template v-else-if="(cuota.estadoReal || cuota.estado) === 'parcial'">
                   <div class="space-y-0.5">
                     <div>${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}</div>
-                    <div class="text-xs text-gray-500 font-normal">Cuota: ${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}</div>
-                    <div v-if="getActividadesPendientesSocio(cuota) > 0" class="text-xs text-purple-600 font-semibold">+ {{ getTextoActividadesSocio(cuota) }}: ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}</div>
-                    <div v-if="getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0" class="text-xs text-blue-600 font-semibold">+ Cuotas de préstamos: ${{ formatMoney(getTotalCuotasPrestamosPendientesSocioSync(cuota)) }}</div>
+                    <div class="text-xs text-texto-suave font-normal">Cuota: ${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}</div>
+                    <div v-if="getActividadesPendientesSocio(cuota) > 0" class="text-xs text-purple-600 oscuro:text-purple-300 font-semibold">+ {{ getTextoActividadesSocio(cuota) }}: ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}</div>
+                    <div v-if="getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0" class="text-xs text-blue-600 oscuro:text-blue-300 font-semibold">+ Cuotas de préstamos: ${{ formatMoney(getTotalCuotasPrestamosPendientesSocioSync(cuota)) }}</div>
                   </div>
                 </template>
                 <!-- Estado normal -->
                 <div v-else>
                   <div v-if="getActividadesPendientesSocio(cuota) > 0 || getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0" class="space-y-0.5">
                     <div>${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}</div>
-                    <div class="text-xs text-gray-500 font-normal">Cuota: ${{ formatMoney(cuota.valor_cuota) }}</div>
-                    <div v-if="getActividadesPendientesSocio(cuota) > 0" class="text-xs text-purple-600 font-semibold">+ {{ getTextoActividadesSocio(cuota) }}: ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}</div>
-                    <div v-if="getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0" class="text-xs text-blue-600 font-semibold">+ Cuotas de préstamos: ${{ formatMoney(getTotalCuotasPrestamosPendientesSocioSync(cuota)) }}</div>
+                    <div class="text-xs text-texto-suave font-normal">Cuota: ${{ formatMoney(cuota.valor_cuota) }}</div>
+                    <div v-if="getActividadesPendientesSocio(cuota) > 0" class="text-xs text-purple-600 oscuro:text-purple-300 font-semibold">+ {{ getTextoActividadesSocio(cuota) }}: ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}</div>
+                    <div v-if="getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0" class="text-xs text-blue-600 oscuro:text-blue-300 font-semibold">+ Cuotas de préstamos: ${{ formatMoney(getTotalCuotasPrestamosPendientesSocioSync(cuota)) }}</div>
                   </div>
                   <div v-else>
                     ${{ formatMoney(cuota.valor_cuota) }}
                   </div>
                 </div>
               </td>
-              <td class="px-4 py-3 text-sm text-right" :class="cuota.valor_pagado > 0 ? 'text-green-600 font-medium' : 'text-gray-400'">
+              <td class="px-4 py-3 text-sm text-right" :class="cuota.valor_pagado > 0 ? 'text-green-600 oscuro:text-green-300 font-medium' : 'text-texto-tenue'">
                 ${{ formatMoney(cuota.valor_pagado || 0) }}
               </td>
-              <td class="px-4 py-3 text-sm text-gray-600">
+              <td class="px-4 py-3 text-sm text-texto-secundario">
                 {{ formatDate(cuota.fecha_limite) }}
               </td>
-              <td class="px-4 py-3 text-sm text-gray-600">
+              <td class="px-4 py-3 text-sm text-texto-secundario">
                 <template v-if="cuota.estado === 'pagada'">
                   {{ (cuota.tipo_pago || 'efectivo').toLowerCase() === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
                 </template>
-                <span v-else class="text-gray-400">—</span>
+                <span v-else class="text-texto-tenue">—</span>
               </td>
               <td class="px-4 py-3 text-center">
                 <span 
@@ -1755,9 +1759,9 @@
                     'badge',
                     (cuota.estadoReal || cuota.estado) === 'pagada' ? 'badge-success' : 
                     (cuota.estadoReal || cuota.estado) === 'mora' ? 'badge-danger' : 
-                    (cuota.estadoReal || cuota.estado) === 'parcial' ? 'bg-blue-100 text-blue-800' : 
-                    (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-100 text-gray-700' : 
-                    'bg-orange-100 text-orange-800'
+                    (cuota.estadoReal || cuota.estado) === 'parcial' ? 'bg-blue-100 oscuro:bg-blue-500/15 text-blue-800 oscuro:text-blue-300' : 
+                    (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-superficie-hundida text-texto-medio' : 
+                    'bg-orange-100 oscuro:bg-orange-500/15 text-orange-800 oscuro:text-orange-300'
                   ]"
                 >
                   {{ (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' : (cuota.estadoReal || cuota.estado) === 'parcial' ? 'Pago Parcial' : (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' : (cuota.estadoReal || cuota.estado) === 'mora' ? 'En Mora' : (cuota.estadoReal || cuota.estado) }}
@@ -1769,7 +1773,7 @@
                     v-if="!esVisor && ((cuota.estadoReal || cuota.estado) === 'parcial' || (getTotalPagadoConActividadesSocio(cuota) > 0 && getTotalPagadoConActividadesSocio(cuota) < getTotalAPagarConActividadesSocio(cuota)))"
                     type="button"
                     @click="abrirModalEditar(cuota)"
-                    class="min-h-11 min-w-11 px-2 py-1.5 text-gray-600 hover:text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1 touch-manipulation"
+                    class="min-h-11 min-w-11 px-2 py-1.5 text-texto-secundario hover:text-texto-medio hover:bg-superficie-suave text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1 touch-manipulation"
                     title="Editar cuota"
                     aria-label="Editar cuota"
                   >
@@ -1779,7 +1783,7 @@
                     v-if="!esVisor && (cuota.estadoReal || cuota.estado) === 'pagada'"
                     type="button"
                     @click="abrirModalEditar(cuota)"
-                    class="min-h-11 min-w-11 px-2 py-1.5 text-gray-600 hover:text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1 touch-manipulation"
+                    class="min-h-11 min-w-11 px-2 py-1.5 text-texto-secundario hover:text-texto-medio hover:bg-superficie-suave text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1 touch-manipulation"
                     title="Editar pago"
                     aria-label="Editar pago"
                   >
@@ -1806,7 +1810,7 @@
                     v-if="puedeEliminarPago(cuota)"
                     type="button"
                     @click.stop="abrirModalEliminarPago(cuota)"
-                    class="min-h-11 min-w-11 px-2 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-semibold rounded-lg transition-all flex items-center justify-center touch-manipulation"
+                    class="min-h-11 min-w-11 px-2 py-1.5 bg-red-50 oscuro:bg-red-500/15 hover:bg-red-100 oscuro:hover:bg-red-500/15 text-red-700 oscuro:text-red-300 border border-red-200 oscuro:border-red-500/30 text-xs font-semibold rounded-lg transition-all flex items-center justify-center touch-manipulation"
                     title="Eliminar un pago registrado"
                     aria-label="Eliminar un pago registrado"
                   >
@@ -1817,24 +1821,24 @@
             </tr>
           </tbody>
           <tfoot>
-            <tr class="bg-gradient-to-r from-natillera-100 via-emerald-100 to-teal-100 border-t-2 border-natillera-300 font-bold">
-              <td class="px-4 py-4 text-sm text-natillera-800" colspan="3">
+            <tr class="bg-gradient-to-r from-natillera-100 oscuro:from-natillera-500/15 via-emerald-100 oscuro:via-emerald-500/10 to-teal-100 oscuro:to-teal-500/10 border-t-2 border-natillera-300 oscuro:border-natillera-500/30 font-bold">
+              <td class="px-4 py-4 text-sm text-natillera-800 oscuro:text-natillera-300" colspan="3">
                 <div class="flex items-center gap-2">
-                  <CurrencyDollarIcon class="w-5 h-5 text-natillera-600" />
+                  <CurrencyDollarIcon class="w-5 h-5 text-natillera-600 oscuro:text-natillera-300" />
                   <span>TOTALES ({{ cuotasFiltradas.length }} cuota{{ cuotasFiltradas.length !== 1 ? 's' : '' }})</span>
                 </div>
               </td>
-              <td class="px-4 py-4 text-sm text-natillera-800 text-right font-bold">
+              <td class="px-4 py-4 text-sm text-natillera-800 oscuro:text-natillera-300 text-right font-bold">
                 ${{ formatMoney(totalesExcel.totalValorCuota) }}
               </td>
-              <td class="px-4 py-4 text-sm text-green-700 text-right font-bold">
+              <td class="px-4 py-4 text-sm text-green-700 oscuro:text-green-300 text-right font-bold">
                 ${{ formatMoney(totalesExcel.totalValorPagado) }}
               </td>
-              <td class="px-4 py-4 text-sm text-gray-600">—</td>
-              <td class="px-4 py-4 text-sm text-gray-600" colspan="2">
+              <td class="px-4 py-4 text-sm text-texto-secundario">—</td>
+              <td class="px-4 py-4 text-sm text-texto-secundario" colspan="2">
                 —
               </td>
-              <td class="px-4 py-4 text-sm text-orange-700 text-right font-bold">
+              <td class="px-4 py-4 text-sm text-orange-700 oscuro:text-orange-300 text-right font-bold">
                 Pendiente: ${{ formatMoney(totalesExcel.totalPendiente) }}
               </td>
             </tr>
@@ -1881,13 +1885,14 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="requestCloseTopModal"
     >
       <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
         <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
             <ExclamationCircleIcon class="h-5 w-5 text-[#B91C1C]" />
           </div>
@@ -1909,6 +1914,7 @@
         <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
           <div class="w-11 shrink-0" aria-hidden="true" />
           <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
               <ExclamationCircleIcon class="h-6 w-6 text-[#B91C1C]" />
             </div>
@@ -1926,22 +1932,22 @@
         </div>
       </div>
       <div class="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-6 pt-5 pb-0 [-webkit-overflow-scrolling:touch]">
-        <div class="bg-red-50 border border-red-200 rounded-xl p-4">
-          <p class="font-medium text-gray-700">
+        <div class="bg-red-50 oscuro:bg-red-500/15 border border-red-200 oscuro:border-red-500/30 rounded-xl p-4">
+          <p class="font-medium text-texto-medio">
             ¿Estás seguro de que deseas borrar las cuotas de
-            <span class="font-bold text-red-600">
+            <span class="font-bold text-red-600 oscuro:text-red-300">
               {{ todosMeses.find(m => m.value === mesSeleccionado)?.label }} {{ anioMesSeleccionado }}
             </span>?
           </p>
-          <p class="mt-2 text-sm text-gray-600">
+          <p class="mt-2 text-sm text-texto-secundario">
             Se eliminarán <strong>{{ cuotasPendientesMes.length }}</strong> cuota(s) pendiente(s) de forma permanente.
           </p>
-          <p class="mt-2 text-xs font-medium text-amber-700">
+          <p class="mt-2 text-xs font-medium text-amber-700 oscuro:text-amber-300">
             Solo se eliminarán las cuotas pendientes. Las cuotas pagadas o parciales no se pueden eliminar.
           </p>
         </div>
       </div>
-      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+      <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
         <div class="flex gap-3">
           <button
             type="button"
@@ -1971,14 +1977,15 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="requestCloseTopModal"
     >
       <!-- Cabecera móvil: una sola fila -->
       <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
         <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
             <TrashIcon class="h-5 w-5 text-[#B91C1C]" />
           </div>
@@ -2001,6 +2008,7 @@
         <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
           <div class="w-11 shrink-0" aria-hidden="true" />
           <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
               <TrashIcon class="h-6 w-6 text-[#B91C1C]" />
             </div>
@@ -2022,30 +2030,30 @@
       <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="contenidoScrollEliminarPagoRef"
-          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 pt-5 pb-4 space-y-4 bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 pt-5 pb-4 space-y-4 bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch]"
           @scroll.passive="programarNatiscrollModalEliminarPago"
         >
           <!-- Socio y periodo de la cuota -->
-          <div v-if="cuotaEliminarPago" class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-            <p class="text-sm font-bold text-gray-800 truncate">
+          <div v-if="cuotaEliminarPago" class="rounded-xl border border-borde bg-superficie-suave px-4 py-3">
+            <p class="text-sm font-bold text-texto truncate">
               {{ cuotaEliminarPago.socio_natillera?.socio?.nombre || cuotaEliminarPago.nombre_socio || 'Socio' }}
             </p>
-            <p class="mt-0.5 text-xs text-gray-600">
+            <p class="mt-0.5 text-xs text-texto-secundario">
               {{ cuotaEliminarPago.descripcion || 'Cuota' }}
             </p>
           </div>
 
           <!-- Error de la eliminación: dentro del modal, no en un alert del navegador -->
-          <div v-if="errorEliminarPago" class="rounded-xl border border-red-300 bg-red-50 px-4 py-3">
-            <p class="text-sm font-bold text-red-800">No se pudo eliminar el pago</p>
-            <p class="mt-1 text-xs leading-relaxed text-red-700">{{ errorEliminarPago }}</p>
+          <div v-if="errorEliminarPago" class="rounded-xl border border-red-300 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 px-4 py-3">
+            <p class="text-sm font-bold text-red-800 oscuro:text-red-300">No se pudo eliminar el pago</p>
+            <p class="mt-1 text-xs leading-relaxed text-red-700 oscuro:text-red-300">{{ errorEliminarPago }}</p>
           </div>
 
           <!-- Resultado: reemplaza el formulario cuando queda algo por revisar -->
           <div v-if="resultadoEliminarPago" class="space-y-3">
-            <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-              <p class="text-sm font-bold text-emerald-800">Pago eliminado</p>
-              <ul class="mt-2 space-y-1 text-xs text-emerald-800">
+            <div class="rounded-xl border border-emerald-200 oscuro:border-emerald-500/30 bg-emerald-50 oscuro:bg-emerald-500/15 px-4 py-3">
+              <p class="text-sm font-bold text-emerald-800 oscuro:text-emerald-300">Pago eliminado</p>
+              <ul class="mt-2 space-y-1 text-xs text-emerald-800 oscuro:text-emerald-300">
                 <li v-if="resultadoEliminarPago.revertido?.cuota">La cuota volvió a quedar pendiente</li>
                 <li v-if="resultadoEliminarPago.revertido?.actividades > 0">
                   {{ resultadoEliminarPago.revertido.actividades }} actividad(es) revertida(s)
@@ -2064,14 +2072,14 @@
 
             <div
               v-if="resultadoEliminarPago.problemas?.length"
-              class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+              class="rounded-xl border border-amber-200 oscuro:border-amber-500/30 bg-amber-50 oscuro:bg-amber-500/15 px-4 py-3"
             >
-              <p class="text-xs font-bold text-amber-900">Queda por revisar a mano</p>
+              <p class="text-xs font-bold text-amber-900 oscuro:text-amber-300">Queda por revisar a mano</p>
               <ul class="mt-1.5 space-y-1.5">
                 <li
                   v-for="(problema, i) in resultadoEliminarPago.problemas"
                   :key="'problema-' + i"
-                  class="flex gap-2 text-xs leading-relaxed text-amber-800"
+                  class="flex gap-2 text-xs leading-relaxed text-amber-800 oscuro:text-amber-300"
                 >
                   <span class="mt-1.5 h-1 w-1 flex-shrink-0 rounded-full bg-amber-500"></span>
                   <span>{{ problema }}</span>
@@ -2084,18 +2092,18 @@
           <CargaCaja v-else-if="cargandoTransaccionesEliminar" texto="Cargando pagos registrados" />
 
           <!-- Sin transacciones: pago antiguo. Se revierte el pago completo de la cuota. -->
-          <div v-else-if="transaccionesEliminarPago.length === 0 && !modoDirectoEliminar" class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4">
-            <p class="text-sm font-semibold text-amber-800">No hay pagos que eliminar</p>
-            <p class="mt-1 text-xs text-amber-700">
+          <div v-else-if="transaccionesEliminarPago.length === 0 && !modoDirectoEliminar" class="rounded-xl border border-amber-200 oscuro:border-amber-500/30 bg-amber-50 oscuro:bg-amber-500/15 px-4 py-4">
+            <p class="text-sm font-semibold text-amber-800 oscuro:text-amber-300">No hay pagos que eliminar</p>
+            <p class="mt-1 text-xs text-amber-700 oscuro:text-amber-300">
               Esta cuota no tiene dinero registrado. Si buscabas corregir un valor, usa «Editar pago».
             </p>
           </div>
 
           <template v-else>
             <!-- Pago antiguo sin transacción: se avisa de que se revierte todo -->
-            <div v-if="modoDirectoEliminar" class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-              <p class="text-sm font-semibold text-amber-800">Pago anterior al registro por transacción</p>
-              <p class="mt-1 text-xs leading-relaxed text-amber-700">
+            <div v-if="modoDirectoEliminar" class="rounded-xl border border-amber-200 oscuro:border-amber-500/30 bg-amber-50 oscuro:bg-amber-500/15 px-4 py-3">
+              <p class="text-sm font-semibold text-amber-800 oscuro:text-amber-300">Pago anterior al registro por transacción</p>
+              <p class="mt-1 text-xs leading-relaxed text-amber-700 oscuro:text-amber-300">
                 Este pago no quedó guardado como transacción individual, así que se revertirá el
                 <strong>pago completo</strong> de la cuota. Las actividades y los abonos a préstamo se
                 identifican por el código de comprobante.
@@ -2104,7 +2112,7 @@
 
             <!-- Selección de la transacción a eliminar -->
             <div v-if="transaccionesEliminarPago.length > 1">
-              <p class="mb-2 text-sm font-semibold text-gray-700">¿Cuál pago quieres eliminar?</p>
+              <p class="mb-2 text-sm font-semibold text-texto-medio">¿Cuál pago quieres eliminar?</p>
               <div class="space-y-2">
                 <button
                   v-for="t in transaccionesEliminarPago"
@@ -2114,20 +2122,20 @@
                   :class="[
                     'w-full min-h-[44px] rounded-xl border-2 px-4 py-3 text-left transition-all touch-manipulation',
                     transaccionSeleccionadaEliminar === t.id
-                      ? 'border-red-400 bg-red-50 shadow-sm'
-                      : 'border-gray-200 bg-white hover:border-gray-300'
+                      ? 'border-red-400 bg-red-50 oscuro:bg-red-500/15 shadow-sm'
+                      : 'border-borde bg-superficie-tarjeta hover:border-borde-fuerte'
                   ]"
                 >
                   <div class="flex items-center justify-between gap-3">
                     <div class="min-w-0">
-                      <p class="text-sm font-bold text-gray-800 tabular-nums">${{ formatMoney(t.valor_total || 0) }}</p>
-                      <p class="mt-0.5 text-xs text-gray-600">
+                      <p class="text-sm font-bold text-texto tabular-nums">${{ formatMoney(t.valor_total || 0) }}</p>
+                      <p class="mt-0.5 text-xs text-texto-secundario">
                         {{ formatDate(t.fecha_pago) }} · {{ (t.forma_pago || 'efectivo') }}
                       </p>
                     </div>
                     <CheckCircleIcon
                       v-if="transaccionSeleccionadaEliminar === t.id"
-                      class="h-5 w-5 flex-shrink-0 text-red-600"
+                      class="h-5 w-5 flex-shrink-0 text-red-600 oscuro:text-red-300"
                     />
                   </div>
                 </button>
@@ -2138,63 +2146,63 @@
             <CargaCaja v-if="cargandoPreviewEliminar" texto="Calculando qué se revertirá" />
 
             <div v-else-if="previewEliminarPago" class="space-y-3">
-              <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-                <p class="text-sm font-semibold text-red-800">Se revertirá este dinero</p>
+              <div class="rounded-xl border border-red-200 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 px-4 py-3">
+                <p class="text-sm font-semibold text-red-800 oscuro:text-red-300">Se revertirá este dinero</p>
                 <div class="mt-2 space-y-1.5">
                   <div v-if="previewEliminarPago.valorCuota > 0" class="flex justify-between gap-2 text-xs">
-                    <span class="text-gray-700">Cuota</span>
-                    <span class="font-semibold tabular-nums text-gray-900">${{ formatMoney(previewEliminarPago.valorCuota) }}</span>
+                    <span class="text-texto-medio">Cuota</span>
+                    <span class="font-semibold tabular-nums text-texto-fuerte">${{ formatMoney(previewEliminarPago.valorCuota) }}</span>
                   </div>
                   <div v-if="previewEliminarPago.valorSancion > 0" class="flex justify-between gap-2 text-xs">
-                    <span class="text-gray-700">Sanción (vuelve a quedar pendiente)</span>
-                    <span class="font-semibold tabular-nums text-gray-900">${{ formatMoney(previewEliminarPago.valorSancion) }}</span>
+                    <span class="text-texto-medio">Sanción (vuelve a quedar pendiente)</span>
+                    <span class="font-semibold tabular-nums text-texto-fuerte">${{ formatMoney(previewEliminarPago.valorSancion) }}</span>
                   </div>
                   <div v-if="previewEliminarPago.valorActividades > 0" class="flex justify-between gap-2 text-xs">
-                    <span class="text-gray-700">Actividades</span>
-                    <span class="font-semibold tabular-nums text-gray-900">${{ formatMoney(previewEliminarPago.valorActividades) }}</span>
+                    <span class="text-texto-medio">Actividades</span>
+                    <span class="font-semibold tabular-nums text-texto-fuerte">${{ formatMoney(previewEliminarPago.valorActividades) }}</span>
                   </div>
                   <div v-if="previewEliminarPago.valorPrestamos > 0" class="flex justify-between gap-2 text-xs">
-                    <span class="text-gray-700">Cuotas de préstamo</span>
-                    <span class="font-semibold tabular-nums text-gray-900">${{ formatMoney(previewEliminarPago.valorPrestamos) }}</span>
+                    <span class="text-texto-medio">Cuotas de préstamo</span>
+                    <span class="font-semibold tabular-nums text-texto-fuerte">${{ formatMoney(previewEliminarPago.valorPrestamos) }}</span>
                   </div>
                   <div v-if="previewEliminarPago.impuesto4x1000 > 0" class="flex justify-between gap-2 text-xs">
-                    <span class="text-gray-700">4×1000</span>
-                    <span class="font-semibold tabular-nums text-gray-900">${{ formatMoney(previewEliminarPago.impuesto4x1000) }}</span>
+                    <span class="text-texto-medio">4×1000</span>
+                    <span class="font-semibold tabular-nums text-texto-fuerte">${{ formatMoney(previewEliminarPago.impuesto4x1000) }}</span>
                   </div>
-                  <div class="flex justify-between gap-2 border-t border-red-200 pt-2 text-sm">
-                    <span class="font-bold text-red-800">Total</span>
-                    <span class="font-bold tabular-nums text-red-800">${{ formatMoney(previewEliminarPago.valorTotal) }}</span>
+                  <div class="flex justify-between gap-2 border-t border-red-200 oscuro:border-red-500/30 pt-2 text-sm">
+                    <span class="font-bold text-red-800 oscuro:text-red-300">Total</span>
+                    <span class="font-bold tabular-nums text-red-800 oscuro:text-red-300">${{ formatMoney(previewEliminarPago.valorTotal) }}</span>
                   </div>
                 </div>
               </div>
 
               <!-- Cómo queda la cuota -->
-              <div class="rounded-xl border border-gray-200 bg-white px-4 py-3">
+              <div class="rounded-xl border border-borde bg-superficie-tarjeta px-4 py-3">
                 <div class="flex items-center justify-between gap-3 text-xs">
-                  <span class="text-gray-600">Pagado en la cuota</span>
-                  <span class="font-semibold tabular-nums text-gray-900">
+                  <span class="text-texto-secundario">Pagado en la cuota</span>
+                  <span class="font-semibold tabular-nums text-texto-fuerte">
                     ${{ formatMoney(previewEliminarPago.valorPagadoCuotaActual) }}
-                    <span class="text-gray-400">→</span>
+                    <span class="text-texto-tenue">→</span>
                     ${{ formatMoney(Math.max(0, previewEliminarPago.valorPagadoCuotaActual - previewEliminarPago.valorCuota)) }}
                   </span>
                 </div>
                 <!-- Lo cobrado por actividades también salió a utilidades: se devuelve al fondo -->
                 <div
                   v-if="previewEliminarPago.utilidadActividades > 0"
-                  class="mt-2 flex items-center justify-between gap-3 border-t border-gray-100 pt-2 text-xs"
+                  class="mt-2 flex items-center justify-between gap-3 border-t border-borde-suave pt-2 text-xs"
                 >
-                  <span class="text-gray-600">Vuelve a utilidades por actividades</span>
-                  <span class="font-semibold tabular-nums text-gray-900">${{ formatMoney(previewEliminarPago.utilidadActividades) }}</span>
+                  <span class="text-texto-secundario">Vuelve a utilidades por actividades</span>
+                  <span class="font-semibold tabular-nums text-texto-fuerte">${{ formatMoney(previewEliminarPago.utilidadActividades) }}</span>
                 </div>
                 <!-- La sanción cobrada se sumó a las utilidades del fondo: se devuelve de ahí -->
                 <div
                   v-if="previewEliminarPago.utilidadSancion && previewEliminarPago.utilidadSancion.valor > 0"
-                  class="mt-2 flex items-center justify-between gap-3 border-t border-gray-100 pt-2 text-xs"
+                  class="mt-2 flex items-center justify-between gap-3 border-t border-borde-suave pt-2 text-xs"
                 >
-                  <span class="text-gray-600">Utilidad por sanciones del fondo</span>
-                  <span class="font-semibold tabular-nums text-gray-900">
+                  <span class="text-texto-secundario">Utilidad por sanciones del fondo</span>
+                  <span class="font-semibold tabular-nums text-texto-fuerte">
                     ${{ formatMoney(previewEliminarPago.utilidadSancion.disponible) }}
-                    <span class="text-gray-400">→</span>
+                    <span class="text-texto-tenue">→</span>
                     ${{ formatMoney(Math.max(0, previewEliminarPago.utilidadSancion.disponible - previewEliminarPago.utilidadSancion.valor)) }}
                   </span>
                 </div>
@@ -2203,14 +2211,14 @@
               <!-- Avisos: una sola caja. Solo aparece cuando algo puede quedar mal. -->
               <div
                 v-if="previewEliminarPago.avisos?.length"
-                class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+                class="rounded-xl border border-amber-200 oscuro:border-amber-500/30 bg-amber-50 oscuro:bg-amber-500/15 px-4 py-3"
               >
-                <p class="text-xs font-bold text-amber-900">Ten en cuenta</p>
+                <p class="text-xs font-bold text-amber-900 oscuro:text-amber-300">Ten en cuenta</p>
                 <ul class="mt-1.5 space-y-1.5">
                   <li
                     v-for="(aviso, i) in previewEliminarPago.avisos"
                     :key="'aviso-' + i"
-                    class="flex gap-2 text-xs leading-relaxed text-amber-800"
+                    class="flex gap-2 text-xs leading-relaxed text-amber-800 oscuro:text-amber-300"
                   >
                     <span class="mt-1.5 h-1 w-1 flex-shrink-0 rounded-full bg-amber-500"></span>
                     <span>{{ aviso }}</span>
@@ -2218,7 +2226,7 @@
                 </ul>
               </div>
 
-              <p class="text-xs font-medium text-gray-500">
+              <p class="text-xs font-medium text-texto-suave">
                 Esta acción no se puede deshacer. Queda registrada en Auditoría.
               </p>
             </div>
@@ -2231,9 +2239,9 @@
           class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
           aria-hidden="true"
         >
-          <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent"></div>
+          <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent"></div>
           <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
-            <span class="rounded-full bg-white/90 px-3 py-1 font-display text-[0.6875rem] font-semibold text-[#1B5E37] shadow-sm">
+            <span class="rounded-full bg-superficie-tarjeta/90 px-3 py-1 font-display text-[0.6875rem] font-semibold text-marca-tinta shadow-sm">
               Desliza para ver más
             </span>
           </div>
@@ -2241,7 +2249,7 @@
       </div>
 
       <!-- Footer de acciones fijo -->
-      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+      <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
         <!-- Ya eliminado: solo queda cerrar -->
         <button
           v-if="resultadoEliminarPago"
@@ -2282,13 +2290,14 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-2xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-2xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="42rem"
       @close="cerrarModalDetalleCuota"
     >
       <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
         <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm ring-2 ring-white/30">
             <img
               v-if="cuotaDetalle"
@@ -2317,6 +2326,7 @@
         <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
           <div class="w-11 shrink-0" aria-hidden="true" />
           <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="flex h-[3.2rem] w-[3.2rem] shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm ring-2 ring-white/25">
               <img
                 v-if="cuotaDetalle"
@@ -2341,7 +2351,7 @@
         </div>
       </div>
 
-      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
+      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-superficie-tarjeta">
         <div
           v-if="cuotaDetalle"
           ref="contenidoScrollDetalleCuotaRef"
@@ -2352,11 +2362,11 @@
           <div 
             :class="[
               'relative p-5 rounded-xl border-2 shadow-sm',
-              (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'pagada' ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200' : 
-              (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200' : 
-              (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'parcial' ? 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200' : 
-              (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'programada' ? 'bg-gradient-to-br from-gray-50 to-slate-50 border-gray-200' : 
-              'bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200'
+              (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'pagada' ? 'bg-gradient-to-br from-green-50 oscuro:from-green-500/15 to-emerald-50 oscuro:to-emerald-500/10 border-green-200 oscuro:border-green-500/30' : 
+              (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' ? 'bg-gradient-to-br from-red-50 oscuro:from-red-500/15 to-rose-50 oscuro:to-rose-500/10 border-red-200 oscuro:border-red-500/30' : 
+              (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'parcial' ? 'bg-gradient-to-br from-blue-50 oscuro:from-blue-500/15 to-cyan-50 oscuro:to-cyan-500/10 border-blue-200 oscuro:border-blue-500/30' : 
+              (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'programada' ? 'bg-gradient-to-br from-superficie-suave to-slate-50 oscuro:to-superficie-suave border-borde' : 
+              'bg-gradient-to-br from-orange-50 oscuro:from-orange-500/15 to-amber-50 oscuro:to-amber-500/10 border-orange-200 oscuro:border-orange-500/30'
             ]"
           >
             <div class="flex items-center gap-3">
@@ -2378,14 +2388,14 @@
                 />
               </div>
               <div>
-                <p class="text-xs text-gray-500 font-medium mb-1">Estado</p>
+                <p class="text-xs text-texto-suave font-medium mb-1">Estado</p>
                 <p 
                   :class="[
                     'text-lg font-bold',
-                    (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'pagada' ? 'text-green-700' : 
-                    (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' ? 'text-red-700' : 
-                    (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'parcial' ? 'text-blue-700' : 
-                    (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'programada' ? 'text-gray-700' : 'text-orange-700'
+                    (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'pagada' ? 'text-green-700 oscuro:text-green-300' : 
+                    (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' ? 'text-red-700 oscuro:text-red-300' : 
+                    (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'parcial' ? 'text-blue-700 oscuro:text-blue-300' : 
+                    (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'programada' ? 'text-texto-medio' : 'text-orange-700 oscuro:text-orange-300'
                   ]"
                 >
                   {{ (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'programada' ? 'Programada' : (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'parcial' ? 'Pago Parcial' : (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'pagada' ? 'Pagada' : (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' ? 'En Mora' : 'Pendiente' }}
@@ -2397,46 +2407,46 @@
           <!-- Resumen de valores: Valor cuota · Sanciones · Actividades · Total a pagar · Valor pagado (2 columnas en desktop) -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- 1. Valor cuota -->
-            <div class="bg-gradient-to-br from-natillera-50 to-emerald-50 p-5 rounded-xl border border-natillera-200 shadow-sm">
-              <p class="text-xs text-gray-500 font-medium mb-1">Valor cuota</p>
-              <p class="text-2xl font-bold text-natillera-700">${{ formatMoney(cuotaDetalle.valor_cuota) }}</p>
+            <div class="bg-gradient-to-br from-natillera-50 oscuro:from-natillera-500/15 to-emerald-50 oscuro:to-emerald-500/10 p-5 rounded-xl border border-natillera-200 oscuro:border-natillera-500/30 shadow-sm">
+              <p class="text-xs text-texto-suave font-medium mb-1">Valor cuota</p>
+              <p class="text-2xl font-bold text-natillera-700 oscuro:text-natillera-300">${{ formatMoney(cuotaDetalle.valor_cuota) }}</p>
             </div>
 
             <!-- 2. Sanciones: cabecera con icono + título + total; desglose Mora / Intereses; Desde fecha -->
-            <div v-if="desgloseSancionDetalle.total > 0" class="bg-gradient-to-br from-red-50 to-rose-50 p-3 rounded-xl border border-red-200 shadow-sm">
+            <div v-if="desgloseSancionDetalle.total > 0" class="bg-gradient-to-br from-red-50 oscuro:from-red-500/15 to-rose-50 oscuro:to-rose-500/10 p-3 rounded-xl border border-red-200 oscuro:border-red-500/30 shadow-sm">
               <div class="flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2 min-w-0">
-                  <div class="w-8 h-8 rounded-lg bg-red-200/80 flex items-center justify-center flex-shrink-0">
-                    <ExclamationTriangleIcon class="w-4 h-4 text-red-700" />
+                  <div class="w-8 h-8 rounded-lg bg-red-200/80 oscuro:bg-red-500/25 flex items-center justify-center flex-shrink-0">
+                    <ExclamationTriangleIcon class="w-4 h-4 text-red-700 oscuro:text-red-300" />
                   </div>
-                  <span class="text-sm font-bold text-gray-900">Sanciones</span>
+                  <span class="text-sm font-bold text-texto-fuerte">Sanciones</span>
                 </div>
-                <span class="font-bold text-red-700 text-lg shrink-0 leading-tight">${{ formatMoney(desgloseSancionDetalle.total) }}</span>
+                <span class="font-bold text-red-700 oscuro:text-red-300 text-lg shrink-0 leading-tight">${{ formatMoney(desgloseSancionDetalle.total) }}</span>
               </div>
-              <ul class="space-y-1 mt-1.5 pt-1.5 border-t border-red-200/70">
+              <ul class="space-y-1 mt-1.5 pt-1.5 border-t border-red-200/70 oscuro:border-red-500/30">
                 <li v-for="(item, idx) in desgloseSancionDetalle.items" :key="idx" class="flex justify-between items-center gap-2">
-                  <span class="text-xs text-gray-800 min-w-0 truncate">
+                  <span class="text-xs text-texto min-w-0 truncate">
                     {{ item.nombre }}{{ item.textoDetalle ? ` (${item.textoDetalle})` : '' }}
                   </span>
-                  <span class="font-semibold text-red-700 text-xs shrink-0">${{ formatMoney(item.valor) }}</span>
+                  <span class="font-semibold text-red-700 oscuro:text-red-300 text-xs shrink-0">${{ formatMoney(item.valor) }}</span>
                 </li>
               </ul>
-              <p v-if="desgloseSancionDetalle.fechaDesde" class="text-[11px] text-gray-500 mt-1">
+              <p v-if="desgloseSancionDetalle.fechaDesde" class="text-[11px] text-texto-suave mt-1">
                 Desde {{ formatDate(desgloseSancionDetalle.fechaDesde) }}
               </p>
-              <p v-else-if="(cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' && getDiasMora(cuotaDetalle) > 0" class="text-[11px] text-gray-500 mt-1">
+              <p v-else-if="(cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' && getDiasMora(cuotaDetalle) > 0" class="text-[11px] text-texto-suave mt-1">
                 {{ getDiasMora(cuotaDetalle) }} {{ getDiasMora(cuotaDetalle) === 1 ? 'día' : 'días' }} en mora
                 <template v-if="cuotaDetalle.fecha_vencimiento || cuotaDetalle.fecha_limite"> desde {{ formatDate(cuotaDetalle.fecha_vencimiento || cuotaDetalle.fecha_limite) }}</template>
               </p>
             </div>
 
             <!-- 3. Actividades (si las hay), desglosadas por nombre -->
-            <div v-if="getDesgloseActividadesCuota(cuotaDetalle).total > 0" class="bg-gradient-to-br from-purple-50 to-indigo-50 p-5 rounded-xl border border-purple-200 shadow-sm">
-              <p class="text-xs text-gray-500 font-medium mb-2">Actividades</p>
+            <div v-if="getDesgloseActividadesCuota(cuotaDetalle).total > 0" class="bg-gradient-to-br from-purple-50 oscuro:from-purple-500/15 to-indigo-50 oscuro:to-indigo-500/10 p-5 rounded-xl border border-purple-200 oscuro:border-purple-500/30 shadow-sm">
+              <p class="text-xs text-texto-suave font-medium mb-2">Actividades</p>
               <ul class="space-y-2">
                 <li v-for="(item, idx) in getDesgloseActividadesCuota(cuotaDetalle).items" :key="idx" class="flex justify-between items-center">
-                  <span class="text-sm text-purple-800">{{ item.nombre }}</span>
-                  <span class="font-bold text-purple-700">${{ formatMoney(item.valor) }}</span>
+                  <span class="text-sm text-purple-800 oscuro:text-purple-300">{{ item.nombre }}</span>
+                  <span class="font-bold text-purple-700 oscuro:text-purple-300">${{ formatMoney(item.valor) }}</span>
                 </li>
               </ul>
             </div>
@@ -2444,13 +2454,13 @@
             <!-- 4. Total a pagar (obligación total: cuota + sanciones + actividades) -->
             <div :class="[
               'p-5 rounded-xl border shadow-sm',
-              (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200' : 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200'
+              (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' ? 'bg-gradient-to-br from-red-50 oscuro:from-red-500/15 to-rose-50 oscuro:to-rose-500/10 border-red-200 oscuro:border-red-500/30' : 'bg-gradient-to-br from-amber-50 oscuro:from-amber-500/15 to-orange-50 oscuro:to-orange-500/10 border-amber-200 oscuro:border-amber-500/30'
             ]">
-              <p class="text-xs text-gray-500 font-medium mb-1">Total a pagar</p>
-              <p :class="['text-2xl font-bold', (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' ? 'text-red-700' : 'text-amber-700']">
+              <p class="text-xs text-texto-suave font-medium mb-1">Total a pagar</p>
+              <p :class="['text-2xl font-bold', (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' ? 'text-red-700 oscuro:text-red-300' : 'text-amber-700 oscuro:text-amber-300']">
                 ${{ formatMoney(totalAPagarDetalle.total) }}
               </p>
-              <p class="text-xs text-gray-600 mt-1.5">
+              <p class="text-xs text-texto-secundario mt-1.5">
                 Incluye: Cuota ${{ formatMoney(totalAPagarDetalle.cuota) }}
                 <template v-if="totalAPagarDetalle.sanciones > 0"> + Sanciones ${{ formatMoney(totalAPagarDetalle.sanciones) }}</template>
                 <template v-if="totalAPagarDetalle.actividades > 0"> + Actividades ${{ formatMoney(totalAPagarDetalle.actividades) }}</template>
@@ -2458,9 +2468,9 @@
             </div>
 
             <!-- 5. Valor pagado -->
-            <div class="bg-gradient-to-br from-green-50 to-emerald-50 p-5 rounded-xl border border-green-200 shadow-sm">
-              <p class="text-xs text-gray-500 font-medium mb-1">Valor pagado</p>
-              <p class="text-2xl font-bold text-green-700">${{ formatMoney(getTotalPagadoConActividadesSocio(cuotaDetalle)) }}</p>
+            <div class="bg-gradient-to-br from-green-50 oscuro:from-green-500/15 to-emerald-50 oscuro:to-emerald-500/10 p-5 rounded-xl border border-green-200 oscuro:border-green-500/30 shadow-sm">
+              <p class="text-xs text-texto-suave font-medium mb-1">Valor pagado</p>
+              <p class="text-2xl font-bold text-green-700 oscuro:text-green-300">${{ formatMoney(getTotalPagadoConActividadesSocio(cuotaDetalle)) }}</p>
             </div>
           </div>
 
@@ -2469,38 +2479,38 @@
             'grid gap-4',
             (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'pagada' && cuotaDetalle.fecha_pago ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'
           ]">
-            <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200 shadow-sm">
+            <div class="bg-gradient-to-br from-superficie-suave to-superficie-hundida p-5 rounded-xl border border-borde shadow-sm">
               <div class="flex items-center gap-3 mb-2">
-                <CalendarIcon class="w-5 h-5 text-gray-500" />
-                <p class="text-xs text-gray-500 font-medium">Fecha de Vencimiento</p>
+                <CalendarIcon class="w-5 h-5 text-texto-suave" />
+                <p class="text-xs text-texto-suave font-medium">Fecha de Vencimiento</p>
               </div>
-              <p class="text-lg font-bold text-gray-800">{{ formatDate(cuotaDetalle.fecha_vencimiento) || 'N/A' }}</p>
-              <p class="text-xs text-gray-500 mt-1">Con días de gracia</p>
+              <p class="text-lg font-bold text-texto">{{ formatDate(cuotaDetalle.fecha_vencimiento) || 'N/A' }}</p>
+              <p class="text-xs text-texto-suave mt-1">Con días de gracia</p>
             </div>
-            <div class="bg-gradient-to-br from-purple-50 to-indigo-50 p-5 rounded-xl border border-purple-200 shadow-sm">
+            <div class="bg-gradient-to-br from-purple-50 oscuro:from-purple-500/15 to-indigo-50 oscuro:to-indigo-500/10 p-5 rounded-xl border border-purple-200 oscuro:border-purple-500/30 shadow-sm">
               <div class="flex items-center gap-3 mb-2">
                 <ExclamationCircleIcon class="w-5 h-5 text-purple-500" />
-                <p class="text-xs text-gray-500 font-medium">Fecha Límite</p>
+                <p class="text-xs text-texto-suave font-medium">Fecha Límite</p>
               </div>
-              <p class="text-lg font-bold text-gray-800">{{ formatDate(cuotaDetalle.fecha_limite) }}</p>
-              <p class="text-xs text-gray-500 mt-1">Sin días de gracia</p>
+              <p class="text-lg font-bold text-texto">{{ formatDate(cuotaDetalle.fecha_limite) }}</p>
+              <p class="text-xs text-texto-suave mt-1">Sin días de gracia</p>
             </div>
             <!-- Fecha de Pago (solo si está pagada) -->
             <div 
               v-if="(cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'pagada' && cuotaDetalle.fecha_pago"
-              class="bg-gradient-to-br from-green-50 to-emerald-50 p-5 rounded-xl border border-green-200 shadow-sm"
+              class="bg-gradient-to-br from-green-50 oscuro:from-green-500/15 to-emerald-50 oscuro:to-emerald-500/10 p-5 rounded-xl border border-green-200 oscuro:border-green-500/30 shadow-sm"
             >
               <div class="flex items-center gap-3 mb-2">
-                <CheckCircleIcon class="w-5 h-5 text-green-600" />
-                <p class="text-xs text-gray-500 font-medium">Fecha de Pago</p>
+                <CheckCircleIcon class="w-5 h-5 text-green-600 oscuro:text-green-300" />
+                <p class="text-xs text-texto-suave font-medium">Fecha de Pago</p>
               </div>
-              <p class="text-lg font-bold text-green-700">{{ formatDate(cuotaDetalle.fecha_pago) }}</p>
-              <p class="text-xs text-green-600 mt-1 font-medium">Cuota pagada</p>
+              <p class="text-lg font-bold text-green-700 oscuro:text-green-300">{{ formatDate(cuotaDetalle.fecha_pago) }}</p>
+              <p class="text-xs text-green-600 oscuro:text-green-300 mt-1 font-medium">Cuota pagada</p>
             </div>
           </div>
 
           <!-- Alerta de ajustes si existe -->
-          <div v-if="tieneAjuste(cuotaDetalle)" class="p-3 rounded-lg bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200 shadow-sm">
+          <div v-if="tieneAjuste(cuotaDetalle)" class="p-3 rounded-lg bg-gradient-to-r from-blue-50 oscuro:from-blue-500/15 via-indigo-50 oscuro:via-indigo-500/10 to-purple-50 oscuro:to-purple-500/10 border-2 border-blue-200 oscuro:border-blue-500/30 shadow-sm">
             <button
               @click.stop="abrirModalHistorialAjustes(cuotaDetalle)"
               class="group w-full flex items-center justify-between gap-3 cursor-pointer"
@@ -2510,68 +2520,68 @@
                   <InformationCircleIcon class="w-5 h-5 text-white" />
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-bold text-blue-800 group-hover:text-blue-900 transition-colors">
+                  <p class="text-sm font-bold text-blue-800 oscuro:text-blue-300 group-hover:text-blue-900 oscuro:group-hover:text-blue-300 transition-colors">
                     Esta cuota tiene ajustes de valor
                   </p>
-                  <p class="text-xs text-blue-600 mt-0.5">
+                  <p class="text-xs text-blue-600 oscuro:text-blue-300 mt-0.5">
                     Haz clic para ver el historial completo de cambios
                   </p>
                 </div>
               </div>
-              <ChevronRightIcon class="w-5 h-5 text-blue-600 group-hover:text-blue-700 group-hover:translate-x-1 transition-all flex-shrink-0" />
+              <ChevronRightIcon class="w-5 h-5 text-blue-600 oscuro:text-blue-300 group-hover:text-blue-700 oscuro:group-hover:text-blue-300 group-hover:translate-x-1 transition-all flex-shrink-0" />
             </button>
           </div>
 
           <!-- Periodicidad y descripción -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="bg-gradient-to-br from-purple-50 to-indigo-50 p-5 rounded-xl border border-purple-200 shadow-sm">
+            <div class="bg-gradient-to-br from-purple-50 oscuro:from-purple-500/15 to-indigo-50 oscuro:to-indigo-500/10 p-5 rounded-xl border border-purple-200 oscuro:border-purple-500/30 shadow-sm">
               <div class="flex items-center gap-3 mb-2">
                 <span class="text-2xl">{{ (cuotaDetalle.quincena === 1 || cuotaDetalle.quincena === 2) ? '🗓️' : '📅' }}</span>
-                <p class="text-xs text-gray-500 font-medium">Periodicidad</p>
+                <p class="text-xs text-texto-suave font-medium">Periodicidad</p>
               </div>
-              <p class="text-lg font-bold text-gray-800">
+              <p class="text-lg font-bold text-texto">
                 {{ (cuotaDetalle.quincena === 1 || cuotaDetalle.quincena === 2) ? `Quincenal - Q${cuotaDetalle.quincena}` : 'Mensual' }}
               </p>
             </div>
-            <div class="bg-gradient-to-br from-blue-50 to-cyan-50 p-5 rounded-xl border border-blue-200 shadow-sm">
+            <div class="bg-gradient-to-br from-blue-50 oscuro:from-blue-500/15 to-cyan-50 oscuro:to-cyan-500/10 p-5 rounded-xl border border-blue-200 oscuro:border-blue-500/30 shadow-sm">
               <div class="flex items-center gap-3 mb-2">
                 <DocumentTextIcon class="w-5 h-5 text-blue-500" />
-                <p class="text-xs text-gray-500 font-medium">Descripción</p>
+                <p class="text-xs text-texto-suave font-medium">Descripción</p>
               </div>
-              <p class="text-lg font-semibold text-gray-800">{{ cuotaDetalle.descripcion && !tieneAjuste(cuotaDetalle) ? cuotaDetalle.descripcion : 'Cuota' }}</p>
+              <p class="text-lg font-semibold text-texto">{{ cuotaDetalle.descripcion && !tieneAjuste(cuotaDetalle) ? cuotaDetalle.descripcion : 'Cuota' }}</p>
             </div>
           </div>
 
           <!-- Información del socio -->
-          <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200 shadow-sm">
-            <p class="text-xs text-gray-500 font-medium mb-3">Información del Socio</p>
+          <div class="bg-gradient-to-br from-superficie-suave to-superficie-hundida p-5 rounded-xl border border-borde shadow-sm">
+            <p class="text-xs text-texto-suave font-medium mb-3">Información del Socio</p>
             <div class="space-y-2">
               <div class="flex items-center gap-3">
-                <UserIcon class="w-5 h-5 text-gray-400" />
+                <UserIcon class="w-5 h-5 text-texto-tenue" />
                 <div>
-                  <p class="text-xs text-gray-500">Nombre</p>
-                  <p class="font-semibold text-gray-800">{{ cuotaDetalle.socio_natillera?.socio?.nombre || 'N/A' }}</p>
+                  <p class="text-xs text-texto-suave">Nombre</p>
+                  <p class="font-semibold text-texto">{{ cuotaDetalle.socio_natillera?.socio?.nombre || 'N/A' }}</p>
                 </div>
               </div>
               <div v-if="cuotaDetalle.socio_natillera?.socio?.telefono" class="flex items-center gap-3">
-                <PhoneIcon class="w-5 h-5 text-gray-400" />
+                <PhoneIcon class="w-5 h-5 text-texto-tenue" />
                 <div>
-                  <p class="text-xs text-gray-500">Teléfono</p>
-                  <p class="font-semibold text-gray-800">{{ cuotaDetalle.socio_natillera?.socio?.telefono }}</p>
+                  <p class="text-xs text-texto-suave">Teléfono</p>
+                  <p class="font-semibold text-texto">{{ cuotaDetalle.socio_natillera?.socio?.telefono }}</p>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Historial de Pagos -->
-          <div v-if="(cuotaDetalle.valor_pagado > 0 || cuotaDetalle.codigo_comprobante) && (historialPagosCuota.length > 0 || cargandoHistorialPagos)" class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-3 sm:p-5 rounded-xl border border-indigo-200 shadow-sm">
+          <div v-if="(cuotaDetalle.valor_pagado > 0 || cuotaDetalle.codigo_comprobante) && (historialPagosCuota.length > 0 || cargandoHistorialPagos)" class="bg-gradient-to-br from-indigo-50 oscuro:from-indigo-500/15 via-purple-50 oscuro:via-purple-500/10 to-pink-50 oscuro:to-pink-500/10 p-3 sm:p-5 rounded-xl border border-indigo-200 oscuro:border-indigo-500/30 shadow-sm">
             <div class="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
               <div class="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
                 <ClockIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
               <div class="min-w-0 flex-1">
-                <p class="text-sm font-bold text-gray-800">Historial de Pagos</p>
-                <p class="text-xs text-gray-600">Registro completo de pagos realizados</p>
+                <p class="text-sm font-bold text-texto">Historial de Pagos</p>
+                <p class="text-xs text-texto-secundario">Registro completo de pagos realizados</p>
               </div>
             </div>
 
@@ -2586,10 +2596,10 @@
                 :class="[
                   'p-3 sm:p-4 rounded-lg border-2 transition-all',
                   pago.es_actual
-                    ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300 shadow-md'
+                    ? 'bg-gradient-to-br from-green-50 oscuro:from-green-500/15 to-emerald-50 oscuro:to-emerald-500/10 border-green-300 oscuro:border-green-500/30 shadow-md'
                     : pago.es_modificacion
-                    ? 'bg-gradient-to-br from-orange-50 to-amber-50 border-orange-300 shadow-md'
-                    : 'bg-white border-indigo-200 shadow-sm hover:shadow-md'
+                    ? 'bg-gradient-to-br from-orange-50 oscuro:from-orange-500/15 to-amber-50 oscuro:to-amber-500/10 border-orange-300 oscuro:border-orange-500/30 shadow-md'
+                    : 'bg-superficie-tarjeta border-indigo-200 oscuro:border-indigo-500/30 shadow-sm hover:shadow-md'
                 ]"
               >
                 <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -2611,29 +2621,29 @@
                         <p
                           :class="[
                             'text-xs sm:text-sm font-bold',
-                            pago.es_actual ? 'text-green-700' : pago.es_modificacion ? 'text-orange-700' : 'text-gray-800'
+                            pago.es_actual ? 'text-green-700 oscuro:text-green-300' : pago.es_modificacion ? 'text-orange-700 oscuro:text-orange-300' : 'text-texto'
                           ]"
                         >
                           {{ pago.es_actual ? 'Pago Actual' : pago.es_modificacion ? 'Pago Modificado' : 'Pago Anterior' }}
                         </p>
-                        <p v-if="pago.codigo_comprobante" class="text-xs font-mono text-gray-600 mt-0.5 break-all">
+                        <p v-if="pago.codigo_comprobante" class="text-xs font-mono text-texto-secundario mt-0.5 break-all">
                           Código: {{ pago.codigo_comprobante }}
                         </p>
-                        <p v-if="pago.es_modificacion && pago.codigo_nuevo" class="text-xs text-orange-600 mt-1 font-semibold break-all">
+                        <p v-if="pago.es_modificacion && pago.codigo_nuevo" class="text-xs text-orange-600 oscuro:text-orange-300 mt-1 font-semibold break-all">
                           → Modificado a código: {{ pago.codigo_nuevo }}
                         </p>
                         <!-- Forma de pago: badge diferenciador -->
-                        <p class="text-xs text-gray-600 mt-1 flex items-center gap-1.5 flex-wrap">
-                          <span class="font-medium text-gray-700">Forma de pago:</span>
+                        <p class="text-xs text-texto-secundario mt-1 flex items-center gap-1.5 flex-wrap">
+                          <span class="font-medium text-texto-medio">Forma de pago:</span>
                           <span
                             v-if="pago.forma_pago"
                             :class="[
                               'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold border',
                               (pago.forma_pago || '').toLowerCase() === 'transferencia'
-                                ? 'bg-blue-100 text-blue-800 border-blue-200'
+                                ? 'bg-blue-100 oscuro:bg-blue-500/15 text-blue-800 oscuro:text-blue-300 border-blue-200 oscuro:border-blue-500/30'
                                 : (pago.forma_pago || '').toLowerCase() === 'tarjeta'
-                                ? 'bg-slate-100 text-slate-700 border-slate-200'
-                                : 'bg-green-100 text-green-800 border-green-200'
+                                ? 'bg-slate-100 oscuro:bg-superficie-hundida text-slate-700 oscuro:text-texto-medio border-slate-200 oscuro:border-borde'
+                                : 'bg-green-100 oscuro:bg-green-500/15 text-green-800 oscuro:text-green-300 border-green-200 oscuro:border-green-500/30'
                             ]"
                           >
                             <BanknotesIcon v-if="(pago.forma_pago || '').toLowerCase() === 'efectivo'" class="w-3.5 h-3.5" />
@@ -2641,31 +2651,31 @@
                             <CreditCardIcon v-else-if="(pago.forma_pago || '').toLowerCase() === 'tarjeta'" class="w-3.5 h-3.5" />
                             <span class="capitalize">{{ (pago.forma_pago || 'efectivo').toLowerCase() === 'transferencia' ? 'Transferencia' : (pago.forma_pago || '').toLowerCase() === 'tarjeta' ? 'Tarjeta' : 'Efectivo' }}</span>
                           </span>
-                          <span v-else class="text-gray-400">—</span>
+                          <span v-else class="text-texto-tenue">—</span>
                         </p>
                       </div>
                     </div>
 
                     <!-- Si es una modificación, mostrar antes y después -->
-                    <div v-if="pago.es_modificacion" class="mt-2 sm:mt-3 p-2 sm:p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                      <p class="text-xs font-semibold text-orange-800 mb-2">Detalle de la Modificación</p>
+                    <div v-if="pago.es_modificacion" class="mt-2 sm:mt-3 p-2 sm:p-3 bg-orange-50 oscuro:bg-orange-500/15 border border-orange-200 oscuro:border-orange-500/30 rounded-lg">
+                      <p class="text-xs font-semibold text-orange-800 oscuro:text-orange-300 mb-2">Detalle de la Modificación</p>
                       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                         <div>
-                          <p class="text-xs text-gray-600 mb-1">Valor Anterior</p>
-                          <p class="text-sm font-bold text-gray-700">
+                          <p class="text-xs text-texto-secundario mb-1">Valor Anterior</p>
+                          <p class="text-sm font-bold text-texto-medio">
                             ${{ formatMoney(pago.valor_pagado) }}
                           </p>
                         </div>
                         <div>
-                          <p class="text-xs text-gray-600 mb-1">Valor Nuevo</p>
-                          <p class="text-sm font-bold text-orange-700">
+                          <p class="text-xs text-texto-secundario mb-1">Valor Nuevo</p>
+                          <p class="text-sm font-bold text-orange-700 oscuro:text-orange-300">
                             ${{ formatMoney(pago.valor_nuevo) }}
                           </p>
                         </div>
                       </div>
-                      <div class="mt-2 pt-2 border-t border-orange-200">
-                        <p class="text-xs text-gray-500 mb-1">Fecha de Modificación</p>
-                        <p class="text-xs font-semibold text-gray-700">
+                      <div class="mt-2 pt-2 border-t border-orange-200 oscuro:border-orange-500/30">
+                        <p class="text-xs text-texto-suave mb-1">Fecha de Modificación</p>
+                        <p class="text-xs font-semibold text-texto-medio">
                           {{ formatDate(pago.fecha_actualizacion) }} {{ formatTime(pago.fecha_actualizacion) }}
                         </p>
                       </div>
@@ -2674,50 +2684,50 @@
                     <!-- Si no es modificación, mostrar información normal -->
                     <div v-else class="mt-2 sm:mt-3 space-y-2 sm:space-y-3">
                       <!-- Pago actual: desglose cuota + sanción + actividades -->
-                      <div v-if="pago.es_actual && cuotaDetalle" class="p-2 sm:p-3 rounded-lg bg-white/80 border border-green-200/60 space-y-2">
-                        <p class="text-xs font-semibold text-gray-700 mb-2">Desglose del pago</p>
+                      <div v-if="pago.es_actual && cuotaDetalle" class="p-2 sm:p-3 rounded-lg bg-superficie-tarjeta/80 border border-green-200/60 oscuro:border-green-500/30 space-y-2">
+                        <p class="text-xs font-semibold text-texto-medio mb-2">Desglose del pago</p>
                         <div class="flex justify-between text-xs sm:text-sm gap-2">
-                          <span class="text-gray-600">Cuota</span>
-                          <span class="font-semibold text-gray-800 shrink-0">${{ formatMoney(cuotaDetalle.valor_pagado || 0) }}</span>
+                          <span class="text-texto-secundario">Cuota</span>
+                          <span class="font-semibold text-texto shrink-0">${{ formatMoney(cuotaDetalle.valor_pagado || 0) }}</span>
                         </div>
                         <div v-if="(cuotaDetalle.valor_pagado_sancion || 0) > 0" class="flex justify-between text-xs sm:text-sm gap-2">
-                          <span class="text-gray-600">Sanción / multa</span>
-                          <span class="font-semibold text-red-700 shrink-0">${{ formatMoney(cuotaDetalle.valor_pagado_sancion || 0) }}</span>
+                          <span class="text-texto-secundario">Sanción / multa</span>
+                          <span class="font-semibold text-red-700 oscuro:text-red-300 shrink-0">${{ formatMoney(cuotaDetalle.valor_pagado_sancion || 0) }}</span>
                         </div>
                         <template v-if="getDesgloseActividadesCuota(cuotaDetalle).total > 0">
                           <div v-for="(item, idx) in getDesgloseActividadesCuota(cuotaDetalle).items" :key="idx" class="flex justify-between text-xs sm:text-sm gap-2">
-                            <span class="text-gray-600 truncate min-w-0">{{ item.nombre }}</span>
-                            <span class="font-semibold text-purple-700 shrink-0">${{ formatMoney(item.valor) }}</span>
+                            <span class="text-texto-secundario truncate min-w-0">{{ item.nombre }}</span>
+                            <span class="font-semibold text-purple-700 oscuro:text-purple-300 shrink-0">${{ formatMoney(item.valor) }}</span>
                           </div>
                         </template>
-                        <div class="flex justify-between text-xs sm:text-sm pt-2 border-t border-green-200/60 gap-2">
-                          <span class="font-bold text-gray-800">Total pagado</span>
-                          <span class="font-bold text-green-700 shrink-0">${{ formatMoney(getTotalPagadoConActividadesSocio(cuotaDetalle)) }}</span>
+                        <div class="flex justify-between text-xs sm:text-sm pt-2 border-t border-green-200/60 oscuro:border-green-500/30 gap-2">
+                          <span class="font-bold text-texto">Total pagado</span>
+                          <span class="font-bold text-green-700 oscuro:text-green-300 shrink-0">${{ formatMoney(getTotalPagadoConActividadesSocio(cuotaDetalle)) }}</span>
                         </div>
                       </div>
                       <!-- Pago no actual: solo valor y fecha -->
                       <div v-if="!pago.es_actual" class="flex flex-col sm:flex-row sm:justify-between gap-2 text-xs sm:text-sm">
                         <div>
-                          <p class="text-xs text-gray-500 mb-0.5">Valor Pagado</p>
-                          <p class="text-base sm:text-lg font-bold text-gray-700">${{ formatMoney(pago.valor_pagado) }}</p>
+                          <p class="text-xs text-texto-suave mb-0.5">Valor Pagado</p>
+                          <p class="text-base sm:text-lg font-bold text-texto-medio">${{ formatMoney(pago.valor_pagado) }}</p>
                         </div>
                         <div>
-                          <p class="text-xs text-gray-500 mb-0.5">Fecha</p>
-                          <p class="text-xs sm:text-sm font-semibold text-gray-700">{{ formatDate(pago.fecha_actualizacion) }}</p>
-                          <p class="text-xs text-gray-500 mt-0.5">{{ formatTime(pago.fecha_actualizacion) }}</p>
+                          <p class="text-xs text-texto-suave mb-0.5">Fecha</p>
+                          <p class="text-xs sm:text-sm font-semibold text-texto-medio">{{ formatDate(pago.fecha_actualizacion) }}</p>
+                          <p class="text-xs text-texto-suave mt-0.5">{{ formatTime(pago.fecha_actualizacion) }}</p>
                         </div>
                       </div>
                       <!-- Fecha cuando es pago actual -->
                       <div v-if="pago.es_actual" class="pt-1">
-                        <p class="text-xs text-gray-500 mb-0.5">Fecha</p>
-                        <p class="text-xs sm:text-sm font-semibold text-gray-700">{{ formatDate(pago.fecha_actualizacion) }} {{ formatTime(pago.fecha_actualizacion) }}</p>
+                        <p class="text-xs text-texto-suave mb-0.5">Fecha</p>
+                        <p class="text-xs sm:text-sm font-semibold text-texto-medio">{{ formatDate(pago.fecha_actualizacion) }} {{ formatTime(pago.fecha_actualizacion) }}</p>
                       </div>
                     </div>
                   </div>
                   <button
                     v-if="pago.codigo_comprobante"
                     @click="reenviarComprobantePorCodigo(pago.codigo_comprobante, pago.valor_pagado)"
-                    class="w-full sm:w-auto px-3 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 flex-shrink-0 order-first sm:order-none sm:mt-0"
+                    class="w-full sm:w-auto px-3 py-2 bg-indigo-100 oscuro:bg-indigo-500/15 hover:bg-indigo-200 oscuro:hover:bg-indigo-500/25 text-indigo-700 oscuro:text-indigo-300 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 flex-shrink-0 order-first sm:order-none sm:mt-0"
                     title="Ver/Reenviar comprobante"
                   >
                     <ArrowPathIcon class="w-4 h-4" />
@@ -2729,7 +2739,7 @@
 
             <!-- Empty state -->
             <div v-else class="text-center py-4 sm:py-6">
-              <p class="text-xs sm:text-sm text-gray-500">No hay historial de pagos disponible</p>
+              <p class="text-xs sm:text-sm text-texto-suave">No hay historial de pagos disponible</p>
             </div>
           </div>
         </div>
@@ -2739,7 +2749,7 @@
           class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
           aria-hidden="true"
         >
-          <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent" />
+          <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent" />
           <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
             <div class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3">
               <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
@@ -2752,7 +2762,7 @@
       </div>
 
         <!-- Footer con acciones -->
-        <div class="flex flex-shrink-0 gap-3 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex flex-shrink-0 gap-3 border-t border-borde bg-superficie-tarjeta px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <button 
             type="button"
             @click="cerrarModalDetalleCuota"
@@ -2781,7 +2791,7 @@
             type="button"
             v-if="cuotaDetalle && puedeEliminarPago(cuotaDetalle)"
             @click="abrirModalEliminarPago(cuotaDetalle)"
-            class="min-h-[48px] min-w-[48px] px-4 rounded-full border border-red-200 bg-red-50 font-semibold text-red-700 transition-all hover:bg-red-100 active:bg-red-200 flex items-center justify-center touch-manipulation"
+            class="min-h-[48px] min-w-[48px] px-4 rounded-full border border-red-200 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 font-semibold text-red-700 oscuro:text-red-300 transition-all hover:bg-red-100 oscuro:hover:bg-red-500/15 active:bg-red-200 oscuro:active:bg-red-500/25 flex items-center justify-center touch-manipulation"
             title="Eliminar un pago registrado"
             aria-label="Eliminar un pago registrado"
           >
@@ -2798,14 +2808,15 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="32rem"
       @close="cerrarModalCuotasSocio"
     >
       <!-- Cabecera móvil: fila -->
       <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
         <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm ring-2 ring-white/30">
             <img
               v-if="socioCuotasSel"
@@ -2822,6 +2833,37 @@
               Cuotas de {{ mesSeleccionadoLabel }} {{ anioParaMes(mesSeleccionado) }}
             </p>
           </div>
+          <!--
+            Acciones del socio (no de una cuota) en la cabecera: en el cuerpo le quitaban alto
+            y protagonismo a las cuotas. En móvil, solo icono; el área táctil es la del botón
+            (44 px) y el círculo translúcido es lo que se ve.
+          -->
+          <button
+            v-if="puedeEditarSocios && socioCuotasSel?.socioNatilleraId"
+            type="button"
+            class="group flex h-11 w-9 shrink-0 items-center justify-center text-white touch-manipulation [-webkit-tap-highlight-color:transparent] disabled:opacity-60"
+            aria-label="Editar socio"
+            title="Editar socio (cuota, periodicidad, datos)"
+            :disabled="abriendoEdicionSocio"
+            @click="abrirEditarSocio(socioCuotasSel.socioNatilleraId)"
+          >
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/25 transition group-active:bg-white/25">
+              <CargaBoton v-if="abriendoEdicionSocio" pequena />
+              <PencilSquareIcon v-else class="h-4 w-4" aria-hidden="true" />
+            </span>
+          </button>
+          <button
+            v-if="socioCuotasSel?.socioNatilleraId"
+            type="button"
+            class="group flex h-11 w-9 shrink-0 items-center justify-center text-white touch-manipulation [-webkit-tap-highlight-color:transparent]"
+            aria-label="Comprobante de varias cuotas"
+            title="Comprobante de varias cuotas"
+            @click="abrirComprobanteVariasDelSocio"
+          >
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/25 transition group-active:bg-white/25">
+              <ClipboardDocumentListIcon class="h-4 w-4" aria-hidden="true" />
+            </span>
+          </button>
           <button
             type="button"
             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 touch-manipulation [-webkit-tap-highlight-color:transparent]"
@@ -2837,6 +2879,7 @@
         <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
           <div class="w-11 shrink-0" aria-hidden="true" />
           <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="flex h-[3.2rem] w-[3.2rem] shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm ring-2 ring-white/25">
               <img
                 v-if="socioCuotasSel"
@@ -2851,6 +2894,29 @@
             <p class="mt-1 text-xs leading-snug text-white/90">
               Cuotas de {{ mesSeleccionadoLabel }} {{ anioParaMes(mesSeleccionado) }}
             </p>
+            <!-- En escritorio sobra ancho para decir qué hace cada una. -->
+            <div v-if="socioCuotasSel?.socioNatilleraId" class="mt-3 flex items-center justify-center gap-2">
+              <button
+                v-if="puedeEditarSocios"
+                type="button"
+                class="inline-flex h-8 items-center gap-1.5 rounded-full bg-white/15 px-3 text-xs font-semibold text-white ring-1 ring-white/25 transition hover:bg-white/25 touch-manipulation disabled:opacity-60"
+                title="Editar socio (cuota, periodicidad, datos)"
+                :disabled="abriendoEdicionSocio"
+                @click="abrirEditarSocio(socioCuotasSel.socioNatilleraId)"
+              >
+                <CargaBoton v-if="abriendoEdicionSocio" pequena />
+                <PencilSquareIcon v-else class="h-3.5 w-3.5" aria-hidden="true" />
+                Editar socio
+              </button>
+              <button
+                type="button"
+                class="inline-flex h-8 items-center gap-1.5 rounded-full bg-white/15 px-3 text-xs font-semibold text-white ring-1 ring-white/25 transition hover:bg-white/25 touch-manipulation"
+                @click="abrirComprobanteVariasDelSocio"
+              >
+                <ClipboardDocumentListIcon class="h-3.5 w-3.5" aria-hidden="true" />
+                Comprobante de varias cuotas
+              </button>
+            </div>
           </div>
           <button
             type="button"
@@ -2864,7 +2930,7 @@
       </div>
 
       <!-- Cuerpo scrolleable + natiscroll -->
-      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
+      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-superficie-tarjeta">
         <div
           v-if="socioCuotasSel"
           ref="contenidoScrollCuotasSocioRef"
@@ -2873,31 +2939,31 @@
         >
           <!-- Resumen del mes: una tira compacta. El protagonista de la vista son las
                tarjetas de cada cuota, así que el total informa sin robarles peso. -->
-          <div class="flex items-center justify-between gap-3 rounded-xl bg-gray-50 px-4 py-2.5">
+          <div class="flex items-center justify-between gap-3 rounded-xl bg-superficie-suave px-4 py-2.5">
             <div class="flex items-baseline gap-2 min-w-0">
-              <span class="text-[11px] font-bold uppercase tracking-wide text-gray-400">
+              <span class="text-[11px] font-bold uppercase tracking-wide text-texto-tenue">
                 {{ socioCuotasSel.totalAPagar > 0 ? 'Falta' : 'Al día' }}
               </span>
               <span
                 class="text-base font-bold leading-none tabular-nums"
-                :class="socioCuotasSel.totalAPagar > 0 ? 'text-red-700' : 'text-green-600'"
+                :class="socioCuotasSel.totalAPagar > 0 ? 'text-red-700 oscuro:text-red-300' : 'text-green-600 oscuro:text-green-300'"
               >
                 ${{ formatMoney(socioCuotasSel.totalAPagar > 0 ? socioCuotasSel.totalAPagar : socioCuotasSel.pagado) }}
               </span>
             </div>
             <div class="flex-shrink-0 text-right text-[11px] font-semibold leading-tight">
-              <p :class="socioCuotasSel.pagado > 0 ? 'text-green-700' : 'text-gray-400'">
+              <p :class="socioCuotasSel.pagado > 0 ? 'text-green-700 oscuro:text-green-300' : 'text-texto-tenue'">
                 <template v-if="socioCuotasSel.pagado > 0">Pagó ${{ formatMoney(socioCuotasSel.pagado) }}</template>
                 <template v-else>Sin abonos</template>
               </p>
-              <p class="tabular-nums text-gray-400">de ${{ formatMoney(socioCuotasSel.montoTotal) }}</p>
+              <p class="tabular-nums text-texto-tenue">de ${{ formatMoney(socioCuotasSel.montoTotal) }}</p>
             </div>
           </div>
 
           <!-- Qué es esta lista. Sin esto, quien abre la modal y solo ve «Cuota» no sabe
                que aquí van a salir también las actividades y las cuotas de préstamo:
                `getConceptosCuota` los añade solo cuando el socio los tiene. -->
-          <p class="flex items-start gap-2 rounded-xl border border-[#1B5E37]/10 bg-[#E8F5E9] px-3 py-2.5 text-xs leading-snug text-[#1B5E37]">
+          <p class="flex items-start gap-2 rounded-xl border border-[#1B5E37]/10 oscuro:border-marca-tinta/10 bg-marca-suave px-3 py-2.5 text-xs leading-snug text-marca-tinta">
             <InformationCircleIcon class="mt-0.5 h-4 w-4 flex-shrink-0" />
             <span>
               Todo lo que debe este mes.
@@ -2908,41 +2974,49 @@
 
           <!-- Cuotas del periodo (1ª / 2ª quincena o mensual). Tocar: editar si ya tiene pago, registrar si no. -->
           <div
-            v-for="cuota in socioCuotasSel.cuotas"
+            v-for="(cuota, indiceCuota) in socioCuotasSel.cuotas"
             :key="cuota.id"
             :data-guia-cuota-socio="cuota.id"
             @click="abrirAccionCuotaDesdeSocio(cuota)"
-            class="overflow-hidden rounded-[var(--radius-lg)] border border-[color:var(--surface-divider)] bg-white shadow-[var(--shadow-sm)]"
-            :class="!esVisor ? 'cursor-pointer hover:shadow-[var(--shadow-md)] transition-shadow' : ''"
+            class="overflow-hidden rounded-[var(--radius-lg)] border border-l-4 border-[color:var(--surface-divider)] bg-superficie-tarjeta shadow-[var(--shadow-sm)]"
+            :class="[ACENTO_CUOTA[tonoCuota(cuota)].franja, !esVisor ? 'cursor-pointer hover:shadow-[var(--shadow-md)] transition-shadow' : '']"
             style="touch-action: manipulation;"
           >
             <!-- Cabecera teñida: es lo que hace que una quincena se distinga de la otra de un vistazo -->
             <div
               class="flex items-center justify-between gap-2 border-b px-4 py-3"
               :class="[
-                (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-50 border-green-100' :
-                (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-50 border-red-100' :
-                tienePagoParcialCuota(cuota) ? 'bg-violet-50 border-violet-100' :
-                (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-slate-50 border-slate-100' :
-                'bg-orange-50 border-orange-100'
+                (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-50 oscuro:bg-green-500/15 border-green-100 oscuro:border-green-500/30' :
+                (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-50 oscuro:bg-red-500/15 border-red-100 oscuro:border-red-500/30' :
+                tienePagoParcialCuota(cuota) ? 'bg-violet-50 oscuro:bg-violet-500/15 border-violet-100 oscuro:border-violet-500/30' :
+                (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-slate-50 oscuro:bg-superficie-suave border-slate-100 oscuro:border-borde-suave' :
+                'bg-orange-50 oscuro:bg-orange-500/15 border-orange-100 oscuro:border-orange-500/30'
               ]"
             >
-              <div class="min-w-0">
+              <!-- Número de la cuota: con dos o tres tarjetas del mismo color, el número es lo
+                   que deja decir «la segunda» sin leer fechas. -->
+              <span
+                v-if="socioCuotasSel.cuotas.length > 1"
+                class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full font-display text-xs font-bold tabular-nums text-white"
+                :class="ACENTO_CUOTA[tonoCuota(cuota)].numero"
+                aria-hidden="true"
+              >{{ indiceCuota + 1 }}</span>
+              <div class="min-w-0 flex-1">
                 <p
                   class="truncate text-base font-bold leading-tight"
                   :class="[
-                    (cuota.estadoReal || cuota.estado) === 'pagada' ? 'text-green-900' :
-                    (cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-900' :
-                    tienePagoParcialCuota(cuota) ? 'text-violet-900' :
-                    (cuota.estadoReal || cuota.estado) === 'programada' ? 'text-slate-800' :
-                    'text-orange-900'
+                    (cuota.estadoReal || cuota.estado) === 'pagada' ? 'text-green-900 oscuro:text-green-300' :
+                    (cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-900 oscuro:text-red-300' :
+                    tienePagoParcialCuota(cuota) ? 'text-violet-900 oscuro:text-violet-300' :
+                    (cuota.estadoReal || cuota.estado) === 'programada' ? 'text-slate-800 oscuro:text-texto' :
+                    'text-orange-900 oscuro:text-orange-300'
                   ]"
                 >
                   {{ getPeriodoCuotaLabel(cuota) }}
                 </p>
                 <p
                   class="mt-0.5 text-[11.5px] font-semibold"
-                  :class="(cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-700' : 'text-gray-500'"
+                  :class="(cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-700 oscuro:text-red-300' : 'text-texto-suave'"
                 >
                   {{ (cuota.estadoReal || cuota.estado) === 'mora' ? 'Venció el' : 'Vence el' }}
                   {{ formatDate(cuota.fecha_vencimiento || cuota.fecha_limite) }}
@@ -2966,7 +3040,7 @@
                 </span>
                 <ChevronRightIcon
                   v-if="!esVisor"
-                  class="w-4 h-4 text-gray-400"
+                  class="w-4 h-4 text-texto-tenue"
                 />
               </div>
             </div>
@@ -2978,44 +3052,48 @@
                  se PAGÓ. Antes un concepto saldado solo decía «pagada», y entonces no había
                  forma de saber cuánto había costado cada cosa una vez cobrada: el total de
                  abajo era la única cifra y no se podía desglosar. La palabra se conserva
-                 debajo del importe para que no se confunda con una deuda. -->
-            <div v-if="getConceptosCuota(cuota).length" class="flex flex-col gap-2">
+                 debajo del importe para que no se confunda con una deuda.
+                 Renglones como los del comprobante: concepto, puntos guía e importe, para
+                 recorrer la columna de cifras sin perder a qué corresponde cada una. -->
+            <div v-if="getConceptosCuota(cuota).length" class="flex flex-col gap-1.5">
               <div v-for="(concepto, i) in getConceptosCuota(cuota)" :key="i">
               <component
                 :is="tieneDesgloseMulta(concepto, cuota) ? 'button' : 'div'"
                 :type="tieneDesgloseMulta(concepto, cuota) ? 'button' : undefined"
                 :aria-expanded="tieneDesgloseMulta(concepto, cuota) ? multasDesplegadas.has(cuota.id) : undefined"
                 class="flex w-full items-center gap-2.5 text-left"
-                :class="tieneDesgloseMulta(concepto, cuota) ? 'touch-manipulation -my-1 py-1 rounded-lg active:bg-gray-50' : ''"
+                :class="tieneDesgloseMulta(concepto, cuota) ? 'touch-manipulation -my-1 py-1 rounded-lg active:bg-superficie-suave' : ''"
                 @click.stop="tieneDesgloseMulta(concepto, cuota) && alternarDesgloseMulta(cuota.id)"
               >
-                <CheckCircleIcon v-if="concepto.saldado" class="h-3.5 w-3.5 flex-shrink-0 text-green-600" />
+                <CheckCircleIcon v-if="concepto.saldado" class="h-3.5 w-3.5 flex-shrink-0 text-green-600 oscuro:text-green-300" />
                 <span v-else class="h-[7px] w-[7px] flex-shrink-0 rounded-full" :class="concepto.dot" />
 
-                <span class="min-w-0 flex-1">
+                <span class="min-w-0 max-w-[65%] shrink">
                   <span
-                    class="flex items-center gap-1 truncate text-sm font-medium"
-                    :class="concepto.saldado ? 'text-gray-400' : 'text-gray-700'"
+                    class="flex items-center gap-1 truncate text-[0.8125rem] font-medium"
+                    :class="concepto.saldado ? 'text-texto-suave' : 'text-texto-medio'"
                   >
                     {{ concepto.etiqueta }}
                     <ChevronDownIcon
                       v-if="tieneDesgloseMulta(concepto, cuota)"
-                      class="h-3.5 w-3.5 flex-shrink-0 text-gray-400 transition-transform duration-200"
+                      class="h-3.5 w-3.5 flex-shrink-0 text-texto-tenue transition-transform duration-200"
                       :class="multasDesplegadas.has(cuota.id) ? 'rotate-180' : ''"
                     />
                   </span>
                   <!-- Abono a medias: era tanto, pagó tanto. Lo que falta va a la derecha. -->
-                  <span v-if="concepto.parcial" class="mt-0.5 block truncate text-[11px] font-medium tabular-nums text-gray-400">
+                  <span v-if="concepto.parcial" class="mt-0.5 block truncate text-[11px] font-medium tabular-nums text-texto-tenue">
                     de ${{ formatMoney(concepto.total) }} · pagó
-                    <span class="font-semibold text-green-700">${{ formatMoney(concepto.abonado) }}</span>
+                    <span class="font-semibold text-green-700 oscuro:text-green-300">${{ formatMoney(concepto.abonado) }}</span>
                   </span>
                 </span>
 
+                <span class="min-w-3 flex-1 self-center border-b border-dotted border-borde-fuerte" aria-hidden="true" />
+
                 <span v-if="concepto.saldado" class="flex-shrink-0 text-right">
-                  <span class="block text-sm font-bold tabular-nums text-green-700">
+                  <span class="block text-sm font-bold tabular-nums text-green-700 oscuro:text-green-300">
                     ${{ formatMoney(concepto.abonado) }}
                   </span>
-                  <span class="block text-[10px] font-semibold uppercase tracking-wide text-green-600">
+                  <span class="block text-[10px] font-semibold uppercase tracking-wide text-green-600 oscuro:text-green-300">
                     pagada
                   </span>
                 </span>
@@ -3032,190 +3110,195 @@
                    Sin esto, un importe de multa es un número sin defensa posible. -->
               <div
                 v-if="tieneDesgloseMulta(concepto, cuota) && multasDesplegadas.has(cuota.id)"
-                class="ml-6 mt-2 rounded-xl border border-red-200/70 bg-red-50/60 px-3 py-2.5"
+                class="ml-6 mt-2 rounded-xl border border-red-200/70 oscuro:border-red-500/30 bg-red-50/60 oscuro:bg-red-500/15 px-3 py-2.5"
                 @click.stop
               >
                 <!-- Todo en dos columnas: concepto a la izquierda, cifra a la derecha.
                      El contexto de cada línea va debajo, en gris y telegráfico, para poder
                      recorrer la columna de importes sin leer nada. -->
                 <div class="flex items-baseline justify-between gap-2">
-                  <span class="text-[11px] font-semibold text-red-900">
+                  <span class="text-[11px] font-semibold text-red-900 oscuro:text-red-300">
                     {{ fechaCortaMulta(getRangoMoraCuota(cuota).desde) }}
-                    <span class="font-normal text-red-800/70">→</span>
+                    <span class="font-normal text-red-800/70 oscuro:text-red-300/70 oscuro:text-red-300">→</span>
                     {{ fechaCortaMulta(getRangoMoraCuota(cuota).hasta) }}
-                    <span v-if="getRangoMoraCuota(cuota).enCurso" class="font-normal text-red-700/70">(hoy)</span>
+                    <span v-if="getRangoMoraCuota(cuota).enCurso" class="font-normal text-red-700/70 oscuro:text-red-300/70 oscuro:text-red-300">(hoy)</span>
                   </span>
-                  <span class="flex-shrink-0 text-[11px] font-medium text-red-800/80 tabular-nums">
+                  <span class="flex-shrink-0 text-[11px] font-medium text-red-800/80 oscuro:text-red-300/80 oscuro:text-red-300 tabular-nums">
                     {{ getRangoMoraCuota(cuota).dias }}
                     {{ getRangoMoraCuota(cuota).dias === 1 ? 'día' : 'días' }}
                   </span>
                 </div>
 
-                <ul class="mt-2 space-y-1.5 border-t border-red-200/70 pt-2">
+                <ul class="mt-2 space-y-1.5 border-t border-red-200/70 oscuro:border-red-500/30 pt-2">
                   <template
                     v-for="(item, idx) in getDesgloseMulta(cuota, socioCuotasSel?.cuotas).items"
                     :key="idx"
                   >
                     <li>
                       <div class="flex items-baseline justify-between gap-2">
-                        <span class="min-w-0 truncate text-[11px] text-gray-700">{{ item.nombre }}</span>
-                        <span class="flex-shrink-0 text-[11px] font-semibold tabular-nums text-red-800">
+                        <span class="min-w-0 truncate text-[11px] text-texto-medio">{{ item.nombre }}</span>
+                        <span class="flex-shrink-0 text-[11px] font-semibold tabular-nums text-red-800 oscuro:text-red-300">
                           ${{ formatMoney(item.valor) }}
                         </span>
                       </div>
                       <!-- Cómo se llegó a esa cifra: periodos y tramo, sin frases. -->
-                      <p v-if="item.rango" class="text-[10px] tabular-nums text-gray-500">
+                      <p v-if="item.rango" class="text-[10px] tabular-nums text-texto-suave">
                         {{ item.rango.periodos }} × ${{ formatMoney(item.rango.valorPeriodo) }}
                         · {{ fechaCortaMulta(item.rango.desde) }} → {{ fechaCortaMulta(item.rango.hasta) }}
                       </p>
-                      <p v-else-if="item.textoDetalle" class="text-[10px] text-gray-500">
+                      <p v-else-if="item.textoDetalle" class="text-[10px] text-texto-suave">
                         {{ item.textoDetalle }}
                       </p>
                     </li>
                   </template>
                 </ul>
 
-                <div class="mt-1.5 flex items-baseline justify-between gap-2 border-t border-red-200/70 pt-1.5">
-                  <span class="text-[11px] font-bold uppercase tracking-wide text-red-900">Total</span>
-                  <span class="text-xs font-bold tabular-nums text-red-800">
+                <div class="mt-1.5 flex items-baseline justify-between gap-2 border-t border-red-200/70 oscuro:border-red-500/30 pt-1.5">
+                  <span class="text-[11px] font-bold uppercase tracking-wide text-red-900 oscuro:text-red-300">Total</span>
+                  <span class="text-xs font-bold tabular-nums text-red-800 oscuro:text-red-300">
                     ${{ formatMoney(getDesgloseMulta(cuota, socioCuotasSel?.cuotas).total) }}
                   </span>
                 </div>
 
-                <p v-if="getReglaMultaTexto()" class="mt-1.5 text-[10px] text-gray-400">
+                <p v-if="getReglaMultaTexto()" class="mt-1.5 text-[10px] text-texto-tenue">
                   {{ getReglaMultaTexto() }}
                 </p>
               </div>
               </div>
             </div>
 
-            <!-- Cierre de la cuota. Sin fondo: el color de la tarjeta ya está en su cabecera,
-                 aquí manda el tamaño del número. -->
-            <div class="mt-3 flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
-              <span class="min-w-0">
-                <span
-                  class="block text-[11px] font-bold uppercase tracking-wide"
-                  :class="[
-                    getTotalAPagarConActividadesSocio(cuota) <= 0 ? 'text-green-700' :
-                    (cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-700' : 'text-slate-600'
-                  ]"
+            <!--
+              Talón del ticket. La perforación (línea punteada con muescas a los lados) corta
+              la tarjeta en dos: arriba el desglose, abajo el resultado. El talón tiene su propio
+              fondo y ocupa todo el ancho, sin esquinas ni borde propios: así el total se lee como
+              la parte final del ticket y no como un botón más.
+            -->
+            <div class="-mx-4 -mb-4 mt-3 bg-superficie-suave">
+              <div class="relative h-0" aria-hidden="true">
+                <span class="absolute inset-x-3 top-0 border-t-2 border-dashed border-borde-fuerte/70" />
+                <span class="absolute -left-2.5 -top-2.5 h-5 w-5 rounded-full border border-[color:var(--surface-divider)] bg-superficie-tarjeta" />
+                <span class="absolute -right-2.5 -top-2.5 h-5 w-5 rounded-full border border-[color:var(--surface-divider)] bg-superficie-tarjeta" />
+              </div>
+
+              <div class="px-4 pb-4 pt-3.5">
+                <!-- Mismo renglón que el desglose y a la misma escala, pero resaltado como una
+                     línea marcada en el recibo: fondo suave del color del estado y barra a la
+                     izquierda. Sin borde completo ni icono, para no parecer un botón. -->
+                <div
+                  class="flex items-center gap-2.5 rounded-lg border-l-[3px] px-3 py-2"
+                  :class="RESALTE_TOTAL[resalteTotalCuota(cuota)].fila"
                 >
-                  {{ getTotalAPagarConActividadesSocio(cuota) <= 0 ? 'Al día' : 'Falta' }}
-                </span>
-                <span
+                  <span
+                    class="flex-shrink-0 text-[0.8125rem] font-bold"
+                    :class="RESALTE_TOTAL[resalteTotalCuota(cuota)].texto"
+                  >
+                    {{ getTotalAPagarConActividadesSocio(cuota) <= 0 ? 'Total pagado' : 'Total a pagar' }}
+                  </span>
+                  <span
+                    class="min-w-3 flex-1 self-center border-b border-dotted"
+                    :class="RESALTE_TOTAL[resalteTotalCuota(cuota)].puntos"
+                    aria-hidden="true"
+                  />
+                  <span
+                    class="flex-shrink-0 text-sm font-extrabold tabular-nums"
+                    :class="RESALTE_TOTAL[resalteTotalCuota(cuota)].texto"
+                  >
+                    ${{ formatMoney(getTotalAPagarConActividadesSocio(cuota) > 0
+                      ? getTotalAPagarConActividadesSocio(cuota)
+                      : getTotalPagadoConActividadesSocio(cuota)) }}
+                  </span>
+                </div>
+                <p
                   v-if="getTotalAPagarConActividadesSocio(cuota) > 0 && getTotalPagadoConActividadesSocio(cuota) > 0"
-                  class="mt-0.5 block text-[11px] font-medium tabular-nums text-gray-400"
+                  class="mt-1 px-3 text-[11px] font-medium tabular-nums text-texto-tenue"
                 >
                   de ${{ formatMoney(getTotalAPagarConActividadesSocio(cuota) + getTotalPagadoConActividadesSocio(cuota)) }} · pagó
-                  <span class="font-semibold text-green-700">${{ formatMoney(getTotalPagadoConActividadesSocio(cuota)) }}</span>
-                </span>
-              </span>
-              <span
-                class="text-lg font-bold leading-none tabular-nums"
-                :class="[
-                  getTotalAPagarConActividadesSocio(cuota) <= 0 ? 'text-green-600' :
-                  (cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-700' : 'text-gray-900'
-                ]"
-              >
-                ${{ formatMoney(getTotalAPagarConActividadesSocio(cuota) > 0
-                  ? getTotalAPagarConActividadesSocio(cuota)
-                  : getTotalPagadoConActividadesSocio(cuota)) }}
-              </span>
-            </div>
+                  <span class="font-semibold text-green-700 oscuro:text-green-300">${{ formatMoney(getTotalPagadoConActividadesSocio(cuota)) }}</span>
+                </p>
 
-            <!-- Admin: activar/desactivar el cálculo de multa para esta cuota (solo raigo.16@gmail.com) -->
-            <label
-              v-if="esUsuarioAdmin && ((cuota.estadoReal || cuota.estado) === 'mora' || cuota.no_calcular_multa)"
-              class="mt-3 flex items-center gap-2 text-xs text-amber-700 cursor-pointer"
-              @click.stop
-            >
-              <input
-                type="checkbox"
-                :checked="!!cuota.no_calcular_multa"
-                @change="toggleNoCalcularMultaCuota(cuota)"
-                class="rounded border-amber-300 text-amber-600 focus:ring-amber-500"
-              />
-              <span>No calcular multa para esta cuota</span>
-            </label>
-
-            <!-- Acciones. En móvil la fila envuelve: con tres botones (cuota parcial) «Pagar restante»
-                 ocupa el ancho completo y «Reenviar» + «Eliminar» van a mitad cada uno debajo; en una
-                 sola línea el texto no cabe y la fila se desborda. Desde sm van los tres en línea. -->
-            <div
-              v-if="(!esVisor && (cuota.estadoReal || cuota.estado) !== 'pagada') || (cuota.estadoReal || cuota.estado) === 'pagada' || tienePagoParcialCuota(cuota)"
-              class="mt-3 flex flex-wrap gap-2"
-            >
-              <!-- Pagar (pendiente) o completar el pago (parcial). No aparece si ya está pagada. -->
-              <button
-                v-if="!esVisor && (cuota.estadoReal || cuota.estado) !== 'pagada'"
-                type="button"
-                data-guia="pagar-cuota"
-                @click.stop="abrirPagoCuotaDesdeSocio(cuota)"
-                class="min-h-[44px] basis-full sm:basis-0 flex-1 px-4 py-2.5 bg-[#1B5E37] hover:bg-[#155a32] active:bg-[#134d2b] text-white text-sm font-semibold rounded-xl flex items-center justify-center gap-2 whitespace-nowrap"
-                style="touch-action: manipulation;"
+              <!-- Admin: activar/desactivar el cálculo de multa para esta cuota (solo raigo.16@gmail.com) -->
+              <label
+                v-if="esUsuarioAdmin && ((cuota.estadoReal || cuota.estado) === 'mora' || cuota.no_calcular_multa)"
+                class="mt-3 flex items-center gap-2 text-xs text-amber-700 oscuro:text-amber-300 cursor-pointer"
+                @click.stop
               >
-                <CurrencyDollarIcon class="w-4 h-4 shrink-0" />
-                <span>{{ tienePagoParcialCuota(cuota) ? 'Pagar restante' : 'Pagar' }}</span>
-              </button>
+                <input
+                  type="checkbox"
+                  :checked="!!cuota.no_calcular_multa"
+                  @change="toggleNoCalcularMultaCuota(cuota)"
+                  class="rounded border-amber-300 oscuro:border-amber-500/30 text-amber-600 oscuro:text-amber-300 focus:ring-amber-500"
+                />
+                <span>No calcular multa para esta cuota</span>
+              </label>
 
-              <!-- Reenviar comprobante (cuotas pagadas o con pago parcial) -->
-              <button
-                v-if="(cuota.estadoReal || cuota.estado) === 'pagada' || tienePagoParcialCuota(cuota)"
-                type="button"
-                @click.stop="reenviarComprobante(cuota)"
-                class="min-h-[44px] flex-1 basis-[calc(50%-0.25rem)] sm:basis-0 px-3 sm:px-4 py-2.5 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white text-sm font-semibold rounded-xl flex items-center justify-center gap-2 whitespace-nowrap"
-                style="touch-action: manipulation;"
-                title="Reenviar comprobante"
+              <!-- Acciones, por peso: Pagar es la principal (verde marca), Reenviar secundaria (tono
+                   suave) y Eliminar, que se usa poco y es destructiva, solo un icono discreto.
+                   Siempre una sola fila. Con cuota parcial salen Pagar y Reenviar a la vez: Reenviar
+                   se queda en solo icono (como la papelera) para que todo quepa en una línea y la
+                   tarjeta no crezca; «Pagar restante» toma el resto del ancho. -->
+              <div
+                v-if="(!esVisor && (cuota.estadoReal || cuota.estado) !== 'pagada') || (cuota.estadoReal || cuota.estado) === 'pagada' || tienePagoParcialCuota(cuota)"
+                class="mt-3 flex gap-2"
               >
-                <ArrowPathIcon class="w-4 h-4 shrink-0" />
-                <span>Reenviar</span>
-              </button>
+                <!-- Pagar (pendiente) o completar el pago (parcial). No aparece si ya está pagada. -->
+                <button
+                  v-if="!esVisor && (cuota.estadoReal || cuota.estado) !== 'pagada'"
+                  type="button"
+                  data-guia="pagar-cuota"
+                  @click.stop="abrirPagoCuotaDesdeSocio(cuota)"
+                  class="boton-cuota min-h-[44px] min-w-0 flex-1 pl-2.5 pr-4 py-2 bg-gradient-to-b from-[#24794A] to-[#1B5E37] hover:from-[#1F6C42] hover:to-[#174F2F] text-white text-sm font-bold rounded-xl ring-1 ring-inset ring-white/10 shadow-md shadow-[#1B5E37]/25 flex items-center justify-center gap-2 whitespace-nowrap"
+                  style="touch-action: manipulation;"
+                >
+                  <!-- tema-fijo: círculo translúcido sobre el verde marca -->
+                  <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/15" aria-hidden="true">
+                    <CurrencyDollarIcon class="w-4 h-4" />
+                  </span>
+                  <span>{{ tienePagoParcialCuota(cuota) ? 'Pagar restante' : 'Pagar' }}</span>
+                </button>
 
-              <!-- Eliminar un pago registrado (admin de la natillera o superusuario) -->
-              <button
-                v-if="puedeEliminarPago(cuota)"
-                type="button"
-                @click.stop="abrirModalEliminarPago(cuota)"
-                class="min-h-[44px] flex-1 basis-[calc(50%-0.25rem)] sm:basis-0 px-3 sm:px-4 py-2.5 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-700 border border-red-200 text-sm font-semibold rounded-xl flex items-center justify-center gap-2 whitespace-nowrap"
-                style="touch-action: manipulation;"
-                title="Eliminar un pago registrado"
-                aria-label="Eliminar un pago registrado"
-              >
-                <TrashIcon class="w-4 h-4 shrink-0" />
-                <span>Eliminar</span>
-              </button>
+                <!-- Reenviar comprobante (cuotas pagadas o con pago parcial) -->
+                <button
+                  v-if="(cuota.estadoReal || cuota.estado) === 'pagada' || tienePagoParcialCuota(cuota)"
+                  type="button"
+                  @click.stop="reenviarComprobante(cuota)"
+                  class="boton-cuota min-h-[44px] bg-superficie-tarjeta text-marca-tinta border border-[#1B5E37]/25 oscuro:border-marca-tinta/30 hover:border-[#1B5E37]/50 hover:bg-marca-suave oscuro:hover:border-marca-tinta/60 text-sm font-bold rounded-xl shadow-sm flex items-center justify-center gap-2 whitespace-nowrap"
+                  :class="!esVisor && tienePagoParcialCuota(cuota) && (cuota.estadoReal || cuota.estado) !== 'pagada'
+                    ? 'h-11 w-11 flex-shrink-0'
+                    : 'min-w-0 flex-1 pl-2.5 pr-3 sm:pr-4 py-2'"
+                  style="touch-action: manipulation;"
+                  title="Reenviar comprobante"
+                  aria-label="Reenviar comprobante"
+                >
+                  <template v-if="!esVisor && tienePagoParcialCuota(cuota) && (cuota.estadoReal || cuota.estado) !== 'pagada'">
+                    <ArrowPathIcon class="w-[1.125rem] h-[1.125rem]" />
+                  </template>
+                  <template v-else>
+                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-marca-suave" aria-hidden="true">
+                      <ArrowPathIcon class="w-4 h-4" />
+                    </span>
+                    <span>Reenviar comprobante</span>
+                  </template>
+                </button>
+
+                <!-- Eliminar un pago registrado (admin de la natillera o superusuario) -->
+                <button
+                  v-if="puedeEliminarPago(cuota)"
+                  type="button"
+                  @click.stop="abrirModalEliminarPago(cuota)"
+                  class="boton-cuota h-11 w-11 flex-shrink-0 rounded-xl border border-borde bg-superficie-tarjeta shadow-sm text-texto-tenue hover:border-red-200 hover:bg-red-50 hover:text-red-600 active:bg-red-100 oscuro:hover:border-red-500/30 oscuro:hover:bg-red-500/15 oscuro:hover:text-red-300 flex items-center justify-center"
+                  style="touch-action: manipulation;"
+                  title="Eliminar un pago registrado"
+                  aria-label="Eliminar un pago registrado"
+                >
+                  <TrashIcon class="w-[1.125rem] h-[1.125rem]" />
+                </button>
+              </div>
+              </div>
             </div>
 
             </div>
           </div>
 
-          <!--
-            Editar el socio sin salir de Cuotas: aquí es donde se nota que la cuota o la
-            periodicidad están mal. Abre el mismo formulario que Socios, y solo con permiso
-            para gestionar socios.
-          -->
-          <button
-            v-if="puedeEditarSocios && socioCuotasSel.socioNatilleraId"
-            type="button"
-            class="btn-modal-secondary w-full inline-flex items-center justify-center gap-2"
-            :disabled="abriendoEdicionSocio"
-            @click="abrirEditarSocio(socioCuotasSel.socioNatilleraId)"
-          >
-            <CargaBoton v-if="abriendoEdicionSocio" pequena />
-            <PencilSquareIcon v-else class="h-5 w-5" />
-            Editar socio (cuota, periodicidad, datos)
-          </button>
-
-          <!-- Un solo comprobante con varias cuotas pagadas: por concepto y con el total -->
-          <button
-            v-if="socioCuotasSel.socioNatilleraId"
-            type="button"
-            class="btn-modal-secondary w-full inline-flex items-center justify-center gap-2"
-            @click="abrirComprobanteVariasDelSocio"
-          >
-            <DocumentDuplicateIcon class="h-5 w-5" />
-            Comprobante de varias cuotas
-          </button>
         </div>
 
         <!-- Natiscroll: «Desliza para ver más» -->
@@ -3224,7 +3307,7 @@
           class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
           aria-hidden="true"
         >
-          <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent" />
+          <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent" />
           <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
             <div class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3">
               <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
@@ -3248,13 +3331,14 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-2xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-2xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="42rem"
       @close="requestCloseTopModal"
     >
       <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
         <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
             <PlusIcon class="h-5 w-5 text-[#1B5E37]" />
           </div>
@@ -3276,6 +3360,7 @@
         <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
           <div class="w-11 shrink-0" aria-hidden="true" />
           <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
               <PlusIcon class="h-6 w-6 text-[#1B5E37]" />
             </div>
@@ -3293,7 +3378,7 @@
         </div>
       </div>
 
-      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
+      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-superficie-tarjeta">
         <div
           ref="scrollContainerGenerarCuotas"
           class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 [-webkit-overflow-scrolling:touch]"
@@ -3302,7 +3387,7 @@
           <form id="formGenerarCuotasNatillerapp" class="space-y-6" @submit.prevent="handleGenerarCuotas">
             <!-- Tipo de generación -->
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-3">Generar cuotas para *</label>
+              <label class="block text-sm font-semibold text-texto-medio mb-3">Generar cuotas para *</label>
               <div class="grid grid-cols-2 gap-3">
                 <button
                   type="button"
@@ -3311,11 +3396,11 @@
                     'p-4 rounded-xl border-2 transition-all',
                     formCuotas.tipoGeneracion === 'todos'
                       ? 'bg-natillera-500 text-white border-natillera-600 shadow-md'
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-natillera-400'
+                      : 'bg-superficie-tarjeta text-texto-medio border-borde-fuerte hover:border-natillera-400'
                   ]"
                 >
                   <div class="font-semibold">Todos los socios</div>
-                  <div :class="['text-xs mt-1', formCuotas.tipoGeneracion === 'todos' ? 'text-white/90' : 'text-gray-500']">
+                  <div :class="['text-xs mt-1', formCuotas.tipoGeneracion === 'todos' ? 'text-white/90' : 'text-texto-suave']">
                     Todos los activos
                   </div>
                 </button>
@@ -3326,11 +3411,11 @@
                     'p-4 rounded-xl border-2 transition-all',
                     formCuotas.tipoGeneracion === 'unSocio'
                       ? 'bg-natillera-500 text-white border-natillera-600 shadow-md'
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-natillera-400'
+                      : 'bg-superficie-tarjeta text-texto-medio border-borde-fuerte hover:border-natillera-400'
                   ]"
                 >
                   <div class="font-semibold">Un solo socio</div>
-                  <div :class="['text-xs mt-1', formCuotas.tipoGeneracion === 'unSocio' ? 'text-white/90' : 'text-gray-500']">
+                  <div :class="['text-xs mt-1', formCuotas.tipoGeneracion === 'unSocio' ? 'text-white/90' : 'text-texto-suave']">
                     Socio específico
                   </div>
                 </button>
@@ -3339,12 +3424,12 @@
 
             <!-- Selector de socio (solo si se selecciona "Un solo socio") -->
             <div v-if="formCuotas.tipoGeneracion === 'unSocio'" class="space-y-3">
-              <label class="block text-sm font-semibold text-gray-700">Seleccionar socio *</label>
+              <label class="block text-sm font-semibold text-texto-medio">Seleccionar socio *</label>
               
               <!-- Barra de búsqueda: flex en vez de iconos `absolute` + translate, que en iOS
                    se descolocan cuando el teclado reordena el layout (manual iOS §5.2). -->
-              <div class="flex items-center bg-white border-2 border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all focus-within:ring-2 focus-within:ring-natillera-500/50 focus-within:border-natillera-500">
-                <span class="pl-4 flex-shrink-0 text-gray-400 pointer-events-none" aria-hidden="true">
+              <div class="flex items-center bg-superficie-tarjeta border-2 border-borde rounded-xl shadow-sm hover:shadow-md transition-all focus-within:ring-2 focus-within:ring-natillera-500/50 focus-within:border-natillera-500">
+                <span class="pl-4 flex-shrink-0 text-texto-tenue pointer-events-none" aria-hidden="true">
                   <MagnifyingGlassIcon class="w-5 h-5" />
                 </span>
                 <input 
@@ -3358,7 +3443,7 @@
                   v-if="busquedaSocioCuotas.trim()"
                   @click="busquedaSocioCuotas = ''"
                   type="button"
-                  class="flex h-11 w-11 flex-shrink-0 items-center justify-center text-gray-400 hover:text-gray-600 rounded-lg transition-colors touch-manipulation"
+                  class="flex h-11 w-11 flex-shrink-0 items-center justify-center text-texto-tenue hover:text-texto-secundario rounded-lg transition-colors touch-manipulation"
                   aria-label="Limpiar búsqueda"
                 >
                   <XMarkIcon class="w-4 h-4" />
@@ -3366,7 +3451,7 @@
               </div>
               
               <!-- Lista de socios mejorada -->
-              <div class="bg-white border-2 border-gray-200 rounded-xl overflow-hidden shadow-sm">
+              <div class="bg-superficie-tarjeta border-2 border-borde rounded-xl overflow-hidden shadow-sm">
                 <div class="max-h-72 overflow-y-auto p-2 space-y-2">
                   <button 
                     v-for="socio in sociosFiltradosCuotas" 
@@ -3376,8 +3461,8 @@
                     :class="[
                       'w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left group',
                       formCuotas.socioSeleccionado === socio.id
-                        ? 'bg-gradient-to-r from-natillera-50 to-emerald-50 border-2 border-natillera-500 shadow-md'
-                        : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent hover:border-natillera-200'
+                        ? 'bg-gradient-to-r from-natillera-50 oscuro:from-natillera-500/15 to-emerald-50 oscuro:to-emerald-500/10 border-2 border-natillera-500 shadow-md'
+                        : 'bg-superficie-suave hover:bg-superficie-hundida border-2 border-transparent hover:border-natillera-200 oscuro:hover:border-natillera-500/30'
                     ]"
                   >
                     <div class="relative flex-shrink-0">
@@ -3385,28 +3470,28 @@
                         :src="getAvatarUrl(socio.socio?.nombre || socio.id, socio.socio?.avatar_seed, socio.socio?.avatar_style)" 
                         :alt="socio.socio?.nombre"
                         class="w-12 h-12 rounded-xl border-2 transition-all"
-                        :class="formCuotas.socioSeleccionado === socio.id ? 'border-natillera-500 shadow-md' : 'border-gray-200 group-hover:border-natillera-300'"
+                        :class="formCuotas.socioSeleccionado === socio.id ? 'border-natillera-500 shadow-md' : 'border-borde group-hover:border-natillera-300 oscuro:group-hover:border-natillera-500/30'"
                       />
                       <div 
                         v-if="formCuotas.socioSeleccionado === socio.id"
-                        class="absolute -bottom-1 -right-1 w-5 h-5 bg-natillera-500 rounded-full border-2 border-white flex items-center justify-center shadow-md"
+                        class="absolute -bottom-1 -right-1 w-5 h-5 bg-natillera-500 rounded-full border-2 border-white oscuro:border-superficie-tarjeta flex items-center justify-center shadow-md"
                       >
                         <CheckIcon class="w-3 h-3 text-white" />
                       </div>
                     </div>
                     <div class="min-w-0 flex-1">
-                      <p class="font-semibold text-gray-900 truncate">{{ socio.socio?.nombre }}</p>
+                      <p class="font-semibold text-texto-fuerte truncate">{{ socio.socio?.nombre }}</p>
                       <div class="flex items-center gap-2 mt-1">
-                        <span class="text-xs font-medium text-gray-600">
+                        <span class="text-xs font-medium text-texto-secundario">
                           ${{ formatMoney(socio.valor_cuota_individual) }}
                         </span>
-                        <span class="text-gray-300">•</span>
+                        <span class="text-gray-300 oscuro:text-texto-tenue">•</span>
                         <span 
                           :class="[
                             'text-xs font-semibold px-2 py-0.5 rounded-lg',
                             socio.periodicidad === 'quincenal' 
-                              ? 'bg-purple-100 text-purple-700 border border-purple-200' 
-                              : 'bg-blue-100 text-blue-700 border border-blue-200'
+                              ? 'bg-purple-100 oscuro:bg-purple-500/15 text-purple-700 oscuro:text-purple-300 border border-purple-200 oscuro:border-purple-500/30' 
+                              : 'bg-blue-100 oscuro:bg-blue-500/15 text-blue-700 oscuro:text-blue-300 border border-blue-200 oscuro:border-blue-500/30'
                           ]"
                         >
                           {{ socio.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}
@@ -3417,11 +3502,11 @@
                   
                   <!-- Mensaje cuando no hay resultados -->
                   <div v-if="sociosFiltradosCuotas.length === 0" class="text-center py-8">
-                    <div class="w-16 h-16 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
-                      <MagnifyingGlassIcon class="w-8 h-8 text-gray-400" />
+                    <div class="w-16 h-16 mx-auto mb-3 bg-superficie-hundida rounded-full flex items-center justify-center">
+                      <MagnifyingGlassIcon class="w-8 h-8 text-texto-tenue" />
                     </div>
-                    <p class="text-gray-500 font-medium">No se encontraron socios</p>
-                    <p class="text-xs text-gray-400 mt-1">Intenta con otro término de búsqueda</p>
+                    <p class="text-texto-suave font-medium">No se encontraron socios</p>
+                    <p class="text-xs text-texto-tenue mt-1">Intenta con otro término de búsqueda</p>
                   </div>
                 </div>
               </div>
@@ -3429,7 +3514,7 @@
 
             <!-- Mes -->
             <div class="relative" ref="dropdownMesRef">
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Mes a generar *</label>
+              <label class="block text-sm font-semibold text-texto-medio mb-2">Mes a generar *</label>
               <div class="relative">
                 <div class="absolute left-4 top-1/2 -translate-y-1/2 text-natillera-500 z-10">
                   <CalendarIcon class="w-5 h-5" />
@@ -3437,14 +3522,14 @@
                 <button
                   type="button"
                   @click="dropdownMesAbierto = !dropdownMesAbierto"
-                  class="w-full pl-12 pr-10 py-3 bg-white border-2 border-gray-200 rounded-xl text-sm font-medium text-gray-800 focus:ring-2 focus:ring-natillera-500/50 focus:border-natillera-500 transition-all shadow-sm hover:shadow-md cursor-pointer text-left flex items-center justify-between"
+                  class="w-full pl-12 pr-10 py-3 bg-superficie-tarjeta border-2 border-borde rounded-xl text-sm font-medium text-texto focus:ring-2 focus:ring-natillera-500/50 focus:border-natillera-500 transition-all shadow-sm hover:shadow-md cursor-pointer text-left flex items-center justify-between"
                 >
                   <span class="flex items-center gap-2">
                     <span v-if="formCuotas.mes">{{ getMesEmoji(formCuotas.mes) }}</span>
                     <span>{{ mesesNatillera.find(m => m.value === formCuotas.mes)?.label || 'Seleccionar mes' }}</span>
                   </span>
                   <svg 
-                    class="w-5 h-5 text-gray-400 transition-transform duration-200"
+                    class="w-5 h-5 text-texto-tenue transition-transform duration-200"
                     :class="{ 'rotate-180': dropdownMesAbierto }"
                     fill="none" 
                     stroke="currentColor" 
@@ -3465,7 +3550,7 @@
                 >
                   <div
                     v-if="dropdownMesAbierto"
-                    class="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-xl overflow-hidden"
+                    class="absolute z-50 w-full mt-2 bg-superficie-tarjeta border-2 border-borde rounded-xl shadow-xl overflow-hidden"
                   >
                     <div class="max-h-64 overflow-y-auto">
                       <button
@@ -3476,15 +3561,15 @@
                         :class="[
                           'w-full px-4 py-3 flex items-center gap-3 text-left transition-colors',
                           formCuotas.mes === mes.value
-                            ? 'bg-natillera-50 text-natillera-700 font-semibold'
-                            : 'text-gray-700 hover:bg-gray-50'
+                            ? 'bg-natillera-50 oscuro:bg-natillera-500/15 text-natillera-700 oscuro:text-natillera-300 font-semibold'
+                            : 'text-texto-medio hover:bg-superficie-suave'
                         ]"
                       >
                         <span class="text-xl">{{ getMesEmoji(mes.value) }}</span>
                         <span class="flex-1">{{ mes.label }}</span>
                         <CheckIcon 
                           v-if="formCuotas.mes === mes.value"
-                          class="w-5 h-5 text-natillera-600"
+                          class="w-5 h-5 text-natillera-600 oscuro:text-natillera-300"
                         />
                       </button>
                     </div>
@@ -3496,58 +3581,58 @@
             <!-- Fechas de pago -->
             <div class="space-y-4">
               <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-3">Fechas Límite de Pago</label>
-                <p v-if="periodicidadNatillera === 'mensual'" class="text-xs text-gray-500 mb-3">
+                <label class="block text-sm font-semibold text-texto-medio mb-3">Fechas Límite de Pago</label>
+                <p v-if="periodicidadNatillera === 'mensual'" class="text-xs text-texto-suave mb-3">
                   Esta natillera está configurada como mensual
                 </p>
-                <p v-else class="text-xs text-gray-500 mb-3">
+                <p v-else class="text-xs text-texto-suave mb-3">
                   La 2da quincena aplica también para socios mensuales
                 </p>
               </div>
               
               <div class="space-y-3">
                 <!-- 1ra Quincena -->
-                <div v-if="periodicidadNatillera === 'quincenal'" class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div v-if="periodicidadNatillera === 'quincenal'" class="bg-superficie-suave rounded-lg p-4 border border-borde">
                   <div class="flex items-center gap-2 mb-3">
                     <span class="w-7 h-7 bg-purple-500 text-white rounded-lg flex items-center justify-center text-xs font-bold">1</span>
-                    <span class="font-medium text-gray-800">1ra Quincena</span>
+                    <span class="font-medium text-texto">1ra Quincena</span>
                   </div>
                   <DatePicker 
                     v-model="formCuotas.fecha_quincena1"
                     placeholder="Seleccionar fecha"
-                    input-class="bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500"
+                    input-class="bg-superficie-tarjeta border border-borde-fuerte rounded-lg focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500"
                   />
                 </div>
 
                 <!-- 2da Quincena / Fecha Mensual -->
-                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div class="bg-superficie-suave rounded-lg p-4 border border-borde">
                   <div class="flex items-center gap-2 mb-3">
                     <span v-if="periodicidadNatillera === 'mensual'" class="w-7 h-7 bg-emerald-500 text-white rounded-lg flex items-center justify-center text-xs">📅</span>
                     <span v-else class="w-7 h-7 bg-indigo-500 text-white rounded-lg flex items-center justify-center text-xs font-bold">2</span>
-                    <span class="font-medium text-gray-800">
+                    <span class="font-medium text-texto">
                       {{ periodicidadNatillera === 'mensual' ? 'Fecha Mensual' : '2da Quincena' }}
                     </span>
                   </div>
                   <DatePicker 
                     v-model="formCuotas.fecha_quincena2"
                     placeholder="Seleccionar fecha"
-                    input-class="bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500"
+                    input-class="bg-superficie-tarjeta border border-borde-fuerte rounded-lg focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500"
                   />
                 </div>
               </div>
             </div>
 
             <!-- Resumen -->
-            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <div class="bg-superficie-suave rounded-lg p-4 border border-borde">
               <div class="flex items-center gap-2 mb-3">
-                <DocumentTextIcon class="w-5 h-5 text-natillera-600" />
-                <p class="text-sm font-semibold text-gray-800">Resumen</p>
+                <DocumentTextIcon class="w-5 h-5 text-natillera-600 oscuro:text-natillera-300" />
+                <p class="text-sm font-semibold text-texto">Resumen</p>
               </div>
-              <div class="space-y-1.5 text-sm text-gray-700 bg-white rounded-lg p-3 border border-gray-200">
+              <div class="space-y-1.5 text-sm text-texto-medio bg-superficie-tarjeta rounded-lg p-3 border border-borde">
               <template v-if="formCuotas.tipoGeneracion === 'todos'">
                 <p>• <strong>{{ conteoSociosMensuales }}</strong> socio(s) mensual(es) → 1 cuota c/u</p>
                 <p>• <strong>{{ conteoSociosQuincenales }}</strong> socio(s) quincenal(es) → 2 cuotas c/u</p>
-                <p class="pt-1 border-t border-gray-200 mt-2 font-semibold text-gray-800">
+                <p class="pt-1 border-t border-borde mt-2 font-semibold text-texto">
                   Total: {{ conteoSociosMensuales + (conteoSociosQuincenales * 2) }} cuotas para {{ mesesNatillera.find(m => m.value === formCuotas.mes)?.label }}
                 </p>
               </template>
@@ -3557,14 +3642,14 @@
                     <p>• Socio: <strong>{{ socio.socio?.nombre }}</strong></p>
                     <p>• Periodicidad: <strong>{{ socio.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}</strong></p>
                     <p>• Valor cuota: <strong>${{ formatMoney(socio.valor_cuota_individual) }}</strong></p>
-                    <p class="pt-1 border-t border-gray-200 mt-2 font-semibold text-gray-800">
+                    <p class="pt-1 border-t border-borde mt-2 font-semibold text-texto">
                       Total: {{ socio.periodicidad === 'quincenal' ? '2' : '1' }} cuota(s) para {{ mesesNatillera.find(m => m.value === formCuotas.mes)?.label }}
                     </p>
                   </template>
                 </template>
               </template>
                 <template v-else>
-                  <p class="text-gray-500 italic text-center py-2">Selecciona un socio para ver el resumen</p>
+                  <p class="text-texto-suave italic text-center py-2">Selecciona un socio para ver el resumen</p>
                 </template>
               </div>
             </div>
@@ -3575,7 +3660,7 @@
           class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
           aria-hidden="true"
         >
-          <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent" />
+          <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent" />
           <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
             <div class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3">
               <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
@@ -3586,7 +3671,7 @@
           </div>
         </div>
       </div>
-      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+      <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
         <div class="flex gap-3">
           <button
             type="button"
@@ -3615,8 +3700,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-[55] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white my-0 sm:my-4"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta my-0 sm:my-4"
       card-max-width="28rem"
       @close="cerrarModalRegistrarPagoSelector"
     >
@@ -3632,6 +3717,7 @@
           >
             <ChevronLeftIcon class="w-6 h-6" />
           </button>
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
             <CurrencyDollarIcon class="w-5 h-5 text-[#1B5E37]" />
           </div>
@@ -3673,6 +3759,7 @@
             </button>
           </div>
           <div class="flex-1 min-w-0 flex flex-col items-center text-center px-2">
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="w-11 h-11 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
               <CurrencyDollarIcon class="w-6 h-6 text-[#1B5E37]" />
             </div>
@@ -3701,11 +3788,11 @@
 
       <div
         ref="contenidoScrollRegistrarPagoSelectorRef"
-        class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-0 space-y-4 bg-white [-webkit-overflow-scrolling:touch]"
+        class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-0 space-y-4 bg-superficie-tarjeta [-webkit-overflow-scrolling:touch]"
       >
         <template v-if="pasoRegistrarPagoSelector === 'socio'">
-          <div data-guia="pago-selector-buscar" class="flex items-center gap-0 border-2 border-gray-200 rounded-xl bg-white focus-within:ring-2 focus-within:ring-natillera-500/50 focus-within:border-natillera-500 transition-all">
-            <span class="pl-3 flex-shrink-0 text-gray-400 pointer-events-none">
+          <div data-guia="pago-selector-buscar" class="flex items-center gap-0 border-2 border-borde rounded-xl bg-superficie-tarjeta focus-within:ring-2 focus-within:ring-natillera-500/50 focus-within:border-natillera-500 transition-all">
+            <span class="pl-3 flex-shrink-0 text-texto-tenue pointer-events-none">
               <MagnifyingGlassIcon class="w-5 h-5" />
             </span>
             <input
@@ -3720,7 +3807,7 @@
             <button
               v-if="busquedaRegistrarPagoSocio.trim()"
               type="button"
-              class="flex h-11 w-11 flex-shrink-0 items-center justify-center text-gray-400 hover:text-gray-600 touch-manipulation"
+              class="flex h-11 w-11 flex-shrink-0 items-center justify-center text-texto-tenue hover:text-texto-secundario touch-manipulation"
               aria-label="Limpiar búsqueda"
               @click="busquedaRegistrarPagoSocio = ''"
             >
@@ -3728,7 +3815,7 @@
             </button>
           </div>
           <div class="flex items-center justify-between gap-3 min-h-[48px] py-1">
-            <span class="text-sm font-medium text-gray-800 leading-snug">Solo pendientes o en mora</span>
+            <span class="text-sm font-medium text-texto leading-snug">Solo pendientes o en mora</span>
             <label class="relative inline-flex items-center cursor-pointer shrink-0 touch-manipulation">
               <input
                 v-model="soloPendientesOMoraRegistrarPago"
@@ -3736,13 +3823,13 @@
                 class="sr-only peer"
               />
               <div
-                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-natillera-300/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-natillera-600"
+                class="w-11 h-6 bg-borde peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-natillera-300/50 oscuro:peer-focus:ring-natillera-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-superficie-tarjeta after:border-borde-fuerte after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-natillera-600"
               />
             </label>
           </div>
           <div v-if="sociosFiltradosRegistrarPago.length === 0" class="text-center py-10 px-2">
-            <UsersIcon class="w-12 h-12 mx-auto text-gray-300 mb-3" />
-            <p class="text-gray-600 font-medium">
+            <UsersIcon class="w-12 h-12 mx-auto text-gray-300 oscuro:text-texto-tenue mb-3" />
+            <p class="text-texto-secundario font-medium">
               <template v-if="sociosParaRegistrarPago.length === 0">No hay socios con cuotas en este mes</template>
               <template v-else-if="sociosRegistrarPagoTrasFiltroEstado.length === 0">
                 Ningún socio está en pendiente o en mora en este período.
@@ -3751,7 +3838,7 @@
             </p>
             <p
               v-if="sociosParaRegistrarPago.length > 0 && sociosFiltradosRegistrarPago.length === 0 && sociosRegistrarPagoTrasFiltroEstado.length > 0 && busquedaRegistrarPagoSocio.trim()"
-              class="text-xs text-gray-500 mt-1"
+              class="text-xs text-texto-suave mt-1"
             >
               Prueba con otro término
             </p>
@@ -3762,34 +3849,34 @@
               :key="item.socio_natillera_id"
               :data-guia-selector-socio="item.socio_natillera_id"
               type="button"
-              class="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-transparent bg-gray-50 hover:bg-gray-100 hover:border-natillera-200 text-left transition-all"
+              class="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-transparent bg-superficie-suave hover:bg-superficie-hundida hover:border-natillera-200 oscuro:hover:border-natillera-500/30 text-left transition-all"
               @click="seleccionarSocioRegistrarPago(item.socio_natillera_id)"
             >
               <img
                 :src="getAvatarUrl(item.socio_natillera?.socio?.nombre || item.socio_natillera_id, item.socio_natillera?.socio?.avatar_seed, item.socio_natillera?.socio?.avatar_style)"
                 :alt="item.socio_natillera?.socio?.nombre"
-                class="w-12 h-12 rounded-xl border-2 border-gray-200 object-cover flex-shrink-0"
+                class="w-12 h-12 rounded-xl border-2 border-borde object-cover flex-shrink-0"
               />
               <div class="min-w-0 flex-1">
-                <p class="font-semibold text-gray-900 truncate">{{ item.socio_natillera?.socio?.nombre || 'Socio' }}</p>
-                <p class="text-xs text-gray-500 mt-0.5">
+                <p class="font-semibold text-texto-fuerte truncate">{{ item.socio_natillera?.socio?.nombre || 'Socio' }}</p>
+                <p class="text-xs text-texto-suave mt-0.5">
                   {{ item.socio_natillera?.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}
                 </p>
               </div>
-              <ChevronRightIcon class="w-5 h-5 text-gray-400 flex-shrink-0" />
+              <ChevronRightIcon class="w-5 h-5 text-texto-tenue flex-shrink-0" />
             </button>
           </div>
         </template>
 
         <template v-else>
-          <p class="text-sm text-gray-600">
+          <p class="text-sm text-texto-secundario">
             Selecciona la cuota para abrir el registro de pago.
           </p>
           <div v-if="cuotasRegistrarPagoDelSocio.length === 0" class="text-center py-10">
-            <p class="text-gray-600 font-medium">Este socio no tiene cuotas en este período</p>
+            <p class="text-texto-secundario font-medium">Este socio no tiene cuotas en este período</p>
             <button
               type="button"
-              class="mt-4 text-sm font-semibold text-natillera-700 hover:text-natillera-800"
+              class="mt-4 text-sm font-semibold text-natillera-700 oscuro:text-natillera-300 hover:text-natillera-800 oscuro:hover:text-natillera-300"
               @click="volverPasoSociosRegistrarPago"
             >
               ← Volver a socios
@@ -3801,20 +3888,20 @@
               :key="cuota.id"
               :data-guia-selector-cuota="cuota.id"
               type="button"
-              class="w-full flex flex-col gap-2 p-3 rounded-xl border-2 border-gray-200 border-l-2 border-l-natillera-600 bg-white hover:border-natillera-400 hover:border-l-natillera-700 hover:shadow-md text-left transition-all"
+              class="w-full flex flex-col gap-2 p-3 rounded-xl border-2 border-borde border-l-2 border-l-natillera-600 bg-superficie-tarjeta hover:border-natillera-400 hover:border-l-natillera-700 hover:shadow-md text-left transition-all"
               @click="seleccionarCuotaYAbrirModalPago(cuota)"
             >
               <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                 <div class="min-w-0 flex-1">
-                  <p class="font-semibold text-gray-900">{{ getDescripcionLista(cuota) }}</p>
+                  <p class="font-semibold text-texto-fuerte">{{ getDescripcionLista(cuota) }}</p>
                   <span
                     :class="[
                       'inline-flex mt-1 text-xs font-bold px-2 py-0.5 rounded-lg',
-                      (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-100 text-green-800' :
-                      (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 text-red-800' :
-                      (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-slate-100 text-slate-700' :
-                      tienePagoParcialCuota(cuota) ? 'bg-violet-100 text-violet-800' :
-                      'bg-gray-100 text-gray-800'
+                      (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-100 oscuro:bg-green-500/15 text-green-800 oscuro:text-green-300' :
+                      (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 oscuro:bg-red-500/15 text-red-800 oscuro:text-red-300' :
+                      (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-slate-100 oscuro:bg-superficie-hundida text-slate-700 oscuro:text-texto-medio' :
+                      tienePagoParcialCuota(cuota) ? 'bg-violet-100 oscuro:bg-violet-500/15 text-violet-800 oscuro:text-violet-300' :
+                      'bg-superficie-hundida text-texto'
                     ]"
                   >
                     {{ (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' : (cuota.estadoReal || cuota.estado) === 'parcial' ? 'Pago parcial' : (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' : (cuota.estadoReal || cuota.estado) === 'mora' ? 'En mora' : tienePagoParcialCuota(cuota) ? 'Pago parcial' : 'Pendiente' }}
@@ -3824,41 +3911,41 @@
                   v-if="!tienePagoParcialCuota(cuota)"
                   class="text-left sm:text-right flex-shrink-0 w-full sm:w-auto"
                 >
-                  <p class="text-xs text-gray-500">Total a pagar</p>
-                  <p class="text-lg font-bold text-natillera-700">${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}</p>
+                  <p class="text-xs text-texto-suave">Total a pagar</p>
+                  <p class="text-lg font-bold text-natillera-700 oscuro:text-natillera-300">${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}</p>
                 </div>
               </div>
               <div
                 v-if="tienePagoParcialCuota(cuota)"
-                class="rounded-lg bg-violet-50/90 border border-violet-200 px-2.5 py-2 space-y-1.5 w-full"
+                class="rounded-lg bg-violet-50/90 oscuro:bg-violet-500/15 border border-violet-200 oscuro:border-violet-500/30 px-2.5 py-2 space-y-1.5 w-full"
               >
-                <p class="text-[10px] font-semibold text-violet-800/90 uppercase tracking-wide">Resumen</p>
+                <p class="text-[10px] font-semibold text-violet-800/90 oscuro:text-violet-300/90 oscuro:text-violet-300 uppercase tracking-wide">Resumen</p>
                 <div class="flex justify-between gap-2 text-xs">
-                  <span class="text-gray-600">Total a pagar</span>
-                  <span class="font-bold text-gray-900 tabular-nums">${{ formatMoney(getTotalObligacionRegistrarPagoSelector(cuota)) }}</span>
+                  <span class="text-texto-secundario">Total a pagar</span>
+                  <span class="font-bold text-texto-fuerte tabular-nums">${{ formatMoney(getTotalObligacionRegistrarPagoSelector(cuota)) }}</span>
                 </div>
                 <div class="flex justify-between gap-2 text-xs">
-                  <span class="text-gray-600">Pagado anteriormente</span>
-                  <span class="font-bold text-green-700 tabular-nums">${{ formatMoney(getPagadoAnteriormenteRegistrarPagoSelector(cuota)) }}</span>
+                  <span class="text-texto-secundario">Pagado anteriormente</span>
+                  <span class="font-bold text-green-700 oscuro:text-green-300 tabular-nums">${{ formatMoney(getPagadoAnteriormenteRegistrarPagoSelector(cuota)) }}</span>
                 </div>
                 <div class="flex justify-between gap-2 text-xs">
-                  <span class="text-gray-600">Pago pendiente</span>
-                  <span class="font-bold text-amber-800 tabular-nums">${{ formatMoney(getPagoPendienteRegistrarPagoSelector(cuota)) }}</span>
+                  <span class="text-texto-secundario">Pago pendiente</span>
+                  <span class="font-bold text-amber-800 oscuro:text-amber-300 tabular-nums">${{ formatMoney(getPagoPendienteRegistrarPagoSelector(cuota)) }}</span>
                 </div>
               </div>
               <div
                 v-if="getLineasDesgloseConceptosCuota(cuota).length > 0"
-                class="rounded-lg bg-gray-50 border border-gray-100 px-2.5 py-2 space-y-1"
+                class="rounded-lg bg-superficie-suave border border-borde-suave px-2.5 py-2 space-y-1"
               >
-                <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Conceptos</p>
+                <p class="text-[10px] font-semibold text-texto-suave uppercase tracking-wide">Conceptos</p>
                 <ul class="space-y-0.5">
                   <li
                     v-for="(ln, idx) in getLineasDesgloseConceptosCuota(cuota)"
                     :key="idx"
-                    class="flex justify-between gap-3 text-xs text-gray-700"
+                    class="flex justify-between gap-3 text-xs text-texto-medio"
                   >
                     <span class="truncate min-w-0">{{ ln.label }}</span>
-                    <span class="tabular-nums font-medium text-gray-900 flex-shrink-0">${{ formatMoney(ln.valor) }}</span>
+                    <span class="tabular-nums font-medium text-texto-fuerte flex-shrink-0">${{ formatMoney(ln.valor) }}</span>
                   </li>
                 </ul>
               </div>
@@ -3868,7 +3955,7 @@
 
       </div>
 
-      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+      <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
         <button
           type="button"
           class="btn-modal-secondary w-full"
@@ -3893,14 +3980,15 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white my-0 sm:my-4"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta my-0 sm:my-4"
       card-max-width="28rem"
       @close="cerrarModalPago"
     >
         <!-- Móvil: fila — icono | títulos | X (sin absolute, iOS-safe) -->
         <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
           <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
               <CurrencyDollarIcon class="w-5 h-5 text-[#1B5E37]" />
             </div>
@@ -3941,6 +4029,7 @@
           <div class="flex items-start pt-[max(1rem,env(safe-area-inset-top))] pb-5 px-4">
             <div class="w-11 flex-shrink-0" aria-hidden="true" />
             <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+              <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
               <div class="w-[3.2rem] h-[3.2rem] rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
                 <CurrencyDollarIcon class="w-6 h-6 text-[#1B5E37]" />
               </div>
@@ -3980,13 +4069,13 @@
         <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div 
           ref="contenidoScrollRef"
-          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 pt-5 pb-0 space-y-5 bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 pt-5 pb-0 space-y-5 bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch]"
           @scroll.passive="programarNatiscrollModalPago"
         >
           <!-- Card de información del socio -->
-          <div data-guia="pago-socio" class="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-xl border border-gray-200 shadow-sm">
+          <div data-guia="pago-socio" class="bg-gradient-to-br from-superficie-suave to-superficie-hundida p-3 rounded-xl border border-borde shadow-sm">
             <!-- Alerta de ajustes si existe -->
-            <div v-if="tieneAjuste(cuotaSeleccionada)" class="mb-2 p-2 rounded-lg bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200 shadow-sm">
+            <div v-if="tieneAjuste(cuotaSeleccionada)" class="mb-2 p-2 rounded-lg bg-gradient-to-r from-blue-50 oscuro:from-blue-500/15 via-indigo-50 oscuro:via-indigo-500/10 to-purple-50 oscuro:to-purple-500/10 border-2 border-blue-200 oscuro:border-blue-500/30 shadow-sm">
               <button
                 @click.stop="abrirModalHistorialAjustes(cuotaSeleccionada)"
                 class="group w-full flex items-center justify-between gap-2 cursor-pointer"
@@ -3996,15 +4085,15 @@
                     <InformationCircleIcon class="w-4 h-4 text-white" />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <p class="text-xs font-bold text-blue-800 group-hover:text-blue-900 transition-colors">
+                    <p class="text-xs font-bold text-blue-800 oscuro:text-blue-300 group-hover:text-blue-900 oscuro:group-hover:text-blue-300 transition-colors">
                       Esta cuota tiene ajustes de valor
                     </p>
-                    <p class="text-xs text-blue-600 mt-0.5">
+                    <p class="text-xs text-blue-600 oscuro:text-blue-300 mt-0.5">
                       Haz clic para ver el historial completo de cambios
                     </p>
                   </div>
                 </div>
-                <ChevronRightIcon class="w-4 h-4 text-blue-600 group-hover:text-blue-700 group-hover:translate-x-1 transition-all flex-shrink-0" />
+                <ChevronRightIcon class="w-4 h-4 text-blue-600 oscuro:text-blue-300 group-hover:text-blue-700 oscuro:group-hover:text-blue-300 group-hover:translate-x-1 transition-all flex-shrink-0" />
               </button>
             </div>
             
@@ -4012,13 +4101,13 @@
               <img 
                 :src="getAvatarUrl(cuotaSeleccionada?.socio_natillera?.socio?.nombre || cuotaSeleccionada?.socio_natillera?.id, cuotaSeleccionada?.socio_natillera?.socio?.avatar_seed, cuotaSeleccionada?.socio_natillera?.socio?.avatar_style)" 
                 :alt="cuotaSeleccionada?.socio_natillera?.socio?.nombre"
-                class="w-10 h-10 rounded-xl flex-shrink-0 border-2 border-natillera-200 shadow-md object-cover"
+                class="w-10 h-10 rounded-xl flex-shrink-0 border-2 border-natillera-200 oscuro:border-natillera-500/30 shadow-md object-cover"
               />
               <div class="flex-1 min-w-0">
-                <p class="font-semibold text-gray-800 truncate text-sm">
+                <p class="font-semibold text-texto truncate text-sm">
                   {{ cuotaSeleccionada?.socio_natillera?.socio?.nombre || 'Socio' }}
                 </p>
-                <p class="text-xs text-gray-500 mt-0.5">
+                <p class="text-xs text-texto-suave mt-0.5">
                   {{ cuotaSeleccionada?.descripcion && !tieneAjuste(cuotaSeleccionada) ? cuotaSeleccionada.descripcion : 'Cuota' }}
                 </p>
               </div>
@@ -4027,20 +4116,20 @@
             <!-- Desglose de conceptos pendientes (solo cuando NO hay pago parcial) -->
             <div
               v-if="!tienePagoParcialCuota(cuotaSeleccionada)"
-              class="mb-3 p-3 rounded-lg bg-gray-50 border border-gray-200 space-y-1.5"
+              class="mb-3 p-3 rounded-lg bg-superficie-suave border border-borde space-y-1.5"
             >
-              <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Conceptos</p>
+              <p class="text-[10px] font-semibold text-texto-suave uppercase tracking-wide mb-1">Conceptos</p>
               <div
                 v-for="(ln, idx) in lineasDesgloseModalPago"
                 :key="'dl-' + idx"
                 class="flex items-center justify-between text-sm gap-2"
               >
-                <span class="text-gray-600 truncate min-w-0">{{ ln.label }}</span>
-                <span class="font-semibold text-gray-800 tabular-nums flex-shrink-0">${{ formatMoney(ln.valor) }}</span>
+                <span class="text-texto-secundario truncate min-w-0">{{ ln.label }}</span>
+                <span class="font-semibold text-texto tabular-nums flex-shrink-0">${{ formatMoney(ln.valor) }}</span>
               </div>
-              <div class="flex items-center justify-between text-base font-bold pt-2 mt-2 border-t border-gray-200">
-                <span class="text-gray-700">Total a pagar</span>
-                <span class="text-natillera-700">${{ formatMoney(getTotalMostrarResumenModalPago()) }}</span>
+              <div class="flex items-center justify-between text-base font-bold pt-2 mt-2 border-t border-borde">
+                <span class="text-texto-medio">Total a pagar</span>
+                <span class="text-natillera-700 oscuro:text-natillera-300">${{ formatMoney(getTotalMostrarResumenModalPago()) }}</span>
               </div>
             </div>
 
@@ -4049,37 +4138,37 @@
               v-if="tienePagoParcialCuota(cuotaSeleccionada)"
               class="mb-3 space-y-2"
             >
-              <div class="p-3 rounded-lg bg-gray-50 border border-gray-200 space-y-2">
+              <div class="p-3 rounded-lg bg-superficie-suave border border-borde space-y-2">
                 <div class="flex items-center justify-between">
-                  <p class="text-xs text-gray-600">Total a pagar</p>
-                  <p class="font-bold text-gray-800 text-base">
+                  <p class="text-xs text-texto-secundario">Total a pagar</p>
+                  <p class="font-bold text-texto text-base">
                     ${{ formatMoney(Math.max(0, getTotalAPagarConActividades(cuotaSeleccionada)) + (cuotaSeleccionada?.valor_pagado || 0) + (cuotaSeleccionada?.valor_pagado_sancion || 0) + getActividadesInfoSocio(cuotaSeleccionada).pagadas + (getTotalAbonadoPrestamosCuotaSocioSync(cuotaSeleccionada) || getTotalCuotasPrestamosPagadasSocioSync(cuotaSeleccionada) || 0)) }}
                   </p>
                 </div>
                 <div class="flex items-center justify-between">
-                  <p class="text-xs text-gray-600">Pagado anteriormente</p>
-                  <p class="font-bold text-green-600 text-base">
+                  <p class="text-xs text-texto-secundario">Pagado anteriormente</p>
+                  <p class="font-bold text-green-600 oscuro:text-green-300 text-base">
                     ${{ formatMoney((cuotaSeleccionada?.valor_pagado || 0) + (cuotaSeleccionada?.valor_pagado_sancion || 0) + getActividadesInfoSocio(cuotaSeleccionada).pagadas + (getTotalAbonadoPrestamosCuotaSocioSync(cuotaSeleccionada) || getTotalCuotasPrestamosPagadasSocioSync(cuotaSeleccionada) || 0)) }}
                   </p>
                 </div>
                 <div class="flex items-center justify-between">
-                  <p class="text-xs text-gray-600">Pago pendiente</p>
-                  <p :class="['font-bold text-base', cuotaSeleccionada?.estado === 'mora' ? 'text-red-600' : 'text-orange-600']">
+                  <p class="text-xs text-texto-secundario">Pago pendiente</p>
+                  <p :class="['font-bold text-base', cuotaSeleccionada?.estado === 'mora' ? 'text-red-600 oscuro:text-red-300' : 'text-orange-600 oscuro:text-orange-300']">
                     ${{ formatMoney(getTotalPendienteMostrarModalPago()) }}
                   </p>
                 </div>
                 <div
                   v-if="lineasDesgloseModalPago.length > 0"
-                  class="mt-2 pt-2 border-t border-gray-200 space-y-1"
+                  class="mt-2 pt-2 border-t border-borde space-y-1"
                 >
-                  <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Desglose del pendiente</p>
+                  <p class="text-[10px] font-semibold text-texto-suave uppercase tracking-wide">Desglose del pendiente</p>
                   <div
                     v-for="(ln, idx) in lineasDesgloseModalPago"
                     :key="'dlp-' + idx"
-                    class="flex justify-between text-xs text-gray-600 gap-2"
+                    class="flex justify-between text-xs text-texto-secundario gap-2"
                   >
                     <span class="truncate min-w-0">{{ ln.label }}</span>
-                    <span class="tabular-nums font-medium text-gray-800 flex-shrink-0">${{ formatMoney(ln.valor) }}</span>
+                    <span class="tabular-nums font-medium text-texto flex-shrink-0">${{ formatMoney(ln.valor) }}</span>
                   </div>
                 </div>
               </div>
@@ -4090,35 +4179,35 @@
             <!-- Fecha del pago: cuándo se recibió realmente el dinero. Es la referencia del cobro:
                  la mora y la sanción se miden hasta ese día, no hasta hoy. -->
             <div data-guia="pago-fecha">
-              <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <label class="block text-sm font-semibold text-texto-medio mb-2">
                 Fecha del pago <span class="text-red-500">*</span>
               </label>
               <DatePicker
                 v-model="formPago.fecha_pago"
                 placeholder="Seleccionar fecha"
                 :max-date="hoyISO"
-                input-class="bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-natillera-200 focus:border-natillera-500"
+                input-class="bg-superficie-tarjeta border-2 border-borde rounded-xl focus:ring-2 focus:ring-natillera-200 oscuro:focus:ring-natillera-500/30 focus:border-natillera-500"
               />
               <!-- Efecto real de la fecha elegida sobre la multa, antes de confirmar -->
               <div v-if="formPago.fecha_pago && formPago.fecha_pago !== hoyISO" class="mt-2 space-y-2">
-                <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                <p class="text-xs text-amber-700 oscuro:text-amber-300 bg-amber-50 oscuro:bg-amber-500/15 border border-amber-200 oscuro:border-amber-500/30 rounded-lg px-3 py-2">
                   Se registrará con fecha {{ formatDate(formPago.fecha_pago) }}.
                 </p>
                 <div
                   v-if="sancionesActivas && cuotaSeleccionada && !cuotaSeleccionada.no_calcular_multa && sancionCambiaPorFecha"
                   class="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"
-                  :class="sancionSegunFechaPago > 0 ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'"
+                  :class="sancionSegunFechaPago > 0 ? 'border-red-200 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15' : 'border-green-200 oscuro:border-green-500/30 bg-green-50 oscuro:bg-green-500/15'"
                 >
-                  <span class="text-xs font-semibold" :class="sancionSegunFechaPago > 0 ? 'text-red-800' : 'text-green-800'">
+                  <span class="text-xs font-semibold" :class="sancionSegunFechaPago > 0 ? 'text-red-800 oscuro:text-red-300' : 'text-green-800 oscuro:text-green-300'">
                     {{ sancionSegunFechaPago > 0 ? 'Sanción a esa fecha' : 'Pagó dentro del plazo: sin multa' }}
                   </span>
                   <span class="flex items-baseline gap-2 flex-shrink-0">
-                    <span class="text-xs text-gray-400 line-through tabular-nums">
+                    <span class="text-xs text-texto-tenue line-through tabular-nums">
                       ${{ formatMoney(getSancionCuota(cuotaSeleccionada)) }}
                     </span>
                     <span
                       class="text-sm font-bold tabular-nums"
-                      :class="sancionSegunFechaPago > 0 ? 'text-red-700' : 'text-green-700'"
+                      :class="sancionSegunFechaPago > 0 ? 'text-red-700 oscuro:text-red-300' : 'text-green-700 oscuro:text-green-300'"
                     >
                       ${{ formatMoney(sancionSegunFechaPago) }}
                     </span>
@@ -4129,7 +4218,7 @@
 
             <!-- Campo de tipo de pago -->
             <div data-guia="pago-tipo">
-              <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <label class="block text-sm font-semibold text-texto-medio mb-2">
                 Tipo de pago <span class="text-red-500">*</span>
               </label>
               <div class="grid grid-cols-2 gap-2">
@@ -4140,8 +4229,8 @@
                   :class="[
                     'relative p-2.5 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02]',
                     formPago.tipo_pago === 'efectivo'
-                      ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20'
-                      : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                      ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 oscuro:from-natillera-500/15 to-emerald-50 oscuro:to-emerald-500/10 shadow-lg shadow-natillera-500/20'
+                      : 'border-borde bg-superficie-tarjeta hover:border-borde-fuerte hover:bg-superficie-suave'
                   ]"
                 >
                   <div class="flex flex-col items-center gap-1.5">
@@ -4150,7 +4239,7 @@
                       'w-9 h-9 rounded-full flex items-center justify-center transition-all',
                       formPago.tipo_pago === 'efectivo'
                         ? 'bg-gradient-to-br from-natillera-500 to-emerald-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-400'
+                        : 'bg-superficie-hundida text-texto-tenue'
                     ]">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -4160,8 +4249,8 @@
                     <span :class="[
                       'font-semibold text-xs',
                       formPago.tipo_pago === 'efectivo'
-                        ? 'text-natillera-700'
-                        : 'text-gray-600'
+                        ? 'text-natillera-700 oscuro:text-natillera-300'
+                        : 'text-texto-secundario'
                     ]">
                       Efectivo
                     </span>
@@ -4183,8 +4272,8 @@
                   :class="[
                     'relative p-2.5 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02]',
                     formPago.tipo_pago === 'transferencia'
-                      ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg shadow-blue-500/20'
-                      : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                      ? 'border-blue-500 bg-gradient-to-br from-blue-50 oscuro:from-blue-500/15 to-indigo-50 oscuro:to-indigo-500/10 shadow-lg shadow-blue-500/20'
+                      : 'border-borde bg-superficie-tarjeta hover:border-borde-fuerte hover:bg-superficie-suave'
                   ]"
                 >
                   <div class="flex flex-col items-center gap-1.5">
@@ -4193,7 +4282,7 @@
                       'w-9 h-9 rounded-full flex items-center justify-center transition-all',
                       formPago.tipo_pago === 'transferencia'
                         ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-400'
+                        : 'bg-superficie-hundida text-texto-tenue'
                     ]">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
@@ -4203,8 +4292,8 @@
                     <span :class="[
                       'font-semibold text-xs',
                       formPago.tipo_pago === 'transferencia'
-                        ? 'text-blue-700'
-                        : 'text-gray-600'
+                        ? 'text-blue-700 oscuro:text-blue-300'
+                        : 'text-texto-secundario'
                     ]">
                       Transferencia
                     </span>
@@ -4223,7 +4312,7 @@
 
             <!-- Campo de valor del pago -->
             <div data-guia="pago-valor">
-              <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <label class="block text-sm font-semibold text-texto-medio mb-2">
                 <span v-if="cuotaSeleccionada?.valor_pagado && cuotaSeleccionada.valor_pagado > 0">
                   Valor adicional a agregar <span class="text-red-500">*</span>
                 </span>
@@ -4244,7 +4333,7 @@
                   @keydown.enter.prevent="mostrarConfirmacionPago"
                   type="text"
                   inputmode="decimal"
-                  class="w-full pl-12 pr-4 py-3.5 text-lg font-semibold text-gray-800 bg-white border-2 border-gray-200 rounded-xl focus:border-natillera-500 focus:ring-2 focus:ring-natillera-200 transition-all outline-none"
+                  class="w-full pl-12 pr-4 py-3.5 text-lg font-semibold text-texto bg-superficie-tarjeta border-2 border-borde rounded-xl focus:border-natillera-500 focus:ring-2 focus:ring-natillera-200 oscuro:focus:ring-natillera-500/30 transition-all outline-none"
                   :placeholder="(
                     (getTotalActividadesSeleccionadas() > 0 || getTotalCuotasPrestamosSeleccionadas() > 0)
                       ? (formPago.tipo_pago === 'transferencia' ? `Máx: ${formatMoney(Math.max(0, getTotalObligacionNetaPagoActual()))}` : 'Ingresa el valor total')
@@ -4260,19 +4349,19 @@
             <!-- 4×1000 opcional (solo transferencia): monto neto en el campo; el impuesto se suma si se marca -->
             <div
               v-if="formPago.tipo_pago === 'transferencia'"
-              class="rounded-xl border-2 border-gray-200 bg-gradient-to-br from-slate-50 to-gray-50 p-4 space-y-3 shadow-sm"
+              class="rounded-xl border-2 border-borde bg-gradient-to-br from-slate-50 oscuro:from-superficie-suave to-superficie-suave p-4 space-y-3 shadow-sm"
             >
               <label class="flex items-start gap-3 cursor-pointer select-none">
                 <input
                   v-model="formPago.aplicaImpuesto4x1000"
                   type="checkbox"
-                  class="mt-1 h-4 w-4 rounded border-gray-300 text-natillera-600 focus:ring-natillera-500"
+                  class="mt-1 h-4 w-4 rounded border-borde-fuerte text-natillera-600 oscuro:text-natillera-300 focus:ring-natillera-500"
                 />
                 <div class="flex-1 min-w-0 flex flex-wrap items-center justify-between gap-2">
-                  <span class="text-sm font-semibold text-gray-800">Aplica 4×1000</span>
+                  <span class="text-sm font-semibold text-texto">Aplica 4×1000</span>
                   <span
                     v-if="formPago.aplicaImpuesto4x1000 && (formPago.valor || 0) > 0"
-                    class="text-sm font-bold text-red-600 tabular-nums"
+                    class="text-sm font-bold text-red-600 oscuro:text-red-300 tabular-nums"
                   >
                     + ${{ formatMoney(calcularImpuesto4x1000(formPago.valor || 0)) }}
                   </span>
@@ -4280,30 +4369,30 @@
               </label>
               <p
                 v-if="formPago.aplicaImpuesto4x1000 && (formPago.valor || 0) > 0"
-                class="text-xs text-gray-600 pl-7"
+                class="text-xs text-texto-secundario pl-7"
               >
                 Se agregará ${{ formatMoney(calcularImpuesto4x1000(formPago.valor || 0)) }} sobre el valor ingresado
               </p>
-              <div class="flex items-center justify-between gap-2 pt-2 border-t border-gray-200">
-                <span class="text-sm font-semibold text-gray-700">Total a cobrar</span>
-                <span class="text-xl font-bold text-natillera-700 tabular-nums">${{ formatMoney(getTotalACobrarModalPago()) }}</span>
+              <div class="flex items-center justify-between gap-2 pt-2 border-t border-borde">
+                <span class="text-sm font-semibold text-texto-medio">Total a cobrar</span>
+                <span class="text-xl font-bold text-natillera-700 oscuro:text-natillera-300 tabular-nums">${{ formatMoney(getTotalACobrarModalPago()) }}</span>
               </div>
             </div>
 
             <!-- Desplegable de Actividades Pendientes -->
-            <div class="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
+            <div class="border border-borde rounded-xl overflow-hidden bg-superficie-tarjeta shadow-sm">
               <!-- Pantalla de carga: skeleton hasta que las actividades estén cargadas -->
               <div
                 v-if="cargandoActividades"
-                class="w-full p-4 bg-gradient-to-r from-purple-50/80 via-indigo-50/80 to-blue-50/80 border-b-0 flex items-center gap-3"
+                class="w-full p-4 bg-gradient-to-r from-purple-50/80 oscuro:from-purple-500/15 via-indigo-50/80 oscuro:via-indigo-500/10 to-blue-50/80 oscuro:to-blue-500/10 border-b-0 flex items-center gap-3"
               >
-                <div class="w-10 h-10 rounded-lg bg-gray-200 animate-pulse flex-shrink-0"></div>
+                <div class="w-10 h-10 rounded-lg bg-borde animate-pulse flex-shrink-0"></div>
                 <div class="flex-1 min-w-0 space-y-2">
-                  <div class="h-3.5 w-32 bg-gray-200 rounded animate-pulse"></div>
-                  <div class="h-3 w-24 bg-gray-100 rounded animate-pulse"></div>
+                  <div class="h-3.5 w-32 bg-borde rounded animate-pulse"></div>
+                  <div class="h-3 w-24 bg-superficie-hundida rounded animate-pulse"></div>
                 </div>
               </div>
-              <div v-if="cargandoActividades" class="border-t border-gray-100 bg-white">
+              <div v-if="cargandoActividades" class="border-t border-borde-suave bg-superficie-tarjeta">
                 <CargaCaja texto="Cargando actividades pendientes" detalle="Obteniendo valores y estados" />
               </div>
 
@@ -4314,8 +4403,8 @@
                 :class="[
                   'w-full flex items-center justify-between p-4 transition-all duration-200',
                   actividadesSeleccionadas.size > 0
-                    ? 'bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 hover:from-purple-100 hover:via-indigo-100 hover:to-purple-100'
-                    : 'bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 hover:from-purple-100 hover:via-indigo-100 hover:to-blue-100'
+                    ? 'bg-gradient-to-r from-purple-50 oscuro:from-purple-500/15 via-indigo-50 oscuro:via-indigo-500/10 to-purple-50 oscuro:to-purple-500/10 hover:from-purple-100 oscuro:hover:from-purple-500/15 hover:via-indigo-100 oscuro:hover:via-indigo-500/10 hover:to-purple-100 oscuro:hover:to-purple-500/10'
+                    : 'bg-gradient-to-r from-purple-50 oscuro:from-purple-500/15 via-indigo-50 oscuro:via-indigo-500/10 to-blue-50 oscuro:to-blue-500/10 hover:from-purple-100 oscuro:hover:from-purple-500/15 hover:via-indigo-100 oscuro:hover:via-indigo-500/10 hover:to-blue-100 oscuro:hover:to-blue-500/10'
                 ]"
               >
                 <div class="flex items-center gap-3 flex-1">
@@ -4323,7 +4412,7 @@
                     <SparklesIcon class="w-5 h-5 text-white" />
                   </div>
                   <div class="text-left flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-gray-800 flex items-center gap-2 flex-wrap">
+                    <p class="text-sm font-semibold text-texto flex items-center gap-2 flex-wrap">
                       <span>Actividades pendientes</span>
                       <span 
                         v-if="actividadesSeleccionadas.size > 0"
@@ -4331,7 +4420,7 @@
                       >
                         {{ actividadesSeleccionadas.size }} {{ actividadesSeleccionadas.size === 1 ? 'Seleccionado' : 'Seleccionados' }}
                       </span>
-                      <span class="text-xs font-normal text-gray-600">
+                      <span class="text-xs font-normal text-texto-secundario">
                         <span v-if="actividadesPendientes.length === 0">• No hay actividades pendientes</span>
                         <span v-else>• {{ actividadesPendientes.length }} actividad{{ actividadesPendientes.length !== 1 ? 'es' : '' }} pendiente{{ actividadesPendientes.length !== 1 ? 's' : '' }}</span>
                       </span>
@@ -4339,7 +4428,7 @@
                   </div>
                 </div>
                 <ChevronDownIcon 
-                  :class="['w-5 h-5 text-gray-500 transition-transform duration-200', actividadesDesplegableAbierto ? 'rotate-180' : '']" 
+                  :class="['w-5 h-5 text-texto-suave transition-transform duration-200', actividadesDesplegableAbierto ? 'rotate-180' : '']" 
                 />
               </button>
               
@@ -4351,9 +4440,9 @@
                 leave-from-class="opacity-100 max-h-[1000px]"
                 leave-to-class="opacity-0 max-h-0"
               >
-                <div v-show="actividadesDesplegableAbierto" class="border-t border-gray-200 bg-white">
+                <div v-show="actividadesDesplegableAbierto" class="border-t border-borde bg-superficie-tarjeta">
                   <div v-if="actividadesPendientes.length === 0" class="p-6 text-center">
-                    <p class="text-sm text-gray-500">No hay actividades pendientes</p>
+                    <p class="text-sm text-texto-suave">No hay actividades pendientes</p>
                   </div>
                   <div v-else class="p-2 space-y-2 max-h-64 overflow-y-auto">
                     <div
@@ -4364,8 +4453,8 @@
                         'bg-gradient-to-br rounded-lg p-2.5 border transition-all',
                         actividadesDeLaCuotaActual.has(actividad.id) ? 'cursor-default' : 'cursor-pointer',
                         actividadesSeleccionadas.has(actividad.id)
-                          ? 'from-purple-100 to-indigo-100 border-purple-400 shadow-md'
-                          : 'from-gray-50 to-purple-50/30 border-gray-200 hover:border-purple-300 hover:shadow-sm'
+                          ? 'from-purple-100 oscuro:from-purple-500/15 to-indigo-100 oscuro:to-indigo-500/10 border-purple-400 shadow-md'
+                          : 'from-superficie-suave to-purple-50/30 oscuro:to-purple-500/10 border-borde hover:border-purple-300 oscuro:hover:border-purple-500/30 hover:shadow-sm'
                       ]"
                     >
                       <div class="flex items-center gap-2.5">
@@ -4375,7 +4464,7 @@
                             'w-5 h-5 rounded border-2 flex items-center justify-center transition-all',
                             actividadesSeleccionadas.has(actividad.id)
                               ? 'bg-purple-500 border-purple-500'
-                              : 'bg-white border-gray-300'
+                              : 'bg-superficie-tarjeta border-borde-fuerte'
                           ]">
                             <svg v-if="actividadesSeleccionadas.has(actividad.id)" class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
@@ -4385,24 +4474,24 @@
                         <!-- Contenido compacto -->
                         <div class="flex-1 min-w-0">
                           <div class="flex items-center justify-between gap-2 mb-1">
-                            <h4 class="font-semibold text-gray-800 truncate text-sm">
+                            <h4 class="font-semibold text-texto truncate text-sm">
                               {{ limpiarDescripcionActividad(actividad.actividad?.descripcion) }}
                             </h4>
-                            <p class="text-xs font-bold text-orange-600 flex-shrink-0">
+                            <p class="text-xs font-bold text-orange-600 oscuro:text-orange-300 flex-shrink-0">
                               ${{ formatMoney(actividad.valor_pendiente || 0) }}
                             </p>
                           </div>
                           <span
                             v-if="actividadesDeLaCuotaActual.has(actividad.id)"
-                            class="text-[10px] font-medium text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded inline-block"
+                            class="text-[10px] font-medium text-purple-600 oscuro:text-purple-300 bg-purple-100 oscuro:bg-purple-500/15 px-1.5 py-0.5 rounded inline-block"
                           >
                             Incluida en esta cuota (no se puede quitar)
                           </span>
                           <div class="flex items-center gap-3 text-xs">
-                            <span class="text-gray-500">
-                              Asignado: <span class="font-semibold text-gray-700">${{ formatMoney(actividad.valor_asignado || 0) }}</span>
+                            <span class="text-texto-suave">
+                              Asignado: <span class="font-semibold text-texto-medio">${{ formatMoney(actividad.valor_asignado || 0) }}</span>
                             </span>
-                            <span v-if="actividad.valor_pagado > 0" class="text-green-600">
+                            <span v-if="actividad.valor_pagado > 0" class="text-green-600 oscuro:text-green-300">
                               Pagado: <span class="font-semibold">${{ formatMoney(actividad.valor_pagado || 0) }}</span>
                             </span>
                           </div>
@@ -4418,20 +4507,20 @@
             <!-- Desplegable de Cuotas de Préstamos Pendientes -->
             <div 
               v-if="cuotasPrestamosPendientes.length > 0"
-              class="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm"
+              class="border border-borde rounded-xl overflow-hidden bg-superficie-tarjeta shadow-sm"
             >
               <!-- Pantalla de carga: skeleton hasta que las cuotas estén cargadas -->
               <div
                 v-if="cargandoCuotasPrestamos"
-                class="w-full p-4 bg-gradient-to-r from-blue-50/80 via-indigo-50/80 to-purple-50/80 border-b-0 flex items-center gap-3"
+                class="w-full p-4 bg-gradient-to-r from-blue-50/80 oscuro:from-blue-500/15 via-indigo-50/80 oscuro:via-indigo-500/10 to-purple-50/80 oscuro:to-purple-500/10 border-b-0 flex items-center gap-3"
               >
-                <div class="w-10 h-10 rounded-lg bg-gray-200 animate-pulse flex-shrink-0"></div>
+                <div class="w-10 h-10 rounded-lg bg-borde animate-pulse flex-shrink-0"></div>
                 <div class="flex-1 min-w-0 space-y-2">
-                  <div class="h-3.5 w-32 bg-gray-200 rounded animate-pulse"></div>
-                  <div class="h-3 w-24 bg-gray-100 rounded animate-pulse"></div>
+                  <div class="h-3.5 w-32 bg-borde rounded animate-pulse"></div>
+                  <div class="h-3 w-24 bg-superficie-hundida rounded animate-pulse"></div>
                 </div>
               </div>
-              <div v-if="cargandoCuotasPrestamos" class="border-t border-gray-100 bg-white">
+              <div v-if="cargandoCuotasPrestamos" class="border-t border-borde-suave bg-superficie-tarjeta">
                 <CargaCaja texto="Cargando cuotas de préstamos pendientes" detalle="Obteniendo valores y estados" />
               </div>
 
@@ -4442,8 +4531,8 @@
                 :class="[
                   'w-full flex items-center justify-between p-4 transition-all duration-200',
                   cuotasPrestamosSeleccionadas.size > 0
-                    ? 'bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 hover:from-blue-100 hover:via-indigo-100 hover:to-blue-100'
-                    : 'bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 hover:from-blue-100 hover:via-indigo-100 hover:to-purple-100'
+                    ? 'bg-gradient-to-r from-blue-50 oscuro:from-blue-500/15 via-indigo-50 oscuro:via-indigo-500/10 to-blue-50 oscuro:to-blue-500/10 hover:from-blue-100 oscuro:hover:from-blue-500/15 hover:via-indigo-100 oscuro:hover:via-indigo-500/10 hover:to-blue-100 oscuro:hover:to-blue-500/10'
+                    : 'bg-gradient-to-r from-blue-50 oscuro:from-blue-500/15 via-indigo-50 oscuro:via-indigo-500/10 to-purple-50 oscuro:to-purple-500/10 hover:from-blue-100 oscuro:hover:from-blue-500/15 hover:via-indigo-100 oscuro:hover:via-indigo-500/10 hover:to-purple-100 oscuro:hover:to-purple-500/10'
                 ]"
               >
                 <div class="flex items-center gap-3 flex-1">
@@ -4453,7 +4542,7 @@
                     </svg>
                   </div>
                   <div class="text-left flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-gray-800 flex items-center gap-2 flex-wrap">
+                    <p class="text-sm font-semibold text-texto flex items-center gap-2 flex-wrap">
                       <span>Cuotas de préstamos pendientes</span>
                       <span 
                         v-if="cuotasPrestamosSeleccionadas.size > 0"
@@ -4461,14 +4550,14 @@
                       >
                         {{ cuotasPrestamosSeleccionadas.size }} {{ cuotasPrestamosSeleccionadas.size === 1 ? 'Seleccionada' : 'Seleccionadas' }}
                       </span>
-                      <span class="text-xs font-normal text-gray-600">
+                      <span class="text-xs font-normal text-texto-secundario">
                         • {{ cuotasPrestamosPendientes.length }} cuota{{ cuotasPrestamosPendientes.length !== 1 ? 's' : '' }} pendiente{{ cuotasPrestamosPendientes.length !== 1 ? 's' : '' }}
                       </span>
                     </p>
                   </div>
                 </div>
                 <ChevronDownIcon 
-                  :class="['w-5 h-5 text-gray-500 transition-transform duration-200', cuotasPrestamosDesplegableAbierto ? 'rotate-180' : '']" 
+                  :class="['w-5 h-5 text-texto-suave transition-transform duration-200', cuotasPrestamosDesplegableAbierto ? 'rotate-180' : '']" 
                 />
               </button>
               
@@ -4480,9 +4569,9 @@
                 leave-from-class="opacity-100 max-h-[1000px]"
                 leave-to-class="opacity-0 max-h-0"
               >
-                <div v-show="cuotasPrestamosDesplegableAbierto" class="border-t border-gray-200 bg-white">
+                <div v-show="cuotasPrestamosDesplegableAbierto" class="border-t border-borde bg-superficie-tarjeta">
                   <div v-if="cuotasPrestamosPendientes.length === 0" class="p-6 text-center">
-                    <p class="text-sm text-gray-500">No hay cuotas de préstamos pendientes</p>
+                    <p class="text-sm text-texto-suave">No hay cuotas de préstamos pendientes</p>
                   </div>
                   <div v-else class="p-2 space-y-2 max-h-64 overflow-y-auto">
                     <div
@@ -4492,8 +4581,8 @@
                       :class="[
                         'bg-gradient-to-br rounded-lg p-2.5 border transition-all cursor-pointer',
                         cuotasPrestamosSeleccionadas.has(cuotaPrestamo.id)
-                          ? 'from-blue-100 to-indigo-100 border-blue-400 shadow-md'
-                          : 'from-gray-50 to-blue-50/30 border-gray-200 hover:border-blue-300 hover:shadow-sm'
+                          ? 'from-blue-100 oscuro:from-blue-500/15 to-indigo-100 oscuro:to-indigo-500/10 border-blue-400 shadow-md'
+                          : 'from-superficie-suave to-blue-50/30 oscuro:to-blue-500/10 border-borde hover:border-blue-300 oscuro:hover:border-blue-500/30 hover:shadow-sm'
                       ]"
                     >
                       <div class="flex items-center gap-2.5">
@@ -4503,7 +4592,7 @@
                             'w-5 h-5 rounded border-2 flex items-center justify-center transition-all',
                             cuotasPrestamosSeleccionadas.has(cuotaPrestamo.id)
                               ? 'bg-blue-500 border-blue-500'
-                              : 'bg-white border-gray-300'
+                              : 'bg-superficie-tarjeta border-borde-fuerte'
                           ]">
                             <svg v-if="cuotasPrestamosSeleccionadas.has(cuotaPrestamo.id)" class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
@@ -4513,32 +4602,39 @@
                         <!-- Contenido compacto -->
                         <div class="flex-1 min-w-0">
                           <div class="flex items-center justify-between gap-2 mb-1">
-                            <h4 class="font-semibold text-gray-800 truncate text-sm">
+                            <h4 class="font-semibold text-texto truncate text-sm">
                               Cuota #{{ cuotaPrestamo.numero_cuota }} - {{ formatDate(cuotaPrestamo.fecha_proyectada) }}
                             </h4>
                             <!-- Destacado: lo abonado a esta cuota del préstamo (no el saldo pendiente) -->
                             <div class="text-right flex-shrink-0">
-                              <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-tight">Pagado</p>
-                              <p class="text-xs font-bold text-blue-600 leading-tight">
+                              <p class="text-[10px] font-semibold text-texto-suave uppercase tracking-wide leading-tight">Pagado</p>
+                              <p class="text-xs font-bold text-blue-600 oscuro:text-blue-300 leading-tight">
                                 ${{ formatMoney(cuotaPrestamo.valor_pagado || 0) }}
                               </p>
                               <p
                                 v-if="(cuotaPrestamo.valor_pendiente || 0) > 0"
-                                class="text-[10px] font-medium text-amber-700 leading-tight mt-0.5"
+                                class="text-[10px] font-medium text-amber-700 oscuro:text-amber-300 leading-tight mt-0.5"
                               >
                                 Falta ${{ formatMoney(cuotaPrestamo.valor_pendiente || 0) }}
+                              </p>
+                              <!-- Mora a la fecha de pago del modal: se cobra primero y va al fondo -->
+                              <p
+                                v-if="moraCuotaPrestamo(cuotaPrestamo) > 0"
+                                class="text-[10px] font-semibold text-rose-700 oscuro:text-rose-300 leading-tight mt-0.5"
+                              >
+                                + Mora ${{ formatMoney(moraCuotaPrestamo(cuotaPrestamo)) }}
                               </p>
                             </div>
                           </div>
                           <span
                             v-if="cuotasPrestamosDeLaCuotaActual.has(cuotaPrestamo.id)"
-                            class="text-[10px] font-medium text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded inline-block"
+                            class="text-[10px] font-medium text-blue-600 oscuro:text-blue-300 bg-blue-100 oscuro:bg-blue-500/15 px-1.5 py-0.5 rounded inline-block"
                           >
                             Programada para este período
                           </span>
                           <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                            <span class="text-gray-500">
-                              Valor cuota: <span class="font-semibold text-gray-700">${{ formatMoney(cuotaPrestamo.valor_cuota || 0) }}</span>
+                            <span class="text-texto-suave">
+                              Valor cuota: <span class="font-semibold text-texto-medio">${{ formatMoney(cuotaPrestamo.valor_cuota || 0) }}</span>
                             </span>
                           </div>
                         </div>
@@ -4559,7 +4655,7 @@
             aria-hidden="true"
           >
             <div
-              class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+              class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent"
               aria-hidden="true"
             />
             <div
@@ -4578,7 +4674,7 @@
         </div>
 
       <!-- Pie fijo (fuera del scroll; skill natillerapp-modals) -->
-      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-3">
+      <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-3">
         <div class="flex gap-3">
           <button 
             type="button"
@@ -4608,13 +4704,14 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-2xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-2xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="42rem"
       @close="requestCloseTopModal"
     >
       <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
         <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
             <InformationCircleIcon class="h-5 w-5 text-[#1B5E37]" />
           </div>
@@ -4636,6 +4733,7 @@
         <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
           <div class="w-11 shrink-0" aria-hidden="true" />
           <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
               <InformationCircleIcon class="h-6 w-6 text-[#1B5E37]" />
             </div>
@@ -4653,33 +4751,33 @@
         </div>
       </div>
 
-      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
+      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-superficie-tarjeta">
         <div
           ref="contenidoScrollHistorialAjustesRef"
           class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 [-webkit-overflow-scrolling:touch]"
           @scroll.passive="programarNatiscrollModalHistorialAjustes"
         >
           <!-- Información del socio -->
-          <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200 shadow-sm mb-6">
+          <div class="bg-gradient-to-br from-superficie-suave to-superficie-hundida p-5 rounded-xl border border-borde shadow-sm mb-6">
             <div class="flex items-center gap-3">
               <img 
                 v-if="cuotaSeleccionada?.socio_natillera?.socio"
                 :src="getAvatarUrl(cuotaSeleccionada.socio_natillera.socio.nombre, cuotaSeleccionada.socio_natillera.socio.avatar_seed, cuotaSeleccionada.socio_natillera.socio.avatar_style)" 
                 :alt="cuotaSeleccionada.socio_natillera.socio.nombre"
-                class="w-12 h-12 rounded-xl flex-shrink-0 border-2 border-natillera-200 shadow-md object-cover"
+                class="w-12 h-12 rounded-xl flex-shrink-0 border-2 border-natillera-200 oscuro:border-natillera-500/30 shadow-md object-cover"
               />
               <div class="flex-1">
-                <p class="font-semibold text-gray-800">
+                <p class="font-semibold text-texto">
                   {{ cuotaSeleccionada?.socio_natillera?.socio?.nombre || 'Socio' }}
                 </p>
-                <p class="text-xs text-gray-500">
+                <p class="text-xs text-texto-suave">
                   {{ getMesLabel(cuotaSeleccionada?.mes) }} {{ cuotaSeleccionada?.anio }}
-                  <span v-if="cuotaSeleccionada?.quincena === 1 || cuotaSeleccionada?.quincena === 2" class="text-purple-600">- Q{{ cuotaSeleccionada.quincena }}</span>
+                  <span v-if="cuotaSeleccionada?.quincena === 1 || cuotaSeleccionada?.quincena === 2" class="text-purple-600 oscuro:text-purple-300">- Q{{ cuotaSeleccionada.quincena }}</span>
                 </p>
               </div>
               <div class="text-right">
-                <p class="text-xs text-gray-500 mb-1">Valor Actual</p>
-                <p class="text-lg font-bold text-natillera-700">
+                <p class="text-xs text-texto-suave mb-1">Valor Actual</p>
+                <p class="text-lg font-bold text-natillera-700 oscuro:text-natillera-300">
                   ${{ formatMoney(cuotaSeleccionada?.valor_cuota || 0) }}
                 </p>
               </div>
@@ -4691,7 +4789,7 @@
             <div
               v-for="(ajuste, index) in obtenerAjustesFormateados(cuotaSeleccionada)"
               :key="index"
-              class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-5 rounded-xl border-2 border-blue-200 shadow-sm hover:shadow-md transition-all"
+              class="bg-gradient-to-br from-blue-50 oscuro:from-blue-500/15 via-indigo-50 oscuro:via-indigo-500/10 to-purple-50 oscuro:to-purple-500/10 p-5 rounded-xl border-2 border-blue-200 oscuro:border-blue-500/30 shadow-sm hover:shadow-md transition-all"
             >
               <div class="flex items-start gap-4">
                 <!-- Icono y número -->
@@ -4704,26 +4802,26 @@
                 <!-- Contenido del ajuste -->
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 mb-2">
-                    <CalendarIcon class="w-4 h-4 text-blue-600" />
-                    <p class="text-xs font-semibold text-blue-700">
+                    <CalendarIcon class="w-4 h-4 text-blue-600 oscuro:text-blue-300" />
+                    <p class="text-xs font-semibold text-blue-700 oscuro:text-blue-300">
                       {{ ajuste.fecha }}
                     </p>
                   </div>
                   
                   <div class="space-y-3">
                     <!-- Cambio de valor -->
-                    <div class="bg-white/60 rounded-lg p-3 border border-blue-100">
-                      <p class="text-xs text-gray-600 mb-2 font-medium">Cambio de Valor</p>
+                    <div class="bg-superficie-tarjeta/60 rounded-lg p-3 border border-blue-100 oscuro:border-blue-500/30">
+                      <p class="text-xs text-texto-secundario mb-2 font-medium">Cambio de Valor</p>
                       <div class="flex items-center gap-2 flex-wrap">
-                        <span class="px-3 py-1.5 bg-gray-100 rounded-lg text-sm font-semibold text-gray-700">
+                        <span class="px-3 py-1.5 bg-superficie-hundida rounded-lg text-sm font-semibold text-texto-medio">
                           ${{ formatMoney(ajuste.valorAnterior) }}
                         </span>
-                        <ArrowRightIcon class="w-4 h-4 text-blue-600 flex-shrink-0" />
-                        <span class="px-3 py-1.5 bg-blue-100 rounded-lg text-sm font-semibold text-blue-700">
+                        <ArrowRightIcon class="w-4 h-4 text-blue-600 oscuro:text-blue-300 flex-shrink-0" />
+                        <span class="px-3 py-1.5 bg-blue-100 oscuro:bg-blue-500/15 rounded-lg text-sm font-semibold text-blue-700 oscuro:text-blue-300">
                           ${{ formatMoney(ajuste.valorNuevo) }}
                         </span>
                         <span class="px-3 py-1.5 rounded-lg text-xs font-semibold"
-                          :class="ajuste.diferencia >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
+                          :class="ajuste.diferencia >= 0 ? 'bg-green-100 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300' : 'bg-red-100 oscuro:bg-red-500/15 text-red-700 oscuro:text-red-300'">
                           {{ ajuste.diferencia >= 0 ? '+' : '' }}${{ formatMoney(Math.abs(ajuste.diferencia)) }}
                         </span>
                       </div>
@@ -4731,15 +4829,15 @@
 
                     <!-- Estado del pago -->
                     <div v-if="ajuste.valorPagado !== null || ajuste.pendiente !== null" class="grid grid-cols-2 gap-2">
-                      <div v-if="ajuste.valorPagado !== null" class="bg-green-50 rounded-lg p-3 border border-green-200">
-                        <p class="text-xs text-gray-600 mb-1 font-medium">Pagado</p>
-                        <p class="text-sm font-bold text-green-700">
+                      <div v-if="ajuste.valorPagado !== null" class="bg-green-50 oscuro:bg-green-500/15 rounded-lg p-3 border border-green-200 oscuro:border-green-500/30">
+                        <p class="text-xs text-texto-secundario mb-1 font-medium">Pagado</p>
+                        <p class="text-sm font-bold text-green-700 oscuro:text-green-300">
                           ${{ formatMoney(ajuste.valorPagado) }}
                         </p>
                       </div>
-                      <div v-if="ajuste.pendiente !== null" class="bg-orange-50 rounded-lg p-3 border border-orange-200">
-                        <p class="text-xs text-gray-600 mb-1 font-medium">Pendiente</p>
-                        <p class="text-sm font-bold text-orange-700">
+                      <div v-if="ajuste.pendiente !== null" class="bg-orange-50 oscuro:bg-orange-500/15 rounded-lg p-3 border border-orange-200 oscuro:border-orange-500/30">
+                        <p class="text-xs text-texto-secundario mb-1 font-medium">Pendiente</p>
+                        <p class="text-sm font-bold text-orange-700 oscuro:text-orange-300">
                           ${{ formatMoney(ajuste.pendiente) }}
                         </p>
                       </div>
@@ -4751,11 +4849,11 @@
 
             <!-- Mensaje si no hay ajustes -->
             <div v-if="!tieneAjuste(cuotaSeleccionada)" class="text-center py-12">
-              <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <InformationCircleIcon class="w-8 h-8 text-gray-400" />
+              <div class="w-16 h-16 bg-superficie-hundida rounded-full flex items-center justify-center mx-auto mb-4">
+                <InformationCircleIcon class="w-8 h-8 text-texto-tenue" />
               </div>
-              <p class="text-gray-500 font-medium">No hay ajustes registrados</p>
-              <p class="text-sm text-gray-400 mt-1">Esta cuota no ha tenido cambios en su valor</p>
+              <p class="text-texto-suave font-medium">No hay ajustes registrados</p>
+              <p class="text-sm text-texto-tenue mt-1">Esta cuota no ha tenido cambios en su valor</p>
             </div>
           </div>
         </div>
@@ -4764,7 +4862,7 @@
           class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
           aria-hidden="true"
         >
-          <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent" />
+          <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent" />
           <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
             <div class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3">
               <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
@@ -4777,7 +4875,7 @@
       </div>
 
         <!-- Footer -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <button
             type="button"
             class="btn-modal-secondary w-full"
@@ -4796,14 +4894,15 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-[65] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="requestCloseTopModal"
     >
       <!-- Cabecera móvil: fila — icono | títulos | X -->
       <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
         <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
             <CheckCircleIcon class="h-5 w-5 text-[#1B5E37]" />
           </div>
@@ -4830,6 +4929,7 @@
         <div class="flex items-start px-4 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
           <div class="w-11 shrink-0" aria-hidden="true" />
           <div class="flex min-w-0 flex-1 flex-col items-center text-center">
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="flex h-[3.2rem] w-[3.2rem] shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
               <CheckCircleIcon class="h-6 w-6 text-[#1B5E37]" />
             </div>
@@ -4855,30 +4955,30 @@
       <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="contenidoScrollConfirmarPagoRef"
-          class="min-h-0 overflow-y-auto flex-1 px-4 sm:px-6 pt-5 pb-0 space-y-4 bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          class="min-h-0 overflow-y-auto flex-1 px-4 sm:px-6 pt-5 pb-0 space-y-4 bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch]"
           @scroll.passive="programarNatiscrollModalConfirmarPago"
         >
           <!-- Total a pagar (hero) -->
-          <div class="rounded-xl border border-[#1B5E37]/15 bg-[#E8F5E9] p-5 shadow-sm">
+          <div class="rounded-xl border border-[#1B5E37]/15 oscuro:border-marca-tinta/15 bg-marca-suave p-5 shadow-sm">
             <div class="flex items-center justify-between gap-3">
               <div class="min-w-0">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-[#1B5E37]/80">Total a pagar</p>
-                <p class="mt-1 font-display text-3xl font-bold text-[#1B5E37] tabular-nums">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-marca-tinta/80">Total a pagar</p>
+                <p class="mt-1 font-display text-3xl font-bold text-marca-tinta tabular-nums">
                   ${{ formatMoney(desglosePagoConfirmacion?.total || 0) }}
                 </p>
               </div>
-              <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-                <CurrencyDollarIcon class="h-6 w-6 text-[#1B5E37]" />
+              <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-superficie-tarjeta shadow-sm">
+                <CurrencyDollarIcon class="h-6 w-6 text-marca-tinta" />
               </div>
             </div>
 
             <!-- Pagado anteriormente (parcial) -->
             <div
               v-if="(desglosePagoConfirmacion?.valorPagadoAnteriorTotal || 0) > 0"
-              class="mt-4 flex items-center justify-between border-t border-[#1B5E37]/15 pt-3"
+              class="mt-4 flex items-center justify-between border-t border-[#1B5E37]/15 oscuro:border-marca-tinta/15 pt-3"
             >
-              <span class="text-sm font-medium text-[#1B5E37]/90">Pagado anteriormente</span>
-              <span class="text-base font-bold text-[#1B5E37] tabular-nums">
+              <span class="text-sm font-medium text-marca-tinta/90">Pagado anteriormente</span>
+              <span class="text-base font-bold text-marca-tinta tabular-nums">
                 ${{ formatMoney(desglosePagoConfirmacion?.valorPagadoAnteriorTotal || 0) }}
               </span>
             </div>
@@ -4918,19 +5018,19 @@
           <!-- Pago pendiente tras este pago (parcial) -->
           <div
             v-if="desglosePagoConfirmacion?.esParcial && (desglosePagoConfirmacion?.pendienteDespuesPago || 0) > 0"
-            class="rounded-xl border border-amber-200 bg-amber-50/80 p-3.5"
+            class="rounded-xl border border-amber-200 oscuro:border-amber-500/30 bg-amber-50/80 oscuro:bg-amber-500/15 p-3.5"
           >
             <div class="flex items-center justify-between gap-3">
               <div class="flex items-center gap-2.5 min-w-0">
-                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-                  <ClockIcon class="h-5 w-5 text-amber-600" />
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-superficie-tarjeta shadow-sm">
+                  <ClockIcon class="h-5 w-5 text-amber-600 oscuro:text-amber-300" />
                 </div>
                 <div class="min-w-0">
-                  <p class="text-sm font-semibold text-amber-900">Pago pendiente</p>
-                  <p class="text-[11px] text-amber-700">Después de este pago</p>
+                  <p class="text-sm font-semibold text-amber-900 oscuro:text-amber-300">Pago pendiente</p>
+                  <p class="text-[11px] text-amber-700 oscuro:text-amber-300">Después de este pago</p>
                 </div>
               </div>
-              <span class="text-base font-bold text-amber-900 tabular-nums">
+              <span class="text-base font-bold text-amber-900 oscuro:text-amber-300 tabular-nums">
                 ${{ formatMoney(desglosePagoConfirmacion?.pendienteDespuesPago || 0) }}
               </span>
             </div>
@@ -4938,84 +5038,84 @@
 
           <!-- Desglose del pago -->
           <div>
-            <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">Desglose del pago</p>
+            <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-texto-suave">Desglose del pago</p>
             <div class="space-y-1.5">
               <!-- Cuota -->
               <div
                 v-if="(desglosePagoConfirmacion?.cuota || 0) > 0"
-                class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2.5"
+                class="flex items-center justify-between rounded-lg border border-borde bg-superficie-tarjeta px-3 py-2.5"
               >
                 <div class="flex items-center gap-2.5 min-w-0">
-                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E8F5E9]">
-                    <BanknotesIcon class="h-4 w-4 text-[#1B5E37]" />
+                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-marca-suave">
+                    <BanknotesIcon class="h-4 w-4 text-marca-tinta" />
                   </div>
-                  <span class="text-sm font-medium text-gray-700">Cuota</span>
+                  <span class="text-sm font-medium text-texto-medio">Cuota</span>
                 </div>
-                <span class="text-sm font-semibold text-gray-900 tabular-nums">${{ formatMoney(desglosePagoConfirmacion?.cuota || 0) }}</span>
+                <span class="text-sm font-semibold text-texto-fuerte tabular-nums">${{ formatMoney(desglosePagoConfirmacion?.cuota || 0) }}</span>
               </div>
 
               <!-- Sanción -->
               <div
                 v-if="(desglosePagoConfirmacion?.sancion || 0) > 0"
-                class="flex items-center justify-between rounded-lg border border-red-200 bg-red-50/60 px-3 py-2.5"
+                class="flex items-center justify-between rounded-lg border border-red-200 oscuro:border-red-500/30 bg-red-50/60 oscuro:bg-red-500/15 px-3 py-2.5"
               >
                 <div class="flex items-center gap-2.5 min-w-0">
-                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white">
-                    <ExclamationTriangleIcon class="h-4 w-4 text-red-600" />
+                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-superficie-tarjeta">
+                    <ExclamationTriangleIcon class="h-4 w-4 text-red-600 oscuro:text-red-300" />
                   </div>
-                  <span class="text-sm font-medium text-gray-700">Sanción</span>
+                  <span class="text-sm font-medium text-texto-medio">Sanción</span>
                 </div>
-                <span class="text-sm font-semibold text-red-700 tabular-nums">${{ formatMoney(desglosePagoConfirmacion?.sancion || 0) }}</span>
+                <span class="text-sm font-semibold text-red-700 oscuro:text-red-300 tabular-nums">${{ formatMoney(desglosePagoConfirmacion?.sancion || 0) }}</span>
               </div>
 
               <!-- Actividades -->
               <div
                 v-if="(desglosePagoConfirmacion?.actividades || 0) > 0"
-                class="flex items-center justify-between rounded-lg border border-purple-200 bg-purple-50/60 px-3 py-2.5"
+                class="flex items-center justify-between rounded-lg border border-purple-200 oscuro:border-purple-500/30 bg-purple-50/60 oscuro:bg-purple-500/15 px-3 py-2.5"
               >
                 <div class="flex items-center gap-2.5 min-w-0">
-                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white">
-                    <CalendarDaysIcon class="h-4 w-4 text-purple-600" />
+                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-superficie-tarjeta">
+                    <CalendarDaysIcon class="h-4 w-4 text-purple-600 oscuro:text-purple-300" />
                   </div>
-                  <span class="text-sm font-medium text-gray-700">
+                  <span class="text-sm font-medium text-texto-medio">
                     Actividades
-                    <span class="text-xs text-gray-500">({{ desglosePagoConfirmacion?.cantidadActividades || 0 }})</span>
+                    <span class="text-xs text-texto-suave">({{ desglosePagoConfirmacion?.cantidadActividades || 0 }})</span>
                   </span>
                 </div>
-                <span class="text-sm font-semibold text-purple-700 tabular-nums">${{ formatMoney(desglosePagoConfirmacion?.actividades || 0) }}</span>
+                <span class="text-sm font-semibold text-purple-700 oscuro:text-purple-300 tabular-nums">${{ formatMoney(desglosePagoConfirmacion?.actividades || 0) }}</span>
               </div>
 
               <!-- Cuotas de préstamos -->
               <div
                 v-if="(desglosePagoConfirmacion?.cuotasPrestamos || 0) > 0"
-                class="overflow-hidden rounded-lg border border-blue-200 bg-blue-50/60"
+                class="overflow-hidden rounded-lg border border-blue-200 oscuro:border-blue-500/30 bg-blue-50/60 oscuro:bg-blue-500/15"
               >
                 <div class="flex items-center justify-between px-3 py-2.5">
                   <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white">
-                      <CurrencyDollarIcon class="h-4 w-4 text-blue-600" />
+                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-superficie-tarjeta">
+                      <CurrencyDollarIcon class="h-4 w-4 text-blue-600 oscuro:text-blue-300" />
                     </div>
-                    <span class="text-sm font-medium text-gray-700">
+                    <span class="text-sm font-medium text-texto-medio">
                       Cuotas de préstamos
-                      <span class="text-xs text-gray-500">({{ desglosePagoConfirmacion?.cantidadCuotasPrestamos || 0 }})</span>
+                      <span class="text-xs text-texto-suave">({{ desglosePagoConfirmacion?.cantidadCuotasPrestamos || 0 }})</span>
                     </span>
                   </div>
-                  <span class="text-sm font-semibold text-blue-700 tabular-nums">${{ formatMoney(desglosePagoConfirmacion?.cuotasPrestamos || 0) }}</span>
+                  <span class="text-sm font-semibold text-blue-700 oscuro:text-blue-300 tabular-nums">${{ formatMoney(desglosePagoConfirmacion?.cuotasPrestamos || 0) }}</span>
                 </div>
                 <div
                   v-if="desglosePagoConfirmacion?.cuotasPrestamosDetalle && desglosePagoConfirmacion.cuotasPrestamosDetalle.length > 0"
-                  class="space-y-1 border-t border-blue-200/80 bg-blue-100/40 px-3 py-2"
+                  class="space-y-1 border-t border-blue-200/80 oscuro:border-blue-500/30 bg-blue-100/40 oscuro:bg-blue-500/15 px-3 py-2"
                 >
                   <div
                     v-for="(cuotaPrestamo, index) in desglosePagoConfirmacion.cuotasPrestamosDetalle"
                     :key="index"
                     class="flex items-center justify-between text-xs"
                   >
-                    <span class="flex items-center gap-1.5 text-gray-600 min-w-0 truncate">
+                    <span class="flex items-center gap-1.5 text-texto-secundario min-w-0 truncate">
                       <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
                       <span class="truncate">{{ cuotaPrestamo.nombre }}</span>
                     </span>
-                    <span class="shrink-0 font-semibold text-blue-700 tabular-nums">${{ formatMoney(cuotaPrestamo.valor || 0) }}</span>
+                    <span class="shrink-0 font-semibold text-blue-700 oscuro:text-blue-300 tabular-nums">${{ formatMoney(cuotaPrestamo.valor || 0) }}</span>
                   </div>
                 </div>
               </div>
@@ -5023,15 +5123,15 @@
               <!-- 4×1000 (GMF) -->
               <div
                 v-if="(desglosePagoConfirmacion?.impuesto4x1000 || 0) > 0"
-                class="flex items-center justify-between rounded-lg border border-sky-200 bg-sky-50/60 px-3 py-2.5"
+                class="flex items-center justify-between rounded-lg border border-sky-200 oscuro:border-sky-500/30 bg-sky-50/60 oscuro:bg-sky-500/15 px-3 py-2.5"
               >
                 <div class="flex items-center gap-2.5 min-w-0">
-                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white">
-                    <BuildingOffice2Icon class="h-4 w-4 text-sky-700" />
+                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-superficie-tarjeta">
+                    <BuildingOffice2Icon class="h-4 w-4 text-sky-700 oscuro:text-sky-300" />
                   </div>
-                  <span class="text-sm font-medium text-gray-700">4×1000 (GMF)</span>
+                  <span class="text-sm font-medium text-texto-medio">4×1000 (GMF)</span>
                 </div>
-                <span class="text-sm font-semibold text-sky-700 tabular-nums">${{ formatMoney(desglosePagoConfirmacion?.impuesto4x1000 || 0) }}</span>
+                <span class="text-sm font-semibold text-sky-700 oscuro:text-sky-300 tabular-nums">${{ formatMoney(desglosePagoConfirmacion?.impuesto4x1000 || 0) }}</span>
               </div>
             </div>
           </div>
@@ -5044,7 +5144,7 @@
           aria-hidden="true"
         >
           <div
-            class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+            class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent"
             aria-hidden="true"
           />
           <div class="relative z-[2] flex justify-center px-5 pb-[max(0.85rem,env(safe-area-inset-bottom,0px))] pt-12">
@@ -5061,7 +5161,7 @@
       </div>
 
       <!-- Pie fijo confirmar pago (fuera del scroll) -->
-      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] pt-4 space-y-3 sm:px-6">
+      <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] pt-4 space-y-3 sm:px-6">
         <button
           type="button"
           class="btn-modal-primary w-full"
@@ -5087,14 +5187,15 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="cerrarConfirmacion"
     >
         <!-- Cabecera móvil: fila — icono | títulos | X -->
         <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
           <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
               <CheckCircleIcon class="h-5 w-5 text-[#1B5E37]" />
             </div>
@@ -5121,6 +5222,7 @@
           <div class="flex items-start px-4 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
             <div class="w-11 shrink-0" aria-hidden="true" />
             <div class="flex min-w-0 flex-1 flex-col items-center text-center">
+              <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
               <div class="flex h-[3.2rem] w-[3.2rem] shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
                 <CheckCircleIcon class="h-6 w-6 text-[#1B5E37]" />
               </div>
@@ -5146,7 +5248,7 @@
         <div
           ref="scrollComprobanteRef"
           @scroll="verificarScrollComprobante"
-          class="min-h-0 overflow-y-auto flex-1 p-3 sm:p-6 relative bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          class="min-h-0 overflow-y-auto flex-1 p-3 sm:p-6 relative bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch]"
         >
           <!-- Indicador de scroll animado -->
           <Transition
@@ -5159,12 +5261,11 @@
           >
             <div 
               v-if="mostrarIndicadorScroll"
-              class="absolute bottom-0 left-0 right-0 flex justify-center pb-3 pointer-events-none z-10"
-              style="background: linear-gradient(to top, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.85) 60%, transparent 100%); padding-top: 20px;"
+              class="absolute bottom-0 left-0 right-0 flex justify-center pb-3 pt-5 pointer-events-none z-10 bg-gradient-to-t from-superficie-tarjeta/98 via-superficie-tarjeta/85 via-60% to-transparent"
             >
               <div class="flex flex-col items-center gap-2">
-                <div class="flex flex-col items-center gap-1.5 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-emerald-100" style="animation: pulse-gentle 4s ease-in-out infinite;">
-                  <span class="text-xs text-emerald-600 font-semibold">Desliza para ver más</span>
+                <div class="flex flex-col items-center gap-1.5 px-4 py-2 bg-superficie-tarjeta/80 backdrop-blur-sm rounded-full shadow-lg border border-emerald-100 oscuro:border-emerald-500/30" style="animation: pulse-gentle 4s ease-in-out infinite;">
+                  <span class="text-xs text-emerald-600 oscuro:text-emerald-300 font-semibold">Desliza para ver más</span>
                   <ChevronDownIcon class="w-4 h-4 text-emerald-500" style="animation: bounce-subtle 1.5s ease-in-out infinite;" />
                 </div>
               </div>
@@ -5172,10 +5273,12 @@
           </Transition>
 
           <!-- Comprobante Visual (esto se convierte en imagen) -->
+          <!-- Se captura como imagen y se comparte: siempre en claro (skill modo oscuro, regla 6) -->
           <div 
             id="comprobante-pago"
             ref="comprobanteRef"
-            class="bg-white rounded-2xl overflow-hidden"
+            data-tema="claro"
+            class="bg-superficie-tarjeta rounded-2xl overflow-hidden"
             style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);"
           >
           <!-- Contenido del comprobante con fondo verdoso claro -->
@@ -5437,7 +5540,7 @@
 
         <!-- Pie fijo (fuera del scroll; skill natillerapp-modals): Descargar y WhatsApp siempre
              a la vista, sin tener que bajar hasta el final del comprobante. -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-3 sm:px-6 pt-3 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-3 sm:px-6 pt-3 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
             <div class="flex gap-3">
               <button
                 type="button"
@@ -5466,7 +5569,7 @@
       :show="!!modalModificacion"
       :z-index="50"
       overlay-class="fixed inset-0 z-50 flex items-center justify-center overflow-hidden overscroll-contain p-2 sm:p-4"
-      card-class="relative max-w-lg w-full bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border border-gray-200 max-h-[95vh] sm:max-h-[90vh] flex flex-col"
+      card-class="relative max-w-lg w-full bg-superficie-tarjeta rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border border-borde max-h-[95vh] sm:max-h-[90vh] flex flex-col"
       card-max-width="32rem"
       @close="requestCloseTopModal"
     >
@@ -5507,10 +5610,12 @@
              `overflow: hidden`) le deje encoger y aparezca la barra interna. -->
         <div class="min-h-0 overflow-y-auto overscroll-contain flex-1 p-3 sm:p-6 relative [-webkit-overflow-scrolling:touch]">
           <!-- Comprobante Visual -->
+          <!-- Se captura como imagen y se comparte: siempre en claro (skill modo oscuro, regla 6) -->
           <div 
             id="comprobante-modificacion"
             ref="comprobanteModificacionRef"
-            class="bg-white rounded-2xl overflow-hidden"
+            data-tema="claro"
+            class="bg-superficie-tarjeta rounded-2xl overflow-hidden"
             style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);"
           >
           <!-- Contenido del comprobante con fondo azulado claro -->
@@ -5664,7 +5769,7 @@
         </div>
 
         <!-- Footer fijo con botones de acción -->
-        <div class="border-t border-gray-200 bg-white p-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex-shrink-0 space-y-3">
+        <div class="border-t border-borde bg-superficie-tarjeta p-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex-shrink-0 space-y-3">
           <!-- Misma fila en móvil y escritorio; WhatsApp solo en móvil, como antes -->
           <div class="flex gap-3">
             <button
@@ -5687,7 +5792,7 @@
               <span>{{ preparandoComprobanteModificacion ? 'Preparando…' : 'WhatsApp' }}</span>
             </button>
           </div>
-          <p class="hidden sm:block text-xs text-gray-400 text-center">
+          <p class="hidden sm:block text-xs text-texto-tenue text-center">
             💡 En celular podrás enviar la imagen directamente a WhatsApp
           </p>
         </div>
@@ -5701,13 +5806,14 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="32rem"
       @close="requestCloseTopModal"
     >
       <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
         <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
             <ArrowDownTrayIcon class="h-5 w-5 text-[#1B5E37]" />
           </div>
@@ -5729,6 +5835,7 @@
         <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
           <div class="w-11 shrink-0" aria-hidden="true" />
           <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
               <ArrowDownTrayIcon class="h-6 w-6 text-[#1B5E37]" />
             </div>
@@ -5754,11 +5861,11 @@
                   type="checkbox" 
                   :checked="todasColumnasSeleccionadas"
                   @change="toggleTodasColumnas"
-                  class="w-5 h-5 rounded border-gray-300 text-natillera-500 focus:ring-natillera-500"
+                  class="w-5 h-5 rounded border-borde-fuerte text-natillera-500 focus:ring-natillera-500"
                 />
-                <span class="font-semibold text-gray-700">Seleccionar todas</span>
+                <span class="font-semibold text-texto-medio">Seleccionar todas</span>
               </label>
-              <span class="text-sm text-gray-500">
+              <span class="text-sm text-texto-suave">
                 {{ columnasSeleccionadas.length }} de {{ columnasDisponibles.length }} seleccionadas
               </span>
             </div>
@@ -5767,18 +5874,18 @@
               <label 
                 v-for="columna in columnasDisponibles" 
                 :key="columna.key"
-                class="flex items-center gap-3 p-3 rounded-xl border-2 transition-all cursor-pointer hover:bg-natillera-50 hover:border-natillera-200"
-                :class="columnasSeleccionadas.includes(columna.key) ? 'bg-natillera-50 border-natillera-300' : 'bg-white border-gray-200'"
+                class="flex items-center gap-3 p-3 rounded-xl border-2 transition-all cursor-pointer hover:bg-natillera-50 oscuro:hover:bg-natillera-500/15 hover:border-natillera-200 oscuro:hover:border-natillera-500/30"
+                :class="columnasSeleccionadas.includes(columna.key) ? 'bg-natillera-50 oscuro:bg-natillera-500/15 border-natillera-300 oscuro:border-natillera-500/30' : 'bg-superficie-tarjeta border-borde'"
               >
                 <input 
                   type="checkbox" 
                   :value="columna.key"
                   v-model="columnasSeleccionadas"
-                  class="w-5 h-5 rounded border-gray-300 text-natillera-500 focus:ring-natillera-500"
+                  class="w-5 h-5 rounded border-borde-fuerte text-natillera-500 focus:ring-natillera-500"
                 />
                 <div class="flex-1">
-                  <p class="font-medium text-gray-800">{{ columna.label }}</p>
-                  <p class="text-xs text-gray-500">{{ columna.description }}</p>
+                  <p class="font-medium text-texto">{{ columna.label }}</p>
+                  <p class="text-xs text-texto-suave">{{ columna.description }}</p>
                 </div>
                 <div 
                   v-if="columnasSeleccionadas.includes(columna.key)"
@@ -5792,7 +5899,7 @@
       </div>
 
         <!-- Footer con botones -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button 
               @click="requestCloseTopModal"
@@ -5823,14 +5930,15 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white my-0 sm:my-4"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta my-0 sm:my-4"
       card-max-width="28rem"
       @close="cerrarModalEditarCuota()"
     >
         <!-- Cabecera marca (móvil = fila) — skill natillerapp-modals -->
         <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
           <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
               <PencilIcon class="h-5 w-5 text-[#1B5E37]" />
             </div>
@@ -5855,6 +5963,7 @@
           <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
             <div class="w-11 shrink-0" aria-hidden="true" />
             <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
+              <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
               <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
                 <PencilIcon class="h-6 w-6 text-[#1B5E37]" />
               </div>
@@ -5875,16 +5984,16 @@
         </div>
 
         <!-- Cuerpo scrolleable + natiscroll (skill natillerapp-modals) -->
-        <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
+        <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-superficie-tarjeta">
         <div
           ref="scrollContainerEditarCuota"
           class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-6 space-y-6 overscroll-contain [-webkit-overflow-scrolling:touch]"
           @scroll.passive="programarNatiscrollModalEditarCuota"
         >
           <!-- Card de información del socio -->
-          <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-xl border border-gray-200 shadow-sm">
+          <div class="bg-gradient-to-br from-superficie-suave to-superficie-hundida p-3 rounded-xl border border-borde shadow-sm">
             <!-- Alerta de ajustes si existe -->
-            <div v-if="tieneAjuste(cuotaEditando)" class="mb-2 p-2 rounded-lg bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200 shadow-sm">
+            <div v-if="tieneAjuste(cuotaEditando)" class="mb-2 p-2 rounded-lg bg-gradient-to-r from-blue-50 oscuro:from-blue-500/15 via-indigo-50 oscuro:via-indigo-500/10 to-purple-50 oscuro:to-purple-500/10 border-2 border-blue-200 oscuro:border-blue-500/30 shadow-sm">
               <button
                 @click.stop="abrirModalHistorialAjustes(cuotaEditando)"
                 class="group w-full flex items-center justify-between gap-2 cursor-pointer"
@@ -5894,15 +6003,15 @@
                     <InformationCircleIcon class="w-4 h-4 text-white" />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <p class="text-xs font-bold text-blue-800 group-hover:text-blue-900 transition-colors">
+                    <p class="text-xs font-bold text-blue-800 oscuro:text-blue-300 group-hover:text-blue-900 oscuro:group-hover:text-blue-300 transition-colors">
                       Esta cuota tiene ajustes de valor
                     </p>
-                    <p class="text-xs text-blue-600 mt-0.5">
+                    <p class="text-xs text-blue-600 oscuro:text-blue-300 mt-0.5">
                       Haz clic para ver el historial completo de cambios
                     </p>
                   </div>
                 </div>
-                <ChevronRightIcon class="w-4 h-4 text-blue-600 group-hover:text-blue-700 group-hover:translate-x-1 transition-all flex-shrink-0" />
+                <ChevronRightIcon class="w-4 h-4 text-blue-600 oscuro:text-blue-300 group-hover:text-blue-700 oscuro:group-hover:text-blue-300 group-hover:translate-x-1 transition-all flex-shrink-0" />
               </button>
             </div>
             
@@ -5910,13 +6019,13 @@
               <img 
                 :src="getAvatarUrl(cuotaEditando?.socio_natillera?.socio?.nombre || cuotaEditando?.socio_natillera?.id, cuotaEditando?.socio_natillera?.socio?.avatar_seed, cuotaEditando?.socio_natillera?.socio?.avatar_style)" 
                 :alt="cuotaEditando?.socio_natillera?.socio?.nombre"
-                class="w-10 h-10 rounded-xl flex-shrink-0 border-2 border-natillera-200 shadow-md object-cover"
+                class="w-10 h-10 rounded-xl flex-shrink-0 border-2 border-natillera-200 oscuro:border-natillera-500/30 shadow-md object-cover"
               />
               <div class="flex-1 min-w-0">
-                <p class="font-semibold text-gray-800 truncate text-sm">
+                <p class="font-semibold text-texto truncate text-sm">
                   {{ cuotaEditando?.socio_natillera?.socio?.nombre || 'Socio' }}
                 </p>
-                <p class="text-xs text-gray-500 mt-0.5">
+                <p class="text-xs text-texto-suave mt-0.5">
                   {{ cuotaEditando?.descripcion && !tieneAjuste(cuotaEditando) ? cuotaEditando.descripcion : 'Cuota' }}
                 </p>
               </div>
@@ -5925,36 +6034,36 @@
             <!-- Cuota, Sanción y Actividades (solo cuando NO hay pago parcial) -->
             <div
               v-if="!tienePagoParcialCuota(cuotaEditando)"
-              class="mb-3 p-3 rounded-lg bg-gray-50 border border-gray-200 space-y-1.5"
+              class="mb-3 p-3 rounded-lg bg-superficie-suave border border-borde space-y-1.5"
             >
               <div class="flex items-center justify-between text-sm">
-                <span class="text-gray-600">Cuota</span>
-                <span class="font-semibold text-gray-800">${{ formatMoney(cuotaEditando?.valor_cuota || 0) }}</span>
+                <span class="text-texto-secundario">Cuota</span>
+                <span class="font-semibold text-texto">${{ formatMoney(cuotaEditando?.valor_cuota || 0) }}</span>
               </div>
               <div
                 v-if="(getSancionTotalCuota(cuotaEditando) || 0) > 0 || (cuotaEditando?.valor_pagado_sancion || 0) > 0"
                 class="flex items-center justify-between text-sm"
               >
-                <span class="text-gray-600">Sanción</span>
-                <span class="font-semibold text-red-600">${{ formatMoney(getSancionTotalCuota(cuotaEditando) || cuotaEditando?.valor_pagado_sancion || 0) }}</span>
+                <span class="text-texto-secundario">Sanción</span>
+                <span class="font-semibold text-red-600 oscuro:text-red-300">${{ formatMoney(getSancionTotalCuota(cuotaEditando) || cuotaEditando?.valor_pagado_sancion || 0) }}</span>
               </div>
               <div
                 v-if="getTotalActividadesPagadasEditar() > 0"
                 class="flex items-center justify-between text-sm"
               >
-                <span class="text-gray-600">{{ getTextoActividadesSocio(cuotaEditando) || 'Actividades' }}</span>
-                <span class="font-semibold text-purple-600">${{ formatMoney(getTotalActividadesPagadasEditar()) }}</span>
+                <span class="text-texto-secundario">{{ getTextoActividadesSocio(cuotaEditando) || 'Actividades' }}</span>
+                <span class="font-semibold text-purple-600 oscuro:text-purple-300">${{ formatMoney(getTotalActividadesPagadasEditar()) }}</span>
               </div>
               <div
                 v-if="getTotalCuotasPrestamosPagadasEditar() > 0"
                 class="flex items-center justify-between text-sm"
               >
-                <span class="text-gray-600">Cuotas de préstamos</span>
-                <span class="font-semibold text-blue-600">${{ formatMoney(getTotalCuotasPrestamosPagadasEditar()) }}</span>
+                <span class="text-texto-secundario">Cuotas de préstamos</span>
+                <span class="font-semibold text-blue-600 oscuro:text-blue-300">${{ formatMoney(getTotalCuotasPrestamosPagadasEditar()) }}</span>
               </div>
-              <div class="flex items-center justify-between text-base font-bold pt-2 mt-2 border-t border-gray-200">
-                <span class="text-gray-700">Total pagado</span>
-                <span class="text-natillera-700">${{ formatMoney((cuotaEditando?.valor_pagado || 0) + (cuotaEditando?.valor_pagado_sancion || 0) + getTotalActividadesPagadasEditar() + getTotalCuotasPrestamosPagadasEditar()) }}</span>
+              <div class="flex items-center justify-between text-base font-bold pt-2 mt-2 border-t border-borde">
+                <span class="text-texto-medio">Total pagado</span>
+                <span class="text-natillera-700 oscuro:text-natillera-300">${{ formatMoney((cuotaEditando?.valor_pagado || 0) + (cuotaEditando?.valor_pagado_sancion || 0) + getTotalActividadesPagadasEditar() + getTotalCuotasPrestamosPagadasEditar()) }}</span>
               </div>
             </div>
 
@@ -5963,22 +6072,22 @@
               v-if="tienePagoParcialCuota(cuotaEditando)"
               class="mb-3 space-y-2"
             >
-              <div class="p-3 rounded-lg bg-gray-50 border border-gray-200 space-y-2">
+              <div class="p-3 rounded-lg bg-superficie-suave border border-borde space-y-2">
                 <div class="flex items-center justify-between">
-                  <p class="text-xs text-gray-600">Total a pagar</p>
-                  <p class="font-bold text-gray-800 text-base">
+                  <p class="text-xs text-texto-secundario">Total a pagar</p>
+                  <p class="font-bold text-texto text-base">
                     ${{ formatMoney(Math.max(0, getTotalAPagarConActividades(cuotaEditando)) + (cuotaEditando?.valor_pagado || 0) + (cuotaEditando?.valor_pagado_sancion || 0) + getTotalActividadesPagadasEditar() + getTotalCuotasPrestamosPagadasEditar()) }}
                   </p>
                 </div>
                 <div class="flex items-center justify-between">
-                  <p class="text-xs text-gray-600">Pagado anteriormente</p>
-                  <p class="font-bold text-green-600 text-base">
+                  <p class="text-xs text-texto-secundario">Pagado anteriormente</p>
+                  <p class="font-bold text-green-600 oscuro:text-green-300 text-base">
                     ${{ formatMoney((cuotaEditando?.valor_pagado || 0) + (cuotaEditando?.valor_pagado_sancion || 0) + getTotalActividadesPagadasEditar() + getTotalCuotasPrestamosPagadasEditar()) }}
                   </p>
                 </div>
                 <div class="flex items-center justify-between">
-                  <p class="text-xs text-gray-600">Pago pendiente</p>
-                  <p :class="['font-bold text-base', cuotaEditando?.estado === 'mora' ? 'text-red-600' : 'text-orange-600']">
+                  <p class="text-xs text-texto-secundario">Pago pendiente</p>
+                  <p :class="['font-bold text-base', cuotaEditando?.estado === 'mora' ? 'text-red-600 oscuro:text-red-300' : 'text-orange-600 oscuro:text-orange-300']">
                     ${{ formatMoney(Math.max(0, getTotalAPagarConActividades(cuotaEditando))) }}
                   </p>
                 </div>
@@ -5989,7 +6098,7 @@
           <div class="space-y-5">
             <!-- Campo de tipo de pago -->
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <label class="block text-sm font-semibold text-texto-medio mb-2">
                 Tipo de pago <span class="text-red-500">*</span>
               </label>
               <div class="grid grid-cols-2 gap-2">
@@ -6000,8 +6109,8 @@
                   :class="[
                     'relative p-2.5 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02]',
                     formEditarCuota.tipo_pago === 'efectivo'
-                      ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20'
-                      : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                      ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 oscuro:from-natillera-500/15 to-emerald-50 oscuro:to-emerald-500/10 shadow-lg shadow-natillera-500/20'
+                      : 'border-borde bg-superficie-tarjeta hover:border-borde-fuerte hover:bg-superficie-suave'
                   ]"
                 >
                   <div class="flex flex-col items-center gap-1.5">
@@ -6010,7 +6119,7 @@
                       'w-9 h-9 rounded-full flex items-center justify-center transition-all',
                       formEditarCuota.tipo_pago === 'efectivo'
                         ? 'bg-gradient-to-br from-natillera-500 to-emerald-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-400'
+                        : 'bg-superficie-hundida text-texto-tenue'
                     ]">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -6020,8 +6129,8 @@
                     <span :class="[
                       'font-semibold text-xs',
                       formEditarCuota.tipo_pago === 'efectivo'
-                        ? 'text-natillera-700'
-                        : 'text-gray-600'
+                        ? 'text-natillera-700 oscuro:text-natillera-300'
+                        : 'text-texto-secundario'
                     ]">
                       Efectivo
                     </span>
@@ -6043,8 +6152,8 @@
                   :class="[
                     'relative p-2.5 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02]',
                     formEditarCuota.tipo_pago === 'transferencia'
-                      ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg shadow-blue-500/20'
-                      : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                      ? 'border-blue-500 bg-gradient-to-br from-blue-50 oscuro:from-blue-500/15 to-indigo-50 oscuro:to-indigo-500/10 shadow-lg shadow-blue-500/20'
+                      : 'border-borde bg-superficie-tarjeta hover:border-borde-fuerte hover:bg-superficie-suave'
                   ]"
                 >
                   <div class="flex flex-col items-center gap-1.5">
@@ -6053,7 +6162,7 @@
                       'w-9 h-9 rounded-full flex items-center justify-center transition-all',
                       formEditarCuota.tipo_pago === 'transferencia'
                         ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-400'
+                        : 'bg-superficie-hundida text-texto-tenue'
                     ]">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
@@ -6063,8 +6172,8 @@
                     <span :class="[
                       'font-semibold text-xs',
                       formEditarCuota.tipo_pago === 'transferencia'
-                        ? 'text-blue-700'
-                        : 'text-gray-600'
+                        ? 'text-blue-700 oscuro:text-blue-300'
+                        : 'text-texto-secundario'
                     ]">
                       Transferencia
                     </span>
@@ -6083,10 +6192,10 @@
 
             <!-- Campo de valor del pago -->
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <label class="block text-sm font-semibold text-texto-medio mb-2">
                 <span v-if="(cuotaEditando?.estadoReal || cuotaEditando?.estado) === 'pagada'">
                   Valor pagado total <span class="text-red-500">*</span>
-                  <span class="text-xs text-amber-600 font-normal ml-2">
+                  <span class="text-xs text-amber-600 oscuro:text-amber-300 font-normal ml-2">
                     (Al cambiar el valor se generará un nuevo código de comprobante)
                   </span>
                 </span>
@@ -6105,7 +6214,7 @@
                   @click="seleccionarValorPagoEditar"
                   type="text"
                   inputmode="decimal"
-                  class="w-full pl-12 pr-4 py-3.5 text-lg font-semibold text-gray-800 bg-white border-2 border-gray-200 rounded-xl focus:border-natillera-500 focus:ring-2 focus:ring-natillera-200 transition-all outline-none"
+                  class="w-full pl-12 pr-4 py-3.5 text-lg font-semibold text-texto bg-superficie-tarjeta border-2 border-borde rounded-xl focus:border-natillera-500 focus:ring-2 focus:ring-natillera-200 oscuro:focus:ring-natillera-500/30 transition-all outline-none"
                   placeholder="Ingresa el valor total pagado"
                   required
                 />
@@ -6115,19 +6224,19 @@
             <!-- 4×1000 opcional (solo transferencia): monto neto en el campo; el impuesto se suma si se marca -->
             <div
               v-if="formEditarCuota.tipo_pago === 'transferencia'"
-              class="rounded-xl border-2 border-gray-200 bg-gradient-to-br from-slate-50 to-gray-50 p-4 space-y-3 shadow-sm"
+              class="rounded-xl border-2 border-borde bg-gradient-to-br from-slate-50 oscuro:from-superficie-suave to-superficie-suave p-4 space-y-3 shadow-sm"
             >
               <label class="flex items-start gap-3 cursor-pointer select-none">
                 <input
                   v-model="formEditarCuota.aplicaImpuesto4x1000"
                   type="checkbox"
-                  class="mt-1 h-4 w-4 rounded border-gray-300 text-natillera-600 focus:ring-natillera-500"
+                  class="mt-1 h-4 w-4 rounded border-borde-fuerte text-natillera-600 oscuro:text-natillera-300 focus:ring-natillera-500"
                 />
                 <div class="flex-1 min-w-0 flex flex-wrap items-center justify-between gap-2">
-                  <span class="text-sm font-semibold text-gray-800">Aplica 4×1000</span>
+                  <span class="text-sm font-semibold text-texto">Aplica 4×1000</span>
                   <span
                     v-if="formEditarCuota.aplicaImpuesto4x1000 && (formEditarCuota.valor || 0) > 0"
-                    class="text-sm font-bold text-red-600 tabular-nums"
+                    class="text-sm font-bold text-red-600 oscuro:text-red-300 tabular-nums"
                   >
                     + ${{ formatMoney(calcularImpuesto4x1000(formEditarCuota.valor || 0)) }}
                   </span>
@@ -6135,32 +6244,32 @@
               </label>
               <p
                 v-if="formEditarCuota.aplicaImpuesto4x1000 && (formEditarCuota.valor || 0) > 0"
-                class="text-xs text-gray-600 pl-7"
+                class="text-xs text-texto-secundario pl-7"
               >
                 Se agregará ${{ formatMoney(calcularImpuesto4x1000(formEditarCuota.valor || 0)) }} sobre el valor ingresado
               </p>
-              <div class="flex items-center justify-between gap-2 pt-2 border-t border-gray-200">
-                <span class="text-sm font-semibold text-gray-700">Total a cobrar</span>
-                <span class="text-xl font-bold text-natillera-700 tabular-nums">${{ formatMoney(getTotalACobrarModalEditar()) }}</span>
+              <div class="flex items-center justify-between gap-2 pt-2 border-t border-borde">
+                <span class="text-sm font-semibold text-texto-medio">Total a cobrar</span>
+                <span class="text-xl font-bold text-natillera-700 oscuro:text-natillera-300 tabular-nums">${{ formatMoney(getTotalACobrarModalEditar()) }}</span>
               </div>
             </div>
 
             <!-- Desplegable de Actividades Pagadas -->
             <div 
               v-if="actividadesPagadasEditar.length > 0"
-              class="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm"
+              class="border border-borde rounded-xl overflow-hidden bg-superficie-tarjeta shadow-sm"
             >
               <button 
                 type="button"
                 @click="actividadesDesplegableAbiertoEditar = !actividadesDesplegableAbiertoEditar"
-                class="w-full flex items-center justify-between p-4 transition-all duration-200 bg-gradient-to-r from-green-50 via-emerald-50 to-green-50 hover:from-green-100 hover:via-emerald-100 hover:to-green-100"
+                class="w-full flex items-center justify-between p-4 transition-all duration-200 bg-gradient-to-r from-green-50 oscuro:from-green-500/15 via-emerald-50 oscuro:via-emerald-500/10 to-green-50 oscuro:to-green-500/10 hover:from-green-100 oscuro:hover:from-green-500/15 hover:via-emerald-100 oscuro:hover:via-emerald-500/10 hover:to-green-100 oscuro:hover:to-green-500/10"
               >
                 <div class="flex items-center gap-3 flex-1">
                   <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-md">
                     <SparklesIcon class="w-5 h-5 text-white" />
                   </div>
                   <div class="text-left flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-gray-800 flex items-center gap-2 flex-wrap">
+                    <p class="text-sm font-semibold text-texto flex items-center gap-2 flex-wrap">
                       <span>Actividades pagadas</span>
                       <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500 text-white shadow-md shadow-emerald-500/30 whitespace-nowrap">
                         {{ actividadesPagadasEditar.length }} {{ actividadesPagadasEditar.length === 1 ? 'Pagada' : 'Pagadas' }}
@@ -6169,7 +6278,7 @@
                   </div>
                 </div>
                 <ChevronDownIcon 
-                  :class="['w-5 h-5 text-gray-500 transition-transform duration-200', actividadesDesplegableAbiertoEditar ? 'rotate-180' : '']" 
+                  :class="['w-5 h-5 text-texto-suave transition-transform duration-200', actividadesDesplegableAbiertoEditar ? 'rotate-180' : '']" 
                 />
               </button>
               
@@ -6181,12 +6290,12 @@
                 leave-from-class="opacity-100 max-h-[1000px]"
                 leave-to-class="opacity-0 max-h-0"
               >
-                <div v-show="actividadesDesplegableAbiertoEditar" class="border-t border-gray-200 bg-white">
+                <div v-show="actividadesDesplegableAbiertoEditar" class="border-t border-borde bg-superficie-tarjeta">
                   <div class="p-2 space-y-2 max-h-64 overflow-y-auto">
                     <div
                       v-for="actividad in actividadesPagadasEditar"
                       :key="actividad.id"
-                      class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-2.5 border border-green-200"
+                      class="bg-gradient-to-br from-green-50 oscuro:from-green-500/15 to-emerald-50 oscuro:to-emerald-500/10 rounded-lg p-2.5 border border-green-200 oscuro:border-green-500/30"
                     >
                       <div class="flex items-center gap-2.5">
                         <div class="flex-shrink-0">
@@ -6198,16 +6307,16 @@
                         </div>
                         <div class="flex-1 min-w-0">
                           <div class="flex items-center justify-between gap-2 mb-1">
-                            <h4 class="font-semibold text-gray-800 truncate text-sm">
+                            <h4 class="font-semibold text-texto truncate text-sm">
                               {{ limpiarDescripcionActividad(actividad.actividad?.descripcion) }}
                             </h4>
-                            <p class="text-xs font-bold text-green-600 flex-shrink-0">
+                            <p class="text-xs font-bold text-green-600 oscuro:text-green-300 flex-shrink-0">
                               ${{ formatMoney(actividad.valor_pagado || 0) }}
                             </p>
                           </div>
                           <div class="flex items-center gap-3 text-xs">
-                            <span class="text-gray-500">
-                              Asignado: <span class="font-semibold text-gray-700">${{ formatMoney(actividad.valor_asignado || 0) }}</span>
+                            <span class="text-texto-suave">
+                              Asignado: <span class="font-semibold text-texto-medio">${{ formatMoney(actividad.valor_asignado || 0) }}</span>
                             </span>
                           </div>
                         </div>
@@ -6221,12 +6330,12 @@
             <!-- Desplegable de Cuotas de Préstamos Pagadas -->
             <div 
               v-if="cuotasPrestamosPagadasEditar.length > 0"
-              class="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm"
+              class="border border-borde rounded-xl overflow-hidden bg-superficie-tarjeta shadow-sm"
             >
               <button
                 type="button"
                 @click="cuotasPrestamosDesplegableAbiertoEditar = !cuotasPrestamosDesplegableAbiertoEditar"
-                class="w-full flex items-center justify-between p-4 transition-all duration-200 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 hover:from-blue-100 hover:via-indigo-100 hover:to-blue-100"
+                class="w-full flex items-center justify-between p-4 transition-all duration-200 bg-gradient-to-r from-blue-50 oscuro:from-blue-500/15 via-indigo-50 oscuro:via-indigo-500/10 to-blue-50 oscuro:to-blue-500/10 hover:from-blue-100 oscuro:hover:from-blue-500/15 hover:via-indigo-100 oscuro:hover:via-indigo-500/10 hover:to-blue-100 oscuro:hover:to-blue-500/10"
               >
                 <div class="flex items-center gap-3 flex-1">
                   <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
@@ -6235,7 +6344,7 @@
                     </svg>
                   </div>
                   <div class="text-left flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-gray-800 flex items-center gap-2 flex-wrap">
+                    <p class="text-sm font-semibold text-texto flex items-center gap-2 flex-wrap">
                       <span>Cuotas de préstamos pagadas</span>
                       <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500 text-white shadow-md shadow-emerald-500/30 whitespace-nowrap">
                         {{ cuotasPrestamosPagadasEditar.length }} {{ cuotasPrestamosPagadasEditar.length === 1 ? 'Pagada' : 'Pagadas' }}
@@ -6244,7 +6353,7 @@
                   </div>
                 </div>
                 <ChevronDownIcon 
-                  :class="['w-5 h-5 text-gray-500 transition-transform duration-200', cuotasPrestamosDesplegableAbiertoEditar ? 'rotate-180' : '']" 
+                  :class="['w-5 h-5 text-texto-suave transition-transform duration-200', cuotasPrestamosDesplegableAbiertoEditar ? 'rotate-180' : '']" 
                 />
               </button>
               
@@ -6256,12 +6365,12 @@
                 leave-from-class="opacity-100 max-h-[1000px]"
                 leave-to-class="opacity-0 max-h-0"
               >
-                <div v-show="cuotasPrestamosDesplegableAbiertoEditar" class="border-t border-gray-200 bg-white">
+                <div v-show="cuotasPrestamosDesplegableAbiertoEditar" class="border-t border-borde bg-superficie-tarjeta">
                   <div class="p-2 space-y-2 max-h-64 overflow-y-auto">
                     <div
                       v-for="cuotaPrestamo in cuotasPrestamosPagadasEditar"
                       :key="cuotaPrestamo.id"
-                      class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-2.5 border border-blue-200"
+                      class="bg-gradient-to-br from-blue-50 oscuro:from-blue-500/15 to-indigo-50 oscuro:to-indigo-500/10 rounded-lg p-2.5 border border-blue-200 oscuro:border-blue-500/30"
                     >
                       <div class="flex items-center gap-2.5">
                         <div class="flex-shrink-0">
@@ -6273,16 +6382,16 @@
                         </div>
                         <div class="flex-1 min-w-0">
                           <div class="flex items-center justify-between gap-2 mb-1">
-                            <h4 class="font-semibold text-gray-800 truncate text-sm">
+                            <h4 class="font-semibold text-texto truncate text-sm">
                               Cuota #{{ cuotaPrestamo.numero_cuota }} - {{ formatDate(cuotaPrestamo.fecha_proyectada) }}
                             </h4>
-                            <p class="text-xs font-bold text-blue-600 flex-shrink-0">
+                            <p class="text-xs font-bold text-blue-600 oscuro:text-blue-300 flex-shrink-0">
                               ${{ formatMoney(cuotaPrestamo.valor_pagado || 0) }}
                             </p>
                           </div>
                           <div class="flex items-center gap-3 text-xs">
-                            <span class="text-gray-500">
-                              Valor cuota: <span class="font-semibold text-gray-700">${{ formatMoney(cuotaPrestamo.valor_cuota || 0) }}</span>
+                            <span class="text-texto-suave">
+                              Valor cuota: <span class="font-semibold text-texto-medio">${{ formatMoney(cuotaPrestamo.valor_cuota || 0) }}</span>
                             </span>
                           </div>
                         </div>
@@ -6301,7 +6410,7 @@
             class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
             aria-hidden="true"
           >
-            <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent" />
+            <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent" />
             <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
               <div class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3">
                 <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
@@ -6314,7 +6423,7 @@
         </div>
 
         <!-- Footer con botones (fijo, pegados al fondo del modal) -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white p-4 pb-[calc(max(1rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta p-4 pb-[calc(max(1rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button 
               type="button"
@@ -6360,7 +6469,9 @@
       :cuotas-iniciales="comprobanteVariasDatos?.cuotaIds || []"
       :historial-ids="comprobanteVariasDatos?.historialIds || []"
       :natillera-nombre="natilleraNombre || natillerasStore.natilleraActual?.nombre || ''"
-      @cerrar="modalComprobanteVarias = false"
+      :mostrar-volver="!!comprobanteVariasDatos?.desdeSocio"
+      @volver="requestCloseTopModal"
+      @cerrar="cerrarComprobanteVarias"
     />
     <!--
       Pago rápido: al elegir un socio en «Registrar pago» salen todas sus cuotas con saldo, de
@@ -6394,7 +6505,7 @@
       :show="!!modalDetalleSocio"
       :z-index="50"
       overlay-class="fixed inset-0 z-50 flex items-center justify-center overflow-hidden overscroll-contain p-4"
-      card-class="relative max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0"
+      card-class="relative max-w-md w-full bg-superficie-tarjeta rounded-3xl shadow-2xl overflow-hidden border border-borde max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0"
       card-max-width="28rem"
       @close="requestCloseTopModal"
     >
@@ -6434,27 +6545,27 @@
         <!-- Contenido -->
         <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 space-y-5 [-webkit-overflow-scrolling:touch]">
           <!-- Valor de la cuota -->
-          <div class="relative bg-gradient-to-br from-natillera-50 to-emerald-50 p-5 rounded-xl border border-natillera-200 shadow-sm">
+          <div class="relative bg-gradient-to-br from-natillera-50 oscuro:from-natillera-500/15 to-emerald-50 oscuro:to-emerald-500/10 p-5 rounded-xl border border-natillera-200 oscuro:border-natillera-500/30 shadow-sm">
             <div class="flex items-center gap-3 mb-2">
               <div class="w-10 h-10 bg-gradient-to-br from-natillera-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
                 <CurrencyDollarIcon class="w-5 h-5 text-white" />
               </div>
               <div>
-                <p class="text-xs text-gray-500 font-medium">Valor de la Cuota</p>
-                <p class="text-2xl font-bold text-natillera-700">${{ formatMoney(socioSeleccionado?.valor_cuota_individual) }}</p>
+                <p class="text-xs text-texto-suave font-medium">Valor de la Cuota</p>
+                <p class="text-2xl font-bold text-natillera-700 oscuro:text-natillera-300">${{ formatMoney(socioSeleccionado?.valor_cuota_individual) }}</p>
               </div>
             </div>
           </div>
 
           <!-- Periodicidad -->
-          <div class="relative p-5 rounded-xl border shadow-sm" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200' : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200'">
+          <div class="relative p-5 rounded-xl border shadow-sm" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'bg-gradient-to-br from-purple-50 oscuro:from-purple-500/15 to-indigo-50 oscuro:to-indigo-500/10 border-purple-200 oscuro:border-purple-500/30' : 'bg-gradient-to-br from-superficie-suave to-superficie-hundida border-borde'">
             <div class="flex items-center gap-3 mb-2">
               <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-md" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'bg-gradient-to-br from-purple-500 to-indigo-600' : 'bg-gradient-to-br from-gray-400 to-gray-500'">
                 <span class="text-xl">{{ socioSeleccionado?.periodicidad === 'quincenal' ? '🗓️' : '📅' }}</span>
               </div>
               <div>
-                <p class="text-xs text-gray-500 font-medium">Periodicidad</p>
-                <p class="text-xl font-bold" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'text-purple-700' : 'text-blue-700'">
+                <p class="text-xs text-texto-suave font-medium">Periodicidad</p>
+                <p class="text-xl font-bold" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'text-purple-700 oscuro:text-purple-300' : 'text-blue-700 oscuro:text-blue-300'">
                   {{ socioSeleccionado?.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}
                 </p>
               </div>
@@ -6462,14 +6573,14 @@
           </div>
 
           <!-- Teléfono -->
-          <div class="relative bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200 shadow-sm">
+          <div class="relative bg-gradient-to-br from-superficie-suave to-superficie-hundida p-5 rounded-xl border border-borde shadow-sm">
             <div class="flex items-center gap-3 mb-2">
               <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
                 <PhoneIcon class="w-5 h-5 text-white" />
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-xs text-gray-500 font-medium">Teléfono / WhatsApp</p>
-                <p class="text-lg font-bold text-gray-800 truncate">{{ socioSeleccionado?.socio?.telefono || 'No registrado' }}</p>
+                <p class="text-xs text-texto-suave font-medium">Teléfono / WhatsApp</p>
+                <p class="text-lg font-bold text-texto truncate">{{ socioSeleccionado?.socio?.telefono || 'No registrado' }}</p>
               </div>
               <a 
                 v-if="socioSeleccionado?.socio?.telefono"
@@ -6484,14 +6595,14 @@
           </div>
 
           <!-- Mensaje para más información -->
-          <div class="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6 rounded-xl border-2 border-blue-200 shadow-sm">
+          <div class="relative bg-gradient-to-br from-blue-50 oscuro:from-blue-500/15 via-indigo-50 oscuro:via-indigo-500/10 to-purple-50 oscuro:to-purple-500/10 p-6 rounded-xl border-2 border-blue-200 oscuro:border-blue-500/30 shadow-sm">
             <div class="flex items-start gap-3">
               <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
                 <UsersIcon class="w-6 h-6 text-white" />
               </div>
               <div class="flex-1">
-                <p class="font-semibold text-gray-800 mb-2">¿Necesitas más información?</p>
-                <p class="text-sm text-gray-600 mb-4">
+                <p class="font-semibold text-texto mb-2">¿Necesitas más información?</p>
+                <p class="text-sm text-texto-secundario mb-4">
                   Accede a la sección completa de socios para ver el historial de pagos, cuotas pendientes y toda la información detallada.
                 </p>
                 <router-link 
@@ -6509,11 +6620,11 @@
         </div>
 
         <!-- Footer -->
-        <div class="flex-shrink-0 px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] border-t border-gray-200 bg-gray-50">
+        <div class="flex-shrink-0 px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] border-t border-borde bg-superficie-suave">
           <button 
             type="button"
             @click="requestCloseTopModal"
-            class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+            class="w-full px-4 py-3 bg-superficie-tarjeta border-2 border-borde-fuerte text-texto-medio font-semibold rounded-xl hover:bg-superficie-suave transition-all"
           >
             Cerrar
           </button>
@@ -6527,7 +6638,7 @@
     :z-index="50"
     align="bottom"
     overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center overflow-hidden overscroll-contain p-0 sm:p-4"
-    card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-3xl sm:rounded-3xl border border-gray-200 bg-white shadow-2xl overflow-hidden"
+    card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-3xl sm:rounded-3xl border border-borde bg-superficie-tarjeta shadow-2xl overflow-hidden"
     card-max-width="32rem"
     @close="requestCloseTopModal"
   >
@@ -6567,7 +6678,7 @@
         <!-- Contenido: `min-h-0` deja que el flex-column de la tarjeta lo encoja y haga scroll -->
         <div class="min-h-0 overflow-y-auto overscroll-contain flex-1 p-6 space-y-4 [-webkit-overflow-scrolling:touch]">
           <!-- Recaudado en Efectivo -->
-          <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border-2 border-green-200 hover:shadow-lg transition-shadow">
+          <div class="bg-gradient-to-br from-green-50 oscuro:from-green-500/15 to-emerald-50 oscuro:to-emerald-500/10 rounded-xl p-5 border-2 border-green-200 oscuro:border-green-500/30 hover:shadow-lg transition-shadow">
             <div class="flex items-center justify-between mb-2">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
@@ -6576,18 +6687,18 @@
                   </svg>
                 </div>
                 <div>
-                  <p class="text-gray-700 text-sm font-semibold">EFECTIVO</p>
-                  <p class="text-gray-500 text-xs">Pagos realizados en efectivo</p>
+                  <p class="text-texto-medio text-sm font-semibold">EFECTIVO</p>
+                  <p class="text-texto-suave text-xs">Pagos realizados en efectivo</p>
                 </div>
               </div>
             </div>
-            <p class="text-green-700 text-2xl sm:text-3xl font-extrabold mt-3">
+            <p class="text-green-700 oscuro:text-green-300 text-2xl sm:text-3xl font-extrabold mt-3">
               ${{ formatMoney(estadisticasRecaudacion.totalRecaudadoEfectivo || 0) }}
             </p>
           </div>
           
           <!-- Recaudado en Transferencia -->
-          <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-5 border-2 border-blue-200 hover:shadow-lg transition-shadow">
+          <div class="bg-gradient-to-br from-blue-50 oscuro:from-blue-500/15 to-cyan-50 oscuro:to-cyan-500/10 rounded-xl p-5 border-2 border-blue-200 oscuro:border-blue-500/30 hover:shadow-lg transition-shadow">
             <div class="flex items-center justify-between mb-2">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
@@ -6596,21 +6707,21 @@
                   </svg>
                 </div>
                 <div>
-                  <p class="text-gray-700 text-sm font-semibold">TRANSFERENCIA</p>
-                  <p class="text-gray-500 text-xs">Pagos realizados por transferencia</p>
+                  <p class="text-texto-medio text-sm font-semibold">TRANSFERENCIA</p>
+                  <p class="text-texto-suave text-xs">Pagos realizados por transferencia</p>
                 </div>
               </div>
             </div>
-            <p class="text-blue-700 text-2xl sm:text-3xl font-extrabold mt-3">
+            <p class="text-blue-700 oscuro:text-blue-300 text-2xl sm:text-3xl font-extrabold mt-3">
               ${{ formatMoney(estadisticasRecaudacion.totalRecaudadoTransferencia || 0) }}
             </p>
           </div>
           
           <!-- Total Recaudado -->
-          <div class="bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-100 rounded-xl p-5 border-2 border-purple-300 relative overflow-hidden">
+          <div class="bg-gradient-to-br from-purple-50 oscuro:from-purple-500/15 via-indigo-50 oscuro:via-indigo-500/10 to-purple-100 oscuro:to-purple-500/10 rounded-xl p-5 border-2 border-purple-300 oscuro:border-purple-500/30 relative overflow-hidden">
             <!-- Efectos decorativos -->
-            <div class="absolute top-0 right-0 w-24 h-24 bg-purple-200/30 rounded-full -mr-12 -mt-12 blur-2xl"></div>
-            <div class="absolute bottom-0 left-0 w-20 h-20 bg-indigo-200/30 rounded-full -ml-10 -mb-10 blur-xl"></div>
+            <div class="absolute top-0 right-0 w-24 h-24 bg-purple-200/30 oscuro:bg-purple-500/25 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+            <div class="absolute bottom-0 left-0 w-20 h-20 bg-indigo-200/30 oscuro:bg-indigo-500/25 rounded-full -ml-10 -mb-10 blur-xl"></div>
             
             <div class="relative z-10">
               <div class="flex items-center justify-between mb-2">
@@ -6621,26 +6732,26 @@
                     </svg>
                   </div>
                   <div>
-                    <p class="text-gray-700 text-sm font-semibold">TOTAL RECAUDADO</p>
-                    <p class="text-gray-500 text-xs">Suma de todos los pagos</p>
+                    <p class="text-texto-medio text-sm font-semibold">TOTAL RECAUDADO</p>
+                    <p class="text-texto-suave text-xs">Suma de todos los pagos</p>
                   </div>
                 </div>
               </div>
-              <p class="text-purple-700 text-2xl sm:text-3xl font-extrabold mt-3">
+              <p class="text-purple-700 oscuro:text-purple-300 text-2xl sm:text-3xl font-extrabold mt-3">
                 ${{ formatMoney((estadisticasRecaudacion.totalRecaudadoEfectivo || 0) + (estadisticasRecaudacion.totalRecaudadoTransferencia || 0)) }}
               </p>
               
               <!-- Porcentajes -->
-              <div class="mt-4 pt-4 border-t border-purple-200 space-y-2">
+              <div class="mt-4 pt-4 border-t border-purple-200 oscuro:border-purple-500/30 space-y-2">
                 <div class="flex items-center justify-between text-sm">
-                  <span class="text-gray-600">Efectivo:</span>
-                  <span class="font-semibold text-green-700">
+                  <span class="text-texto-secundario">Efectivo:</span>
+                  <span class="font-semibold text-green-700 oscuro:text-green-300">
                     {{ estadisticasRecaudacion.totalAportado > 0 ? (((estadisticasRecaudacion.totalRecaudadoEfectivo || 0) / estadisticasRecaudacion.totalAportado) * 100).toFixed(1) : 0 }}%
                   </span>
                 </div>
                 <div class="flex items-center justify-between text-sm">
-                  <span class="text-gray-600">Transferencia:</span>
-                  <span class="font-semibold text-blue-700">
+                  <span class="text-texto-secundario">Transferencia:</span>
+                  <span class="font-semibold text-blue-700 oscuro:text-blue-300">
                     {{ estadisticasRecaudacion.totalAportado > 0 ? (((estadisticasRecaudacion.totalRecaudadoTransferencia || 0) / estadisticasRecaudacion.totalAportado) * 100).toFixed(1) : 0 }}%
                   </span>
                 </div>
@@ -6650,7 +6761,7 @@
         </div>
 
         <!-- Footer: hoja inferior en móvil, así que suma la safe-area y lo que tapa la barra de Safari -->
-        <div class="border-t border-gray-200 bg-gray-50 px-4 pt-4 pb-[calc(max(1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex-shrink-0">
+        <div class="border-t border-borde bg-superficie-suave px-4 pt-4 pb-[calc(max(1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex-shrink-0">
           <button 
             @click="requestCloseTopModal"
             class="w-full btn-primary bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
@@ -6714,7 +6825,7 @@ import {
   XMarkIcon,
   PencilIcon,
   PencilSquareIcon,
-  DocumentDuplicateIcon,
+  ClipboardDocumentListIcon,
   DocumentTextIcon,
   UserIcon,
   PhoneIcon,
@@ -6733,7 +6844,8 @@ import {
 } from '@heroicons/vue/24/outline'
 import { UserIcon as UserIconSolid } from '@heroicons/vue/24/solid'
 import DatePicker from '../../components/DatePicker.vue'
-import { getCurrentDateISO, fechaPagoAIso } from '../../utils/formatDate'
+import { getCurrentDateISO, fechaPagoAIso, parseDateLocal } from '../../utils/formatDate'
+import { calcularMoraCuota, reglasMoraNatillera } from '../../composables/usePagoPrestamo'
 
 import BackButton from '../../components/BackButton.vue'
 import CuotasPageSkeleton from '../../components/CuotasPageSkeleton.vue'
@@ -7097,22 +7209,22 @@ function getConceptosCuota(cuota) {
   agregar('Cuota',
     (cuota.valor_cuota || 0) - (cuota.valor_pagado || 0),
     cuota.valor_pagado,
-    'bg-[#1B5E37]', 'text-[#1B5E37]', 'cuota')
+    'bg-[#1B5E37]', 'text-marca-tinta', 'cuota')
 
   agregar('Multa',
     getSancionCuota(cuota),
     cuota.valor_pagado_sancion,
-    'bg-red-700', 'text-red-700', 'multa')
+    'bg-red-700', 'text-red-700 oscuro:text-red-300', 'multa')
 
   agregar(getTextoActividadesSocio(cuota) || 'Actividades',
     getActividadesPendientesSocio(cuota),
     getActividadesInfoSocio(cuota)?.pagadas,
-    'bg-purple-800', 'text-purple-800', 'actividades')
+    'bg-purple-800', 'text-purple-800 oscuro:text-purple-300', 'actividades')
 
   agregar('Préstamo',
     getTotalCuotasPrestamosPendientesSocioSync(cuota),
     getTotalAbonadoPrestamosCuotaSocioSync(cuota) || getTotalCuotasPrestamosPagadasSocioSync(cuota),
-    'bg-blue-800', 'text-blue-800', 'prestamo')
+    'bg-blue-800', 'text-blue-800 oscuro:text-blue-300', 'prestamo')
 
   return conceptos
 }
@@ -8094,6 +8206,12 @@ const { requestCloseTop: requestCloseTopModal, replaceTop: replaceTopModal, hasO
       if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
     }
   },
+  comprobanteVarias: {
+    isOpen: computed(() => !!modalComprobanteVarias.value),
+    hide: () => { modalComprobanteVarias.value = false },
+    show: () => { modalComprobanteVarias.value = true },
+    dismiss: () => { modalComprobanteVarias.value = false }
+  },
   desgloseRecaudacion: {
     isOpen: computed(() => !!modalDesgloseRecaudacion.value),
     hide: () => { modalDesgloseRecaudacion.value = false },
@@ -8469,10 +8587,28 @@ const cuotasFiltradas = computed(() => {
   return filtradas
 })
 
-// Socios únicos con al menos una cuota en el mes (misma exclusión que la lista principal)
+/*
+ * Cuotas que cuentan para «Registrar pago»: las del mes que se ve y las de meses
+ * anteriores. Antes solo las del mes, y un socio con un pago parcial (o en mora) de un
+ * mes anterior y el mes actual al día no salía en la lista: no había cómo cobrarle el
+ * resto. Las de meses posteriores no cuentan, o saldrían todos los socios.
+ */
+const cuotasHastaMesVista = computed(() => {
+  if (!mesSeleccionado.value) return cuotasStore.cuotas
+  const anio = calcularAnioMes(mesSeleccionado.value, mesInicio.value, mesFin.value, anioNatillera.value)
+  const tope = anio * 12 + mesSeleccionado.value
+  return cuotasStore.cuotas.filter((c) => {
+    const a = Number(c.anio)
+    const m = Number(c.mes)
+    if (!a || !m) return true
+    return a * 12 + m <= tope
+  })
+})
+
+// Socios únicos con al menos una cuota hasta el mes que se ve (misma exclusión que la lista principal)
 const sociosParaRegistrarPago = computed(() => {
   const seen = new Map()
-  for (const c of cuotasMesActual.value) {
+  for (const c of cuotasHastaMesVista.value) {
     const sid = c.socio_natillera_id
     if (!sid || sociosInactivosSinPagoCompletoIds.value.has(sid)) continue
     if (!seen.has(sid)) {
@@ -8623,7 +8759,7 @@ const cuotasAgrupadasPorSocio = computed(() => {
       chips.push({
         etiqueta: 'Multa',
         valor: multa,
-        clase: debe ? 'bg-red-50 text-red-800 ring-red-200/70' : 'bg-emerald-50 text-emerald-700 ring-emerald-200/70',
+        clase: debe ? 'bg-red-50 oscuro:bg-red-500/15 text-red-800 oscuro:text-red-300 ring-red-200/70 oscuro:ring-red-500/30' : 'bg-emerald-50 oscuro:bg-emerald-500/15 text-emerald-700 oscuro:text-emerald-300 ring-emerald-200/70 oscuro:ring-emerald-500/30',
         dot: debe ? 'bg-red-500' : 'bg-emerald-500',
       })
     }
@@ -8642,7 +8778,7 @@ const cuotasAgrupadasPorSocio = computed(() => {
       chips.push({
         etiqueta: nombre,
         valor: actividades,
-        clase: debe ? 'bg-purple-50 text-purple-800 ring-purple-200/70' : 'bg-emerald-50 text-emerald-700 ring-emerald-200/70',
+        clase: debe ? 'bg-purple-50 oscuro:bg-purple-500/15 text-purple-800 oscuro:text-purple-300 ring-purple-200/70 oscuro:ring-purple-500/30' : 'bg-emerald-50 oscuro:bg-emerald-500/15 text-emerald-700 oscuro:text-emerald-300 ring-emerald-200/70 oscuro:ring-emerald-500/30',
         dot: debe ? 'bg-purple-500' : 'bg-emerald-500',
       })
     }
@@ -8654,7 +8790,7 @@ const cuotasAgrupadasPorSocio = computed(() => {
       chips.push({
         etiqueta: 'Préstamo',
         valor: prestamo,
-        clase: debe ? 'bg-blue-50 text-blue-800 ring-blue-200/70' : 'bg-emerald-50 text-emerald-700 ring-emerald-200/70',
+        clase: debe ? 'bg-blue-50 oscuro:bg-blue-500/15 text-blue-800 oscuro:text-blue-300 ring-blue-200/70 oscuro:ring-blue-500/30' : 'bg-emerald-50 oscuro:bg-emerald-500/15 text-emerald-700 oscuro:text-emerald-300 ring-emerald-200/70 oscuro:ring-emerald-500/30',
         dot: debe ? 'bg-blue-500' : 'bg-emerald-500',
       })
     }
@@ -9487,6 +9623,61 @@ function tienePagoParcialCuota(cuota) {
   return totalPagado > 0 && pendiente > 0
 }
 
+/** Estado visual de una tarjeta de cuota en la modal del socio: el mismo orden que su badge. */
+function tonoCuota(cuota) {
+  const estado = cuota.estadoReal || cuota.estado
+  if (estado === 'pagada') return 'pagada'
+  if (estado === 'mora') return 'mora'
+  if (tienePagoParcialCuota(cuota)) return 'parcial'
+  if (estado === 'programada') return 'programada'
+  return 'pendiente'
+}
+
+/** Resalte del renglón «Total» de cada cuota: verde si está saldada; si no, el de su estado. */
+function resalteTotalCuota(cuota) {
+  if (getTotalAPagarConActividadesSocio(cuota) <= 0) return 'pagada'
+  return tonoCuota(cuota)
+}
+
+/* Clases completas, sin interpolar, para que Tailwind las encuentre al compilar. */
+const RESALTE_TOTAL = {
+  pagada: {
+    fila: 'bg-green-100/70 oscuro:bg-green-500/15 border-l-green-600 oscuro:border-l-green-400',
+    texto: 'text-green-800 oscuro:text-green-300',
+    puntos: 'border-green-700/30 oscuro:border-green-300/30'
+  },
+  mora: {
+    fila: 'bg-red-100/70 oscuro:bg-red-500/15 border-l-red-600 oscuro:border-l-red-400',
+    texto: 'text-red-800 oscuro:text-red-300',
+    puntos: 'border-red-700/30 oscuro:border-red-300/30'
+  },
+  parcial: {
+    fila: 'bg-violet-100/70 oscuro:bg-violet-500/15 border-l-violet-600 oscuro:border-l-violet-400',
+    texto: 'text-violet-800 oscuro:text-violet-300',
+    puntos: 'border-violet-700/30 oscuro:border-violet-300/30'
+  },
+  programada: {
+    fila: 'bg-slate-200/70 oscuro:bg-superficie-hundida border-l-slate-500 oscuro:border-l-slate-400',
+    texto: 'text-slate-800 oscuro:text-texto-fuerte',
+    puntos: 'border-slate-700/30 oscuro:border-borde-fuerte'
+  },
+  pendiente: {
+    fila: 'bg-orange-100/70 oscuro:bg-orange-500/15 border-l-orange-600 oscuro:border-l-orange-400',
+    texto: 'text-orange-800 oscuro:text-orange-300',
+    puntos: 'border-orange-700/30 oscuro:border-orange-300/30'
+  }
+}
+
+/* Franja lateral y círculo numerado de cada tarjeta. Clases completas, sin interpolar,
+   para que Tailwind las encuentre al compilar. */
+const ACENTO_CUOTA = {
+  pagada: { franja: 'border-l-green-500', numero: 'bg-green-600' },
+  mora: { franja: 'border-l-red-500', numero: 'bg-red-600' },
+  parcial: { franja: 'border-l-violet-500', numero: 'bg-violet-600' },
+  programada: { franja: 'border-l-slate-400', numero: 'bg-slate-500' },
+  pendiente: { franja: 'border-l-orange-500', numero: 'bg-orange-500' }
+}
+
 /** Cuota que cuenta como pendiente / en mora / con saldo (actividades o préstamos) para el selector registrar pago. */
 function cuotaEntraEnFiltroPendientesMoraRegistrarPago(cuota) {
   if (!cuota) return false
@@ -9498,7 +9689,7 @@ function cuotaEntraEnFiltroPendientesMoraRegistrarPago(cuota) {
 
 function socioTieneCuotaPendienteOMoraRegistrarPago(socioNatilleraId) {
   if (!socioNatilleraId) return false
-  for (const c of cuotasMesActual.value) {
+  for (const c of cuotasHastaMesVista.value) {
     if (c.socio_natillera_id !== socioNatilleraId) continue
     if (sociosInactivosSinPagoCompletoIds.value.has(c.socio_natillera_id)) continue
     if (cuotaEntraEnFiltroPendientesMoraRegistrarPago(c)) return true
@@ -11629,9 +11820,20 @@ function abrirComprobanteVariasDelSocio() {
     socioNatilleraId: sel.socioNatilleraId,
     nombre: sel.socio?.nombre || '',
     telefono: sel.socio?.telefono || '',
-    cuotaIds: []
+    cuotaIds: [],
+    desdeSocio: true
   }
+  // No se cierra la del socio: useModalStack la oculta y la apila, y «←» o el «atrás»
+  // del sistema la devuelven tal como estaba.
   modalComprobanteVarias.value = true
+}
+
+/** X del comprobante: cierra todo, también la modal del socio que quedó apilada debajo. */
+function cerrarComprobanteVarias() {
+  const desdeSocio = !!comprobanteVariasDatos.value?.desdeSocio
+  modalComprobanteVarias.value = false
+  if (!desdeSocio) return
+  nextTick(() => { if (modalCuotasSocio.value) cerrarModalCuotasSocio() })
 }
 
 function volverPasoSociosRegistrarPago() {
@@ -12045,11 +12247,13 @@ async function registrarPagosCuotasPrestamos(valorTotalCuotasPrestamos, tipoPago
       valor_pagado_efectivo_actual: parseFloat(cp.valor_pagado_efectivo) || 0,
       valor_pagado_transferencia_actual: parseFloat(cp.valor_pagado_transferencia) || 0,
       valor_pendiente: cp.valor_pendiente,
+      mora: moraCuotaPrestamo(cp),
       fecha_proyectada: cp.fecha_proyectada
     }))
 
   return pagarCuotasPrestamoDeCuota({
     cuotaId: cuotaSeleccionada.value.id,
+    natilleraId: id,
     nombreSocio,
     nombreNatillera,
     cuotasPrestamo: cuotasPrestamosParaPagar,
@@ -12089,7 +12293,7 @@ async function cargarCuotasPrestamosPendientes(cuota) {
     const prestamoIds = prestamos.map(p => p.id)
     const { data: planPagos, error: errorPlanPagos } = await supabase
       .from('plan_pagos_prestamo')
-      .select('id, prestamo_id, numero_cuota, valor_cuota, valor_pagado, valor_pagado_efectivo, valor_pagado_transferencia, fecha_proyectada')
+      .select('id, prestamo_id, numero_cuota, valor_cuota, valor_pagado, valor_pagado_efectivo, valor_pagado_transferencia, capital, fecha_proyectada')
       .in('prestamo_id', prestamoIds)
       .eq('pagada', false)
       .order('fecha_proyectada', { ascending: true })
@@ -12365,10 +12569,24 @@ function getTotalCuotasPrestamosSeleccionadas() {
   let total = 0
   cuotasPrestamosPendientes.value.forEach(cuotaPrestamo => {
     if (cuotasPrestamosSeleccionadas.value.has(cuotaPrestamo.id)) {
-      total += parseFloat(cuotaPrestamo.valor_pendiente || 0)
+      // Lo que falta de la cuota + su mora a la fecha del pago (se cobra primero la mora)
+      total += parseFloat(cuotaPrestamo.valor_pendiente || 0) + moraCuotaPrestamo(cuotaPrestamo)
     }
   })
   return total
+}
+
+/*
+ * Mora de una cuota de préstamo a la fecha de pago del modal, con las reglas de Préstamos
+ * (capital pendiente × tasa de mora/30 × días tras la gracia). Antes el modal cobraba solo
+ * lo que faltaba de la cuota: la mora no se veía ni se cobraba desde aquí.
+ */
+function moraCuotaPrestamo(cuotaPrestamo) {
+  if (!cuotaPrestamo) return 0
+  const { tasaMora, diasGracia: graciaPrestamo } = reglasMoraNatillera(natilleraConfigCache || {})
+  if (!(tasaMora > 0)) return 0
+  const corte = parseDateLocal(formPago.fecha_pago || getCurrentDateISO())
+  return Math.round(calcularMoraCuota(cuotaPrestamo, tasaMora, corte, graciaPrestamo))
 }
 
 // Actualizar el valor del pago cuando se seleccionan/deseleccionan cuotas de préstamos
@@ -13363,12 +13581,18 @@ function mostrarConfirmacionPago() {
   // Obtener las cuotas de préstamos seleccionadas con sus detalles
   const cuotasPrestamosDetalle = cuotasPrestamosPendientes.value
     .filter(cp => cuotasPrestamosSeleccionadas.value.has(cp.id))
-    .map(cp => ({
-      nombre: `Cuota préstamo #${cp.numero_cuota}`,
-      valor: cp.valor_pendiente || 0,
-      numero_cuota: cp.numero_cuota,
-      prestamo_id: cp.prestamo_id
-    }))
+    .flatMap(cp => {
+      const mora = moraCuotaPrestamo(cp)
+      const lineas = [{
+        nombre: `Cuota préstamo #${cp.numero_cuota}`,
+        valor: cp.valor_pendiente || 0,
+        numero_cuota: cp.numero_cuota,
+        prestamo_id: cp.prestamo_id
+      }]
+      // La mora cobrada, en su propia línea del comprobante
+      if (mora > 0) lineas.unshift({ nombre: `Mora préstamo #${cp.numero_cuota}`, valor: mora, numero_cuota: cp.numero_cuota, prestamo_id: cp.prestamo_id, esMora: true })
+      return lineas
+    })
 
   const esParcial = valorPagado < totalAdeudado
   const pendienteDespuesPago = esParcial ? totalAdeudado - valorPagado : 0
@@ -13528,6 +13752,8 @@ async function handleRegistrarPago() {
         .map(cp => ({
           nombre: `Cuota préstamo #${cp.numero_cuota}`,
           valor: parseFloat(cp.valor_pendiente || cp.valor_cuota || 0),
+          // Aparte de `valor`: la reversión resta `valor` del plan, la mora sale del fondo
+          mora: moraCuotaPrestamo(cp),
           numero_cuota: cp.numero_cuota,
           prestamo_id: cp.prestamo_id,
           pagado: valorCuotasPrestamosPagado > 0
@@ -13739,12 +13965,17 @@ async function handleRegistrarPago() {
       } else {
         const cuotasPrestamosPagadas = cuotasPrestamosPendientes.value
           .filter(cp => cuotasPrestamosSeleccionadas.value.has(cp.id))
-          .map(cp => ({
-            nombre: `Cuota préstamo #${cp.numero_cuota}`,
-            valor: cp.valor_pendiente || 0,
-            numero_cuota: cp.numero_cuota,
-            prestamo_id: cp.prestamo_id
-          }))
+          .flatMap(cp => {
+            const mora = moraCuotaPrestamo(cp)
+            const lineas = [{
+              nombre: `Cuota préstamo #${cp.numero_cuota}`,
+              valor: cp.valor_pendiente || 0,
+              numero_cuota: cp.numero_cuota,
+              prestamo_id: cp.prestamo_id
+            }]
+            if (mora > 0) lineas.unshift({ nombre: `Mora préstamo #${cp.numero_cuota}`, valor: mora, numero_cuota: cp.numero_cuota, prestamo_id: cp.prestamo_id, esMora: true })
+            return lineas
+          })
         cuotasPrestamosParaConceptos = cuotasPrestamosPagadas
       }
     }
@@ -15879,16 +16110,16 @@ function dotColorMes(mes) {
   if (r.enMora > 0) return 'bg-red-500'
   if (r.pendientes > 0) return 'bg-amber-500'
   if (r.pagadas > 0) return 'bg-emerald-500'
-  return 'bg-gray-300'
+  return 'bg-borde-fuerte'
 }
 
 // Clases de la tarjeta de mes según su estado (le da relieve/color en el selector de mes)
 function claseCardMes(mes) {
   const r = resumenMesCarrusel(mes)
-  if (r.enMora > 0) return 'bg-gradient-to-br from-red-50 to-white border-red-200 hover:border-red-300'
-  if (r.pendientes > 0) return 'bg-gradient-to-br from-amber-50 to-white border-amber-200 hover:border-amber-300'
-  if (r.pagadas > 0) return 'bg-gradient-to-br from-emerald-50 to-white border-emerald-200 hover:border-emerald-300'
-  return 'bg-white border-gray-200 hover:border-gray-300'
+  if (r.enMora > 0) return 'bg-gradient-to-br from-red-50 oscuro:from-red-500/15 to-superficie-tarjeta border-red-200 oscuro:border-red-500/30 hover:border-red-300 oscuro:hover:border-red-500/30'
+  if (r.pendientes > 0) return 'bg-gradient-to-br from-amber-50 oscuro:from-amber-500/15 to-superficie-tarjeta border-amber-200 oscuro:border-amber-500/30 hover:border-amber-300 oscuro:hover:border-amber-500/30'
+  if (r.pagadas > 0) return 'bg-gradient-to-br from-emerald-50 oscuro:from-emerald-500/15 to-superficie-tarjeta border-emerald-200 oscuro:border-emerald-500/30 hover:border-emerald-300 oscuro:hover:border-emerald-500/30'
+  return 'bg-superficie-tarjeta border-borde hover:border-borde-fuerte'
 }
 
 function esMesActualHoy(mes) {
@@ -16511,6 +16742,24 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* Botones de cada cuota en la modal del socio: se hunden un poco al tocarlos, como
+   respuesta inmediata del dedo. El transform va en el propio botón (no en un ancestro de
+   nada `fixed`), así que no afecta a iOS. Sin `display` aquí: lo pone Tailwind. */
+.boton-cuota {
+  -webkit-transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, -webkit-transform 0.1s ease;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+.boton-cuota:active:not(:disabled) {
+  -webkit-transform: scale(0.97);
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .boton-cuota:active:not(:disabled) {
+    -webkit-transform: none;
+    transform: none;
+  }
+}
+
 /* ---------- Botón icon-only del header en móvil (estilo Socios) ---------- */
 .cuotas-header-icon-btn {
   width: 44px;
@@ -16877,5 +17126,34 @@ onUnmounted(() => {
   }
 }
 
+
+/* ==========================================================================
+   Modo oscuro (skill natillerapp-modo-oscuro). Solo lo que cambia: las reglas
+   de claro de arriba quedan intactas. Los comprobantes capturados llevan
+   data-tema="claro" y no entran aquí.
+   ========================================================================== */
+:where([data-tema=oscuro]) .socios-toolbar__search { background: var(--superficie-tarjeta); }
+:where([data-tema=oscuro]) .socios-toolbar__search > svg,
+:where([data-tema=oscuro]) .socios-search__input::placeholder,
+:where([data-tema=oscuro]) .cuotas-segmented__icon,
+:where([data-tema=oscuro]) .cuotas-toolbar__count { color: var(--texto-tenue); }
+:where([data-tema=oscuro]) .socios-search__input { color: var(--texto-fuerte); }
+:where([data-tema=oscuro]) .socios-search__clear,
+:where([data-tema=oscuro]) .cuotas-segmented__opt { color: var(--texto-suave); }
+:where([data-tema=oscuro]) .socios-search__clear:hover { background: rgb(255 255 255 / 0.06); }
+:where([data-tema=oscuro]) .cuotas-segmented { background: rgb(255 255 255 / 0.05); }
+:where([data-tema=oscuro]) .cuotas-segmented__opt:not(.is-selected):hover { color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .flecha-carrusel {
+  background-color: var(--superficie-elevada);
+  border-color: var(--borde);
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .flecha-carrusel:hover { background-color: var(--superficie-suave); color: var(--texto-fuerte); }
+/* Los fades se funden con el lienzo de la página */
+:where([data-tema=oscuro]) .fade-mobile-left { background: linear-gradient(to right, var(--superficie-lienzo) 0%, transparent 100%); }
+:where([data-tema=oscuro]) .fade-mobile-right { background: linear-gradient(to left, var(--superficie-lienzo) 0%, transparent 100%); }
+:where([data-tema=oscuro]) .chevron-mobile { color: var(--texto-secundario); }
+:where([data-tema=oscuro]) .chevron-mobile::before { background-color: var(--superficie-elevada); border-color: var(--borde); }
+:where([data-tema=oscuro]) .chevron-mobile:active::before { background-color: var(--superficie-hundida); }
 </style>
 

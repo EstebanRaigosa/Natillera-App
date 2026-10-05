@@ -5,13 +5,13 @@
         <ChatBubbleOvalLeftEllipsisIcon class="h-5 w-5 text-white" />
       </div>
       <div class="min-w-0">
-        <h2 class="font-display text-lg font-bold text-gray-800">Botón de soporte</h2>
-        <p class="text-sm text-gray-500">El acceso rápido que flota sobre la pantalla</p>
+        <h2 class="font-display text-lg font-bold text-texto">Botón de soporte</h2>
+        <p class="text-sm text-texto-suave">El acceso rápido que flota sobre la pantalla</p>
       </div>
     </div>
 
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
-      <p class="min-w-0 flex-1 text-sm leading-relaxed text-gray-600">
+      <p class="min-w-0 flex-1 text-sm leading-relaxed text-texto-secundario">
         Puedes arrastrarlo a donde te estorbe menos: se queda pegado al lado más cercano y
         recuerda dónde lo dejaste. Manteniéndolo pulsado aparece la opción de ocultarlo.
       </p>
@@ -23,22 +23,18 @@
         :aria-checked="visible"
         :class="[
           'inline-flex min-h-[44px] shrink-0 items-center gap-2.5 rounded-full px-4 text-sm font-semibold transition touch-manipulation',
-          visible ? 'bg-[#1B5E37] text-white' : 'border border-gray-300 bg-white text-gray-700',
+          visible ? 'bg-[#1B5E37] text-white' : 'border border-borde-fuerte bg-superficie-tarjeta text-texto-medio',
         ]"
         @click="alternar"
       >
         <span
           :class="[
             'relative h-5 w-9 shrink-0 rounded-full transition',
-            visible ? 'bg-white/30' : 'bg-gray-300',
+            visible ? 'bg-white/30' : 'bg-borde-fuerte',
           ]"
         >
-          <span
-            :class="[
-              'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all',
-              visible ? 'left-[1.125rem]' : 'left-0.5',
-            ]"
-          />
+          <!-- tema-fijo: la perilla del interruptor es blanca en los dos modos -->
+          <span class="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all" :class="visible ? 'left-[1.125rem]' : 'left-0.5'" />
         </span>
         {{ visible ? 'Visible' : 'Oculto' }}
       </button>
@@ -47,7 +43,7 @@
     <div v-if="visible" class="mt-3 flex flex-wrap gap-2">
       <button
         type="button"
-        class="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 touch-manipulation"
+        class="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-borde-fuerte bg-superficie-tarjeta px-4 text-sm font-semibold text-texto-medio transition hover:bg-superficie-suave touch-manipulation"
         @click="restablecer"
       >
         <ArrowPathIcon class="h-4 w-4" />

@@ -6,16 +6,16 @@
           <BackButton to="/dashboard" :inline="true" />
           <div class="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
             <div
-              class="hidden sm:flex w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-natillera-100 items-center justify-center flex-shrink-0 border border-natillera-200/80"
+              class="hidden sm:flex w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-natillera-100 oscuro:bg-natillera-500/15 items-center justify-center flex-shrink-0 border border-natillera-200/80 oscuro:border-natillera-500/30"
               aria-hidden="true"
             >
-              <BanknotesIcon class="w-6 h-6 sm:w-7 sm:h-7 text-natillera-700" />
+              <BanknotesIcon class="w-6 h-6 sm:w-7 sm:h-7 text-natillera-700 oscuro:text-natillera-300" />
             </div>
             <div class="min-w-0">
-              <h1 class="font-display text-xl sm:text-2xl font-bold tracking-tight text-gray-900">
-                Crear <span class="text-natillera-700">Natillera</span>
+              <h1 class="font-display text-xl sm:text-2xl font-bold tracking-tight text-texto-fuerte">
+                Crear <span class="text-natillera-700 oscuro:text-natillera-300">Natillera</span>
               </h1>
-              <p class="hidden sm:block text-gray-500 text-sm mt-0.5">
+              <p class="hidden sm:block text-texto-suave text-sm mt-0.5">
                 Configura tu nuevo grupo de ahorro en 4 pasos simples
               </p>
             </div>
@@ -25,11 +25,11 @@
 
       <!-- Stepper en caja -->
       <div
-        class="mb-6 sm:mb-8 rounded-2xl border border-gray-200 bg-white px-3 py-4 sm:px-6 sm:py-5 shadow-sm"
+        class="mb-6 sm:mb-8 rounded-2xl border border-borde bg-superficie-tarjeta px-3 py-4 sm:px-6 sm:py-5 shadow-sm"
       >
         <div class="relative flex items-start justify-between gap-1 sm:gap-2">
           <div
-            class="absolute top-[18px] sm:top-5 left-[12%] right-[12%] h-px bg-gray-200 -translate-y-1/2 pointer-events-none"
+            class="absolute top-[18px] sm:top-5 left-[12%] right-[12%] h-px bg-borde -translate-y-1/2 pointer-events-none"
             aria-hidden="true"
           />
           <template v-for="(step, index) in steps" :key="step.id">
@@ -50,7 +50,7 @@
                     ? 'bg-[#166534] text-white shadow-sm'
                     : currentStep === index + 1
                       ? 'bg-[#166534] text-white shadow-md ring-4 ring-[#166534]/15'
-                      : 'bg-gray-100 text-gray-400 border border-gray-200 group-hover:border-gray-300'
+                      : 'bg-superficie-hundida text-texto-tenue border border-borde group-hover:border-borde-fuerte'
                 ]"
               >
                 <CheckIcon v-if="currentStep > index + 1" class="w-4 h-4 sm:w-5 sm:h-5" />
@@ -60,7 +60,7 @@
                 <p
                   :class="[
                     'text-[10px] sm:text-xs font-medium leading-tight',
-                    currentStep === index + 1 ? 'text-natillera-700' : 'text-gray-400'
+                    currentStep === index + 1 ? 'text-natillera-700 oscuro:text-natillera-300' : 'text-texto-tenue'
                   ]"
                 >
                   Paso {{ index + 1 }}
@@ -68,7 +68,7 @@
                 <p
                   :class="[
                     'text-[11px] sm:text-sm font-semibold leading-snug mt-0.5 line-clamp-2',
-                    currentStep === index + 1 ? 'text-gray-900' : 'text-gray-400'
+                    currentStep === index + 1 ? 'text-texto-fuerte' : 'text-texto-tenue'
                   ]"
                 >
                   {{ step.label }}
@@ -79,7 +79,7 @@
         </div>
       </div>
 
-      <form @submit.prevent="handleSubmit" class="wizard-form-shell rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <form @submit.prevent="handleSubmit" class="wizard-form-shell rounded-2xl border border-borde bg-superficie-tarjeta shadow-sm overflow-hidden">
         <div class="flex flex-col lg:flex-row lg:min-h-[420px]">
           <!-- Barra lateral (mismo verde que el shell / sidebar app) -->
           <aside
@@ -129,14 +129,14 @@
         <div v-show="currentStep === 1" key="step1" class="wizard-step-content">
           <div class="space-y-5">
         <div class="relative">
-          <label class="label flex items-center gap-2 text-gray-900 font-semibold">
-            Nombre de la natillera <span class="text-natillera-600">*</span>
+          <label class="label flex items-center gap-2 text-texto-fuerte font-semibold">
+            Nombre de la natillera <span class="text-natillera-600 oscuro:text-natillera-300">*</span>
           </label>
           <div class="relative">
             <input 
               v-model="wizardForm.nombre"
               type="text" 
-              class="input-field peer rounded-xl border-gray-200 text-base md:text-sm"
+              class="input-field peer rounded-xl border-borde text-base md:text-sm"
               placeholder="Ej: Natillera Familia González"
               autocomplete="off"
               maxlength="60"
@@ -145,35 +145,35 @@
           </div>
           <p
             id="wizard-nombre-charcount"
-            class="mt-1 text-xs text-gray-500 tabular-nums"
+            class="mt-1 text-xs text-texto-suave tabular-nums"
             aria-live="polite"
           >{{ nombreCharCount }}/60 caracteres</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
           <div class="relative group">
-            <label class="label text-gray-900 font-semibold">Fecha de inicio <span class="text-natillera-600">*</span></label>
+            <label class="label text-texto-fuerte font-semibold">Fecha de inicio <span class="text-natillera-600 oscuro:text-natillera-300">*</span></label>
             <div class="relative">
               <input 
                 v-model="wizardForm.fecha_inicio"
                 type="date" 
                 lang="es-CO"
-                class="input-field peer rounded-xl border-gray-200"
+                class="input-field peer rounded-xl border-borde"
                 required
               />
             </div>
           </div>
 
           <div class="relative group">
-            <label class="label text-gray-900 font-semibold">Periodicidad <span class="text-natillera-600">*</span></label>
+            <label class="label text-texto-fuerte font-semibold">Periodicidad <span class="text-natillera-600 oscuro:text-natillera-300">*</span></label>
             <div class="relative">
-              <select v-model="wizardForm.periodicidad" class="input-field peer appearance-none cursor-pointer rounded-xl border-gray-200" required>
+              <select v-model="wizardForm.periodicidad" class="input-field peer appearance-none cursor-pointer rounded-xl border-borde" required>
                 <option value="">Selecciona...</option>
                 <option value="quincenal">Quincenal</option>
                 <option value="mensual">Mensual</option>
               </select>
               <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <svg class="w-5 h-5 text-gray-400 group-hover:text-natillera-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-texto-tenue group-hover:text-natillera-600 oscuro:group-hover:text-natillera-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
               </div>
@@ -182,10 +182,10 @@
         </div>
 
         <div class="relative">
-          <label class="label text-gray-900 font-semibold">Descripción <span class="text-gray-400 font-normal">(opcional)</span></label>
+          <label class="label text-texto-fuerte font-semibold">Descripción <span class="text-texto-tenue font-normal">(opcional)</span></label>
           <textarea 
             v-model="wizardForm.descripcion"
-            class="input-field peer resize-none rounded-xl border-gray-200 text-base md:text-sm"
+            class="input-field peer resize-none rounded-xl border-borde text-base md:text-sm"
             rows="3"
             maxlength="200"
             placeholder="Describe el propósito de esta natillera (opcional)"
@@ -193,7 +193,7 @@
           ></textarea>
           <p
             id="wizard-desc-charcount"
-            class="mt-1 text-xs text-gray-500 tabular-nums"
+            class="mt-1 text-xs text-texto-suave tabular-nums"
             aria-live="polite"
           >{{ descripcionCharCount }}/200 caracteres</p>
         </div>
@@ -212,19 +212,19 @@
         mode="out-in"
       >
         <div v-show="currentStep === 2" key="step2" class="wizard-step-content space-y-6">
-      <div class="relative p-4 sm:p-6 rounded-2xl border border-gray-200 bg-gray-50/50 overflow-hidden">
+      <div class="relative p-4 sm:p-6 rounded-2xl border border-borde bg-superficie-suave/50 overflow-hidden">
         <div class="relative">
-          <h3 class="font-semibold text-gray-900 flex items-center gap-2 sm:gap-2.5 mb-4 sm:mb-5 text-base sm:text-lg">
+          <h3 class="font-semibold text-texto-fuerte flex items-center gap-2 sm:gap-2.5 mb-4 sm:mb-5 text-base sm:text-lg">
             <div class="p-1.5 bg-[#166534] rounded-lg shadow-sm">
               <CalendarDaysIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <span>Período de la <span class="text-natillera-700">Natillera</span></span>
+            <span>Período de la <span class="text-natillera-700 oscuro:text-natillera-300">Natillera</span></span>
           </h3>
           
           <div class="space-y-3 sm:space-y-5">
-            <div class="p-3 sm:p-4 bg-white border border-natillera-100 rounded-xl">
-              <p class="text-xs sm:text-sm text-gray-700 flex items-start gap-2 leading-relaxed">
-                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-natillera-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="p-3 sm:p-4 bg-superficie-tarjeta border border-natillera-100 oscuro:border-natillera-500/30 rounded-xl">
+              <p class="text-xs sm:text-sm text-texto-medio flex items-start gap-2 leading-relaxed">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-natillera-600 oscuro:text-natillera-300 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 <span>Selecciona el <strong>período de duración</strong> de la natillera (mes y año de inicio y fin). Los valores se calculan automáticamente y puedes ajustarlos desde aquí o más adelante.</span>
@@ -234,36 +234,36 @@
             <!-- Mes y Año de Inicio -->
             <div class="grid grid-cols-2 gap-2 sm:gap-4">
               <div class="relative">
-                <label class="label text-gray-900 font-semibold flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm mb-1.5 sm:mb-2">
+                <label class="label text-texto-fuerte font-semibold flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm mb-1.5 sm:mb-2">
                   <span class="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-natillera-500"></span>
                   <span class="hidden sm:inline">Mes de Inicio</span>
                   <span class="sm:hidden">Mes Inicio</span>
-                  <span class="text-natillera-600">*</span>
+                  <span class="text-natillera-600 oscuro:text-natillera-300">*</span>
                 </label>
                 <div class="relative">
-                  <select v-model.number="wizardForm.mes_inicio" class="input-field bg-white border-gray-200 focus:border-natillera-500 focus:ring-natillera-500/25 appearance-none cursor-pointer text-sm sm:text-base py-2 sm:py-2.5 rounded-xl">
+                  <select v-model.number="wizardForm.mes_inicio" class="input-field bg-superficie-tarjeta border-borde focus:border-natillera-500 focus:ring-natillera-500/25 appearance-none cursor-pointer text-sm sm:text-base py-2 sm:py-2.5 rounded-xl">
                     <option v-for="mes in meses" :key="mes.value" :value="mes.value">{{ mes.label }}</option>
                   </select>
                   <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:pr-3 pointer-events-none">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-texto-tenue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                   </div>
                 </div>
               </div>
               <div class="relative">
-                <label class="label text-gray-900 font-semibold flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm mb-1.5 sm:mb-2">
+                <label class="label text-texto-fuerte font-semibold flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm mb-1.5 sm:mb-2">
                   <span class="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-natillera-500"></span>
                   <span class="hidden sm:inline">Año de Inicio</span>
                   <span class="sm:hidden">Año Inicio</span>
-                  <span class="text-natillera-600">*</span>
+                  <span class="text-natillera-600 oscuro:text-natillera-300">*</span>
                 </label>
                 <div class="relative">
-                  <select v-model.number="wizardForm.anio_inicio" class="input-field bg-white border-gray-200 focus:border-natillera-500 focus:ring-natillera-500/25 appearance-none cursor-pointer text-sm sm:text-base py-2 sm:py-2.5 rounded-xl">
+                  <select v-model.number="wizardForm.anio_inicio" class="input-field bg-superficie-tarjeta border-borde focus:border-natillera-500 focus:ring-natillera-500/25 appearance-none cursor-pointer text-sm sm:text-base py-2 sm:py-2.5 rounded-xl">
                     <option v-for="anio in aniosDisponibles" :key="anio" :value="anio">{{ anio }}</option>
                   </select>
                   <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:pr-3 pointer-events-none">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-texto-tenue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                   </div>
@@ -274,36 +274,36 @@
             <!-- Mes y Año de Fin -->
             <div class="grid grid-cols-2 gap-2 sm:gap-4">
               <div class="relative">
-                <label class="label text-gray-900 font-semibold flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm mb-1.5 sm:mb-2">
+                <label class="label text-texto-fuerte font-semibold flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm mb-1.5 sm:mb-2">
                   <span class="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-natillera-600"></span>
                   <span class="hidden sm:inline">Mes de Fin</span>
                   <span class="sm:hidden">Mes Fin</span>
-                  <span class="text-natillera-600">*</span>
+                  <span class="text-natillera-600 oscuro:text-natillera-300">*</span>
                 </label>
                 <div class="relative">
-                  <select v-model.number="wizardForm.mes_fin" class="input-field bg-white border-gray-200 focus:border-natillera-500 focus:ring-natillera-500/25 appearance-none cursor-pointer text-sm sm:text-base py-2 sm:py-2.5 rounded-xl">
+                  <select v-model.number="wizardForm.mes_fin" class="input-field bg-superficie-tarjeta border-borde focus:border-natillera-500 focus:ring-natillera-500/25 appearance-none cursor-pointer text-sm sm:text-base py-2 sm:py-2.5 rounded-xl">
                     <option v-for="mes in meses" :key="mes.value" :value="mes.value">{{ mes.label }}</option>
                   </select>
                   <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:pr-3 pointer-events-none">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-texto-tenue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                   </div>
                 </div>
               </div>
               <div class="relative">
-                <label class="label text-gray-900 font-semibold flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm mb-1.5 sm:mb-2">
+                <label class="label text-texto-fuerte font-semibold flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm mb-1.5 sm:mb-2">
                   <span class="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-natillera-600"></span>
                   <span class="hidden sm:inline">Año de Fin</span>
                   <span class="sm:hidden">Año Fin</span>
-                  <span class="text-natillera-600">*</span>
+                  <span class="text-natillera-600 oscuro:text-natillera-300">*</span>
                 </label>
                 <div class="relative">
-                  <select v-model.number="wizardForm.anio" class="input-field bg-white border-gray-200 focus:border-natillera-500 focus:ring-natillera-500/25 appearance-none cursor-pointer text-sm sm:text-base py-2 sm:py-2.5 rounded-xl">
+                  <select v-model.number="wizardForm.anio" class="input-field bg-superficie-tarjeta border-borde focus:border-natillera-500 focus:ring-natillera-500/25 appearance-none cursor-pointer text-sm sm:text-base py-2 sm:py-2.5 rounded-xl">
                     <option v-for="anio in aniosDisponibles" :key="anio" :value="anio">{{ anio }}</option>
                   </select>
                   <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:pr-3 pointer-events-none">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-texto-tenue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                   </div>
@@ -312,17 +312,17 @@
             </div>
 
             <!-- Resumen del período -->
-            <div class="p-3 sm:p-4 bg-natillera-50 border border-natillera-100 rounded-lg sm:rounded-xl">
+            <div class="p-3 sm:p-4 bg-natillera-50 oscuro:bg-natillera-500/15 border border-natillera-100 oscuro:border-natillera-500/30 rounded-lg sm:rounded-xl">
               <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                 <div class="flex items-center gap-2">
                   <span class="text-lg sm:text-xl">📅</span>
                   <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
-                    <strong class="text-natillera-900">{{ meses.find(m => m.value === wizardForm.mes_inicio)?.label }} {{ wizardForm.anio_inicio }}</strong>
-                    <span class="text-gray-500">→</span>
-                    <strong class="text-natillera-800">{{ meses.find(m => m.value === wizardForm.mes_fin)?.label }} {{ wizardForm.anio }}</strong>
+                    <strong class="text-natillera-900 oscuro:text-natillera-300">{{ meses.find(m => m.value === wizardForm.mes_inicio)?.label }} {{ wizardForm.anio_inicio }}</strong>
+                    <span class="text-texto-suave">→</span>
+                    <strong class="text-natillera-800 oscuro:text-natillera-300">{{ meses.find(m => m.value === wizardForm.mes_fin)?.label }} {{ wizardForm.anio }}</strong>
                   </div>
                 </div>
-                <span class="text-xs text-gray-500 bg-white/60 px-2 py-1 rounded-full self-start sm:self-auto">
+                <span class="text-xs text-texto-suave bg-superficie-tarjeta/60 px-2 py-1 rounded-full self-start sm:self-auto">
                   {{ cantidadMeses }} {{ cantidadMeses === 1 ? 'mes' : 'meses' }}
                 </span>
               </div>
@@ -337,8 +337,8 @@
               leave-from-class="opacity-100 max-h-20 translate-y-0"
               leave-to-class="opacity-0 max-h-0 -translate-y-2"
             >
-              <div v-if="wizardForm.anio_inicio !== wizardForm.anio" class="p-2.5 sm:p-3 bg-amber-50/80 border border-amber-200/50 rounded-lg sm:rounded-xl">
-                <p class="text-xs text-amber-700 flex items-start gap-2 leading-relaxed">
+              <div v-if="wizardForm.anio_inicio !== wizardForm.anio" class="p-2.5 sm:p-3 bg-amber-50/80 oscuro:bg-amber-500/15 border border-amber-200/50 oscuro:border-amber-500/30 rounded-lg sm:rounded-xl">
+                <p class="text-xs text-amber-700 oscuro:text-amber-300 flex items-start gap-2 leading-relaxed">
                   <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                   </svg>
@@ -366,7 +366,7 @@
         mode="out-in"
       >
         <div v-show="currentStep === 3" key="step3" class="wizard-step-content space-y-6">
-          <h3 class="font-semibold text-gray-900 flex items-center gap-2.5 mb-5 text-lg">
+          <h3 class="font-semibold text-texto-fuerte flex items-center gap-2.5 mb-5 text-lg">
             <div class="p-1.5 bg-[#166534] rounded-lg shadow-sm">
               <ExclamationTriangleIcon class="w-5 h-5 text-white" />
             </div>
@@ -374,7 +374,7 @@
           </h3>
           
           <div class="space-y-5">
-            <div class="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-all duration-300">
+            <div class="flex items-center gap-4 p-4 bg-superficie-tarjeta rounded-xl border border-borde hover:shadow-sm transition-all duration-300">
               <label for="multa_activa" class="relative flex items-center cursor-pointer group flex-1">
                 <input 
                   type="checkbox" 
@@ -383,22 +383,22 @@
                   class="sr-only peer"
                 />
                 <!-- Toggle mejorado -->
-                <div class="relative w-14 h-7 bg-gray-300 rounded-full shadow-inner transition-all duration-300 peer-checked:bg-[#166534] peer-checked:shadow-lg peer-checked:shadow-natillera-900/25 peer-focus:ring-2 peer-focus:ring-natillera-500/40 peer-focus:ring-offset-2">
-                  <!-- Círculo del toggle -->
+                <div class="relative w-14 h-7 bg-borde-fuerte rounded-full shadow-inner transition-all duration-300 peer-checked:bg-[#166534] peer-checked:shadow-lg peer-checked:shadow-natillera-900/25 peer-focus:ring-2 peer-focus:ring-natillera-500/40 peer-focus:ring-offset-2">
+                  <!-- tema-fijo: la perilla del interruptor es blanca en los dos modos -->
                   <div class="absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 peer-checked:translate-x-7 flex items-center justify-center">
-                    <!-- Icono de check cuando está activo -->
+                    <!-- tema-fijo: check verde sobre la perilla blanca -->
                     <svg v-if="wizardForm.multa_activa" class="w-4 h-4 text-natillera-700 animate-scale-in" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                     </svg>
                     <!-- Icono de X cuando está inactivo -->
-                    <svg v-else class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg v-else class="w-3.5 h-3.5 text-texto-tenue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                   </div>
                   <!-- Efecto de brillo cuando está activo -->
-                  <div v-if="wizardForm.multa_activa" class="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer-toggle"></div>
+                  <div v-if="wizardForm.multa_activa" class="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-superficie-tarjeta/30 to-transparent animate-shimmer-toggle"></div>
                 </div>
-                <span class="ml-4 text-gray-800 font-semibold group-hover:text-gray-900 transition-colors text-sm sm:text-base">
+                <span class="ml-4 text-texto font-semibold group-hover:text-texto-fuerte transition-colors text-sm sm:text-base">
                   Aplicar multas por pago tardío
                 </span>
               </label>
@@ -415,12 +415,12 @@
               <div v-if="wizardForm.multa_activa" class="space-y-5">
                 <!-- Días de gracia -->
                 <div class="relative">
-                  <label class="label text-gray-900 font-semibold">Días de gracia</label>
+                  <label class="label text-texto-fuerte font-semibold">Días de gracia</label>
                   <div class="relative">
                     <input 
                       v-model.number="wizardForm.dias_gracia"
                       type="number" 
-                      class="input-field bg-white border-gray-200 focus:border-natillera-500 focus:ring-natillera-500/25 rounded-xl"
+                      class="input-field bg-superficie-tarjeta border-borde focus:border-natillera-500 focus:ring-natillera-500/25 rounded-xl"
                       placeholder="3"
                       min="0"
                     />
@@ -428,63 +428,63 @@
                 </div>
 
                 <!-- Tipo de sanción -->
-                <div class="p-4 bg-white rounded-xl border border-gray-200">
-                  <label class="label font-semibold text-gray-900 mb-3 block">Tipo de Sanción</label>
+                <div class="p-4 bg-superficie-tarjeta rounded-xl border border-borde">
+                  <label class="label font-semibold text-texto-fuerte mb-3 block">Tipo de Sanción</label>
                   <div class="grid grid-cols-3 gap-1.5 sm:gap-3">
                     <button 
                       type="button"
                       @click="wizardForm.tipo_sancion = 'simple'"
-                      :class="['py-3 px-2 sm:p-3 rounded-lg sm:rounded-xl border-2 text-left transition-all min-w-0 min-h-[72px] sm:min-h-0', wizardForm.tipo_sancion === 'simple' ? 'border-natillera-600 bg-natillera-50' : 'border-gray-200 bg-white hover:border-natillera-200']"
+                      :class="['py-3 px-2 sm:p-3 rounded-lg sm:rounded-xl border-2 text-left transition-all min-w-0 min-h-[72px] sm:min-h-0', wizardForm.tipo_sancion === 'simple' ? 'border-natillera-600 bg-natillera-50 oscuro:bg-natillera-500/15' : 'border-borde bg-superficie-tarjeta hover:border-natillera-200 oscuro:hover:border-natillera-500/30']"
                     >
-                      <CurrencyDollarIcon class="w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1 flex-shrink-0" :class="wizardForm.tipo_sancion === 'simple' ? 'text-natillera-700' : 'text-gray-400'" />
-                      <p class="font-semibold text-xs sm:text-sm text-gray-800 truncate">Simple</p>
-                      <p class="text-[10px] sm:text-xs text-gray-500 hidden sm:block">Valor fijo</p>
+                      <CurrencyDollarIcon class="w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1 flex-shrink-0" :class="wizardForm.tipo_sancion === 'simple' ? 'text-natillera-700 oscuro:text-natillera-300' : 'text-texto-tenue'" />
+                      <p class="font-semibold text-xs sm:text-sm text-texto truncate">Simple</p>
+                      <p class="text-[10px] sm:text-xs text-texto-suave hidden sm:block">Valor fijo</p>
                     </button>
                     <button 
                       type="button"
                       @click="wizardForm.tipo_sancion = 'escalonada'"
-                      :class="['py-3 px-2 sm:p-3 rounded-lg sm:rounded-xl border-2 text-left transition-all min-w-0 min-h-[72px] sm:min-h-0', wizardForm.tipo_sancion === 'escalonada' ? 'border-natillera-600 bg-natillera-50' : 'border-gray-200 bg-white hover:border-natillera-200']"
+                      :class="['py-3 px-2 sm:p-3 rounded-lg sm:rounded-xl border-2 text-left transition-all min-w-0 min-h-[72px] sm:min-h-0', wizardForm.tipo_sancion === 'escalonada' ? 'border-natillera-600 bg-natillera-50 oscuro:bg-natillera-500/15' : 'border-borde bg-superficie-tarjeta hover:border-natillera-200 oscuro:hover:border-natillera-500/30']"
                     >
-                      <ChartBarIcon class="w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1 flex-shrink-0" :class="wizardForm.tipo_sancion === 'escalonada' ? 'text-natillera-700' : 'text-gray-400'" />
-                      <p class="font-semibold text-xs sm:text-sm text-gray-800 truncate">Escalonada</p>
-                      <p class="text-[10px] sm:text-xs text-gray-500 hidden sm:block">Progresiva</p>
+                      <ChartBarIcon class="w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1 flex-shrink-0" :class="wizardForm.tipo_sancion === 'escalonada' ? 'text-natillera-700 oscuro:text-natillera-300' : 'text-texto-tenue'" />
+                      <p class="font-semibold text-xs sm:text-sm text-texto truncate">Escalonada</p>
+                      <p class="text-[10px] sm:text-xs text-texto-suave hidden sm:block">Progresiva</p>
                     </button>
                     <button 
                       type="button"
                       @click="wizardForm.tipo_sancion = 'diaria'"
-                      :class="['py-3 px-2 sm:p-3 rounded-lg sm:rounded-xl border-2 text-left transition-all min-w-0 min-h-[72px] sm:min-h-0', wizardForm.tipo_sancion === 'diaria' ? 'border-natillera-600 bg-natillera-50' : 'border-gray-200 bg-white hover:border-natillera-200']"
+                      :class="['py-3 px-2 sm:p-3 rounded-lg sm:rounded-xl border-2 text-left transition-all min-w-0 min-h-[72px] sm:min-h-0', wizardForm.tipo_sancion === 'diaria' ? 'border-natillera-600 bg-natillera-50 oscuro:bg-natillera-500/15' : 'border-borde bg-superficie-tarjeta hover:border-natillera-200 oscuro:hover:border-natillera-500/30']"
                     >
-                      <ClockIcon class="w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1 flex-shrink-0" :class="wizardForm.tipo_sancion === 'diaria' ? 'text-natillera-700' : 'text-gray-400'" />
-                      <p class="font-semibold text-xs sm:text-sm text-gray-800 truncate">Diaria</p>
-                      <p class="text-[10px] sm:text-xs text-gray-500 hidden sm:block">Por día de mora</p>
+                      <ClockIcon class="w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1 flex-shrink-0" :class="wizardForm.tipo_sancion === 'diaria' ? 'text-natillera-700 oscuro:text-natillera-300' : 'text-texto-tenue'" />
+                      <p class="font-semibold text-xs sm:text-sm text-texto truncate">Diaria</p>
+                      <p class="text-[10px] sm:text-xs text-texto-suave hidden sm:block">Por día de mora</p>
                     </button>
                   </div>
                 </div>
 
                 <!-- Simple -->
                 <div v-if="wizardForm.tipo_sancion === 'simple'" class="space-y-4">
-                  <div class="p-4 bg-white rounded-xl border border-gray-200">
-                    <label class="label font-semibold text-gray-900">Valor de multa por mora</label>
+                  <div class="p-4 bg-superficie-tarjeta rounded-xl border border-borde">
+                    <label class="label font-semibold text-texto-fuerte">Valor de multa por mora</label>
                     <div class="relative mt-2">
-                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-texto-suave">$</span>
                       <input 
                         :value="formatearValorMulta(wizardForm.valor_multa)"
                         @input="handleValorMultaInput"
                         type="text" 
                         inputmode="numeric"
-                        class="input-field bg-white border-gray-200 focus:border-natillera-500 focus:ring-natillera-500/25 pl-8 w-full max-w-[200px] rounded-xl" 
+                        class="input-field bg-superficie-tarjeta border-borde focus:border-natillera-500 focus:ring-natillera-500/25 pl-8 w-full max-w-[200px] rounded-xl" 
                         placeholder="5.000"
                       />
                     </div>
                   </div>
                   
                   <!-- Resumen Simple -->
-                  <div class="p-3 bg-natillera-50 rounded-lg border border-natillera-100">
+                  <div class="p-3 bg-natillera-50 oscuro:bg-natillera-500/15 rounded-lg border border-natillera-100 oscuro:border-natillera-500/30">
                     <div class="flex items-start gap-2">
-                      <CurrencyDollarIcon class="w-4 h-4 text-natillera-700 mt-0.5 flex-shrink-0" />
+                      <CurrencyDollarIcon class="w-4 h-4 text-natillera-700 oscuro:text-natillera-300 mt-0.5 flex-shrink-0" />
                       <div class="flex-1">
-                        <p class="text-xs font-semibold text-natillera-900 mb-1">Resumen: Sanción Simple</p>
-                        <p class="text-xs text-gray-700">
+                        <p class="text-xs font-semibold text-natillera-900 oscuro:text-natillera-300 mb-1">Resumen: Sanción Simple</p>
+                        <p class="text-xs text-texto-medio">
                           Se aplicará un valor fijo de <strong>${{ formatMoney(wizardForm.valor_multa) }}</strong> por cada cuota en mora.
                         </p>
                       </div>
@@ -492,10 +492,10 @@
                   </div>
 
                   <!-- Info adicional -->
-                  <div class="p-3 bg-natillera-50/80 rounded-lg border border-natillera-100">
+                  <div class="p-3 bg-natillera-50/80 oscuro:bg-natillera-500/15 rounded-lg border border-natillera-100 oscuro:border-natillera-500/30">
                     <div class="flex items-start gap-2">
-                      <InformationCircleIcon class="w-4 h-4 text-natillera-700 mt-0.5 flex-shrink-0" />
-                      <p class="text-xs text-gray-700">
+                      <InformationCircleIcon class="w-4 h-4 text-natillera-700 oscuro:text-natillera-300 mt-0.5 flex-shrink-0" />
+                      <p class="text-xs text-texto-medio">
                         💡 Puedes configurar <strong>intereses adicionales por días</strong> y <strong>devolución por mora excesiva</strong> en la sección de Configuración → Sanciones por mora.
                       </p>
                     </div>
@@ -504,38 +504,38 @@
 
                 <!-- Diaria -->
                 <div v-if="wizardForm.tipo_sancion === 'diaria'" class="space-y-4">
-                  <div class="p-4 bg-white rounded-xl border border-gray-200">
-                    <label class="label font-semibold text-gray-900">Valor por día de mora</label>
-                    <p class="text-xs text-gray-500 mb-2">Por cada día de atraso se suma este valor a la sanción.</p>
+                  <div class="p-4 bg-superficie-tarjeta rounded-xl border border-borde">
+                    <label class="label font-semibold text-texto-fuerte">Valor por día de mora</label>
+                    <p class="text-xs text-texto-suave mb-2">Por cada día de atraso se suma este valor a la sanción.</p>
                     <div class="relative mt-2">
-                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-texto-suave">$</span>
                       <input 
                         :value="formatearValorMulta(wizardForm.valor_multa_diaria)"
                         @input="handleValorMultaDiariaInput"
                         type="text" 
                         inputmode="numeric"
-                        class="input-field bg-white border-gray-200 focus:border-natillera-500 focus:ring-natillera-500/25 pl-8 w-full max-w-[200px] rounded-xl" 
+                        class="input-field bg-superficie-tarjeta border-borde focus:border-natillera-500 focus:ring-natillera-500/25 pl-8 w-full max-w-[200px] rounded-xl" 
                         placeholder="500"
                       />
                     </div>
                   </div>
                   <!-- Resumen Diaria -->
-                  <div class="p-3 bg-natillera-50 rounded-lg border border-natillera-100">
+                  <div class="p-3 bg-natillera-50 oscuro:bg-natillera-500/15 rounded-lg border border-natillera-100 oscuro:border-natillera-500/30">
                     <div class="flex items-start gap-2">
-                      <ClockIcon class="w-4 h-4 text-natillera-700 mt-0.5 flex-shrink-0" />
+                      <ClockIcon class="w-4 h-4 text-natillera-700 oscuro:text-natillera-300 mt-0.5 flex-shrink-0" />
                       <div class="flex-1">
-                        <p class="text-xs font-semibold text-natillera-900 mb-1">Resumen: Sanción Diaria</p>
-                        <p class="text-xs text-gray-700">
+                        <p class="text-xs font-semibold text-natillera-900 oscuro:text-natillera-300 mb-1">Resumen: Sanción Diaria</p>
+                        <p class="text-xs text-texto-medio">
                           Se sumará <strong>${{ formatMoney(wizardForm.valor_multa_diaria) }}</strong> por cada día de mora después del vencimiento (y días de gracia).
                         </p>
                       </div>
                     </div>
                   </div>
                   <!-- Info adicional -->
-                  <div class="p-3 bg-natillera-50/80 rounded-lg border border-natillera-100">
+                  <div class="p-3 bg-natillera-50/80 oscuro:bg-natillera-500/15 rounded-lg border border-natillera-100 oscuro:border-natillera-500/30">
                     <div class="flex items-start gap-2">
-                      <InformationCircleIcon class="w-4 h-4 text-natillera-700 mt-0.5 flex-shrink-0" />
-                      <p class="text-xs text-gray-700">
+                      <InformationCircleIcon class="w-4 h-4 text-natillera-700 oscuro:text-natillera-300 mt-0.5 flex-shrink-0" />
+                      <p class="text-xs text-texto-medio">
                         💡 Puedes configurar <strong>devolución por mora excesiva</strong> en la sección de Configuración → Sanciones por mora.
                       </p>
                     </div>
@@ -545,25 +545,25 @@
                 <!-- Escalonada -->
                 <div v-if="wizardForm.tipo_sancion === 'escalonada'" class="space-y-4">
                   <!-- Tabla niveles -->
-                  <div class="p-4 bg-white rounded-xl border border-gray-200">
-                    <label class="label font-semibold text-gray-900 mb-3 block">Intereses por cuotas vencidas</label>
+                  <div class="p-4 bg-superficie-tarjeta rounded-xl border border-borde">
+                    <label class="label font-semibold text-texto-fuerte mb-3 block">Intereses por cuotas vencidas</label>
                     <div class="space-y-3">
                       <div v-for="(nivel, index) in wizardForm.niveles_sancion" :key="index" class="flex items-center gap-3">
-                        <span class="text-sm text-gray-600 w-20 flex-shrink-0">{{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}</span>
+                        <span class="text-sm text-texto-secundario w-20 flex-shrink-0">{{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}</span>
                         <div class="relative flex-1 min-w-0">
-                          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
+                          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-texto-suave text-sm">$</span>
                           <input 
                             v-model.number="nivel.valor" 
                             type="number" 
                             min="0" 
-                            class="input-field bg-white border-gray-200 focus:border-natillera-500 focus:ring-natillera-500/25 pl-7 py-2.5 sm:py-1.5 text-base sm:text-sm w-full rounded-xl" 
+                            class="input-field bg-superficie-tarjeta border-borde focus:border-natillera-500 focus:ring-natillera-500/25 pl-7 py-2.5 sm:py-1.5 text-base sm:text-sm w-full rounded-xl" 
                           />
                         </div>
                         <button 
                           v-if="wizardForm.niveles_sancion.length > 1" 
                           @click="eliminarNivel(index)" 
                           type="button"
-                          class="text-red-500 hover:text-red-700 p-1 transition-colors"
+                          class="text-red-500 hover:text-red-700 oscuro:hover:text-red-300 p-1 transition-colors"
                         >
                           <XMarkIcon class="w-4 h-4" />
                         </button>
@@ -573,26 +573,26 @@
                       v-if="wizardForm.niveles_sancion.length < 10" 
                       @click="agregarNivel" 
                       type="button"
-                      class="mt-3 text-sm text-natillera-700 hover:text-natillera-800 font-medium flex items-center gap-1 transition-colors"
+                      class="mt-3 text-sm text-natillera-700 oscuro:text-natillera-300 hover:text-natillera-800 oscuro:hover:text-natillera-300 font-medium flex items-center gap-1 transition-colors"
                     >
                       <PlusIcon class="w-4 h-4" /> Agregar nivel
                     </button>
                   </div>
 
                   <!-- Resumen Escalonada -->
-                  <div class="p-3 bg-natillera-50 rounded-lg border border-natillera-100">
+                  <div class="p-3 bg-natillera-50 oscuro:bg-natillera-500/15 rounded-lg border border-natillera-100 oscuro:border-natillera-500/30">
                     <div class="flex items-start gap-2">
-                      <ChartBarIcon class="w-4 h-4 text-natillera-700 mt-0.5 flex-shrink-0" />
+                      <ChartBarIcon class="w-4 h-4 text-natillera-700 oscuro:text-natillera-300 mt-0.5 flex-shrink-0" />
                       <div class="flex-1">
-                        <p class="text-xs font-semibold text-natillera-900 mb-1">Resumen: Sanción Escalonada</p>
-                        <p class="text-xs text-gray-700 mb-2">
+                        <p class="text-xs font-semibold text-natillera-900 oscuro:text-natillera-300 mb-1">Resumen: Sanción Escalonada</p>
+                        <p class="text-xs text-texto-medio mb-2">
                           El valor de la multa aumenta según la cantidad de cuotas en mora del socio:
                         </p>
                         <div class="space-y-1">
-                          <div v-for="(nivel, index) in wizardForm.niveles_sancion.slice(0, 3)" :key="index" class="text-xs text-gray-700">
+                          <div v-for="(nivel, index) in wizardForm.niveles_sancion.slice(0, 3)" :key="index" class="text-xs text-texto-medio">
                             • {{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}: <strong>${{ formatMoney(nivel.valor) }}</strong>
                           </div>
-                          <p v-if="wizardForm.niveles_sancion.length > 3" class="text-xs text-natillera-700 italic">
+                          <p v-if="wizardForm.niveles_sancion.length > 3" class="text-xs text-natillera-700 oscuro:text-natillera-300 italic">
                             ... y {{ wizardForm.niveles_sancion.length - 3 }} nivel{{ wizardForm.niveles_sancion.length - 3 > 1 ? 'es' : '' }} más
                           </p>
                         </div>
@@ -601,10 +601,10 @@
                   </div>
 
                   <!-- Info adicional -->
-                  <div class="p-3 bg-natillera-50/80 rounded-lg border border-natillera-100">
+                  <div class="p-3 bg-natillera-50/80 oscuro:bg-natillera-500/15 rounded-lg border border-natillera-100 oscuro:border-natillera-500/30">
                     <div class="flex items-start gap-2">
-                      <InformationCircleIcon class="w-4 h-4 text-natillera-700 mt-0.5 flex-shrink-0" />
-                      <p class="text-xs text-gray-700">
+                      <InformationCircleIcon class="w-4 h-4 text-natillera-700 oscuro:text-natillera-300 mt-0.5 flex-shrink-0" />
+                      <p class="text-xs text-texto-medio">
                         💡 Puedes configurar <strong>intereses adicionales por días</strong> y <strong>devolución por mora excesiva</strong> en la sección de Configuración → Sanciones por mora.
                       </p>
                     </div>
@@ -617,12 +617,12 @@
       </Transition>
 
       <!-- Generación automática de cuotas (oculta en creación; configurable en Configuración de la natillera) -->
-      <div v-if="false" class="relative p-4 sm:p-6 bg-gradient-to-br from-emerald-50 via-green-50 to-emerald-50 rounded-xl sm:rounded-2xl border-2 border-emerald-100/50 shadow-lg shadow-emerald-100/50 hover:shadow-xl hover:shadow-emerald-200/50 transition-all duration-300 animate-fade-in-up stagger-5 overflow-hidden">
+      <div v-if="false" class="relative p-4 sm:p-6 bg-gradient-to-br from-emerald-50 oscuro:from-emerald-500/15 via-green-50 oscuro:via-green-500/10 to-emerald-50 oscuro:to-emerald-500/10 rounded-xl sm:rounded-2xl border-2 border-emerald-100/50 oscuro:border-emerald-500/30 shadow-lg shadow-emerald-100/50 hover:shadow-xl hover:shadow-emerald-200/50 transition-all duration-300 animate-fade-in-up stagger-5 overflow-hidden">
         <!-- Decoración de fondo -->
-        <div class="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-emerald-200/20 to-green-200/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+        <div class="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-emerald-200/20 oscuro:from-emerald-500/15 to-green-200/20 oscuro:to-green-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
         
         <div class="relative">
-          <h3 class="font-semibold text-emerald-800 flex items-center gap-2 sm:gap-2.5 mb-3 sm:mb-5 text-base sm:text-lg">
+          <h3 class="font-semibold text-emerald-800 oscuro:text-emerald-300 flex items-center gap-2 sm:gap-2.5 mb-3 sm:mb-5 text-base sm:text-lg">
             <div class="p-1 sm:p-1.5 bg-gradient-to-br from-emerald-500 to-green-500 rounded-lg shadow-md">
               <SparklesIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
@@ -631,7 +631,7 @@
           
           <div class="space-y-3 sm:space-y-4">
             <!-- Toggle con mejor soporte móvil -->
-            <div class="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 bg-white/70 backdrop-blur-sm rounded-xl border border-emerald-100/50">
+            <div class="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 bg-superficie-tarjeta/70 backdrop-blur-sm rounded-xl border border-emerald-100/50 oscuro:border-emerald-500/30">
               <!-- Switch mejorado para móvil (usando botón en lugar de checkbox) -->
               <button 
                 type="button"
@@ -640,37 +640,34 @@
                   'relative flex-shrink-0 w-12 h-7 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:ring-offset-2',
                   wizardForm.cuotas_automaticas 
                     ? 'bg-gradient-to-r from-emerald-500 to-green-500 shadow-lg shadow-emerald-500/30' 
-                    : 'bg-gray-300'
+                    : 'bg-borde-fuerte'
                 ]"
               >
-                <span 
-                  :class="[
-                    'absolute top-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-all duration-300 flex items-center justify-center',
-                    wizardForm.cuotas_automaticas ? 'left-[22px]' : 'left-0.5'
-                  ]"
-                >
+                <!-- tema-fijo: la perilla del interruptor es blanca en los dos modos -->
+                <span class="absolute top-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-all duration-300 flex items-center justify-center" :class="wizardForm.cuotas_automaticas ? 'left-[22px]' : 'left-0.5'">
+                  <!-- tema-fijo: check verde sobre la perilla blanca -->
                   <svg v-if="wizardForm.cuotas_automaticas" class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                   </svg>
-                  <svg v-else class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg v-else class="w-3 h-3 text-texto-tenue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                   </svg>
                 </span>
               </button>
               
               <div class="flex-1 min-w-0">
-                <span class="text-gray-700 font-semibold text-sm sm:text-base block mb-1">
+                <span class="text-texto-medio font-semibold text-sm sm:text-base block mb-1">
                   Generar cuotas automáticamente
                 </span>
-                <p class="text-xs text-gray-500 leading-relaxed">
+                <p class="text-xs text-texto-suave leading-relaxed">
                   Al agregar un nuevo socio, se crearán todas sus cuotas del período
                 </p>
               </div>
             </div>
 
             <!-- Información explicativa -->
-            <div class="p-3 sm:p-4 bg-emerald-50/80 border border-emerald-200/50 rounded-lg sm:rounded-xl">
-              <p class="text-xs sm:text-sm text-emerald-700 flex items-start gap-2 leading-relaxed">
+            <div class="p-3 sm:p-4 bg-emerald-50/80 oscuro:bg-emerald-500/15 border border-emerald-200/50 oscuro:border-emerald-500/30 rounded-lg sm:rounded-xl">
+              <p class="text-xs sm:text-sm text-emerald-700 oscuro:text-emerald-300 flex items-start gap-2 leading-relaxed">
                 <SparklesIcon class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
                 <span>
                   Las cuotas se generarán desde <strong>{{ meses.find(m => m.value === wizardForm.mes_inicio)?.label }} {{ wizardForm.anio_inicio }}</strong> hasta <strong>{{ meses.find(m => m.value === wizardForm.mes_fin)?.label }} {{ wizardForm.anio }}</strong>, 
@@ -694,9 +691,9 @@
       >
         <div v-show="currentStep === 4" key="step4" class="wizard-step-content space-y-6">
       <!-- Reglas de intereses (préstamos) -->
-      <div class="relative p-5 sm:p-6 rounded-2xl border border-gray-200 bg-gray-50/50 overflow-hidden">
+      <div class="relative p-5 sm:p-6 rounded-2xl border border-borde bg-superficie-suave/50 overflow-hidden">
         <div class="relative">
-          <h3 class="font-semibold text-gray-900 flex items-center gap-2.5 mb-5 text-lg">
+          <h3 class="font-semibold text-texto-fuerte flex items-center gap-2.5 mb-5 text-lg">
             <div class="p-1.5 bg-[#166534] rounded-lg shadow-sm">
               <CurrencyDollarIcon class="w-5 h-5 text-white" />
             </div>
@@ -704,7 +701,7 @@
           </h3>
           
           <div class="space-y-5">
-            <div class="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-all duration-300">
+            <div class="flex items-center gap-4 p-4 bg-superficie-tarjeta rounded-xl border border-borde hover:shadow-sm transition-all duration-300">
               <label for="prestamos_activos" class="relative flex items-center cursor-pointer group flex-1">
                 <input 
                   type="checkbox" 
@@ -713,22 +710,22 @@
                   class="sr-only peer"
                 />
                 <!-- Toggle mejorado -->
-                <div class="relative w-14 h-7 bg-gray-300 rounded-full shadow-inner transition-all duration-300 peer-checked:bg-[#166534] peer-checked:shadow-lg peer-checked:shadow-natillera-900/25 peer-focus:ring-2 peer-focus:ring-natillera-500/40 peer-focus:ring-offset-2">
-                  <!-- Círculo del toggle -->
+                <div class="relative w-14 h-7 bg-borde-fuerte rounded-full shadow-inner transition-all duration-300 peer-checked:bg-[#166534] peer-checked:shadow-lg peer-checked:shadow-natillera-900/25 peer-focus:ring-2 peer-focus:ring-natillera-500/40 peer-focus:ring-offset-2">
+                  <!-- tema-fijo: la perilla del interruptor es blanca en los dos modos -->
                   <div class="absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 peer-checked:translate-x-7 flex items-center justify-center">
-                    <!-- Icono de check cuando está activo -->
+                    <!-- tema-fijo: check verde sobre la perilla blanca -->
                     <svg v-if="wizardForm.prestamos_activos" class="w-4 h-4 text-natillera-700 animate-scale-in" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                     </svg>
                     <!-- Icono de X cuando está inactivo -->
-                    <svg v-else class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg v-else class="w-3.5 h-3.5 text-texto-tenue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                   </div>
                   <!-- Efecto de brillo cuando está activo -->
-                  <div v-if="wizardForm.prestamos_activos" class="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer-toggle"></div>
+                  <div v-if="wizardForm.prestamos_activos" class="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-superficie-tarjeta/30 to-transparent animate-shimmer-toggle"></div>
                 </div>
-                <span class="ml-4 text-gray-800 font-semibold group-hover:text-gray-900 transition-colors text-sm sm:text-base">
+                <span class="ml-4 text-texto font-semibold group-hover:text-texto-fuerte transition-colors text-sm sm:text-base">
                   Permitir préstamos internos
                 </span>
               </label>
@@ -744,12 +741,12 @@
             >
               <div v-if="wizardForm.prestamos_activos" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="relative">
-                  <label class="label text-gray-900 font-semibold">Interés mensual (%)</label>
+                  <label class="label text-texto-fuerte font-semibold">Interés mensual (%)</label>
                   <div class="relative">
                     <input 
                       v-model.number="wizardForm.interes_prestamo"
                       type="number" 
-                      class="input-field bg-white border-gray-200 focus:border-natillera-500 focus:ring-natillera-500/25 rounded-xl"
+                      class="input-field bg-superficie-tarjeta border-borde focus:border-natillera-500 focus:ring-natillera-500/25 rounded-xl"
                       placeholder="2"
                       min="0"
                       max="100"
@@ -758,31 +755,31 @@
                   </div>
                 </div>
                 <div class="relative">
-                  <label class="label text-gray-900 font-semibold">Plazo máximo (meses)</label>
+                  <label class="label text-texto-fuerte font-semibold">Plazo máximo (meses)</label>
                   <div class="relative">
                     <input
                       v-model.number="wizardForm.plazo_maximo"
                       type="number"
-                      class="input-field bg-white border-gray-200 focus:border-natillera-500 focus:ring-natillera-500/25 rounded-xl"
+                      class="input-field bg-superficie-tarjeta border-borde focus:border-natillera-500 focus:ring-natillera-500/25 rounded-xl"
                       placeholder="6"
                       min="1"
                     />
                   </div>
                 </div>
                 <div class="relative sm:col-span-2">
-                  <label class="label text-gray-900 font-semibold">Tasa de mora (% mensual)</label>
+                  <label class="label text-texto-fuerte font-semibold">Tasa de mora (% mensual)</label>
                   <div class="relative">
                     <input
                       v-model.number="wizardForm.tasa_mora"
                       type="number"
-                      class="input-field bg-white border-gray-200 focus:border-natillera-500 focus:ring-natillera-500/25 rounded-xl"
+                      class="input-field bg-superficie-tarjeta border-borde focus:border-natillera-500 focus:ring-natillera-500/25 rounded-xl"
                       placeholder="0"
                       min="0"
                       max="100"
                       step="0.5"
                     />
                   </div>
-                  <p class="mt-1.5 text-xs text-gray-500">
+                  <p class="mt-1.5 text-xs text-texto-suave">
                     Interés por atraso, sobre el capital pendiente y proporcional a los días de mora. Déjalo en 0 si no cobras mora.
                   </p>
                 </div>
@@ -805,7 +802,7 @@
         leave-from-class="opacity-100 translate-y-0"
         leave-to-class="opacity-0 -translate-y-2"
       >
-        <div v-if="error" class="mx-5 sm:mx-8 mb-4 p-4 bg-red-50/90 border border-red-100 rounded-xl text-red-700 text-sm flex items-center gap-3">
+        <div v-if="error" class="mx-5 sm:mx-8 mb-4 p-4 bg-red-50/90 oscuro:bg-red-500/15 border border-red-100 oscuro:border-red-500/30 rounded-xl text-red-700 oscuro:text-red-300 text-sm flex items-center gap-3">
           <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
@@ -813,9 +810,9 @@
         </div>
       </Transition>
 
-      <div class="flex flex-col gap-4 px-5 py-4 sm:px-8 sm:py-5 border-t border-gray-200 bg-gray-50/50">
+      <div class="flex flex-col gap-4 px-5 py-4 sm:px-8 sm:py-5 border-t border-borde bg-superficie-suave/50">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-        <p class="text-sm text-gray-500 text-center sm:text-left shrink-0">
+        <p class="text-sm text-texto-suave text-center sm:text-left shrink-0">
           Paso {{ currentStep }} de {{ steps.length }}
         </p>
         <div class="flex flex-row flex-wrap items-stretch justify-end gap-3 w-full sm:w-auto sm:flex-1 sm:min-w-0">
@@ -1268,7 +1265,7 @@ async function handleSubmit() {
 }
 
 .wizard-form-sidebar {
-  background: #166534;
+  background: #166534; /* tema-fijo: verde de marca del asistente, igual en los dos modos */
 }
 
 /* Píldoras: secundarios un poco más compactos; primario (Siguiente/Crear) un poco más grande */
@@ -1280,8 +1277,8 @@ async function handleSubmit() {
 }
 
 .wizard-btn-primary {
-  background: #166534;
-  color: #fff;
+  background: #166534; /* tema-fijo: verde de marca del asistente, igual en los dos modos */
+  color: #fff; /* tema-fijo: verde de marca del asistente, igual en los dos modos */
   border-radius: 9999px;
   transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
 }
@@ -1293,12 +1290,12 @@ async function handleSubmit() {
 }
 
 .wizard-btn-primary:hover:not(:disabled) {
-  background: #145a2d;
+  background: #145a2d; /* tema-fijo: verde de marca del asistente, igual en los dos modos */
   box-shadow: 0 4px 14px rgba(22, 101, 52, 0.28);
 }
 
 .wizard-btn-primary:focus-visible {
-  outline: 2px solid var(--color-natillera-400, #4ade80);
+  outline: 2px solid var(--color-natillera-400, #4ade80); /* tema-fijo: verde de marca del asistente, igual en los dos modos */
   outline-offset: 2px;
 }
 
@@ -1409,6 +1406,11 @@ async function handleSubmit() {
 
 .animate-shimmer-toggle {
   animation: shimmer-toggle 2s ease-in-out infinite;
+}
+
+/* Modo oscuro: el lienzo del asistente. El verde de la barra y del botón no cambia. */
+:where([data-tema=oscuro]) .crear-natillera-wizard {
+  background: linear-gradient(180deg, var(--superficie-lienzo) 0%, var(--superficie-hundida) 100%);
 }
 </style>
 

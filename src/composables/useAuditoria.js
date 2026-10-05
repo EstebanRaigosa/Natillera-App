@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { filtroSinCorreo } from './useOcultarMiActividad'
 
 /**
  * Ejecuta una promesa de auditoría en segundo plano sin bloquear
@@ -577,6 +578,7 @@ export function useAuditoria() {
    * @param {string} filtros.entidadId - ID de entidad específica
    * @param {string} filtros.usuarioId - ID del usuario (solo para super usuario)
    * @param {string} filtros.usuarioEmail - Email del usuario (solo para super usuario)
+   * @param {string} filtros.excluirEmail - Email cuyos registros se ocultan (el propio superusuario)
    * @param {Date} filtros.fechaDesde - Fecha desde
    * @param {Date} filtros.fechaHasta - Fecha hasta
    * @param {number} filtros.limit - Límite de resultados
@@ -616,6 +618,9 @@ export function useAuditoria() {
         }
         if (filtros.usuarioEmail) {
           query = query.eq('usuario_email', filtros.usuarioEmail)
+        }
+        if (filtros.excluirEmail) {
+          query = query.or(filtroSinCorreo('usuario_email', filtros.excluirEmail))
         }
         if (filtros.fechaDesde) {
           query = query.gte('created_at', filtros.fechaDesde.toISOString())

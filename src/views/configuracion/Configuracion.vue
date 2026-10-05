@@ -2,10 +2,10 @@
   <div class="max-w-4xl mx-auto space-y-6">
     <!-- Header -->
     <div>
-      <h1 class="text-2xl sm:text-3xl font-display font-bold text-gray-800">
+      <h1 class="text-2xl sm:text-3xl font-display font-bold text-texto">
         Configuración
       </h1>
-      <p class="text-gray-500 mt-1">
+      <p class="text-texto-suave mt-1">
         Personaliza los mensajes y ajustes de la aplicación
       </p>
     </div>
@@ -17,10 +17,10 @@
           <ChatBubbleLeftRightIcon class="w-5 h-5 text-white" />
         </div>
         <div>
-          <h2 class="text-lg font-display font-bold text-gray-800">
+          <h2 class="text-lg font-display font-bold text-texto">
             Mensajes por Defecto
           </h2>
-          <p class="text-sm text-gray-500">
+          <p class="text-sm text-texto-suave">
             Personaliza los mensajes de WhatsApp para recordatorios de pago
           </p>
         </div>
@@ -29,8 +29,8 @@
       <!-- Mensaje Individual -->
       <div class="mb-6">
         <div class="flex items-center justify-between mb-3">
-          <label class="font-semibold text-gray-700 flex items-center gap-2">
-            <UserIcon class="w-4 h-4 text-natillera-600" />
+          <label class="font-semibold text-texto-medio flex items-center gap-2">
+            <UserIcon class="w-4 h-4 text-natillera-600 oscuro:text-natillera-300" />
             Mensaje Individual
           </label>
           <div class="flex gap-1">
@@ -40,8 +40,8 @@
               :class="[
                 'px-2 py-1 text-xs rounded-lg transition-colors',
                 esVisor 
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                  ? 'bg-superficie-hundida text-texto-tenue cursor-not-allowed' 
+                  : 'bg-blue-100 oscuro:bg-blue-500/15 text-blue-700 oscuro:text-blue-300 hover:bg-blue-200 oscuro:hover:bg-blue-500/25'
               ]"
               title="Insertar nombre del socio"
             >
@@ -53,8 +53,8 @@
               :class="[
                 'px-2 py-1 text-xs rounded-lg transition-colors',
                 esVisor 
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                  : 'bg-green-100 text-green-700 hover:bg-green-200'
+                  ? 'bg-superficie-hundida text-texto-tenue cursor-not-allowed' 
+                  : 'bg-green-100 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300 hover:bg-green-200 oscuro:hover:bg-green-500/25'
               ]"
               title="Insertar monto de la cuota"
             >
@@ -62,8 +62,8 @@
             </button>
           </div>
         </div>
-        <p class="text-xs text-gray-500 mb-2">
-          Este mensaje se envía a cada socio individualmente. Usa <code class="bg-gray-100 px-1 rounded">{{nombre}}</code> y <code class="bg-gray-100 px-1 rounded">{{monto}}</code> para personalizar.
+        <p class="text-xs text-texto-suave mb-2">
+          Este mensaje se envía a cada socio individualmente. Usa <code class="bg-superficie-hundida px-1 rounded">{{nombre}}</code> y <code class="bg-superficie-hundida px-1 rounded">{{monto}}</code> para personalizar.
         </p>
         <textarea
           ref="textareaIndividual"
@@ -71,32 +71,32 @@
           :disabled="esVisor"
           :class="[
             'input-field min-h-[150px] font-mono text-sm',
-            esVisor ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''
+            esVisor ? 'bg-superficie-hundida cursor-not-allowed opacity-75' : ''
           ]"
           placeholder="Escribe el mensaje individual..."
         ></textarea>
         
         <!-- Vista previa -->
-        <div class="mt-3 p-3 bg-green-50 border border-green-200 rounded-xl">
-          <p class="text-xs font-semibold text-green-700 mb-2 flex items-center gap-1">
+        <div class="mt-3 p-3 bg-green-50 oscuro:bg-green-500/15 border border-green-200 oscuro:border-green-500/30 rounded-xl">
+          <p class="text-xs font-semibold text-green-700 oscuro:text-green-300 mb-2 flex items-center gap-1">
             <EyeIcon class="w-3.5 h-3.5" />
             Vista previa (ejemplo)
           </p>
-          <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ vistaPreviewIndividual }}</p>
+          <p class="text-sm text-texto-medio whitespace-pre-wrap">{{ vistaPreviewIndividual }}</p>
         </div>
       </div>
 
-      <hr class="border-gray-200 my-6" />
+      <hr class="border-borde my-6" />
 
       <!-- Mensaje General -->
       <div class="mb-6">
         <div class="flex items-center justify-between mb-3">
-          <label class="font-semibold text-gray-700 flex items-center gap-2">
-            <UsersIcon class="w-4 h-4 text-purple-600" />
+          <label class="font-semibold text-texto-medio flex items-center gap-2">
+            <UsersIcon class="w-4 h-4 text-purple-600 oscuro:text-purple-300" />
             Mensaje General
           </label>
         </div>
-        <p class="text-xs text-gray-500 mb-2">
+        <p class="text-xs text-texto-suave mb-2">
           Este mensaje se puede enviar a todos los socios a la vez. No usa variables personalizadas.
         </p>
         <textarea
@@ -104,28 +104,28 @@
           :disabled="esVisor"
           :class="[
             'input-field min-h-[150px] font-mono text-sm',
-            esVisor ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''
+            esVisor ? 'bg-superficie-hundida cursor-not-allowed opacity-75' : ''
           ]"
           placeholder="Escribe el mensaje general..."
         ></textarea>
         
         <!-- Vista previa -->
-        <div class="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-xl">
-          <p class="text-xs font-semibold text-purple-700 mb-2 flex items-center gap-1">
+        <div class="mt-3 p-3 bg-purple-50 oscuro:bg-purple-500/15 border border-purple-200 oscuro:border-purple-500/30 rounded-xl">
+          <p class="text-xs font-semibold text-purple-700 oscuro:text-purple-300 mb-2 flex items-center gap-1">
             <EyeIcon class="w-3.5 h-3.5" />
             Vista previa
           </p>
-          <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ configStore.mensajeGeneral }}</p>
+          <p class="text-sm text-texto-medio whitespace-pre-wrap">{{ configStore.mensajeGeneral }}</p>
         </div>
       </div>
 
-      <hr class="border-gray-200 my-6" />
+      <hr class="border-borde my-6" />
 
       <!-- Mensaje Cuota en Mora -->
       <div class="mb-6">
         <div class="flex items-center justify-between mb-3">
-          <label class="font-semibold text-gray-700 flex items-center gap-2">
-            <ExclamationTriangleIcon class="w-4 h-4 text-red-600" />
+          <label class="font-semibold text-texto-medio flex items-center gap-2">
+            <ExclamationTriangleIcon class="w-4 h-4 text-red-600 oscuro:text-red-300" />
             Mensaje Cuota en Mora
           </label>
           <div class="flex gap-1 flex-wrap">
@@ -134,7 +134,7 @@
               :disabled="esVisor"
               :class="[
                 'px-2 py-1 text-xs rounded-lg transition-colors',
-                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                esVisor ? 'bg-superficie-hundida text-texto-tenue cursor-not-allowed' : 'bg-blue-100 oscuro:bg-blue-500/15 text-blue-700 oscuro:text-blue-300 hover:bg-blue-200 oscuro:hover:bg-blue-500/25'
               ]"
               title="Insertar nombre del socio"
             >
@@ -145,7 +145,7 @@
               :disabled="esVisor"
               :class="[
                 'px-2 py-1 text-xs rounded-lg transition-colors',
-                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-100 text-green-700 hover:bg-green-200'
+                esVisor ? 'bg-superficie-hundida text-texto-tenue cursor-not-allowed' : 'bg-green-100 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300 hover:bg-green-200 oscuro:hover:bg-green-500/25'
               ]"
               title="Insertar mes"
             >
@@ -156,7 +156,7 @@
               :disabled="esVisor"
               :class="[
                 'px-2 py-1 text-xs rounded-lg transition-colors',
-                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-100 text-green-700 hover:bg-green-200'
+                esVisor ? 'bg-superficie-hundida text-texto-tenue cursor-not-allowed' : 'bg-green-100 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300 hover:bg-green-200 oscuro:hover:bg-green-500/25'
               ]"
               title="Insertar año"
             >
@@ -167,7 +167,7 @@
               :disabled="esVisor"
               :class="[
                 'px-2 py-1 text-xs rounded-lg transition-colors',
-                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-100 text-green-700 hover:bg-green-200'
+                esVisor ? 'bg-superficie-hundida text-texto-tenue cursor-not-allowed' : 'bg-green-100 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300 hover:bg-green-200 oscuro:hover:bg-green-500/25'
               ]"
               title="Insertar valor de la cuota"
             >
@@ -178,7 +178,7 @@
               :disabled="esVisor"
               :class="[
                 'px-2 py-1 text-xs rounded-lg transition-colors',
-                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                esVisor ? 'bg-superficie-hundida text-texto-tenue cursor-not-allowed' : 'bg-orange-100 oscuro:bg-orange-500/15 text-orange-700 oscuro:text-orange-300 hover:bg-orange-200 oscuro:hover:bg-orange-500/25'
               ]"
               title="Insertar sanción"
             >
@@ -189,7 +189,7 @@
               :disabled="esVisor"
               :class="[
                 'px-2 py-1 text-xs rounded-lg transition-colors',
-                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                esVisor ? 'bg-superficie-hundida text-texto-tenue cursor-not-allowed' : 'bg-purple-100 oscuro:bg-purple-500/15 text-purple-700 oscuro:text-purple-300 hover:bg-purple-200 oscuro:hover:bg-purple-500/25'
               ]"
               title="Insertar total a pagar"
             >
@@ -200,7 +200,7 @@
               :disabled="esVisor"
               :class="[
                 'px-2 py-1 text-xs rounded-lg transition-colors',
-                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                esVisor ? 'bg-superficie-hundida text-texto-tenue cursor-not-allowed' : 'bg-superficie-hundida text-texto-medio hover:bg-borde'
               ]"
               title="Insertar fecha de vencimiento"
             >
@@ -211,7 +211,7 @@
               :disabled="esVisor"
               :class="[
                 'px-2 py-1 text-xs rounded-lg transition-colors',
-                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-red-100 text-red-700 hover:bg-red-200'
+                esVisor ? 'bg-superficie-hundida text-texto-tenue cursor-not-allowed' : 'bg-red-100 oscuro:bg-red-500/15 text-red-700 oscuro:text-red-300 hover:bg-red-200 oscuro:hover:bg-red-500/25'
               ]"
               title="Insertar días en mora"
             >
@@ -219,8 +219,8 @@
             </button>
           </div>
         </div>
-        <p class="text-xs text-gray-500 mb-2">
-          Mensaje que se envía cuando una cuota está en mora. Variables disponibles: <code class="bg-gray-100 px-1 rounded">{{nombre}}</code>, <code class="bg-gray-100 px-1 rounded">{{mes}}</code>, <code class="bg-gray-100 px-1 rounded">{{anio}}</code>, <code class="bg-gray-100 px-1 rounded">{{valor_cuota}}</code>, <code class="bg-gray-100 px-1 rounded">{{sancion}}</code>, <code class="bg-gray-100 px-1 rounded">{{total}}</code>, <code class="bg-gray-100 px-1 rounded">{{fecha_vencimiento}}</code>, <code class="bg-gray-100 px-1 rounded">{{dias_mora}}</code>
+        <p class="text-xs text-texto-suave mb-2">
+          Mensaje que se envía cuando una cuota está en mora. Variables disponibles: <code class="bg-superficie-hundida px-1 rounded">{{nombre}}</code>, <code class="bg-superficie-hundida px-1 rounded">{{mes}}</code>, <code class="bg-superficie-hundida px-1 rounded">{{anio}}</code>, <code class="bg-superficie-hundida px-1 rounded">{{valor_cuota}}</code>, <code class="bg-superficie-hundida px-1 rounded">{{sancion}}</code>, <code class="bg-superficie-hundida px-1 rounded">{{total}}</code>, <code class="bg-superficie-hundida px-1 rounded">{{fecha_vencimiento}}</code>, <code class="bg-superficie-hundida px-1 rounded">{{dias_mora}}</code>
         </p>
         <textarea
           ref="textareaCuotaMora"
@@ -228,28 +228,28 @@
           :disabled="esVisor"
           :class="[
             'input-field min-h-[150px] font-mono text-sm',
-            esVisor ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''
+            esVisor ? 'bg-superficie-hundida cursor-not-allowed opacity-75' : ''
           ]"
           placeholder="Escribe el mensaje para cuota en mora..."
         ></textarea>
         
         <!-- Vista previa -->
-        <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl">
-          <p class="text-xs font-semibold text-red-700 mb-2 flex items-center gap-1">
+        <div class="mt-3 p-3 bg-red-50 oscuro:bg-red-500/15 border border-red-200 oscuro:border-red-500/30 rounded-xl">
+          <p class="text-xs font-semibold text-red-700 oscuro:text-red-300 mb-2 flex items-center gap-1">
             <EyeIcon class="w-3.5 h-3.5" />
             Vista previa (ejemplo)
           </p>
-          <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ vistaPreviewCuotaMora }}</p>
+          <p class="text-sm text-texto-medio whitespace-pre-wrap">{{ vistaPreviewCuotaMora }}</p>
         </div>
       </div>
 
-      <hr class="border-gray-200 my-6" />
+      <hr class="border-borde my-6" />
 
       <!-- Mensaje Cuota Pendiente -->
       <div class="mb-6">
         <div class="flex items-center justify-between mb-3">
-          <label class="font-semibold text-gray-700 flex items-center gap-2">
-            <ClockIcon class="w-4 h-4 text-amber-600" />
+          <label class="font-semibold text-texto-medio flex items-center gap-2">
+            <ClockIcon class="w-4 h-4 text-amber-600 oscuro:text-amber-300" />
             Mensaje Cuota Pendiente
           </label>
           <div class="flex gap-1 flex-wrap">
@@ -258,7 +258,7 @@
               :disabled="esVisor"
               :class="[
                 'px-2 py-1 text-xs rounded-lg transition-colors',
-                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                esVisor ? 'bg-superficie-hundida text-texto-tenue cursor-not-allowed' : 'bg-blue-100 oscuro:bg-blue-500/15 text-blue-700 oscuro:text-blue-300 hover:bg-blue-200 oscuro:hover:bg-blue-500/25'
               ]"
               title="Insertar nombre del socio"
             >
@@ -269,7 +269,7 @@
               :disabled="esVisor"
               :class="[
                 'px-2 py-1 text-xs rounded-lg transition-colors',
-                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-100 text-green-700 hover:bg-green-200'
+                esVisor ? 'bg-superficie-hundida text-texto-tenue cursor-not-allowed' : 'bg-green-100 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300 hover:bg-green-200 oscuro:hover:bg-green-500/25'
               ]"
               title="Insertar mes"
             >
@@ -280,7 +280,7 @@
               :disabled="esVisor"
               :class="[
                 'px-2 py-1 text-xs rounded-lg transition-colors',
-                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-100 text-green-700 hover:bg-green-200'
+                esVisor ? 'bg-superficie-hundida text-texto-tenue cursor-not-allowed' : 'bg-green-100 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300 hover:bg-green-200 oscuro:hover:bg-green-500/25'
               ]"
               title="Insertar año"
             >
@@ -291,7 +291,7 @@
               :disabled="esVisor"
               :class="[
                 'px-2 py-1 text-xs rounded-lg transition-colors',
-                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-100 text-green-700 hover:bg-green-200'
+                esVisor ? 'bg-superficie-hundida text-texto-tenue cursor-not-allowed' : 'bg-green-100 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300 hover:bg-green-200 oscuro:hover:bg-green-500/25'
               ]"
               title="Insertar valor de la cuota"
             >
@@ -302,7 +302,7 @@
               :disabled="esVisor"
               :class="[
                 'px-2 py-1 text-xs rounded-lg transition-colors',
-                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                esVisor ? 'bg-superficie-hundida text-texto-tenue cursor-not-allowed' : 'bg-purple-100 oscuro:bg-purple-500/15 text-purple-700 oscuro:text-purple-300 hover:bg-purple-200 oscuro:hover:bg-purple-500/25'
               ]"
               title="Insertar total a pagar"
             >
@@ -313,7 +313,7 @@
               :disabled="esVisor"
               :class="[
                 'px-2 py-1 text-xs rounded-lg transition-colors',
-                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                esVisor ? 'bg-superficie-hundida text-texto-tenue cursor-not-allowed' : 'bg-superficie-hundida text-texto-medio hover:bg-borde'
               ]"
               title="Insertar fecha de vencimiento"
             >
@@ -321,8 +321,8 @@
             </button>
           </div>
         </div>
-        <p class="text-xs text-gray-500 mb-2">
-          Mensaje que se envía cuando una cuota está pendiente. Variables disponibles: <code class="bg-gray-100 px-1 rounded">{{nombre}}</code>, <code class="bg-gray-100 px-1 rounded">{{mes}}</code>, <code class="bg-gray-100 px-1 rounded">{{anio}}</code>, <code class="bg-gray-100 px-1 rounded">{{valor_cuota}}</code>, <code class="bg-gray-100 px-1 rounded">{{total}}</code>, <code class="bg-gray-100 px-1 rounded">{{fecha_vencimiento}}</code>
+        <p class="text-xs text-texto-suave mb-2">
+          Mensaje que se envía cuando una cuota está pendiente. Variables disponibles: <code class="bg-superficie-hundida px-1 rounded">{{nombre}}</code>, <code class="bg-superficie-hundida px-1 rounded">{{mes}}</code>, <code class="bg-superficie-hundida px-1 rounded">{{anio}}</code>, <code class="bg-superficie-hundida px-1 rounded">{{valor_cuota}}</code>, <code class="bg-superficie-hundida px-1 rounded">{{total}}</code>, <code class="bg-superficie-hundida px-1 rounded">{{fecha_vencimiento}}</code>
         </p>
         <textarea
           ref="textareaCuotaPendiente"
@@ -330,23 +330,23 @@
           :disabled="esVisor"
           :class="[
             'input-field min-h-[150px] font-mono text-sm',
-            esVisor ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''
+            esVisor ? 'bg-superficie-hundida cursor-not-allowed opacity-75' : ''
           ]"
           placeholder="Escribe el mensaje para cuota pendiente..."
         ></textarea>
         
         <!-- Vista previa -->
-        <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
-          <p class="text-xs font-semibold text-amber-700 mb-2 flex items-center gap-1">
+        <div class="mt-3 p-3 bg-amber-50 oscuro:bg-amber-500/15 border border-amber-200 oscuro:border-amber-500/30 rounded-xl">
+          <p class="text-xs font-semibold text-amber-700 oscuro:text-amber-300 mb-2 flex items-center gap-1">
             <EyeIcon class="w-3.5 h-3.5" />
             Vista previa (ejemplo)
           </p>
-          <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ vistaPreviewCuotaPendiente }}</p>
+          <p class="text-sm text-texto-medio whitespace-pre-wrap">{{ vistaPreviewCuotaPendiente }}</p>
         </div>
       </div>
 
       <!-- Botones de acción -->
-      <div v-if="!esVisor" class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+      <div v-if="!esVisor" class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-borde">
         <button 
           @click="restaurarDefecto"
           class="btn-secondary inline-flex items-center justify-center gap-2"
@@ -365,12 +365,12 @@
       </div>
       
       <!-- Mensaje informativo para visores -->
-      <div v-if="esVisor" class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+      <div v-if="esVisor" class="mt-4 p-4 bg-blue-50 oscuro:bg-blue-500/15 border border-blue-200 oscuro:border-blue-500/30 rounded-xl">
         <div class="flex items-start gap-3">
-          <EyeIcon class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <EyeIcon class="w-5 h-5 text-blue-600 oscuro:text-blue-300 flex-shrink-0 mt-0.5" />
           <div>
-            <p class="text-sm font-semibold text-blue-800 mb-1">Modo de solo lectura</p>
-            <p class="text-sm text-blue-700">Como visor, puedes consultar la configuración pero no puedes modificarla.</p>
+            <p class="text-sm font-semibold text-blue-800 oscuro:text-blue-300 mb-1">Modo de solo lectura</p>
+            <p class="text-sm text-blue-700 oscuro:text-blue-300">Como visor, puedes consultar la configuración pero no puedes modificarla.</p>
           </div>
         </div>
       </div>
@@ -378,7 +378,7 @@
       <!-- Mensaje de éxito/error -->
       <div v-if="mensaje" :class="[
         'mt-4 p-3 rounded-xl text-sm flex items-center gap-2',
-        mensaje.tipo === 'exito' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+        mensaje.tipo === 'exito' ? 'bg-green-50 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300 border border-green-200 oscuro:border-green-500/30' : 'bg-red-50 oscuro:bg-red-500/15 text-red-700 oscuro:text-red-300 border border-red-200 oscuro:border-red-500/30'
       ]">
         <component :is="mensaje.tipo === 'exito' ? CheckCircleIcon : ExclamationCircleIcon" class="w-5 h-5" />
         {{ mensaje.texto }}

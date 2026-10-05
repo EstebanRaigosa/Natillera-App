@@ -27,20 +27,20 @@ defineProps({
     <header class="ds-page-header" aria-hidden="true">
       <div class="ds-page-header__row">
         <div class="ds-page-header__lead">
-          <div class="w-9 h-9 rounded-full bg-gray-200 animate-pulse flex-shrink-0"></div>
-          <div class="ds-page-header__icon !bg-gray-200 animate-pulse"></div>
+          <div class="w-9 h-9 rounded-full bg-borde animate-pulse flex-shrink-0"></div>
+          <div class="ds-page-header__icon !bg-borde animate-pulse"></div>
           <div class="min-w-0 flex-1">
-            <div class="h-6 w-40 sm:w-52 rounded bg-gray-200 animate-pulse"></div>
-            <div class="hidden sm:block h-3.5 w-56 rounded bg-gray-100 animate-pulse mt-2"></div>
+            <div class="h-6 w-40 sm:w-52 rounded bg-borde animate-pulse"></div>
+            <div class="hidden sm:block h-3.5 w-56 rounded bg-superficie-hundida animate-pulse mt-2"></div>
           </div>
         </div>
         <div class="ds-page-header__actions hidden sm:flex gap-2">
-          <div class="h-9 w-32 rounded-lg bg-gray-200 animate-pulse"></div>
-          <div class="h-9 w-32 rounded-lg bg-gray-200 animate-pulse"></div>
+          <div class="h-9 w-32 rounded-lg bg-borde animate-pulse"></div>
+          <div class="h-9 w-32 rounded-lg bg-borde animate-pulse"></div>
         </div>
       </div>
       <!-- Móvil: botón registrar pago a ancho completo -->
-      <div class="sm:hidden h-11 w-full rounded-lg bg-gray-200 animate-pulse mt-3"></div>
+      <div class="sm:hidden h-11 w-full rounded-lg bg-borde animate-pulse mt-3"></div>
     </header>
 
     <!-- Tabs de meses + resumen -->
@@ -51,22 +51,22 @@ defineProps({
           <div
             v-for="n in 5"
             :key="n"
-            class="flex-shrink-0 rounded-t-2xl bg-gray-200 animate-pulse"
+            class="flex-shrink-0 rounded-t-2xl bg-borde animate-pulse"
             :class="n === 1 ? 'w-[128px] h-[76px]' : 'w-[110px] h-[60px]'"
           ></div>
         </div>
       </div>
 
       <!-- Tarjeta de resumen del mes -->
-      <div class="relative z-10 -mt-1 bg-white rounded-2xl border border-gray-200/80 shadow-sm p-3 sm:p-5">
+      <div class="relative z-10 -mt-1 bg-superficie-tarjeta rounded-2xl border border-borde/80 shadow-sm p-3 sm:p-5">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4">
           <div class="flex items-center gap-2 sm:gap-2.5 min-w-0">
-            <div class="h-6 w-28 rounded bg-gray-200 animate-pulse"></div>
-            <div class="h-6 w-24 rounded bg-gray-200 animate-pulse"></div>
-            <div class="h-5 w-12 rounded-full bg-gray-200 animate-pulse"></div>
+            <div class="h-6 w-28 rounded bg-borde animate-pulse"></div>
+            <div class="h-6 w-24 rounded bg-borde animate-pulse"></div>
+            <div class="h-5 w-12 rounded-full bg-borde animate-pulse"></div>
           </div>
           <div class="flex items-center gap-3 sm:gap-4 flex-wrap">
-            <div v-for="n in 4" :key="n" class="h-4 w-16 rounded bg-gray-100 animate-pulse"></div>
+            <div v-for="n in 4" :key="n" class="h-4 w-16 rounded bg-superficie-hundida animate-pulse"></div>
           </div>
         </div>
       </div>
@@ -74,10 +74,10 @@ defineProps({
 
     <!-- Toolbar (búsqueda + filtros) -->
     <div class="flex flex-col gap-3" aria-hidden="true">
-      <div class="h-11 w-full rounded-xl bg-gray-200 animate-pulse"></div>
+      <div class="h-11 w-full rounded-xl bg-borde animate-pulse"></div>
       <div class="flex flex-wrap gap-2">
-        <div class="h-9 w-48 rounded-lg bg-gray-100 animate-pulse"></div>
-        <div class="h-9 w-40 rounded-lg bg-gray-100 animate-pulse"></div>
+        <div class="h-9 w-48 rounded-lg bg-superficie-hundida animate-pulse"></div>
+        <div class="h-9 w-40 rounded-lg bg-superficie-hundida animate-pulse"></div>
       </div>
     </div>
 

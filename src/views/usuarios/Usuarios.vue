@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto space-y-6">
     <!-- Header -->
-    <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
+    <div class="relative bg-gradient-to-br from-superficie-tarjeta via-natillera-50/50 oscuro:via-natillera-500/10 to-emerald-50/30 oscuro:to-emerald-500/10 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-natillera-200/50 oscuro:border-natillera-500/30 shadow-xl backdrop-blur-sm overflow-hidden">
       <!-- Efectos decorativos -->
       <div class="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-gradient-to-br from-natillera-400/20 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
       <div class="absolute bottom-0 left-0 w-36 sm:w-48 h-36 sm:h-48 bg-gradient-to-tr from-teal-400/20 to-natillera-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
@@ -13,18 +13,18 @@
               <UsersIcon class="w-6 h-6 sm:w-7 sm:h-8 text-white" />
             </div>
             <div>
-              <h1 class="text-2xl sm:text-3xl font-display font-bold text-gray-800">
+              <h1 class="text-2xl sm:text-3xl font-display font-bold text-texto">
                 Administración de Usuarios
               </h1>
-              <p class="text-sm sm:text-base text-gray-600 mt-1">
+              <p class="text-sm sm:text-base text-texto-secundario mt-1">
                 Gestiona usuarios, roles y permisos del sistema
               </p>
             </div>
           </div>
           <button
             @click="mostrarPanel = !mostrarPanel"
-            class="p-3 bg-white border-2 border-natillera-200 text-natillera-600 rounded-xl hover:bg-natillera-50 hover:border-natillera-300 transition-all shadow-md hover:shadow-lg"
-            :class="{ 'bg-natillera-50 border-natillera-300': mostrarPanel }"
+            class="p-3 bg-superficie-tarjeta border-2 border-natillera-200 oscuro:border-natillera-500/30 text-natillera-600 oscuro:text-natillera-300 rounded-xl hover:bg-natillera-50 oscuro:hover:bg-natillera-500/15 hover:border-natillera-300 oscuro:hover:border-natillera-500/30 transition-all shadow-md hover:shadow-lg"
+            :class="{ 'bg-natillera-50 oscuro:bg-natillera-500/15 border-natillera-300 oscuro:border-natillera-500/30': mostrarPanel }"
           >
             <Bars3Icon class="w-6 h-6" />
           </button>
@@ -32,21 +32,21 @@
 
         <!-- Estadísticas rápidas -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-6">
-          <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-200 shadow-sm">
-            <p class="text-2xl sm:text-3xl font-bold text-blue-600 mb-1">{{ totalUsuarios }}</p>
-            <p class="text-xs sm:text-sm font-semibold text-blue-700">Total Usuarios</p>
+          <div class="bg-gradient-to-br from-blue-50 oscuro:from-blue-500/15 to-indigo-50 oscuro:to-indigo-500/10 p-4 rounded-xl border border-blue-200 oscuro:border-blue-500/30 shadow-sm">
+            <p class="text-2xl sm:text-3xl font-bold text-blue-600 oscuro:text-blue-300 mb-1">{{ totalUsuarios }}</p>
+            <p class="text-xs sm:text-sm font-semibold text-blue-700 oscuro:text-blue-300">Total Usuarios</p>
           </div>
-          <div class="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl border border-green-200 shadow-sm">
-            <p class="text-2xl sm:text-3xl font-bold text-green-600 mb-1">{{ usuariosActivos }}</p>
-            <p class="text-xs sm:text-sm font-semibold text-green-700">Activos</p>
+          <div class="bg-gradient-to-br from-green-50 oscuro:from-green-500/15 to-emerald-50 oscuro:to-emerald-500/10 p-4 rounded-xl border border-green-200 oscuro:border-green-500/30 shadow-sm">
+            <p class="text-2xl sm:text-3xl font-bold text-green-600 oscuro:text-green-300 mb-1">{{ usuariosActivos }}</p>
+            <p class="text-xs sm:text-sm font-semibold text-green-700 oscuro:text-green-300">Activos</p>
           </div>
-          <div class="bg-gradient-to-br from-purple-50 to-indigo-50 p-4 rounded-xl border border-purple-200 shadow-sm">
-            <p class="text-2xl sm:text-3xl font-bold text-purple-600 mb-1">{{ totalAdmins }}</p>
-            <p class="text-xs sm:text-sm font-semibold text-purple-700">Administradores</p>
+          <div class="bg-gradient-to-br from-purple-50 oscuro:from-purple-500/15 to-indigo-50 oscuro:to-indigo-500/10 p-4 rounded-xl border border-purple-200 oscuro:border-purple-500/30 shadow-sm">
+            <p class="text-2xl sm:text-3xl font-bold text-purple-600 oscuro:text-purple-300 mb-1">{{ totalAdmins }}</p>
+            <p class="text-xs sm:text-sm font-semibold text-purple-700 oscuro:text-purple-300">Administradores</p>
           </div>
-          <div class="bg-gradient-to-br from-amber-50 to-orange-50 p-4 rounded-xl border border-amber-200 shadow-sm">
-            <p class="text-2xl sm:text-3xl font-bold text-amber-600 mb-1">{{ usuariosInactivos }}</p>
-            <p class="text-xs sm:text-sm font-semibold text-amber-700">Inactivos</p>
+          <div class="bg-gradient-to-br from-amber-50 oscuro:from-amber-500/15 to-orange-50 oscuro:to-orange-500/10 p-4 rounded-xl border border-amber-200 oscuro:border-amber-500/30 shadow-sm">
+            <p class="text-2xl sm:text-3xl font-bold text-amber-600 oscuro:text-amber-300 mb-1">{{ usuariosInactivos }}</p>
+            <p class="text-xs sm:text-sm font-semibold text-amber-700 oscuro:text-amber-300">Inactivos</p>
           </div>
         </div>
       </div>
@@ -57,13 +57,13 @@
       <Transition name="slide-fade">
         <div 
           v-if="mostrarPanel"
-          class="lg:w-80 bg-white rounded-2xl border border-gray-200 shadow-xl p-6 h-fit lg:sticky lg:top-6"
+          class="lg:w-80 bg-superficie-tarjeta rounded-2xl border border-borde shadow-xl p-6 h-fit lg:sticky lg:top-6"
         >
           <div class="flex items-center justify-between mb-6">
-            <h2 class="text-lg font-display font-bold text-gray-800">Configuración</h2>
+            <h2 class="text-lg font-display font-bold text-texto">Configuración</h2>
             <button
               @click="mostrarPanel = false"
-              class="lg:hidden p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+              class="lg:hidden p-2 text-texto-tenue hover:text-texto-secundario rounded-lg hover:bg-superficie-hundida"
             >
               <XMarkIcon class="w-5 h-5" />
             </button>
@@ -72,23 +72,23 @@
           <!-- Filtros -->
           <div class="space-y-4">
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Buscar</label>
+              <label class="block text-sm font-semibold text-texto-medio mb-2">Buscar</label>
               <div class="relative">
-                <MagnifyingGlassIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <MagnifyingGlassIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-texto-tenue" />
                 <input
                   v-model="busqueda"
                   type="text"
                   placeholder="Buscar por email o nombre..."
-                  class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500"
+                  class="w-full pl-10 pr-4 py-2.5 border border-borde-fuerte rounded-xl focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500"
                 />
               </div>
             </div>
 
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Filtrar por Rol</label>
+              <label class="block text-sm font-semibold text-texto-medio mb-2">Filtrar por Rol</label>
               <select
                 v-model="filtroRol"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500"
+                class="w-full px-4 py-2.5 border border-borde-fuerte rounded-xl focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500"
               >
                 <option value="">Todos los roles</option>
                 <option value="super_admin">Super Admin</option>
@@ -99,10 +99,10 @@
             </div>
 
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Estado</label>
+              <label class="block text-sm font-semibold text-texto-medio mb-2">Estado</label>
               <select
                 v-model="filtroEstado"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500"
+                class="w-full px-4 py-2.5 border border-borde-fuerte rounded-xl focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500"
               >
                 <option value="">Todos</option>
                 <option value="activo">Activos</option>
@@ -112,7 +112,7 @@
 
             <button
               @click="resetearFiltros"
-              class="w-full px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors"
+              class="w-full px-4 py-2.5 bg-superficie-hundida hover:bg-borde text-texto-medio font-semibold rounded-xl transition-colors"
             >
               Limpiar Filtros
             </button>
@@ -126,7 +126,7 @@
         <CargaCaja v-if="usersStore.loading" texto="Cargando usuarios" />
 
         <!-- Error -->
-        <div v-else-if="usersStore.error" class="bg-red-50 border border-red-200 rounded-xl p-4 text-red-600">
+        <div v-else-if="usersStore.error" class="bg-red-50 oscuro:bg-red-500/15 border border-red-200 oscuro:border-red-500/30 rounded-xl p-4 text-red-600 oscuro:text-red-300">
           {{ usersStore.error }}
         </div>
 
@@ -135,10 +135,10 @@
           <div
             v-for="usuario in usuariosFiltrados"
             :key="usuario.id"
-            class="bg-white rounded-xl border-2 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden"
+            class="bg-superficie-tarjeta rounded-xl border-2 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden"
             :class="[
-              usuario.activo ? 'border-gray-200 hover:border-natillera-300' : 'border-red-200 bg-red-50/30',
-              usuarioSeleccionado?.id === usuario.id ? 'border-natillera-500 ring-2 ring-natillera-200' : ''
+              usuario.activo ? 'border-borde hover:border-natillera-300 oscuro:hover:border-natillera-500/30' : 'border-red-200 oscuro:border-red-500/30 bg-red-50/30 oscuro:bg-red-500/15',
+              usuarioSeleccionado?.id === usuario.id ? 'border-natillera-500 ring-2 ring-natillera-200 oscuro:ring-natillera-500/30' : ''
             ]"
           >
             <div class="p-4 sm:p-6">
@@ -152,14 +152,14 @@
                       :alt="usuario.nombre || usuario.email"
                       class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl border-2 shadow-md object-cover"
                       :class="[
-                        usuario.rol === 'super_admin' ? 'border-purple-300' :
-                        usuario.rol === 'admin' ? 'border-blue-300' :
-                        usuario.activo ? 'border-gray-300' : 'border-red-300'
+                        usuario.rol === 'super_admin' ? 'border-purple-300 oscuro:border-purple-500/30' :
+                        usuario.rol === 'admin' ? 'border-blue-300 oscuro:border-blue-500/30' :
+                        usuario.activo ? 'border-borde-fuerte' : 'border-red-300 oscuro:border-red-500/30'
                       ]"
                     />
                     <!-- Badge de estado -->
                     <div
-                      class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white shadow-md"
+                      class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white oscuro:border-superficie-tarjeta shadow-md"
                       :class="usuario.activo ? 'bg-green-500' : 'bg-red-500'"
                     ></div>
                   </div>
@@ -167,17 +167,17 @@
                   <!-- Datos -->
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 flex-wrap mb-2">
-                      <h3 class="font-bold text-gray-800 text-base sm:text-lg truncate">
+                      <h3 class="font-bold text-texto text-base sm:text-lg truncate">
                         {{ usuario.nombre || usuario.email }}
                       </h3>
                       <!-- Badge de rol -->
                       <span
                         class="px-2.5 py-0.5 rounded-lg text-xs font-semibold border whitespace-nowrap"
                         :class="[
-                          usuario.rol === 'super_admin' ? 'bg-purple-100 text-purple-700 border-purple-200' :
-                          usuario.rol === 'admin' ? 'bg-blue-100 text-blue-700 border-blue-200' :
-                          usuario.rol === 'invitado' ? 'bg-gray-100 text-gray-700 border-gray-200' :
-                          'bg-green-100 text-green-700 border-green-200'
+                          usuario.rol === 'super_admin' ? 'bg-purple-100 oscuro:bg-purple-500/15 text-purple-700 oscuro:text-purple-300 border-purple-200 oscuro:border-purple-500/30' :
+                          usuario.rol === 'admin' ? 'bg-blue-100 oscuro:bg-blue-500/15 text-blue-700 oscuro:text-blue-300 border-blue-200 oscuro:border-blue-500/30' :
+                          usuario.rol === 'invitado' ? 'bg-superficie-hundida text-texto-medio border-borde' :
+                          'bg-green-100 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300 border-green-200 oscuro:border-green-500/30'
                         ]"
                       >
                         {{ getRolLabel(usuario.rol) }}
@@ -185,17 +185,17 @@
                       <!-- Badge de estado -->
                       <span
                         class="px-2 py-0.5 rounded-lg text-xs font-semibold"
-                        :class="usuario.activo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+                        :class="usuario.activo ? 'bg-green-100 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300' : 'bg-red-100 oscuro:bg-red-500/15 text-red-700 oscuro:text-red-300'"
                       >
                         {{ usuario.activo ? 'Activo' : 'Inactivo' }}
                       </span>
                     </div>
-                    <p class="text-sm text-gray-600 truncate mb-2">{{ usuario.email }}</p>
-                    <div class="flex items-center gap-4 text-xs text-gray-500">
+                    <p class="text-sm text-texto-secundario truncate mb-2">{{ usuario.email }}</p>
+                    <div class="flex items-center gap-4 text-xs text-texto-suave">
                       <span v-if="usuario.ultimo_acceso">
                         Último acceso: {{ formatDate(usuario.ultimo_acceso) }}
                       </span>
-                      <span v-else class="text-gray-400">Sin acceso registrado</span>
+                      <span v-else class="text-texto-tenue">Sin acceso registrado</span>
                     </div>
                   </div>
                 </div>
@@ -204,7 +204,7 @@
                 <div class="flex items-center gap-2 flex-shrink-0">
                   <button
                     @click="seleccionarUsuario(usuario)"
-                    class="p-2 bg-natillera-50 hover:bg-natillera-100 text-natillera-600 rounded-lg transition-colors"
+                    class="p-2 bg-natillera-50 oscuro:bg-natillera-500/15 hover:bg-natillera-100 oscuro:hover:bg-natillera-500/15 text-natillera-600 oscuro:text-natillera-300 rounded-lg transition-colors"
                     title="Editar usuario"
                   >
                     <PencilIcon class="w-5 h-5" />
@@ -216,9 +216,9 @@
         </div>
 
         <!-- Sin resultados -->
-        <div v-else class="text-center py-12 bg-white rounded-xl border border-gray-200">
-          <UsersIcon class="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p class="text-gray-500 text-lg">No se encontraron usuarios</p>
+        <div v-else class="text-center py-12 bg-superficie-tarjeta rounded-xl border border-borde">
+          <UsersIcon class="w-12 h-12 text-texto-tenue mx-auto mb-4" />
+          <p class="text-texto-suave text-lg">No se encontraron usuarios</p>
         </div>
       </div>
     </div>
@@ -229,7 +229,7 @@
       :z-index="50"
       align="bottom"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      card-class="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-superficie-tarjeta rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-borde"
       card-max-width="42rem"
       @close="cerrarModalUsuario"
     >
@@ -267,34 +267,34 @@
         <div class="overflow-y-auto flex-1 p-4 sm:p-6 space-y-6">
           <!-- Información básica -->
           <div class="space-y-4">
-            <h4 class="text-lg font-display font-bold text-gray-800">Información Básica</h4>
+            <h4 class="text-lg font-display font-bold text-texto">Información Básica</h4>
             
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre</label>
+              <label class="block text-sm font-semibold text-texto-medio mb-2">Nombre</label>
               <input
                 v-model="formUsuario.nombre"
                 type="text"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500"
+                class="w-full px-4 py-2.5 border border-borde-fuerte rounded-xl focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500"
                 placeholder="Nombre del usuario"
               />
             </div>
 
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+              <label class="block text-sm font-semibold text-texto-medio mb-2">Email</label>
               <input
                 v-model="formUsuario.email"
                 type="email"
                 disabled
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed"
+                class="w-full px-4 py-2.5 border border-borde-fuerte rounded-xl bg-superficie-suave text-texto-suave cursor-not-allowed"
               />
-              <p class="text-xs text-gray-500 mt-1">El email no se puede modificar</p>
+              <p class="text-xs text-texto-suave mt-1">El email no se puede modificar</p>
             </div>
 
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Rol</label>
+              <label class="block text-sm font-semibold text-texto-medio mb-2">Rol</label>
               <select
                 v-model="formUsuario.rol"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500"
+                class="w-full px-4 py-2.5 border border-borde-fuerte rounded-xl focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500"
                 :disabled="!puedeCambiarRol"
               >
                 <option value="usuario">Usuario</option>
@@ -302,7 +302,7 @@
                 <option value="super_admin">Super Administrador</option>
                 <option value="invitado">Invitado</option>
               </select>
-              <p v-if="!puedeCambiarRol" class="text-xs text-amber-600 mt-1">
+              <p v-if="!puedeCambiarRol" class="text-xs text-amber-600 oscuro:text-amber-300 mt-1">
                 No tienes permisos para cambiar este rol
               </p>
             </div>
@@ -312,9 +312,9 @@
                 v-model="formUsuario.activo"
                 type="checkbox"
                 id="activo"
-                class="w-5 h-5 rounded border-gray-300 text-natillera-600 focus:ring-natillera-500"
+                class="w-5 h-5 rounded border-borde-fuerte text-natillera-600 oscuro:text-natillera-300 focus:ring-natillera-500"
               />
-              <label for="activo" class="text-sm font-semibold text-gray-700">
+              <label for="activo" class="text-sm font-semibold text-texto-medio">
                 Usuario activo
               </label>
             </div>
@@ -322,8 +322,8 @@
 
           <!-- Permisos -->
           <div class="space-y-4">
-            <h4 class="text-lg font-display font-bold text-gray-800">Permisos</h4>
-            <div class="bg-gray-50 rounded-xl p-4 space-y-3">
+            <h4 class="text-lg font-display font-bold text-texto">Permisos</h4>
+            <div class="bg-superficie-suave rounded-xl p-4 space-y-3">
               <div
                 v-for="permiso in permisosDisponibles"
                 :key="permiso.key"
@@ -334,11 +334,11 @@
                   :value="permiso.key"
                   type="checkbox"
                   :id="`permiso-${permiso.key}`"
-                  class="w-5 h-5 rounded border-gray-300 text-natillera-600 focus:ring-natillera-500"
+                  class="w-5 h-5 rounded border-borde-fuerte text-natillera-600 oscuro:text-natillera-300 focus:ring-natillera-500"
                 />
                 <label :for="`permiso-${permiso.key}`" class="flex-1">
-                  <p class="text-sm font-semibold text-gray-800">{{ permiso.label }}</p>
-                  <p class="text-xs text-gray-500">{{ permiso.description }}</p>
+                  <p class="text-sm font-semibold text-texto">{{ permiso.label }}</p>
+                  <p class="text-xs text-texto-suave">{{ permiso.description }}</p>
                 </label>
               </div>
             </div>
@@ -346,10 +346,10 @@
         </div>
 
         <!-- Footer -->
-        <div class="p-4 sm:p-6 border-t border-gray-200 bg-gray-50 flex gap-3">
+        <div class="p-4 sm:p-6 border-t border-borde bg-superficie-suave flex gap-3">
           <button
             @click="cerrarModalUsuario"
-            class="flex-1 px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+            class="flex-1 px-4 py-3 bg-superficie-tarjeta border-2 border-borde-fuerte text-texto-medio font-semibold rounded-xl hover:bg-superficie-suave transition-all"
           >
             Cancelar
           </button>

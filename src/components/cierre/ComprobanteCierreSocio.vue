@@ -5,7 +5,9 @@
     así sale igual se genere en el móvil o en el escritorio. Colores y tipografía del sistema
     de diseño (verde #1B5E37, Mulish), sin gradientes ni emojis.
   -->
+  <!-- Comprobante que se comparte como imagen: siempre en claro (skill modo oscuro, regla 6) -->
   <div
+    data-tema="claro"
     :style="{ width: fluido ? '100%' : '400px' }"
     style="box-sizing: border-box; background: #ffffff; border-radius: 20px; overflow: hidden; border: 1px solid #e5e7eb; font-family: Mulish, system-ui, -apple-system, 'Segoe UI', sans-serif; color: #0f172a;"
   >

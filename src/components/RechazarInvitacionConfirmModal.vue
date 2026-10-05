@@ -4,7 +4,7 @@
     :z-index="zIndex"
     :persistent="loading"
     overlay-class="fixed inset-0 z-[60] flex items-center justify-center p-4"
-    card-class="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-2xl px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]"
+    card-class="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-borde/90 bg-superficie-tarjeta shadow-2xl px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]"
     @close="handleClose"
   >
     <div
@@ -17,16 +17,16 @@
       <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
       <div class="flex gap-4">
         <div
-          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 ring-1 ring-amber-200/80"
+          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 oscuro:bg-amber-500/15 text-amber-700 oscuro:text-amber-300 ring-1 ring-amber-200/80 oscuro:ring-amber-500/30"
           aria-hidden="true"
         >
           <ExclamationTriangleIcon class="h-6 w-6" />
         </div>
         <div class="min-w-0 flex-1 pt-0.5">
-          <h3 :id="titleId" class="font-display text-lg font-bold leading-tight text-gray-900">
+          <h3 :id="titleId" class="font-display text-lg font-bold leading-tight text-texto-fuerte">
             ¿Rechazar invitación?
           </h3>
-          <p class="mt-1 text-sm text-gray-600">
+          <p class="mt-1 text-sm text-texto-secundario">
             No podrás deshacer esta decisión desde aquí.
           </p>
         </div>
@@ -34,10 +34,10 @@
 
       <p
         id="rechazar-invitacion-desc"
-        class="mt-5 text-sm leading-relaxed text-gray-700"
+        class="mt-5 text-sm leading-relaxed text-texto-medio"
       >
         Vas a rechazar unirte como colaborador a
-        <span class="font-semibold text-gray-900">«{{ nombreNatillera }}»</span>.
+        <span class="font-semibold text-texto-fuerte">«{{ nombreNatillera }}»</span>.
         Si cambias de idea, quien te invitó puede enviarte una nueva invitación cuando quiera.
       </p>
       </div>

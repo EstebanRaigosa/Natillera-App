@@ -2,8 +2,8 @@
   <div class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto space-y-3 sm:space-y-5 lg:space-y-6 overflow-x-hidden relative">
     <!-- Efectos decorativos de fondo -->
     <div class="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-      <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-natillera-200/30 to-emerald-200/20 rounded-full blur-3xl"></div>
-      <div class="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-200/30 to-natillera-200/20 rounded-full blur-3xl"></div>
+      <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-natillera-200/30 oscuro:from-natillera-500/15 to-emerald-200/20 oscuro:to-emerald-500/10 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-200/30 oscuro:from-teal-500/15 to-natillera-200/20 oscuro:to-natillera-500/10 rounded-full blur-3xl"></div>
     </div>
     <CargaPantalla
       :visible="cargandoNatillera"
@@ -15,17 +15,17 @@
         <div class="flex items-center gap-2">
           <BackButton to="/dashboard" :inline="true" />
           <div class="min-w-0 flex-1">
-            <h1 class="text-[clamp(1.25rem,3.6vw,1.75rem)] font-bold text-gray-900 leading-tight truncate">
-              Hola, <span class="text-[#166534]">{{ authStore.userName }}</span>
+            <h1 class="text-[clamp(1.25rem,3.6vw,1.75rem)] font-bold text-texto-fuerte leading-tight truncate">
+              Hola, <span class="text-[#166534] oscuro:text-marca-tinta">{{ authStore.userName }}</span>
             </h1>
             <div class="flex flex-wrap items-center gap-2 mt-0.5">
-              <p class="text-sm sm:text-base font-semibold text-gray-700 truncate">{{ nombreNatilleraPascalCase }}</p>
+              <p class="text-sm sm:text-base font-semibold text-texto-medio truncate">{{ nombreNatilleraPascalCase }}</p>
               <span
                 :class="[
                   'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold',
                   natillera.estado === 'activa'
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-amber-100 text-amber-700'
+                    ? 'bg-green-100 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300'
+                    : 'bg-amber-100 oscuro:bg-amber-500/15 text-amber-700 oscuro:text-amber-300'
                 ]"
               >
                 <span
@@ -39,7 +39,7 @@
           <button
             type="button"
             data-guia="boton-recorrido"
-            class="ml-auto flex h-11 min-w-[2.75rem] flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#166534]/25 bg-white px-0 text-[#166534] shadow-sm transition-colors hover:bg-[#f0fdf4] active:bg-[#dcfce7] sm:h-auto sm:px-3 sm:py-2 sm:rounded-lg [-webkit-tap-highlight-color:transparent]"
+            class="ml-auto flex h-11 min-w-[2.75rem] flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#166534]/25 oscuro:border-marca-tinta/25 bg-superficie-tarjeta px-0 text-[#166534] oscuro:text-marca-tinta shadow-sm transition-colors hover:bg-[#f0fdf4] oscuro:hover:bg-green-500/15 active:bg-[#dcfce7] oscuro:active:bg-green-500/15 sm:h-auto sm:px-3 sm:py-2 sm:rounded-lg [-webkit-tap-highlight-color:transparent]"
             title="¿Cómo funciona esta pantalla?"
             aria-label="¿Cómo funciona esta pantalla? Ver el recorrido guiado"
             @click="abrirGuia({ manual: true })"
@@ -51,18 +51,18 @@
           <router-link
             v-if="miSocioNatilleraId"
             :to="{ name: 'PortalSocio', params: { socioNatilleraId: miSocioNatilleraId } }"
-            class="flex h-11 min-w-[2.75rem] flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#166534]/25 bg-white px-0 text-[#166534] shadow-sm transition-colors hover:bg-[#f0fdf4] active:bg-[#dcfce7] sm:h-auto sm:px-3 sm:py-2 sm:rounded-lg [-webkit-tap-highlight-color:transparent]"
+            class="flex h-11 min-w-[2.75rem] flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#166534]/25 oscuro:border-marca-tinta/25 bg-superficie-tarjeta px-0 text-[#166534] oscuro:text-marca-tinta shadow-sm transition-colors hover:bg-[#f0fdf4] oscuro:hover:bg-green-500/15 active:bg-[#dcfce7] oscuro:active:bg-green-500/15 sm:h-auto sm:px-3 sm:py-2 sm:rounded-lg [-webkit-tap-highlight-color:transparent]"
             title="Ver mi portal de socio"
             aria-label="Ver mi portal de socio en esta natillera"
           >
             <UserCircleIcon class="h-5 w-5 flex-shrink-0 sm:h-4 sm:w-4" />
             <span class="hidden text-xs font-semibold sm:inline">Mi portal</span>
           </router-link>
-          <button
+          <!-- tema-fijo: botón verde de marca, sus estados valen igual en los dos modos -->
+          <button class="flex-shrink-0 w-10 h-10 sm:w-auto sm:h-auto sm:px-3 sm:py-2 rounded-full sm:rounded-lg flex items-center justify-center gap-1.5 text-white bg-[#166534] hover:bg-[#145a2d] active:bg-[#124d26] shadow-sm transition-colors touch-manipulation"
             v-if="puedeUsarRecordatorio"
             type="button"
             @click="abrirModalRecordatorio"
-            class="flex-shrink-0 w-10 h-10 sm:w-auto sm:h-auto sm:px-3 sm:py-2 rounded-full sm:rounded-lg flex items-center justify-center gap-1.5 text-white bg-[#166534] hover:bg-[#145a2d] active:bg-[#124d26] shadow-sm transition-colors touch-manipulation"
             title="Recordatorios"
             aria-label="Recordatorios"
           >
@@ -75,76 +75,76 @@
       <!-- ─── Indicadores (paleta: #2D2D2D · #E91E63 · #F58231 · #90D15B · #2EBA74) ─── -->
       <div data-guia="indicadores" class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         <!-- Socios -->
-        <div data-guia="card-socios" class="flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
-          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#2D2D2D]/10 text-[#2D2D2D]">
+        <div data-guia="card-socios" class="flex items-center gap-2 rounded-2xl border border-borde/80 bg-superficie-tarjeta px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#2D2D2D]/10 oscuro:bg-white/10 text-[#2D2D2D] oscuro:text-texto-fuerte">
             <UsersIcon class="h-6 w-6" />
           </div>
           <div class="min-w-0 flex-1">
-            <p class="text-[10px] sm:text-xs font-medium text-gray-500 leading-tight">Socios</p>
-            <p class="text-base sm:text-lg font-bold text-[#2D2D2D] tabular-nums leading-tight mt-0">{{ estadisticas.totalSocios }}</p>
+            <p class="text-[10px] sm:text-xs font-medium text-texto-suave leading-tight">Socios</p>
+            <p class="text-base sm:text-lg font-bold text-[#2D2D2D] oscuro:text-texto-fuerte tabular-nums leading-tight mt-0">{{ estadisticas.totalSocios }}</p>
           </div>
         </div>
         <!-- Recaudado -->
-        <div data-guia="card-recaudado" class="flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
-          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#2EBA74]/18 text-[#1f9a5c]">
+        <div data-guia="card-recaudado" class="flex items-center gap-2 rounded-2xl border border-borde/80 bg-superficie-tarjeta px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#2EBA74]/18 text-[#1f9a5c] oscuro:text-emerald-300">
             <BanknotesIcon class="h-6 w-6" />
           </div>
           <div class="min-w-0 flex-1">
-            <p class="text-[10px] sm:text-xs font-medium text-gray-500 leading-tight">Recaudado</p>
-            <p class="text-base sm:text-lg font-bold text-[#188a52] tabular-nums leading-tight mt-0 break-words">${{ formatMoney(fondoTotalIndicador) }}</p>
+            <p class="text-[10px] sm:text-xs font-medium text-texto-suave leading-tight">Recaudado</p>
+            <p class="text-base sm:text-lg font-bold text-[#188a52] oscuro:text-emerald-300 tabular-nums leading-tight mt-0 break-words">${{ formatMoney(fondoTotalIndicador) }}</p>
           </div>
         </div>
         <!-- Pendiente -->
-        <div data-guia="card-pendiente" class="flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
-          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#F58231]/16 text-[#F58231]">
+        <div data-guia="card-pendiente" class="flex items-center gap-2 rounded-2xl border border-borde/80 bg-superficie-tarjeta px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#F58231]/16 text-[#F58231] oscuro:text-orange-300">
             <ClipboardDocumentListIcon class="h-6 w-6" />
           </div>
           <div class="min-w-0 flex-1">
-            <p class="text-[10px] sm:text-xs font-medium text-gray-500 leading-tight">Pendiente</p>
-            <p class="text-base sm:text-lg font-bold text-[#d46a28] tabular-nums leading-tight mt-0 break-words">${{ formatMoney(estadisticas.totalPendiente) }}</p>
+            <p class="text-[10px] sm:text-xs font-medium text-texto-suave leading-tight">Pendiente</p>
+            <p class="text-base sm:text-lg font-bold text-[#d46a28] oscuro:text-orange-300 tabular-nums leading-tight mt-0 break-words">${{ formatMoney(estadisticas.totalPendiente) }}</p>
           </div>
         </div>
         <!-- Utilidad -->
         <div
           data-guia="card-utilidad"
           @click="abrirModalDesgloseUtilidades"
-          class="flex cursor-pointer items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 transition-colors hover:bg-[#90D15B]/14 sm:px-3 sm:py-2 shadow-sm"
+          class="flex cursor-pointer items-center gap-2 rounded-2xl border border-borde/80 bg-superficie-tarjeta px-2.5 py-2 transition-colors hover:bg-[#90D15B]/14 oscuro:hover:bg-[#90D15B]/10 sm:px-3 sm:py-2 shadow-sm"
         >
-          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#90D15B]/35 text-[#3d6b28]">
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#90D15B]/35 text-[#3d6b28] oscuro:text-marca-tinta">
             <SparklesIcon class="h-6 w-6" />
           </div>
           <div class="min-w-0 flex-1">
-            <p class="text-[10px] sm:text-xs font-medium text-gray-500 leading-tight">Utilidad</p>
-            <p class="text-base sm:text-lg font-bold text-[#C2185B] tabular-nums leading-tight mt-0 break-words">${{ formatMoney(utilidadNetoIndicador) }}</p>
+            <p class="text-[10px] sm:text-xs font-medium text-texto-suave leading-tight">Utilidad</p>
+            <p class="text-base sm:text-lg font-bold text-[#C2185B] oscuro:text-pink-300 tabular-nums leading-tight mt-0 break-words">${{ formatMoney(utilidadNetoIndicador) }}</p>
           </div>
         </div>
       </div>
 
       <!-- ─── Configuración de la natillera (plegable en todos los tamaños; título corto en móvil) ─── -->
       <div data-guia="configuracion" class="mt-2 sm:mt-3">
-        <div class="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm sm:p-4 lg:px-4 lg:py-3">
+        <div class="rounded-2xl border border-borde/80 bg-superficie-tarjeta p-5 shadow-sm sm:p-4 lg:px-4 lg:py-3">
           <div class="flex items-center justify-between gap-3">
             <button
               type="button"
-              class="-my-1 flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-xl py-1.5 pl-0 pr-1 text-left transition-colors hover:bg-gray-50 active:bg-gray-50 sm:my-0 sm:py-0 sm:pr-0"
+              class="-my-1 flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-xl py-1.5 pl-0 pr-1 text-left transition-colors hover:bg-superficie-suave active:bg-superficie-suave sm:my-0 sm:py-0 sm:pr-0"
               :aria-expanded="datosNatilleraConfigPanelAbierto"
               aria-controls="panel-datos-natillera"
               @click="toggleDatosNatilleraConfigPanel"
             >
               <InformationCircleIcon
-                class="h-5 w-5 shrink-0 text-gray-800 lg:h-4 lg:w-4"
+                class="h-5 w-5 shrink-0 text-texto lg:h-4 lg:w-4"
                 stroke-width="1.75"
                 aria-hidden="true"
               />
               <h3
                 id="heading-datos-natillera"
-                class="min-w-0 flex-1 text-sm font-bold text-gray-900 max-sm:normal-case max-sm:tracking-tight sm:uppercase sm:tracking-wide"
+                class="min-w-0 flex-1 text-sm font-bold text-texto-fuerte max-sm:normal-case max-sm:tracking-tight sm:uppercase sm:tracking-wide"
               >
                 <span class="max-sm:inline sm:hidden">Conf. de la natillera</span>
                 <span class="hidden sm:inline">Configuración de la Natillera</span>
               </h3>
               <ChevronDownIcon
-                class="h-5 w-5 shrink-0 text-gray-500 transition-transform duration-200"
+                class="h-5 w-5 shrink-0 text-texto-suave transition-transform duration-200"
                 :class="datosNatilleraConfigPanelAbierto ? 'rotate-180' : ''"
                 aria-hidden="true"
               />
@@ -152,7 +152,7 @@
             <router-link
               v-if="puedeConfigurar && id"
               :to="`/natilleras/${id}/configuracion`"
-              class="inline-flex h-11 w-11 shrink-0 items-center justify-center self-center rounded-full text-[#166534] transition hover:bg-gray-100 active:bg-gray-200 [-webkit-tap-highlight-color:transparent] touch-manipulation lg:h-10 lg:w-10"
+              class="inline-flex h-11 w-11 shrink-0 items-center justify-center self-center rounded-full text-[#166534] oscuro:text-marca-tinta transition hover:bg-superficie-hundida active:bg-borde [-webkit-tap-highlight-color:transparent] touch-manipulation lg:h-10 lg:w-10"
               aria-label="Editar configuración de la natillera"
               title="Editar configuración"
               @click.stop
@@ -177,70 +177,70 @@
             class="grid grid-cols-2 gap-x-4 gap-y-5 pt-5 text-sm sm:gap-x-6 sm:gap-y-4 lg:gap-x-5 lg:gap-y-2 lg:pt-2"
           >
             <div class="min-w-0">
-              <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 lg:text-[9px]">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-texto-suave lg:text-[9px]">
                 Periodicidad
               </p>
-              <p class="mt-1 text-sm font-bold capitalize text-gray-900 sm:text-base lg:mt-0.5 lg:text-sm">
+              <p class="mt-1 text-sm font-bold capitalize text-texto-fuerte sm:text-base lg:mt-0.5 lg:text-sm">
                 {{ natillera.periodicidad || '—' }}
               </p>
             </div>
             <div class="min-w-0">
-              <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 lg:text-[9px]">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-texto-suave lg:text-[9px]">
                 Días de gracia
               </p>
-              <p class="mt-1 text-sm font-bold tabular-nums text-gray-900 sm:text-base lg:mt-0.5 lg:text-sm">
+              <p class="mt-1 text-sm font-bold tabular-nums text-texto-fuerte sm:text-base lg:mt-0.5 lg:text-sm">
                 {{ natillera.reglas_multas?.dias_gracia ?? '—' }}
               </p>
             </div>
             <div class="min-w-0">
-              <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 lg:text-[9px]">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-texto-suave lg:text-[9px]">
                 Fecha inicio
               </p>
-              <p class="mt-1 text-sm font-bold text-gray-900 sm:text-base lg:mt-0.5 lg:text-sm">
+              <p class="mt-1 text-sm font-bold text-texto-fuerte sm:text-base lg:mt-0.5 lg:text-sm">
                 {{ formatFechaCorta(natillera.fecha_inicio) }}
               </p>
             </div>
             <div class="min-w-0">
-              <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 lg:text-[9px]">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-texto-suave lg:text-[9px]">
                 Fecha final
               </p>
-              <p class="mt-1 text-sm font-bold text-gray-900 sm:text-base lg:mt-0.5 lg:text-sm">
+              <p class="mt-1 text-sm font-bold text-texto-fuerte sm:text-base lg:mt-0.5 lg:text-sm">
                 {{ fechaFinConfiguracionTexto }}
               </p>
             </div>
             <div class="min-w-0">
-              <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 lg:text-[9px]">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-texto-suave lg:text-[9px]">
                 Préstamos
               </p>
               <p
                 v-if="natilleraPrestamosDeshabilitados(natillera)"
-                class="mt-1 text-sm font-bold text-gray-700 sm:text-base lg:mt-0.5 lg:text-sm"
+                class="mt-1 text-sm font-bold text-texto-medio sm:text-base lg:mt-0.5 lg:text-sm"
               >
                 No permitidos
               </p>
-              <p v-else class="mt-1 text-sm font-bold text-[#166534] sm:text-base lg:mt-0.5 lg:text-sm">Permitidos</p>
+              <p v-else class="mt-1 text-sm font-bold text-[#166534] oscuro:text-marca-tinta sm:text-base lg:mt-0.5 lg:text-sm">Permitidos</p>
             </div>
             <div class="col-span-2 min-w-0 sm:col-span-2">
-              <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 lg:text-[9px]">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-texto-suave lg:text-[9px]">
                 Sanciones
               </p>
               <template
                 v-if="natillera.reglas_multas?.sanciones?.activa || natillera.reglas_multas?.activa"
               >
-                <p class="mt-1 text-base font-bold text-[#166534] sm:text-lg lg:mt-0.5 lg:text-sm">
+                <p class="mt-1 text-base font-bold text-[#166534] oscuro:text-marca-tinta sm:text-lg lg:mt-0.5 lg:text-sm">
                   Activas
                 </p>
-                <p class="mt-2 text-sm font-normal leading-snug text-gray-900 lg:mt-1 lg:text-xs lg:leading-tight">
+                <p class="mt-2 text-sm font-normal leading-snug text-texto-fuerte lg:mt-1 lg:text-xs lg:leading-tight">
                   Tipo:
                   <span class="font-semibold">{{ etiquetaTipoSancionesNatillera }}</span>
                 </p>
-                <p class="mt-1 text-sm font-normal leading-snug text-gray-900 lg:mt-0.5 lg:text-xs lg:leading-tight">
+                <p class="mt-1 text-sm font-normal leading-snug text-texto-fuerte lg:mt-0.5 lg:text-xs lg:leading-tight">
                   Sanciones adicionales:
                   <span
                     :class="
                       sancionesAdicionalesNatilleraResumen.activas
-                        ? 'font-semibold text-amber-800'
-                        : 'font-semibold text-gray-800'
+                        ? 'font-semibold text-amber-800 oscuro:text-amber-300'
+                        : 'font-semibold text-texto'
                     "
                   >
                     {{ sancionesAdicionalesNatilleraResumen.activas ? 'Sí' : 'No'
@@ -249,7 +249,7 @@
                   </span>
                 </p>
               </template>
-              <p v-else class="mt-1 text-sm font-bold text-gray-700 sm:text-base lg:mt-0.5 lg:text-sm">
+              <p v-else class="mt-1 text-sm font-bold text-texto-medio sm:text-base lg:mt-0.5 lg:text-sm">
                 Desactivadas
               </p>
             </div>
@@ -269,30 +269,30 @@
         <div
           v-for="inv in misInvitacionesPendientesDetalle"
           :key="inv.id"
-          class="invitacion-notify-card group relative overflow-hidden rounded-xl border border-emerald-400/45 bg-gradient-to-br from-emerald-50/95 via-white to-teal-50/90 pl-[3px] shadow-md shadow-emerald-700/10 ring-1 ring-emerald-500/25 animate-fade-in-invite"
+          class="invitacion-notify-card group relative overflow-hidden rounded-xl border border-emerald-400/45 bg-gradient-to-br from-emerald-50/95 oscuro:from-emerald-500/15 via-superficie-tarjeta to-teal-50/90 oscuro:to-teal-500/10 pl-[3px] shadow-md shadow-emerald-700/10 ring-1 ring-emerald-500/25 animate-fade-in-invite"
         >
           <div
             class="pointer-events-none absolute inset-y-0 left-0 w-[3px] rounded-l-[10px] bg-gradient-to-b from-emerald-400 via-emerald-600 to-teal-600 shadow-[0_0_12px_rgba(16,185,129,0.55)]"
             aria-hidden="true"
           />
           <div
-            class="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-emerald-200/35 to-transparent animate-sweep-invite"
+            class="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-emerald-200/35 oscuro:via-emerald-500/10 to-transparent animate-sweep-invite"
             aria-hidden="true"
           />
           <div class="relative flex flex-wrap items-stretch gap-2 px-2 py-1.5 pl-3 sm:gap-3 sm:px-3 sm:py-2">
             <div
-              class="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-md shadow-emerald-900/25 ring-2 ring-white/80 sm:h-10 sm:w-10"
+              class="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-md shadow-emerald-900/25 ring-2 ring-white/80 oscuro:ring-superficie-tarjeta/80 sm:h-10 sm:w-10"
               aria-hidden="true"
             >
               <BellAlertIcon class="h-4 w-4 sm:h-5 sm:w-5 animate-bounce-slow-invite" />
               <span
-                class="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white shadow-md ring-2 ring-white"
+                class="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white shadow-md ring-2 ring-white oscuro:ring-superficie-tarjeta"
                 aria-hidden="true"
               >1</span>
             </div>
             <div class="min-w-0 flex-1 basis-[min(100%,10rem)] self-center">
               <div class="mb-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                <span class="text-[10px] font-bold leading-snug text-emerald-900 sm:text-[11px]">
+                <span class="text-[10px] font-bold leading-snug text-emerald-900 oscuro:text-emerald-300 sm:text-[11px]">
                   Te invitaron a participar en una natillera
                 </span>
                 <span
@@ -302,11 +302,11 @@
                   Esta natillera
                 </span>
               </div>
-              <p class="min-w-0 truncate text-[10px] leading-snug text-slate-800 sm:text-[11px]">
-                <span class="font-semibold text-emerald-900">{{ inv.natillera_nombre || 'Natillera' }}</span>
-                <span class="text-emerald-700/90"> · {{ formatearRolColaboradorInvitacion(inv.rol) }}</span>
-                <span class="text-slate-500"> · </span>
-                <span class="text-slate-600">{{ emailInvitadorDestacado(inv) }}</span>
+              <p class="min-w-0 truncate text-[10px] leading-snug text-slate-800 oscuro:text-texto sm:text-[11px]">
+                <span class="font-semibold text-emerald-900 oscuro:text-emerald-300">{{ inv.natillera_nombre || 'Natillera' }}</span>
+                <span class="text-emerald-700/90 oscuro:text-emerald-300/90"> · {{ formatearRolColaboradorInvitacion(inv.rol) }}</span>
+                <span class="text-slate-500 oscuro:text-texto-suave"> · </span>
+                <span class="text-slate-600 oscuro:text-texto-secundario">{{ emailInvitadorDestacado(inv) }}</span>
               </p>
             </div>
             <div class="flex w-full shrink-0 items-center justify-end gap-1.5 sm:ml-auto sm:w-auto sm:justify-center sm:self-center">
@@ -323,7 +323,7 @@
                 type="button"
                 @click="abrirModalRechazarInvitacionCompacta(inv)"
                 :disabled="procesandoInvitacionCompacta === inv.id"
-                class="inline-flex h-11 min-w-[4.5rem] touch-manipulation items-center justify-center rounded-full border border-slate-300/90 bg-white/90 px-3 text-[10px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.98] disabled:opacity-50 sm:min-w-[4.25rem] sm:px-2.5"
+                class="inline-flex h-11 min-w-[4.5rem] touch-manipulation items-center justify-center rounded-full border border-slate-300/90 oscuro:border-borde-fuerte/90 bg-superficie-tarjeta/90 px-3 text-[10px] font-semibold text-slate-700 oscuro:text-texto-medio shadow-sm transition hover:bg-slate-50 oscuro:hover:bg-superficie-suave active:scale-[0.98] disabled:opacity-50 sm:min-w-[4.25rem] sm:px-2.5"
               >
                 Rechazar
               </button>
@@ -393,10 +393,10 @@
         <section
           v-if="sociosEnMora.length > 0"
           data-guia="alertas"
-          class="rounded-2xl border border-gray-200/80 bg-white shadow-sm"
+          class="rounded-2xl border border-borde/80 bg-superficie-tarjeta shadow-sm"
         >
           <div class="px-5 pt-5 pb-3">
-            <h2 class="text-base sm:text-lg font-bold text-gray-900">Alertas</h2>
+            <h2 class="text-base sm:text-lg font-bold text-texto-fuerte">Alertas</h2>
           </div>
           <div class="px-3 pb-4 space-y-4">
             <!-- Cuotas en mora -->
@@ -405,7 +405,7 @@
                 <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-500 text-white" aria-hidden="true">
                   <ExclamationTriangleIconSolid class="h-3 w-3" />
                 </span>
-                <span class="text-xs font-bold text-red-700 uppercase tracking-wide">Cuotas en mora</span>
+                <span class="text-xs font-bold text-red-700 oscuro:text-red-300 uppercase tracking-wide">Cuotas en mora</span>
                 <span class="text-[10px] font-bold text-white bg-red-500 rounded-full px-1.5 py-0.5 leading-none">{{ cantidadCuotasEnMoraAlertas }}</span>
               </div>
               <div class="space-y-0.5">
@@ -413,25 +413,25 @@
                   v-for="socioMora in sociosCuotasMoraLista.slice(0, previewCuotasCount)"
                   :key="'cm-' + socioMora.id"
                   type="button"
-                  class="flex w-full min-h-[48px] touch-manipulation items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-red-50/40 active:bg-red-50/60 disabled:cursor-wait disabled:opacity-60 [-webkit-tap-highlight-color:transparent]"
+                  class="flex w-full min-h-[48px] touch-manipulation items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-red-50/40 oscuro:hover:bg-red-500/15 active:bg-red-50/60 oscuro:active:bg-red-500/15 disabled:cursor-wait disabled:opacity-60 [-webkit-tap-highlight-color:transparent]"
                   :aria-label="`Ver estado del socio ${socioMora.nombre || ''}`"
                   @click="abrirComprobanteEstadoDesdeAlertaCuotasMora(socioMora)"
                 >
-                  <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-red-100 text-red-500" aria-hidden="true">
+                  <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-red-100 oscuro:bg-red-500/15 text-red-500" aria-hidden="true">
                     <ExclamationTriangleIconSolid class="h-3 w-3" />
                   </span>
                   <div class="min-w-0 flex-1">
-                    <p class="text-[13px] font-semibold text-gray-900 truncate leading-tight">{{ socioMora.nombre }}</p>
-                    <p class="text-[11px] text-gray-400 mt-0.5 leading-tight">
+                    <p class="text-[13px] font-semibold text-texto-fuerte truncate leading-tight">{{ socioMora.nombre }}</p>
+                    <p class="text-[11px] text-texto-tenue mt-0.5 leading-tight">
                       {{ socioMora.cuotasMora }} {{ socioMora.cuotasMora === 1 ? 'cuota' : 'cuotas' }}
                       · {{ socioMora.diasMora }}d
                     </p>
                   </div>
                   <div class="flex-shrink-0 pl-2 text-right tabular-nums leading-tight">
-                    <p class="text-sm font-bold text-red-600">${{ formatMoney(socioMora.totalDeudaCuotas + socioMora.totalSanciones) }}</p>
-                    <p v-if="socioMora.totalSanciones > 0" class="text-[10px] text-gray-400 mt-1">
-                      cuota <span class="text-gray-500">${{ formatMoney(socioMora.totalDeudaCuotas) }}</span>
-                      + multa <span class="text-amber-600">${{ formatMoney(socioMora.totalSanciones) }}</span>
+                    <p class="text-sm font-bold text-red-600 oscuro:text-red-300">${{ formatMoney(socioMora.totalDeudaCuotas + socioMora.totalSanciones) }}</p>
+                    <p v-if="socioMora.totalSanciones > 0" class="text-[10px] text-texto-tenue mt-1">
+                      cuota <span class="text-texto-suave">${{ formatMoney(socioMora.totalDeudaCuotas) }}</span>
+                      + multa <span class="text-amber-600 oscuro:text-amber-300">${{ formatMoney(socioMora.totalSanciones) }}</span>
                     </p>
                   </div>
                 </button>
@@ -439,7 +439,7 @@
             </div>
 
             <!-- Separador si hay ambos tipos -->
-            <div v-if="previewCuotasCount > 0 && previewPrestamosCount > 0" class="border-t border-gray-100 mx-2"></div>
+            <div v-if="previewCuotasCount > 0 && previewPrestamosCount > 0" class="border-t border-borde-suave mx-2"></div>
 
             <!-- Préstamos en mora -->
             <div v-if="previewPrestamosCount > 0">
@@ -447,7 +447,7 @@
                 <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-violet-500 text-white" aria-hidden="true">
                   <BanknotesIconSolid class="h-3 w-3" />
                 </span>
-                <span class="text-xs font-bold text-violet-700 uppercase tracking-wide">Préstamos en mora</span>
+                <span class="text-xs font-bold text-violet-700 oscuro:text-violet-300 uppercase tracking-wide">Préstamos en mora</span>
                 <span class="text-[10px] font-bold text-white bg-violet-500 rounded-full px-1.5 py-0.5 leading-none">{{ prestamosEnMoraLista.length }}</span>
               </div>
               <div class="space-y-1">
@@ -455,22 +455,22 @@
                   v-for="p in prestamosEnMoraLista.slice(0, previewPrestamosCount)"
                   :key="'pm-' + p.prestamoId"
                   type="button"
-                  class="flex w-full min-h-[48px] touch-manipulation items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-violet-50/40 active:bg-violet-50/60 disabled:cursor-wait disabled:opacity-60 [-webkit-tap-highlight-color:transparent]"
+                  class="flex w-full min-h-[48px] touch-manipulation items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-violet-50/40 oscuro:hover:bg-violet-500/15 active:bg-violet-50/60 oscuro:active:bg-violet-500/15 disabled:cursor-wait disabled:opacity-60 [-webkit-tap-highlight-color:transparent]"
                   :aria-label="`Ver estado del socio ${p.nombreSocio || ''}`"
                   @click="abrirComprobanteEstadoDesdeAlertaPrestamo(p)"
                 >
-                  <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-violet-100 text-violet-500" aria-hidden="true">
+                  <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-violet-100 oscuro:bg-violet-500/15 text-violet-500" aria-hidden="true">
                     <BanknotesIconSolid class="h-3 w-3" />
                   </span>
                   <div class="min-w-0 flex-1">
-                    <p class="text-[13px] font-semibold text-gray-900 truncate leading-tight">{{ p.nombreSocio }}</p>
-                    <p class="text-[11px] text-gray-400 mt-0.5 leading-tight">
+                    <p class="text-[13px] font-semibold text-texto-fuerte truncate leading-tight">{{ p.nombreSocio }}</p>
+                    <p class="text-[11px] text-texto-tenue mt-0.5 leading-tight">
                       {{ p.cuotasVencidas }} {{ p.cuotasVencidas === 1 ? 'cuota' : 'cuotas' }}
                       · {{ p.diasMoraPrestamo }}d
                     </p>
                   </div>
                   <div class="text-right flex-shrink-0 pl-2">
-                    <p class="text-[13px] font-bold text-violet-600 tabular-nums leading-tight">${{ formatMoney(p.totalDeudaPrestamo) }}</p>
+                    <p class="text-[13px] font-bold text-violet-600 oscuro:text-violet-300 tabular-nums leading-tight">${{ formatMoney(p.totalDeudaPrestamo) }}</p>
                   </div>
                 </button>
               </div>
@@ -480,7 +480,7 @@
             <div v-if="hayMasAlertasRecientes" class="pt-1 text-center">
               <button
                 type="button"
-                class="text-sm font-semibold text-[#166534] underline decoration-[#166534]/40 underline-offset-2 transition hover:text-[#145a2d] hover:decoration-[#145a2d]/50 active:opacity-90 [-webkit-tap-highlight-color:transparent] touch-manipulation"
+                class="text-sm font-semibold text-[#166534] oscuro:text-marca-tinta underline decoration-[#166534]/40 underline-offset-2 transition hover:text-[#145a2d] oscuro:hover:text-marca-tinta hover:decoration-[#145a2d]/50 active:opacity-90 [-webkit-tap-highlight-color:transparent] touch-manipulation"
                 @click="modalTodasLasAlertas = true"
               >
                 Ver todos
@@ -493,14 +493,14 @@
         <section
           v-if="ultimosMovimientos.length > 0"
           data-guia="movimientos"
-          class="rounded-2xl border border-gray-200/80 bg-white shadow-sm"
+          class="rounded-2xl border border-borde/80 bg-superficie-tarjeta shadow-sm"
         >
           <div class="flex flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-3">
-            <h2 class="text-base sm:text-lg font-bold text-gray-900">Últimos movimientos</h2>
+            <h2 class="text-base sm:text-lg font-bold text-texto-fuerte">Últimos movimientos</h2>
             <button
               type="button"
               @click="abrirModalTodosMovimientos"
-              class="shrink-0 text-xs sm:text-sm font-semibold text-natillera-500 hover:text-natillera-600 active:text-natillera-700 underline underline-offset-2 decoration-natillera-400 hover:decoration-natillera-500 touch-manipulation"
+              class="shrink-0 text-xs sm:text-sm font-semibold text-natillera-500 hover:text-natillera-600 oscuro:hover:text-natillera-300 active:text-natillera-700 oscuro:active:text-natillera-300 underline underline-offset-2 decoration-natillera-400 hover:decoration-natillera-500 touch-manipulation"
             >
               Ver todos
             </button>
@@ -508,27 +508,27 @@
           <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
               <thead>
-                <tr class="border-b border-gray-100">
-                  <th class="px-5 pb-2.5 font-semibold text-gray-600 text-xs">Socio</th>
-                  <th class="px-3 pb-2.5 font-semibold text-gray-600 text-xs hidden sm:table-cell">Detalle</th>
-                  <th class="px-3 pb-2.5 font-semibold text-gray-600 text-xs text-right">Monto</th>
-                  <th class="pl-2 pr-3 sm:px-5 pb-2.5 font-semibold text-gray-600 text-xs text-right">Tipo</th>
+                <tr class="border-b border-borde-suave">
+                  <th class="px-5 pb-2.5 font-semibold text-texto-secundario text-xs">Socio</th>
+                  <th class="px-3 pb-2.5 font-semibold text-texto-secundario text-xs hidden sm:table-cell">Detalle</th>
+                  <th class="px-3 pb-2.5 font-semibold text-texto-secundario text-xs text-right">Monto</th>
+                  <th class="pl-2 pr-3 sm:px-5 pb-2.5 font-semibold text-texto-secundario text-xs text-right">Tipo</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-50">
+              <tbody class="divide-y divide-gray-50 oscuro:divide-borde-suave">
                 <tr
                   v-for="mov in ultimosMovimientos"
                   :key="mov.id"
-                  class="hover:bg-gray-50/60 transition-colors"
+                  class="hover:bg-superficie-suave/60 transition-colors"
                 >
                   <td class="px-5 py-3 min-w-0 max-w-[11rem] sm:max-w-[10rem]">
-                    <p class="font-medium text-gray-800 truncate">{{ mov.nombre }}</p>
-                    <p class="sm:hidden text-xs text-gray-500 truncate mt-0.5">{{ mov.periodo }}</p>
+                    <p class="font-medium text-texto truncate">{{ mov.nombre }}</p>
+                    <p class="sm:hidden text-xs text-texto-suave truncate mt-0.5">{{ mov.periodo }}</p>
                   </td>
-                  <td class="px-3 py-3 text-gray-600 hidden sm:table-cell text-sm leading-snug min-w-0 max-w-[14rem]">{{ mov.periodo }}</td>
+                  <td class="px-3 py-3 text-texto-secundario hidden sm:table-cell text-sm leading-snug min-w-0 max-w-[14rem]">{{ mov.periodo }}</td>
                   <td
                     class="px-3 py-3 font-semibold tabular-nums text-right whitespace-nowrap"
-                    :class="Number(mov.monto) < 0 ? 'text-rose-700' : 'text-gray-800'"
+                    :class="Number(mov.monto) < 0 ? 'text-rose-700 oscuro:text-rose-300' : 'text-texto'"
                   >${{ formatMoney(mov.monto) }}</td>
                   <td class="pl-2 pr-3 sm:px-5 py-3 text-right align-middle min-w-0">
                     <span
@@ -552,7 +552,7 @@
       <!-- Mientras llegan las estadísticas la tarjeta se queda con la carga dentro: reserva su sitio y la pantalla no salta. -->
       <section
         v-if="cargandoEstadisticas && utilidadesCategoriaGrafico.segments.length === 0 && !ajustesUtilidadesGrafico.tieneAjustes"
-        class="mt-4 sm:mt-6 rounded-2xl border border-gray-200/80 bg-white shadow-sm overflow-hidden"
+        class="mt-4 sm:mt-6 rounded-2xl border border-borde/80 bg-superficie-tarjeta shadow-sm overflow-hidden"
       >
         <CargaCaja texto="Cargando utilidades por categoría" />
       </section>
@@ -560,19 +560,19 @@
       <section
         v-if="utilidadesCategoriaGrafico.segments.length > 0 || ajustesUtilidadesGrafico.tieneAjustes"
         data-guia="utilidades"
-        class="mt-4 sm:mt-6 rounded-2xl border border-gray-200/80 bg-white shadow-sm overflow-hidden"
+        class="mt-4 sm:mt-6 rounded-2xl border border-borde/80 bg-superficie-tarjeta shadow-sm overflow-hidden"
       >
         <div class="flex flex-wrap items-start justify-between gap-3 px-5 pt-5 pb-2">
           <div class="min-w-0">
-            <h2 class="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
-              <ChartPieIcon class="h-5 w-5 shrink-0 text-[#73AA73]" aria-hidden="true" />
+            <h2 class="text-base sm:text-lg font-bold text-texto-fuerte flex items-center gap-2">
+              <ChartPieIcon class="h-5 w-5 shrink-0 text-[#73AA73] oscuro:text-marca-tinta" aria-hidden="true" />
               Utilidades por categoría
             </h2>
           </div>
           <button
             type="button"
             @click="abrirModalDesgloseUtilidades"
-            class="shrink-0 text-xs sm:text-sm font-semibold text-natillera-500 hover:text-natillera-600 active:text-natillera-700 underline underline-offset-2 decoration-natillera-400 hover:decoration-natillera-500"
+            class="shrink-0 text-xs sm:text-sm font-semibold text-natillera-500 hover:text-natillera-600 oscuro:hover:text-natillera-300 active:text-natillera-700 oscuro:active:text-natillera-300 underline underline-offset-2 decoration-natillera-400 hover:decoration-natillera-500"
           >
             Ver desglose completo
           </button>
@@ -591,10 +591,10 @@
               :style="{ background: utilidadesCategoriaGrafico.conicGradient }"
             >
               <div
-                class="absolute inset-[26%] rounded-full bg-white flex flex-col items-center justify-center px-2 text-center shadow-sm border border-[#73AA73]/28"
+                class="absolute inset-[26%] rounded-full bg-superficie-tarjeta flex flex-col items-center justify-center px-2 text-center shadow-sm border border-[#73AA73]/28 oscuro:border-marca-tinta-borde"
               >
-                <span class="text-[10px] font-bold uppercase tracking-wide text-gray-400 leading-tight">Recogidas</span>
-                <span class="text-lg sm:text-xl font-bold text-[#2EBA74] tabular-nums leading-tight mt-0.5">
+                <span class="text-[10px] font-bold uppercase tracking-wide text-texto-tenue leading-tight">Recogidas</span>
+                <span class="text-lg sm:text-xl font-bold text-[#2EBA74] oscuro:text-emerald-300 tabular-nums leading-tight mt-0.5">
                   ${{ formatMoney(utilidadesCategoriaGrafico.total) }}
                 </span>
               </div>
@@ -612,16 +612,16 @@
                   :style="{ backgroundColor: seg.color }"
                   aria-hidden="true"
                 />
-                <span class="text-sm font-semibold text-gray-800 truncate flex-1">{{ seg.label }}</span>
-                <span class="text-sm font-bold text-gray-900 tabular-nums shrink-0">${{ formatMoney(seg.value) }}</span>
+                <span class="text-sm font-semibold text-texto truncate flex-1">{{ seg.label }}</span>
+                <span class="text-sm font-bold text-texto-fuerte tabular-nums shrink-0">${{ formatMoney(seg.value) }}</span>
               </div>
-              <div class="h-2 rounded-full bg-gray-100 overflow-hidden">
+              <div class="h-2 rounded-full bg-superficie-hundida overflow-hidden">
                 <div
                   class="h-full rounded-full min-w-px transition-[width] duration-500 ease-out"
                   :style="{ width: seg.pct + '%', backgroundColor: seg.color }"
                 />
               </div>
-              <p class="text-[11px] text-gray-500 mt-0.5 tabular-nums">{{ seg.pct.toFixed(1) }}% del total recogido</p>
+              <p class="text-[11px] text-texto-suave mt-0.5 tabular-nums">{{ seg.pct.toFixed(1) }}% del total recogido</p>
             </li>
           </ul>
         </div>
@@ -631,51 +631,51 @@
         <div class="px-5 pb-5 sm:pb-6">
           <div
             v-if="ajustesUtilidadesGrafico.tieneAjustes"
-            class="rounded-xl border border-gray-200/90 bg-gradient-to-b from-natillera-50/50 to-white px-4 py-3.5 shadow-sm"
+            class="rounded-xl border border-borde/90 bg-gradient-to-b from-natillera-50/50 oscuro:from-natillera-500/15 to-superficie-tarjeta px-4 py-3.5 shadow-sm"
           >
-            <p class="text-[11px] font-bold uppercase tracking-wide text-gray-500 mb-3">
+            <p class="text-[11px] font-bold uppercase tracking-wide text-texto-suave mb-3">
               De lo recogido al neto en utilidades
             </p>
             <div class="space-y-2 text-sm">
               <div class="flex items-center justify-between gap-3">
-                <span class="text-gray-600">Recogidas</span>
-                <span class="font-bold tabular-nums text-gray-900">${{ formatMoney(ajustesUtilidadesGrafico.recogidas) }}</span>
+                <span class="text-texto-secundario">Recogidas</span>
+                <span class="font-bold tabular-nums text-texto-fuerte">${{ formatMoney(ajustesUtilidadesGrafico.recogidas) }}</span>
               </div>
               <div
                 v-if="ajustesUtilidadesGrafico.egresos > 0"
                 class="flex items-center justify-between gap-3"
               >
-                <span class="text-red-700">Egresos de utilidades</span>
-                <span class="font-bold tabular-nums text-red-600">− ${{ formatMoney(ajustesUtilidadesGrafico.egresos) }}</span>
+                <span class="text-red-700 oscuro:text-red-300">Egresos de utilidades</span>
+                <span class="font-bold tabular-nums text-red-600 oscuro:text-red-300">− ${{ formatMoney(ajustesUtilidadesGrafico.egresos) }}</span>
               </div>
               <div
                 v-if="ajustesUtilidadesGrafico.ingresos > 0"
                 class="flex items-center justify-between gap-3"
               >
-                <span class="text-natillera-800">Ingresos a utilidades</span>
-                <span class="font-bold tabular-nums text-natillera-600">+ ${{ formatMoney(ajustesUtilidadesGrafico.ingresos) }}</span>
+                <span class="text-natillera-800 oscuro:text-natillera-300">Ingresos a utilidades</span>
+                <span class="font-bold tabular-nums text-natillera-600 oscuro:text-natillera-300">+ ${{ formatMoney(ajustesUtilidadesGrafico.ingresos) }}</span>
               </div>
               <div
-                class="flex items-center justify-between gap-3 border-t border-gray-200 pt-2.5 mt-2"
+                class="flex items-center justify-between gap-3 border-t border-borde pt-2.5 mt-2"
               >
-                <span class="font-semibold text-natillera-900">Neto</span>
-                <span class="text-base font-bold tabular-nums text-natillera-700">${{ formatMoney(ajustesUtilidadesGrafico.neto) }}</span>
+                <span class="font-semibold text-natillera-900 oscuro:text-natillera-300">Neto</span>
+                <span class="text-base font-bold tabular-nums text-natillera-700 oscuro:text-natillera-300">${{ formatMoney(ajustesUtilidadesGrafico.neto) }}</span>
               </div>
             </div>
           </div>
           <p
             v-else
-            class="rounded-lg border border-dashed border-gray-200 bg-gray-50/80 px-3 py-2.5 text-center text-xs text-gray-600"
+            class="rounded-lg border border-dashed border-borde bg-superficie-suave/80 px-3 py-2.5 text-center text-xs text-texto-secundario"
           >
-            No hay egresos ni ingresos en el rubro utilidades: el <span class="font-semibold text-gray-800">neto</span> coincide con lo
-            <span class="font-semibold text-gray-800">recogido</span>.
+            No hay egresos ni ingresos en el rubro utilidades: el <span class="font-semibold text-texto">neto</span> coincide con lo
+            <span class="font-semibold text-texto">recogido</span>.
           </p>
         </div>
       </section>
 
     </template>
     <div v-else-if="!cargandoNatillera" class="card text-center py-12">
-      <p class="text-gray-500">No se encontró la natillera</p>
+      <p class="text-texto-suave">No se encontró la natillera</p>
       <router-link to="/natilleras" class="btn-primary mt-4 inline-block">
         Volver a natilleras
       </router-link>
@@ -685,7 +685,7 @@
       :show="!!modalDetalle"
       :z-index="50"
       overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      card-class="relative max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 max-h-[90vh] max-h-[90dvh] flex flex-col min-h-0"
+      card-class="relative max-w-md w-full bg-superficie-tarjeta rounded-3xl shadow-2xl overflow-hidden border border-borde max-h-[90vh] max-h-[90dvh] flex flex-col min-h-0"
       @close="modalDetalle = false"
     >
         <!-- El scroll no puede vivir en la card: en iOS ModalWrapper la fuerza a overflow:hidden
@@ -726,40 +726,40 @@
         <!-- Contenido -->
         <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-6 space-y-5">
           <!-- Valor de la cuota -->
-          <div class="relative bg-gradient-to-br from-natillera-50 to-emerald-50 p-5 rounded-xl border border-natillera-200 shadow-sm">
+          <div class="relative bg-gradient-to-br from-natillera-50 oscuro:from-natillera-500/15 to-emerald-50 oscuro:to-emerald-500/10 p-5 rounded-xl border border-natillera-200 oscuro:border-natillera-500/30 shadow-sm">
             <div class="flex items-center gap-3 mb-2">
               <div class="w-10 h-10 bg-gradient-to-br from-natillera-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
                 <CurrencyDollarIcon class="w-5 h-5 text-white" />
               </div>
               <div>
-                <p class="text-xs text-gray-500 font-medium">Valor de la Cuota</p>
-                <p class="text-2xl font-bold text-natillera-700">${{ formatMoney(socioSeleccionado?.valor_cuota_individual) }}</p>
+                <p class="text-xs text-texto-suave font-medium">Valor de la Cuota</p>
+                <p class="text-2xl font-bold text-natillera-700 oscuro:text-natillera-300">${{ formatMoney(socioSeleccionado?.valor_cuota_individual) }}</p>
               </div>
             </div>
           </div>
           <!-- Periodicidad -->
-          <div class="relative p-5 rounded-xl border shadow-sm" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200' : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200'">
+          <div class="relative p-5 rounded-xl border shadow-sm" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'bg-gradient-to-br from-purple-50 oscuro:from-purple-500/15 to-indigo-50 oscuro:to-indigo-500/10 border-purple-200 oscuro:border-purple-500/30' : 'bg-gradient-to-br from-superficie-suave to-superficie-hundida border-borde'">
             <div class="flex items-center gap-3 mb-2">
               <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-md" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'bg-gradient-to-br from-purple-500 to-indigo-600' : 'bg-gradient-to-br from-gray-400 to-gray-500'">
                 <span class="text-xl">{{ socioSeleccionado?.periodicidad === 'quincenal' ? '🗓️' : '📅' }}</span>
               </div>
               <div>
-                <p class="text-xs text-gray-500 font-medium">Periodicidad</p>
-                <p class="text-xl font-bold" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'text-purple-700' : 'text-blue-700'">
+                <p class="text-xs text-texto-suave font-medium">Periodicidad</p>
+                <p class="text-xl font-bold" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'text-purple-700 oscuro:text-purple-300' : 'text-blue-700 oscuro:text-blue-300'">
                   {{ socioSeleccionado?.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}
                 </p>
               </div>
             </div>
           </div>
           <!-- Teléfono -->
-          <div class="relative bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200 shadow-sm">
+          <div class="relative bg-gradient-to-br from-superficie-suave to-superficie-hundida p-5 rounded-xl border border-borde shadow-sm">
             <div class="flex items-center gap-3 mb-2">
               <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
                 <PhoneIcon class="w-5 h-5 text-white" />
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-xs text-gray-500 font-medium">Teléfono / WhatsApp</p>
-                <p class="text-lg font-bold text-gray-800 truncate">{{ socioSeleccionado?.socio?.telefono || 'No registrado' }}</p>
+                <p class="text-xs text-texto-suave font-medium">Teléfono / WhatsApp</p>
+                <p class="text-lg font-bold text-texto truncate">{{ socioSeleccionado?.socio?.telefono || 'No registrado' }}</p>
               </div>
               <a 
                 v-if="socioSeleccionado?.socio?.telefono"
@@ -774,14 +774,14 @@
             </div>
           </div>
           <!-- Mensaje para más información -->
-          <div class="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6 rounded-xl border-2 border-blue-200 shadow-sm">
+          <div class="relative bg-gradient-to-br from-blue-50 oscuro:from-blue-500/15 via-indigo-50 oscuro:via-indigo-500/10 to-purple-50 oscuro:to-purple-500/10 p-6 rounded-xl border-2 border-blue-200 oscuro:border-blue-500/30 shadow-sm">
             <div class="flex items-start gap-3">
               <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
                 <UsersIcon class="w-6 h-6 text-white" />
               </div>
               <div class="flex-1">
-                <p class="font-semibold text-gray-800 mb-2">¿Necesitas más información?</p>
-                <p class="text-sm text-gray-600 mb-4">
+                <p class="font-semibold text-texto mb-2">¿Necesitas más información?</p>
+                <p class="text-sm text-texto-secundario mb-4">
                   Accede a la sección completa de socios para ver el historial de pagos, cuotas pendientes y toda la información detallada.
                 </p>
                 <router-link 
@@ -798,10 +798,10 @@
           </div>
         </div>
         <!-- Footer -->
-        <div class="flex-shrink-0 px-6 pt-6 pb-[calc(max(1.5rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] border-t border-gray-200 bg-gray-50">
+        <div class="flex-shrink-0 px-6 pt-6 pb-[calc(max(1.5rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] border-t border-borde bg-superficie-suave">
           <button 
             @click="modalDetalle = false"
-            class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+            class="w-full px-4 py-3 bg-superficie-tarjeta border-2 border-borde-fuerte text-texto-medio font-semibold rounded-xl hover:bg-superficie-suave transition-all"
           >
             Cerrar
           </button>
@@ -814,15 +814,15 @@
       align="bottom"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white my-0 sm:my-4"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta my-0 sm:my-4"
       card-max-width="28rem"
       @close="cerrarModalBuscarComprobante"
     >
       <!-- Móvil: fila — icono | títulos | X (sin absolute, iOS-safe) -->
       <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
         <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
-          <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+          <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm"><!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <MagnifyingGlassIcon class="h-5 w-5 text-[#1B5E37]" />
           </div>
           <div class="min-w-0 flex-1 text-left">
@@ -848,7 +848,7 @@
         <div class="flex items-start px-4 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
           <div class="w-11 flex-shrink-0" aria-hidden="true" />
           <div class="flex min-w-0 flex-1 flex-col items-center text-center">
-            <div class="flex h-[3.2rem] w-[3.2rem] flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+            <div class="flex h-[3.2rem] w-[3.2rem] flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm"><!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
               <MagnifyingGlassIcon class="h-6 w-6 text-[#1B5E37]" />
             </div>
             <h3 class="mt-2.5 font-display text-lg font-bold leading-tight text-white">
@@ -871,14 +871,14 @@
 
       <!-- Cuerpo scrolleable: formulario, resultados y CTA al final (skill modales) -->
       <div
-        class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain bg-white px-6 pb-0 pt-5 [-webkit-overflow-scrolling:touch] space-y-5"
+        class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain bg-superficie-tarjeta px-6 pb-0 pt-5 [-webkit-overflow-scrolling:touch] space-y-5"
       >
         <div>
-          <label class="mb-2 block text-sm font-semibold text-gray-800">Código del comprobante</label>
+          <label class="mb-2 block text-sm font-semibold text-texto">Código del comprobante</label>
           <div
-            class="flex items-center gap-0 rounded-xl border-2 border-gray-200 bg-white focus-within:border-[#1B5E37] focus-within:ring-2 focus-within:ring-[#1B5E37]/40"
+            class="flex items-center gap-0 rounded-xl border-2 border-borde bg-superficie-tarjeta focus-within:border-[#1B5E37] oscuro:focus-within:border-marca-tinta focus-within:ring-2 focus-within:ring-[#1B5E37]/40"
           >
-            <span class="pointer-events-none flex shrink-0 items-center pl-3 text-gray-400">
+            <span class="pointer-events-none flex shrink-0 items-center pl-3 text-texto-tenue">
               <MagnifyingGlassIcon class="h-5 w-5" />
             </span>
             <input
@@ -908,31 +908,31 @@
             <!-- Alerta si es un comprobante antiguo -->
             <div
               v-if="infoComprobanteAntiguo"
-              class="rounded-xl border-2 border-amber-200 bg-amber-50/90 p-4 shadow-sm"
+              class="rounded-xl border-2 border-amber-200 oscuro:border-amber-500/30 bg-amber-50/90 oscuro:bg-amber-500/15 p-4 shadow-sm"
             >
               <div class="mb-4 flex items-start gap-3">
                 <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-amber-500">
                   <ExclamationCircleIcon class="h-6 w-6 text-white" />
                 </div>
                 <div class="flex-1">
-                  <h4 class="mb-1 font-display font-bold text-amber-900">Comprobante actualizado</h4>
-                  <p class="text-sm text-amber-800/90">
+                  <h4 class="mb-1 font-display font-bold text-amber-900 oscuro:text-amber-300">Comprobante actualizado</h4>
+                  <p class="text-sm text-amber-800/90 oscuro:text-amber-300/90">
                     Este código corresponde a un comprobante antiguo que fue actualizado.
                   </p>
                 </div>
               </div>
 
-              <div class="mb-4 space-y-3 rounded-lg border border-amber-200 bg-white p-4">
-                <div class="flex items-center justify-between py-2 border-b border-amber-100">
-                  <span class="text-sm text-amber-700 font-medium">Código Anterior:</span>
-                  <span class="font-mono font-bold text-amber-900 text-lg">{{ infoComprobanteAntiguo.codigoAnterior }}</span>
+              <div class="mb-4 space-y-3 rounded-lg border border-amber-200 oscuro:border-amber-500/30 bg-superficie-tarjeta p-4">
+                <div class="flex items-center justify-between py-2 border-b border-amber-100 oscuro:border-amber-500/30">
+                  <span class="text-sm text-amber-700 oscuro:text-amber-300 font-medium">Código Anterior:</span>
+                  <span class="font-mono font-bold text-amber-900 oscuro:text-amber-300 text-lg">{{ infoComprobanteAntiguo.codigoAnterior }}</span>
                 </div>
                 <div class="flex items-center justify-between py-2">
-                  <span class="text-sm text-green-700 font-medium">Código Actual:</span>
-                  <span class="font-mono font-bold text-green-800 text-lg">{{ infoComprobanteAntiguo.codigoNuevo }}</span>
+                  <span class="text-sm text-green-700 oscuro:text-green-300 font-medium">Código Actual:</span>
+                  <span class="font-mono font-bold text-green-800 oscuro:text-green-300 text-lg">{{ infoComprobanteAntiguo.codigoNuevo }}</span>
                 </div>
-                <div v-if="infoComprobanteAntiguo.fechaActualizacion" class="pt-3 border-t border-amber-100">
-                  <span class="text-xs text-amber-600">Actualizado el: {{ formatDate(infoComprobanteAntiguo.fechaActualizacion) }}</span>
+                <div v-if="infoComprobanteAntiguo.fechaActualizacion" class="pt-3 border-t border-amber-100 oscuro:border-amber-500/30">
+                  <span class="text-xs text-amber-600 oscuro:text-amber-300">Actualizado el: {{ formatDate(infoComprobanteAntiguo.fechaActualizacion) }}</span>
                 </div>
               </div>
               
@@ -951,8 +951,8 @@
               :class="[
                 'rounded-xl border-2 p-4 shadow-sm sm:p-5',
                 comprobanteEncontrado.tipo === 'abono_prestamo'
-                  ? 'border-amber-200 bg-amber-50/80'
-                  : 'border-emerald-200 bg-[#E8F5E9]/80',
+                  ? 'border-amber-200 oscuro:border-amber-500/30 bg-amber-50/80 oscuro:bg-amber-500/15'
+                  : 'border-emerald-200 oscuro:border-emerald-500/30 bg-marca-suave/80',
               ]"
             >
               <div class="mb-4 flex items-center gap-2">
@@ -968,14 +968,14 @@
                   <h4
                     :class="[
                       'font-display text-lg font-bold',
-                      comprobanteEncontrado.tipo === 'abono_prestamo' ? 'text-amber-900' : 'text-[#14532d]',
+                      comprobanteEncontrado.tipo === 'abono_prestamo' ? 'text-amber-900 oscuro:text-amber-300' : 'text-[#14532d] oscuro:text-marca-tinta',
                     ]"
                   >
                     Comprobante encontrado
                   </h4>
                   <p
                     v-if="comprobanteEncontrado.tipo === 'abono_prestamo'"
-                    class="mt-0.5 text-xs font-semibold text-amber-800"
+                    class="mt-0.5 text-xs font-semibold text-amber-800 oscuro:text-amber-300"
                   >
                     Abono a préstamo
                   </p>
@@ -983,39 +983,39 @@
               </div>
 
               <div
-                class="space-y-4 rounded-lg border bg-white p-4 sm:p-5"
-                :class="comprobanteEncontrado.tipo === 'abono_prestamo' ? 'border-amber-200' : 'border-emerald-200'"
+                class="space-y-4 rounded-lg border bg-superficie-tarjeta p-4 sm:p-5"
+                :class="comprobanteEncontrado.tipo === 'abono_prestamo' ? 'border-amber-200 oscuro:border-amber-500/30' : 'border-emerald-200 oscuro:border-emerald-500/30'"
               >
-                <div class="pb-3 border-b border-gray-100">
-                  <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Código {{ infoComprobanteAntiguo ? 'Actual' : 'del Comprobante' }}</p>
-                  <p class="font-mono font-bold text-xl text-gray-800">{{ comprobanteEncontrado.codigo_comprobante }}</p>
+                <div class="pb-3 border-b border-borde-suave">
+                  <p class="text-xs text-texto-suave mb-1 uppercase tracking-wide font-semibold">Código {{ infoComprobanteAntiguo ? 'Actual' : 'del Comprobante' }}</p>
+                  <p class="font-mono font-bold text-xl text-texto">{{ comprobanteEncontrado.codigo_comprobante }}</p>
                 </div>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Socio</p>
-                    <p class="font-semibold text-gray-800">{{ comprobanteEncontrado.socio_natillera?.socio?.nombre || 'N/A' }}</p>
+                    <p class="text-xs text-texto-suave mb-1 uppercase tracking-wide font-semibold">Socio</p>
+                    <p class="font-semibold text-texto">{{ comprobanteEncontrado.socio_natillera?.socio?.nombre || 'N/A' }}</p>
                   </div>
                   
                   <div>
-                    <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Descripción</p>
-                    <p class="text-gray-800">{{ comprobanteEncontrado.descripcion || 'N/A' }}</p>
+                    <p class="text-xs text-texto-suave mb-1 uppercase tracking-wide font-semibold">Descripción</p>
+                    <p class="text-texto">{{ comprobanteEncontrado.descripcion || 'N/A' }}</p>
                   </div>
                 </div>
                 
                 <!-- Alerta de comprobante eliminado -->
-                <div v-if="comprobanteEncontrado.eliminado" class="bg-red-50 border-2 border-red-300 rounded-lg p-4 mb-4">
+                <div v-if="comprobanteEncontrado.eliminado" class="bg-red-50 oscuro:bg-red-500/15 border-2 border-red-300 oscuro:border-red-500/30 rounded-lg p-4 mb-4">
                   <div class="flex items-start gap-3">
                     <div class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
                       <ExclamationCircleIcon class="w-5 h-5 text-white" />
                     </div>
                     <div class="flex-1">
-                      <p class="mb-2 font-display font-bold text-red-800">Comprobante eliminado</p>
+                      <p class="mb-2 font-display font-bold text-red-800 oscuro:text-red-300">Comprobante eliminado</p>
                       <div class="space-y-1 text-sm">
-                        <p class="text-red-700">
+                        <p class="text-red-700 oscuro:text-red-300">
                           <span class="font-semibold">Eliminado por:</span> {{ comprobanteEncontrado.eliminado_por }}
                         </p>
-                        <p class="text-red-700">
+                        <p class="text-red-700 oscuro:text-red-300">
                           <span class="font-semibold">Fecha de eliminación:</span> {{ formatDateWithTime(comprobanteEncontrado.eliminado_el) }}
                         </p>
                       </div>
@@ -1023,21 +1023,21 @@
                   </div>
                 </div>
                 <!-- Alerta de código actualizado -->
-                <div v-else-if="comprobanteEncontrado.codigo_nuevo" class="bg-red-50 border-2 border-red-400 rounded-lg p-4 mb-4">
+                <div v-else-if="comprobanteEncontrado.codigo_nuevo" class="bg-red-50 oscuro:bg-red-500/15 border-2 border-red-400 rounded-lg p-4 mb-4">
                   <div class="flex items-start gap-3">
                     <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
                       <ExclamationTriangleIcon class="w-6 h-6 text-white" />
                     </div>
                     <div class="flex-1">
-                      <p class="mb-2 font-display text-lg font-bold text-red-800">Comprobante no válido</p>
-                      <p class="text-sm text-red-700 mb-2 font-semibold">
-                        Este comprobante fue actualizado y <span class="text-red-900 font-bold">ya no es válido</span>.
+                      <p class="mb-2 font-display text-lg font-bold text-red-800 oscuro:text-red-300">Comprobante no válido</p>
+                      <p class="text-sm text-red-700 oscuro:text-red-300 mb-2 font-semibold">
+                        Este comprobante fue actualizado y <span class="text-red-900 oscuro:text-red-300 font-bold">ya no es válido</span>.
                       </p>
-                      <p class="text-sm text-red-600 mb-3">
+                      <p class="text-sm text-red-600 oscuro:text-red-300 mb-3">
                         El comprobante válido tiene el siguiente código:
                       </p>
                       <div class="flex items-center gap-3 flex-wrap">
-                        <span class="font-mono font-bold text-red-900 bg-red-100 border-2 border-red-300 px-3 py-1.5 rounded-lg">
+                        <span class="font-mono font-bold text-red-900 oscuro:text-red-300 bg-red-100 oscuro:bg-red-500/15 border-2 border-red-300 oscuro:border-red-500/30 px-3 py-1.5 rounded-lg">
                           {{ comprobanteEncontrado.codigo_nuevo }}
                         </span>
                         <button
@@ -1054,43 +1054,43 @@
                 </div>
                 <!-- Información específica según el tipo -->
                 <template v-if="comprobanteEncontrado.tipo === 'abono_prestamo' || comprobanteEncontrado.tipo === 'abono_prestamo_eliminado' || comprobanteEncontrado.tipo === 'abono_prestamo_antiguo'">
-                  <div class="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                    <p class="text-xs text-amber-700 mb-2 uppercase tracking-wide font-semibold">Información del Préstamo</p>
+                  <div class="bg-amber-50 oscuro:bg-amber-500/15 rounded-lg p-4 border border-amber-200 oscuro:border-amber-500/30">
+                    <p class="text-xs text-amber-700 oscuro:text-amber-300 mb-2 uppercase tracking-wide font-semibold">Información del Préstamo</p>
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <p class="text-xs text-gray-500 mb-1">Monto del Préstamo</p>
-                        <p class="font-bold text-gray-800">${{ formatMoney(comprobanteEncontrado.prestamo?.monto || 0) }}</p>
+                        <p class="text-xs text-texto-suave mb-1">Monto del Préstamo</p>
+                        <p class="font-bold text-texto">${{ formatMoney(comprobanteEncontrado.prestamo?.monto || 0) }}</p>
                       </div>
                       <div>
-                        <p class="text-xs text-gray-500 mb-1">Saldo Actual</p>
-                        <p class="font-bold text-gray-800">${{ formatMoney(comprobanteEncontrado.prestamo?.saldo_actual || 0) }}</p>
+                        <p class="text-xs text-texto-suave mb-1">Saldo Actual</p>
+                        <p class="font-bold text-texto">${{ formatMoney(comprobanteEncontrado.prestamo?.saldo_actual || 0) }}</p>
                       </div>
                       <div>
-                        <p class="text-xs text-gray-500 mb-1">Interés</p>
-                        <p class="font-bold text-gray-800">{{ comprobanteEncontrado.prestamo?.interes || 0 }}%</p>
+                        <p class="text-xs text-texto-suave mb-1">Interés</p>
+                        <p class="font-bold text-texto">{{ comprobanteEncontrado.prestamo?.interes || 0 }}%</p>
                       </div>
                       <div>
-                        <p class="text-xs text-gray-500 mb-1">Cuotas</p>
-                        <p class="font-bold text-gray-800">{{ comprobanteEncontrado.prestamo?.numero_cuotas || 0 }}</p>
+                        <p class="text-xs text-texto-suave mb-1">Cuotas</p>
+                        <p class="font-bold text-texto">{{ comprobanteEncontrado.prestamo?.numero_cuotas || 0 }}</p>
                       </div>
                     </div>
                   </div>
                   
-                  <div class="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200">
-                    <div class="bg-amber-50 rounded-lg p-3 border border-amber-200">
-                      <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Valor del Abono</p>
-                      <p class="font-bold text-amber-700 text-lg">${{ formatMoney(comprobanteEncontrado.valor_pagado || 0) }}</p>
+                  <div class="grid grid-cols-2 gap-4 pt-3 border-t border-borde">
+                    <div class="bg-amber-50 oscuro:bg-amber-500/15 rounded-lg p-3 border border-amber-200 oscuro:border-amber-500/30">
+                      <p class="text-xs text-texto-suave mb-1 uppercase tracking-wide font-semibold">Valor del Abono</p>
+                      <p class="font-bold text-amber-700 oscuro:text-amber-300 text-lg">${{ formatMoney(comprobanteEncontrado.valor_pagado || 0) }}</p>
                     </div>
-                    <div v-if="!comprobanteEncontrado.eliminado" class="bg-green-50 rounded-lg p-3 border border-green-200">
-                      <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Saldo Después del Abono</p>
-                      <p class="font-bold text-green-600 text-lg">${{ formatMoney(Math.max(0, (comprobanteEncontrado.prestamo?.saldo_actual || 0) - (comprobanteEncontrado.valor_pagado || 0))) }}</p>
+                    <div v-if="!comprobanteEncontrado.eliminado" class="bg-green-50 oscuro:bg-green-500/15 rounded-lg p-3 border border-green-200 oscuro:border-green-500/30">
+                      <p class="text-xs text-texto-suave mb-1 uppercase tracking-wide font-semibold">Saldo Después del Abono</p>
+                      <p class="font-bold text-green-600 oscuro:text-green-300 text-lg">${{ formatMoney(Math.max(0, (comprobanteEncontrado.prestamo?.saldo_actual || 0) - (comprobanteEncontrado.valor_pagado || 0))) }}</p>
                     </div>
                   </div>
                 </template>
                 
                 <template v-else>
                   <!-- Badge de estado de pago destacado -->
-                  <div v-if="comprobanteEncontrado.total_a_pagar_completo && comprobanteEncontrado.valor_pagado_completo" class="pt-3 border-t border-gray-200 mb-3">
+                  <div v-if="comprobanteEncontrado.total_a_pagar_completo && comprobanteEncontrado.valor_pagado_completo" class="pt-3 border-t border-borde mb-3">
                     <div 
                       :class="[
                         'inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg',
@@ -1105,7 +1105,7 @@
                   </div>
                   
                   <!-- Formato tipo resta matemática - Diseño moderno y compacto -->
-                  <div v-if="comprobanteEncontrado.total_a_pagar_completo && comprobanteEncontrado.valor_pagado_completo" class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-50 border border-slate-200 shadow-lg">
+                  <div v-if="comprobanteEncontrado.total_a_pagar_completo && comprobanteEncontrado.valor_pagado_completo" class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 oscuro:from-superficie-suave via-superficie-tarjeta to-slate-50 oscuro:to-superficie-suave border border-slate-200 oscuro:border-borde shadow-lg">
                     <!-- Línea decorativa superior -->
                     <div 
                       :class="[
@@ -1119,35 +1119,35 @@
                     <div class="p-4 space-y-3">
                       <!-- Total a Pagar -->
                       <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-slate-600 uppercase tracking-wider">Total a Pagar</span>
-                        <span class="text-2xl font-bold text-slate-900">${{ formatMoney(comprobanteEncontrado.total_a_pagar_completo || comprobanteEncontrado.valor_cuota || 0) }}</span>
+                        <span class="text-xs font-semibold text-slate-600 oscuro:text-texto-secundario uppercase tracking-wider">Total a Pagar</span>
+                        <span class="text-2xl font-bold text-slate-900 oscuro:text-texto-fuerte">${{ formatMoney(comprobanteEncontrado.total_a_pagar_completo || comprobanteEncontrado.valor_cuota || 0) }}</span>
                       </div>
                       
                       <!-- Línea divisoria con signo menos -->
                       <div class="relative flex items-center py-1">
-                        <div class="flex-1 border-t-2 border-dashed border-slate-300"></div>
-                        <span class="px-3 text-xl font-light text-slate-400">−</span>
-                        <div class="flex-1 border-t-2 border-dashed border-slate-300"></div>
+                        <div class="flex-1 border-t-2 border-dashed border-slate-300 oscuro:border-borde-fuerte"></div>
+                        <span class="px-3 text-xl font-light text-slate-400 oscuro:text-texto-tenue">−</span>
+                        <div class="flex-1 border-t-2 border-dashed border-slate-300 oscuro:border-borde-fuerte"></div>
                       </div>
                       
                       <!-- Valor Pagado -->
                       <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-slate-600 uppercase tracking-wider">Valor Pagado</span>
-                        <span class="text-2xl font-bold text-green-600">${{ formatMoney(comprobanteEncontrado.valor_pagado_completo || comprobanteEncontrado.valor_pagado || 0) }}</span>
+                        <span class="text-xs font-semibold text-slate-600 oscuro:text-texto-secundario uppercase tracking-wider">Valor Pagado</span>
+                        <span class="text-2xl font-bold text-green-600 oscuro:text-green-300">${{ formatMoney(comprobanteEncontrado.valor_pagado_completo || comprobanteEncontrado.valor_pagado || 0) }}</span>
                       </div>
                       
                       <!-- Línea divisoria final -->
-                      <div class="border-t-2 border-slate-300"></div>
+                      <div class="border-t-2 border-slate-300 oscuro:border-borde-fuerte"></div>
                       
                       <!-- Valor Restante -->
                       <div class="flex items-center justify-between pt-1">
-                        <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Valor Restante</span>
+                        <span class="text-xs font-bold text-slate-700 oscuro:text-texto-medio uppercase tracking-wider">Valor Restante</span>
                         <span 
                           :class="[
                             'text-2xl font-extrabold',
                             (comprobanteEncontrado.valor_pagado_completo || 0) < (comprobanteEncontrado.total_a_pagar_completo || 0)
-                              ? 'text-orange-600'
-                              : 'text-green-600'
+                              ? 'text-orange-600 oscuro:text-orange-300'
+                              : 'text-green-600 oscuro:text-green-300'
                           ]"
                         >
                           ${{ formatMoney(Math.max(0, (comprobanteEncontrado.total_a_pagar_completo || 0) - (comprobanteEncontrado.valor_pagado_completo || 0))) }}
@@ -1157,27 +1157,27 @@
                   </div>
                   
                   <!-- Fallback si no hay total_a_pagar_completo calculado -->
-                  <div v-else class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
-                    <div class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200 shadow-sm">
-                      <p class="text-xs text-slate-600 mb-1.5 uppercase tracking-wide font-semibold">Total a Pagar</p>
-                      <p class="font-bold text-slate-900 text-lg">${{ formatMoney(comprobanteEncontrado.valor_cuota || 0) }}</p>
+                  <div v-else class="grid grid-cols-2 gap-3 pt-3 border-t border-borde">
+                    <div class="bg-gradient-to-br from-slate-50 oscuro:from-superficie-suave to-slate-100 oscuro:to-superficie-hundida rounded-xl p-4 border border-slate-200 oscuro:border-borde shadow-sm">
+                      <p class="text-xs text-slate-600 oscuro:text-texto-secundario mb-1.5 uppercase tracking-wide font-semibold">Total a Pagar</p>
+                      <p class="font-bold text-slate-900 oscuro:text-texto-fuerte text-lg">${{ formatMoney(comprobanteEncontrado.valor_cuota || 0) }}</p>
                     </div>
-                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200 shadow-sm">
-                      <p class="text-xs text-green-700 mb-1.5 uppercase tracking-wide font-semibold">Total Pagado</p>
-                      <p class="font-bold text-green-700 text-lg">${{ formatMoney(comprobanteEncontrado.valor_pagado || 0) }}</p>
+                    <div class="bg-gradient-to-br from-green-50 oscuro:from-green-500/15 to-emerald-50 oscuro:to-emerald-500/10 rounded-xl p-4 border border-green-200 oscuro:border-green-500/30 shadow-sm">
+                      <p class="text-xs text-green-700 oscuro:text-green-300 mb-1.5 uppercase tracking-wide font-semibold">Total Pagado</p>
+                      <p class="font-bold text-green-700 oscuro:text-green-300 text-lg">${{ formatMoney(comprobanteEncontrado.valor_pagado || 0) }}</p>
                     </div>
                   </div>
                   
                   <!-- Desglose del total a pagar (desplegable): Cuota + Sanciones + Actividades + Préstamos -->
-                  <div v-if="comprobanteEncontrado.desglose_a_pagar" class="pt-3 border-t border-gray-200">
+                  <div v-if="comprobanteEncontrado.desglose_a_pagar" class="pt-3 border-t border-borde">
                     <button
                       @click="desgloseAPagarAbierto = !desgloseAPagarAbierto"
-                      class="w-full flex items-center justify-between text-left focus:outline-none rounded-xl p-3 hover:bg-slate-50 transition-all duration-200 border border-transparent hover:border-slate-200"
+                      class="w-full flex items-center justify-between text-left focus:outline-none rounded-xl p-3 hover:bg-slate-50 oscuro:hover:bg-superficie-suave transition-all duration-200 border border-transparent hover:border-slate-200 oscuro:hover:border-borde"
                     >
-                      <span class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Desglose del Total a Pagar</span>
+                      <span class="text-xs font-semibold text-slate-600 oscuro:text-texto-secundario uppercase tracking-wide">Desglose del Total a Pagar</span>
                       <ChevronDownIcon 
                         :class="[
-                          'w-4 h-4 text-slate-400 transition-transform duration-200',
+                          'w-4 h-4 text-slate-400 oscuro:text-texto-tenue transition-transform duration-200',
                           desgloseAPagarAbierto ? 'transform rotate-180' : ''
                         ]"
                       />
@@ -1190,37 +1190,37 @@
                       leave-from-class="opacity-100 transform translate-y-0"
                       leave-to-class="opacity-0 transform -translate-y-2"
                     >
-                      <div v-if="desgloseAPagarAbierto" class="mt-2 ml-2 space-y-2 pl-4 border-l-2 border-slate-200">
+                      <div v-if="desgloseAPagarAbierto" class="mt-2 ml-2 space-y-2 pl-4 border-l-2 border-slate-200 oscuro:border-borde">
                         <div v-if="comprobanteEncontrado.desglose_a_pagar.cuota > 0" class="flex items-center justify-between text-sm py-1">
-                          <span class="text-slate-600 font-medium">Cuota</span>
-                          <span class="font-bold text-slate-800">${{ formatMoney(comprobanteEncontrado.desglose_a_pagar.cuota) }}</span>
+                          <span class="text-slate-600 oscuro:text-texto-secundario font-medium">Cuota</span>
+                          <span class="font-bold text-slate-800 oscuro:text-texto">${{ formatMoney(comprobanteEncontrado.desglose_a_pagar.cuota) }}</span>
                         </div>
                         <div v-if="comprobanteEncontrado.desglose_a_pagar.sancion > 0" class="flex items-center justify-between text-sm py-1">
-                          <span class="text-slate-600 font-medium">Sanciones</span>
-                          <span class="font-bold text-red-600">${{ formatMoney(comprobanteEncontrado.desglose_a_pagar.sancion) }}</span>
+                          <span class="text-slate-600 oscuro:text-texto-secundario font-medium">Sanciones</span>
+                          <span class="font-bold text-red-600 oscuro:text-red-300">${{ formatMoney(comprobanteEncontrado.desglose_a_pagar.sancion) }}</span>
                         </div>
                         <div v-if="comprobanteEncontrado.desglose_a_pagar.actividades > 0" class="flex items-center justify-between text-sm py-1">
-                          <span class="text-slate-600 font-medium">Actividades</span>
-                          <span class="font-bold text-blue-600">${{ formatMoney(comprobanteEncontrado.desglose_a_pagar.actividades) }}</span>
+                          <span class="text-slate-600 oscuro:text-texto-secundario font-medium">Actividades</span>
+                          <span class="font-bold text-blue-600 oscuro:text-blue-300">${{ formatMoney(comprobanteEncontrado.desglose_a_pagar.actividades) }}</span>
                         </div>
                         <div v-if="comprobanteEncontrado.desglose_a_pagar.prestamos > 0" class="flex items-center justify-between text-sm py-1">
-                          <span class="text-slate-600 font-medium">Préstamos</span>
-                          <span class="font-bold text-amber-600">${{ formatMoney(comprobanteEncontrado.desglose_a_pagar.prestamos) }}</span>
+                          <span class="text-slate-600 oscuro:text-texto-secundario font-medium">Préstamos</span>
+                          <span class="font-bold text-amber-600 oscuro:text-amber-300">${{ formatMoney(comprobanteEncontrado.desglose_a_pagar.prestamos) }}</span>
                         </div>
                       </div>
                     </Transition>
                   </div>
                   
                   <!-- Desglose del total pagado (desplegable) -->
-                  <div v-if="comprobanteEncontrado.desglose_pagado && (comprobanteEncontrado.desglose_pagado.actividades > 0 || comprobanteEncontrado.desglose_pagado.sancion > 0 || comprobanteEncontrado.desglose_pagado.prestamos > 0)" class="pt-3 border-t border-gray-200">
+                  <div v-if="comprobanteEncontrado.desglose_pagado && (comprobanteEncontrado.desglose_pagado.actividades > 0 || comprobanteEncontrado.desglose_pagado.sancion > 0 || comprobanteEncontrado.desglose_pagado.prestamos > 0)" class="pt-3 border-t border-borde">
                     <button
                       @click="desglosePagadoAbierto = !desglosePagadoAbierto"
-                      class="w-full flex items-center justify-between text-left focus:outline-none rounded-xl p-3 hover:bg-green-50 transition-all duration-200 border border-transparent hover:border-green-200"
+                      class="w-full flex items-center justify-between text-left focus:outline-none rounded-xl p-3 hover:bg-green-50 oscuro:hover:bg-green-500/15 transition-all duration-200 border border-transparent hover:border-green-200 oscuro:hover:border-green-500/30"
                     >
-                      <span class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Desglose del Pago</span>
+                      <span class="text-xs font-semibold text-slate-600 oscuro:text-texto-secundario uppercase tracking-wide">Desglose del Pago</span>
                       <ChevronDownIcon 
                         :class="[
-                          'w-4 h-4 text-slate-400 transition-transform duration-200',
+                          'w-4 h-4 text-slate-400 oscuro:text-texto-tenue transition-transform duration-200',
                           desglosePagadoAbierto ? 'transform rotate-180' : ''
                         ]"
                       />
@@ -1233,37 +1233,37 @@
                       leave-from-class="opacity-100 transform translate-y-0"
                       leave-to-class="opacity-0 transform -translate-y-2"
                     >
-                      <div v-if="desglosePagadoAbierto" class="mt-2 ml-2 space-y-2 pl-4 border-l-2 border-green-200">
+                      <div v-if="desglosePagadoAbierto" class="mt-2 ml-2 space-y-2 pl-4 border-l-2 border-green-200 oscuro:border-green-500/30">
                         <div v-if="comprobanteEncontrado.desglose_pagado.cuota > 0" class="flex items-center justify-between text-sm py-1">
-                          <span class="text-slate-600 font-medium">Cuota</span>
-                          <span class="font-bold text-slate-800">${{ formatMoney(comprobanteEncontrado.desglose_pagado.cuota) }}</span>
+                          <span class="text-slate-600 oscuro:text-texto-secundario font-medium">Cuota</span>
+                          <span class="font-bold text-slate-800 oscuro:text-texto">${{ formatMoney(comprobanteEncontrado.desglose_pagado.cuota) }}</span>
                         </div>
                         <div v-if="comprobanteEncontrado.desglose_pagado.sancion > 0" class="flex items-center justify-between text-sm py-1">
-                          <span class="text-slate-600 font-medium">Sanciones</span>
-                          <span class="font-bold text-red-600">${{ formatMoney(comprobanteEncontrado.desglose_pagado.sancion) }}</span>
+                          <span class="text-slate-600 oscuro:text-texto-secundario font-medium">Sanciones</span>
+                          <span class="font-bold text-red-600 oscuro:text-red-300">${{ formatMoney(comprobanteEncontrado.desglose_pagado.sancion) }}</span>
                         </div>
                         <div v-if="comprobanteEncontrado.desglose_pagado.actividades > 0" class="flex items-center justify-between text-sm py-1">
-                          <span class="text-slate-600 font-medium">Actividades</span>
-                          <span class="font-bold text-blue-600">${{ formatMoney(comprobanteEncontrado.desglose_pagado.actividades) }}</span>
+                          <span class="text-slate-600 oscuro:text-texto-secundario font-medium">Actividades</span>
+                          <span class="font-bold text-blue-600 oscuro:text-blue-300">${{ formatMoney(comprobanteEncontrado.desglose_pagado.actividades) }}</span>
                         </div>
                         <div v-if="comprobanteEncontrado.desglose_pagado.prestamos > 0" class="flex items-center justify-between text-sm py-1">
-                          <span class="text-slate-600 font-medium">Préstamos</span>
-                          <span class="font-bold text-amber-600">${{ formatMoney(comprobanteEncontrado.desglose_pagado.prestamos) }}</span>
+                          <span class="text-slate-600 oscuro:text-texto-secundario font-medium">Préstamos</span>
+                          <span class="font-bold text-amber-600 oscuro:text-amber-300">${{ formatMoney(comprobanteEncontrado.desglose_pagado.prestamos) }}</span>
                         </div>
                       </div>
                     </Transition>
                   </div>
                   
-                  <div class="pt-3 border-t border-gray-200">
-                    <p class="text-xs text-gray-500 mb-2 uppercase tracking-wide font-semibold">Estado</p>
+                  <div class="pt-3 border-t border-borde">
+                    <p class="text-xs text-texto-suave mb-2 uppercase tracking-wide font-semibold">Estado</p>
                     <span 
                       :class="[
                         'inline-flex items-center px-3 py-1.5 rounded-lg font-semibold text-sm',
-                        comprobanteEncontrado.estado === 'pagada' ? 'bg-green-100 text-green-800' :
-                        comprobanteEncontrado.estado === 'parcial' ? 'bg-blue-100 text-blue-800' :
-                        comprobanteEncontrado.estado === 'mora' ? 'bg-red-100 text-red-800' :
-                        comprobanteEncontrado.estado === 'pendiente' ? 'bg-orange-100 text-orange-800' :
-                        'bg-gray-100 text-gray-700'
+                        comprobanteEncontrado.estado === 'pagada' ? 'bg-green-100 oscuro:bg-green-500/15 text-green-800 oscuro:text-green-300' :
+                        comprobanteEncontrado.estado === 'parcial' ? 'bg-blue-100 oscuro:bg-blue-500/15 text-blue-800 oscuro:text-blue-300' :
+                        comprobanteEncontrado.estado === 'mora' ? 'bg-red-100 oscuro:bg-red-500/15 text-red-800 oscuro:text-red-300' :
+                        comprobanteEncontrado.estado === 'pendiente' ? 'bg-orange-100 oscuro:bg-orange-500/15 text-orange-800 oscuro:text-orange-300' :
+                        'bg-superficie-hundida text-texto-medio'
                       ]"
                     >
                       {{ comprobanteEncontrado.estado?.toUpperCase() || 'N/A' }}
@@ -1271,38 +1271,38 @@
                   </div>
                 </template>
                 
-                <div class="pt-3 border-t border-gray-200">
+                <div class="pt-3 border-t border-borde">
                   <div :class="[
                     'rounded-lg p-3 border',
-                    comprobanteEncontrado.tipo === 'abono_prestamo' ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'
+                    comprobanteEncontrado.tipo === 'abono_prestamo' ? 'bg-amber-50 oscuro:bg-amber-500/15 border-amber-200 oscuro:border-amber-500/30' : 'bg-green-50 oscuro:bg-green-500/15 border-green-200 oscuro:border-green-500/30'
                   ]">
-                    <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Fecha de Pago</p>
+                    <p class="text-xs text-texto-suave mb-1 uppercase tracking-wide font-semibold">Fecha de Pago</p>
                     <p v-if="comprobanteEncontrado.fecha_pago" :class="[
                       'font-bold text-lg',
-                      comprobanteEncontrado.tipo === 'abono_prestamo' ? 'text-amber-800' : 'text-green-800'
+                      comprobanteEncontrado.tipo === 'abono_prestamo' ? 'text-amber-800 oscuro:text-amber-300' : 'text-green-800 oscuro:text-green-300'
                     ]">
                       {{ formatDateWithTime(comprobanteEncontrado.fecha_pago) }}
                     </p>
-                    <p v-else class="text-gray-500 font-medium">No registrada</p>
+                    <p v-else class="text-texto-suave font-medium">No registrada</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
           <!-- Error -->
-          <div v-if="errorBusqueda" class="rounded-xl border-2 border-red-200 bg-red-50/90 p-4 shadow-sm">
+          <div v-if="errorBusqueda" class="rounded-xl border-2 border-red-200 oscuro:border-red-500/30 bg-red-50/90 oscuro:bg-red-500/15 p-4 shadow-sm">
             <div class="flex items-center gap-3">
               <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-red-500">
                 <ExclamationCircleIcon class="h-6 w-6 text-white" />
               </div>
-              <p class="font-semibold text-red-800">{{ errorBusqueda }}</p>
+              <p class="font-semibold text-red-800 oscuro:text-red-300">{{ errorBusqueda }}</p>
             </div>
           </div>
 
-        <div class="border-t border-gray-200 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="border-t border-borde pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <button
             type="button"
-            class="min-h-[48px] w-full rounded-full border-2 border-gray-300 bg-white px-4 py-3 font-semibold text-gray-800 transition-colors hover:bg-gray-50 touch-manipulation [-webkit-tap-highlight-color:transparent]"
+            class="min-h-[48px] w-full rounded-full border-2 border-borde-fuerte bg-superficie-tarjeta px-4 py-3 font-semibold text-texto transition-colors hover:bg-superficie-suave touch-manipulation [-webkit-tap-highlight-color:transparent]"
             @click="cerrarModalBuscarComprobante"
           >
             Cerrar
@@ -1316,7 +1316,7 @@
       :z-index="60"
       align="bottom"
       overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      card-class="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-superficie-tarjeta rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-borde"
       card-max-width="42rem"
       @close="cerrarModalCuotasSocio"
     >
@@ -1376,7 +1376,7 @@
           
           <!-- Sin cuotas -->
           <div v-else-if="cuotasSocioPorMes.length === 0" class="text-center py-12">
-            <p class="text-gray-400 text-base sm:text-lg">No hay cuotas registradas</p>
+            <p class="text-texto-tenue text-base sm:text-lg">No hay cuotas registradas</p>
           </div>
           
           <!-- Lista de cuotas agrupadas por mes -->
@@ -1387,25 +1387,25 @@
               <div
                 v-for="(grupoMes, grupoIndex) in cuotasAgrupadasPorMes"
                 :key="`${grupoMes.anio}-${grupoMes.mes}`"
-                class="bg-gradient-to-br from-natillera-50 via-white to-emerald-50 rounded-3xl border-4 border-natillera-300 shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden mb-6"
+                class="bg-gradient-to-br from-natillera-50 oscuro:from-natillera-500/15 via-superficie-tarjeta to-emerald-50 oscuro:to-emerald-500/10 rounded-3xl border-4 border-natillera-300 oscuro:border-natillera-500/30 shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden mb-6"
               >
                 <!-- Encabezado del mes -->
-                <div class="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-natillera-200 via-natillera-100 to-emerald-200 border-b-4 border-natillera-400">
-                  <div class="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-200 flex items-center justify-center text-xl sm:text-4xl shadow-md sm:shadow-xl flex-shrink-0">
+                <div class="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-natillera-200 oscuro:from-natillera-500/15 via-natillera-100 oscuro:via-natillera-500/10 to-emerald-200 oscuro:to-emerald-500/10 border-b-4 border-natillera-400">
+                  <div class="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-100 oscuro:from-blue-500/15 to-cyan-100 oscuro:to-cyan-500/10 border-2 border-blue-200 oscuro:border-blue-500/30 flex items-center justify-center text-xl sm:text-4xl shadow-md sm:shadow-xl flex-shrink-0">
                     {{ getMesEmoji(grupoMes.mes) }}
                   </div>
                   <div class="flex-1 min-w-0">
-                    <h4 class="font-bold text-gray-900 text-base sm:text-xl">
+                    <h4 class="font-bold text-texto-fuerte text-base sm:text-xl">
                       {{ getMesLabel(grupoMes.mes) }} {{ grupoMes.anio }}
                     </h4>
-                    <p class="text-xs sm:text-sm text-emerald-600 font-semibold">
+                    <p class="text-xs sm:text-sm text-emerald-600 oscuro:text-emerald-300 font-semibold">
                       {{ grupoMes.cuotas.length }} {{ grupoMes.cuotas.length === 1 ? 'cuota' : 'cuotas' }}
                     </p>
                   </div>
                   <button
                     type="button"
                     @click="irACuotasDelMes(grupoMes)"
-                    class="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-white/90 hover:bg-white border border-natillera-300/80 text-natillera-700 font-semibold text-xs sm:text-sm shadow-sm hover:shadow transition-all"
+                    class="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-superficie-tarjeta/90 hover:bg-superficie-tarjeta border border-natillera-300/80 oscuro:border-natillera-500/30 text-natillera-700 oscuro:text-natillera-300 font-semibold text-xs sm:text-sm shadow-sm hover:shadow transition-all"
                     title="Ir a cuotas de este mes"
                   >
                     <span class="hidden sm:inline">Ir a cuotas</span>
@@ -1423,14 +1423,14 @@
                 :style="{ animationDelay: `${index * 0.05}s` }"
                 :class="[
                   cuotaData.estado === 'pagada' 
-                    ? 'bg-green-50/90 border-[2.5px] border-green-300/80 shadow-md shadow-green-100/50 ring-1 ring-green-200/40' :
+                    ? 'bg-green-50/90 oscuro:bg-green-500/15 border-[2.5px] border-green-300/80 oscuro:border-green-500/30 shadow-md shadow-green-100/50 ring-1 ring-green-200/40 oscuro:ring-green-500/30' :
                   cuotaData.estado === 'mora' 
-                    ? `bg-red-50/90 border-[2.5px] border-red-300/80 shadow-md shadow-red-100/50 ring-1 ring-red-200/40 ${animacionesCuotasMora ? 'animate-mora-highlight' : ''}` :
+                    ? `bg-red-50/90 oscuro:bg-red-500/15 border-[2.5px] border-red-300/80 oscuro:border-red-500/30 shadow-md shadow-red-100/50 ring-1 ring-red-200/40 oscuro:ring-red-500/30 ${animacionesCuotasMora ? 'animate-mora-highlight' : ''}` :
                   cuotaData.estado === 'programada'
-                    ? 'bg-gray-50/90 border-[2.5px] border-gray-300/80 shadow-md shadow-gray-100/50 ring-1 ring-gray-200/40' :
+                    ? 'bg-superficie-suave/90 border-[2.5px] border-borde-fuerte/80 shadow-md shadow-gray-100/50 ring-1 ring-borde/40' :
                   cuotaData.estado === 'pendiente'
-                    ? 'bg-amber-50/90 border-[2.5px] border-amber-300/80 shadow-md shadow-amber-100/50 ring-1 ring-amber-200/40' :
-                  'bg-green-50/90 border-[2.5px] border-green-300/80 shadow-md shadow-green-100/50 ring-1 ring-green-200/40'
+                    ? 'bg-amber-50/90 oscuro:bg-amber-500/15 border-[2.5px] border-amber-300/80 oscuro:border-amber-500/30 shadow-md shadow-amber-100/50 ring-1 ring-amber-200/40 oscuro:ring-amber-500/30' :
+                  'bg-green-50/90 oscuro:bg-green-500/15 border-[2.5px] border-green-300/80 oscuro:border-green-500/30 shadow-md shadow-green-100/50 ring-1 ring-green-200/40 oscuro:ring-green-500/30'
                 ]"
               >
               <!-- Efecto de resaltado para cuotas en mora -->
@@ -1459,7 +1459,7 @@
                       <!-- Badge de ajuste -->
                       <div 
                         v-if="cuotaData.descripcion && (cuotaData.descripcion.includes('Ajuste de valor') || cuotaData.descripcion.includes('Cuota ajustada'))"
-                        class="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0"
+                        class="w-5 h-5 rounded-full bg-blue-100 oscuro:bg-blue-500/15 text-blue-600 oscuro:text-blue-300 flex items-center justify-center flex-shrink-0"
                         :title="cuotaData.descripcion"
                       >
                         <InformationCircleIcon class="w-3.5 h-3.5" />
@@ -1470,42 +1470,42 @@
                         <!-- Pago parcial tiene prioridad sobre estado pagada -->
                         <span 
                           v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))"
-                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-orange-200/90 text-orange-800 border border-orange-300/60 shadow-sm"
+                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-orange-200/90 oscuro:bg-orange-500/25 text-orange-800 oscuro:text-orange-300 border border-orange-300/60 oscuro:border-orange-500/30 shadow-sm"
                         >
                           PAGO PARCIAL
                         </span>
                         <span 
                           v-else-if="cuotaData.estado === 'pagada' || (cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0)))"
-                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-green-200/90 text-green-800 border border-green-300/60 shadow-sm"
+                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-green-200/90 oscuro:bg-green-500/25 text-green-800 oscuro:text-green-300 border border-green-300/60 oscuro:border-green-500/30 shadow-sm"
                         >
                           PAGADA
                         </span>
                         <span 
                           v-else-if="cuotaData.estado === 'mora'"
-                          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-200/90 text-red-800 border border-red-300/60 shadow-sm"
+                          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-200/90 oscuro:bg-red-500/25 text-red-800 oscuro:text-red-300 border border-red-300/60 oscuro:border-red-500/30 shadow-sm"
                         >
                           EN MORA
-                          <span v-if="cuotaData.diasMora > 0" class="text-red-900 font-extrabold">
+                          <span v-if="cuotaData.diasMora > 0" class="text-red-900 oscuro:text-red-300 font-extrabold">
                             ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
                           </span>
                         </span>
                         <span 
                           v-else-if="cuotaData.estado === 'pendiente' && !(cuotaData.valorPagado > 0)"
-                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-200/90 text-amber-800 border border-amber-300/60 shadow-sm"
+                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-200/90 oscuro:bg-amber-500/25 text-amber-800 oscuro:text-amber-300 border border-amber-300/60 oscuro:border-amber-500/30 shadow-sm"
                         >
                           PENDIENTE
                         </span>
                         <span 
                           v-else-if="cuotaData.estado === 'programada' || (!cuotaData.estado && cuotaData.valorPagado === 0)"
-                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200/90 text-gray-800 border border-gray-300/60 shadow-sm"
+                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-borde/90 text-texto border border-borde-fuerte/60 shadow-sm"
                         >
                           PROGRAMADA
                         </span>
                       </div>
                       <!-- Fecha de vencimiento -->
                       <div class="flex items-center gap-2 mt-1">
-                        <CalendarDaysIcon class="w-4 h-4 text-gray-500 flex-shrink-0" />
-                        <span class="text-xs text-gray-600">
+                        <CalendarDaysIcon class="w-4 h-4 text-texto-suave flex-shrink-0" />
+                        <span class="text-xs text-texto-secundario">
                           Vence: {{ formatDate(cuotaData.fechaVencimiento) }}
                         </span>
                       </div>
@@ -1513,18 +1513,18 @@
                     <!-- Lado derecho: Montos -->
                     <div class="flex flex-col items-end text-right flex-shrink-0">
                       <!-- Etiqueta según estado -->
-                      <p v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-green-600 mb-1">
+                      <p v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-green-600 oscuro:text-green-300 mb-1">
                         TOTAL PAGADO
                       </p>
-                      <p v-else-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-amber-600 mb-1">
+                      <p v-else-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-amber-600 oscuro:text-amber-300 mb-1">
                         PENDIENTE
                       </p>
-                      <p v-else class="text-xs font-medium text-gray-500 mb-1">
+                      <p v-else class="text-xs font-medium text-texto-suave mb-1">
                         MONTO CUOTA
                       </p>
                       
                       <!-- Monto principal -->
-                      <p class="text-2xl font-bold mb-1" :class="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0)) ? 'text-green-600' : (cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0)) ? 'text-orange-600' : (cuotaData.sancion > 0 ? 'text-red-600' : 'text-gray-800'))">
+                      <p class="text-2xl font-bold mb-1" :class="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0)) ? 'text-green-600 oscuro:text-green-300' : (cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0)) ? 'text-orange-600 oscuro:text-orange-300' : (cuotaData.sancion > 0 ? 'text-red-600 oscuro:text-red-300' : 'text-texto'))">
                         <template v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))">
                           <!-- Pago parcial: mostrar restante -->
                           ${{ formatMoney((cuotaData.valorCuota + (cuotaData.sancion || 0)) - cuotaData.valorPagado) }}
@@ -1541,23 +1541,23 @@
                       
                       <!-- Detalles de la cuota -->
                       <div class="flex flex-col items-end gap-0.5">
-                        <p class="text-xs text-gray-500">
+                        <p class="text-xs text-texto-suave">
                           Cuota: ${{ formatMoney(cuotaData.valorCuota) }}
                         </p>
-                        <p v-if="cuotaData.sancion > 0" class="text-xs text-red-600 font-medium">
+                        <p v-if="cuotaData.sancion > 0" class="text-xs text-red-600 oscuro:text-red-300 font-medium">
                           Sanción: ${{ formatMoney(cuotaData.sancion) }}
                         </p>
                         <!-- En pago parcial: mostrar lo pagado -->
-                        <p v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs text-green-600 font-medium mt-1">
+                        <p v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs text-green-600 oscuro:text-green-300 font-medium mt-1">
                           Pagado: ${{ formatMoney(cuotaData.valorPagado) }}
                         </p>
                       </div>
                     </div>
                   </div>
                   <!-- Fecha de pago (si está pagada o parcialmente pagada) -->
-                  <div v-if="cuotaData.valorPagado > 0 && cuotaData.fechaPago" class="flex items-center gap-2 pt-2 border-t border-gray-200">
-                    <CheckCircleIcon class="w-4 h-4 text-green-600 flex-shrink-0" />
-                    <span class="text-xs text-green-600 font-medium">
+                  <div v-if="cuotaData.valorPagado > 0 && cuotaData.fechaPago" class="flex items-center gap-2 pt-2 border-t border-borde">
+                    <CheckCircleIcon class="w-4 h-4 text-green-600 oscuro:text-green-300 flex-shrink-0" />
+                    <span class="text-xs text-green-600 oscuro:text-green-300 font-medium">
                       Pagado el: {{ formatDate(cuotaData.fechaPago) }}
                     </span>
                   </div>
@@ -1586,28 +1586,28 @@
                       <!-- Badge de estado -->
                       <span 
                         v-if="cuotaData.estado === 'pagada'"
-                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-green-200/90 text-green-800 border border-green-300/70 shadow-sm"
+                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-green-200/90 oscuro:bg-green-500/25 text-green-800 oscuro:text-green-300 border border-green-300/70 oscuro:border-green-500/30 shadow-sm"
                       >
                         pagada
                       </span>
                       <span 
                         v-else-if="cuotaData.estado === 'mora'"
-                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-red-200/90 text-red-800 border border-red-300/70 shadow-sm"
+                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-red-200/90 oscuro:bg-red-500/25 text-red-800 oscuro:text-red-300 border border-red-300/70 oscuro:border-red-500/30 shadow-sm"
                       >
                         en mora
-                        <span v-if="cuotaData.diasMora > 0" class="text-red-900 font-extrabold">
+                        <span v-if="cuotaData.diasMora > 0" class="text-red-900 oscuro:text-red-300 font-extrabold">
                           ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
                         </span>
                       </span>
                       <span 
                         v-else-if="cuotaData.estado === 'pendiente'"
-                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-200/90 text-amber-800 border border-amber-300/70 shadow-sm"
+                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-200/90 oscuro:bg-amber-500/25 text-amber-800 oscuro:text-amber-300 border border-amber-300/70 oscuro:border-amber-500/30 shadow-sm"
                       >
                         pendiente
                       </span>
                       <span 
                         v-else
-                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-gray-200/90 text-gray-800 border border-gray-300/70 shadow-sm"
+                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-borde/90 text-texto border border-borde-fuerte/70 shadow-sm"
                       >
                         programada
                       </span>
@@ -1617,7 +1617,7 @@
                       v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
                       type="button"
                       @click="enviarWhatsAppCuota(cuotaData)"
-                      class="w-9 h-9 rounded-lg text-[#1B5E37] hover:bg-[#E8F5E9] transition-colors flex items-center justify-center flex-shrink-0 touch-manipulation"
+                      class="w-9 h-9 rounded-lg text-marca-tinta hover:bg-marca-suave transition-colors flex items-center justify-center flex-shrink-0 touch-manipulation"
                       title="Enviar recordatorio por WhatsApp"
                       aria-label="Enviar recordatorio por WhatsApp"
                     >
@@ -1627,28 +1627,28 @@
                   <!-- Fila media: Monto principal -->
                   <div class="flex items-baseline justify-between gap-3">
                     <div class="flex-1">
-                      <p class="text-xl font-bold" :class="cuotaData.sancion > 0 ? 'text-red-600' : 'text-gray-800'">
+                      <p class="text-xl font-bold" :class="cuotaData.sancion > 0 ? 'text-red-600 oscuro:text-red-300' : 'text-texto'">
                         ${{ formatMoney(cuotaData.totalConSanciones > 0 ? cuotaData.totalConSanciones : cuotaData.valorCuota) }}
                       </p>
                       <div class="flex items-center gap-2 mt-1 flex-wrap">
-                        <p class="text-sm text-gray-600 font-medium">
+                        <p class="text-sm text-texto-secundario font-medium">
                           Cuota: ${{ formatMoney(cuotaData.valorCuota) }}
                         </p>
-                        <p v-if="cuotaData.sancion > 0" class="text-sm text-red-600 font-semibold">
+                        <p v-if="cuotaData.sancion > 0" class="text-sm text-red-600 oscuro:text-red-300 font-semibold">
                           + Sanción: ${{ formatMoney(cuotaData.sancion) }}
                         </p>
                       </div>
                     </div>
                   </div>
                   <!-- Fila inferior: Detalles adicionales -->
-                  <div class="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-200">
+                  <div class="flex flex-wrap items-center gap-3 pt-2 border-t border-borde">
                     <div class="flex items-center gap-1.5">
-                      <CalendarDaysIcon class="w-4 h-4 text-gray-500 flex-shrink-0" />
-                      <span class="text-sm text-gray-600">
+                      <CalendarDaysIcon class="w-4 h-4 text-texto-suave flex-shrink-0" />
+                      <span class="text-sm text-texto-secundario">
                         Vence: {{ formatDate(cuotaData.fechaVencimiento) }}
                       </span>
                     </div>
-                    <p v-if="cuotaData.valorPagado > 0" class="text-sm font-semibold text-green-600 whitespace-nowrap">
+                    <p v-if="cuotaData.valorPagado > 0" class="text-sm font-semibold text-green-600 oscuro:text-green-300 whitespace-nowrap">
                       Pagado: ${{ formatMoney(cuotaData.valorPagado) }}
                     </p>
                   </div>
@@ -1667,25 +1667,25 @@
               <div
                 v-for="(grupoMes, grupoIndex) in cuotasAgrupadasPorMes"
                 :key="`${grupoMes.anio}-${grupoMes.mes}-simplificado`"
-                class="bg-gradient-to-br from-natillera-50 via-white to-emerald-50 rounded-3xl border-4 border-natillera-300 shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden mb-6"
+                class="bg-gradient-to-br from-natillera-50 oscuro:from-natillera-500/15 via-superficie-tarjeta to-emerald-50 oscuro:to-emerald-500/10 rounded-3xl border-4 border-natillera-300 oscuro:border-natillera-500/30 shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden mb-6"
               >
                 <!-- Encabezado del mes -->
-                <div class="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-natillera-200 via-natillera-100 to-emerald-200 border-b-4 border-natillera-400">
-                  <div class="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-200 flex items-center justify-center text-xl sm:text-4xl shadow-md sm:shadow-xl flex-shrink-0">
+                <div class="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-natillera-200 oscuro:from-natillera-500/15 via-natillera-100 oscuro:via-natillera-500/10 to-emerald-200 oscuro:to-emerald-500/10 border-b-4 border-natillera-400">
+                  <div class="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-100 oscuro:from-blue-500/15 to-cyan-100 oscuro:to-cyan-500/10 border-2 border-blue-200 oscuro:border-blue-500/30 flex items-center justify-center text-xl sm:text-4xl shadow-md sm:shadow-xl flex-shrink-0">
                     {{ getMesEmoji(grupoMes.mes) }}
                   </div>
                   <div class="flex-1 min-w-0">
-                    <h4 class="font-bold text-gray-900 text-base sm:text-xl">
+                    <h4 class="font-bold text-texto-fuerte text-base sm:text-xl">
                       {{ getMesLabel(grupoMes.mes) }} {{ grupoMes.anio }}
                     </h4>
-                    <p class="text-xs sm:text-sm text-emerald-600 font-semibold">
+                    <p class="text-xs sm:text-sm text-emerald-600 oscuro:text-emerald-300 font-semibold">
                       {{ grupoMes.cuotas.length }} {{ grupoMes.cuotas.length === 1 ? 'cuota' : 'cuotas' }}
                     </p>
                   </div>
                   <button
                     type="button"
                     @click="irACuotasDelMes(grupoMes)"
-                    class="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-white/90 hover:bg-white border border-natillera-300/80 text-natillera-700 font-semibold text-xs sm:text-sm shadow-sm hover:shadow transition-all"
+                    class="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-superficie-tarjeta/90 hover:bg-superficie-tarjeta border border-natillera-300/80 oscuro:border-natillera-500/30 text-natillera-700 oscuro:text-natillera-300 font-semibold text-xs sm:text-sm shadow-sm hover:shadow transition-all"
                     title="Ir a cuotas de este mes"
                   >
                     <span class="hidden sm:inline">Ir a cuotas</span>
@@ -1703,14 +1703,14 @@
                 :style="{ animationDelay: `${index * 0.03}s` }"
                 :class="[
                   cuotaData.estado === 'pagada' 
-                    ? 'bg-green-50/90 border-[2.5px] border-green-300/80 shadow-md shadow-green-100/50 ring-1 ring-green-200/40' :
+                    ? 'bg-green-50/90 oscuro:bg-green-500/15 border-[2.5px] border-green-300/80 oscuro:border-green-500/30 shadow-md shadow-green-100/50 ring-1 ring-green-200/40 oscuro:ring-green-500/30' :
                   cuotaData.estado === 'mora' 
-                    ? `bg-red-50/90 border-[2.5px] border-red-300/80 shadow-md shadow-red-100/50 ring-1 ring-red-200/40 ${animacionesCuotasMora ? 'animate-mora-highlight' : ''}` :
+                    ? `bg-red-50/90 oscuro:bg-red-500/15 border-[2.5px] border-red-300/80 oscuro:border-red-500/30 shadow-md shadow-red-100/50 ring-1 ring-red-200/40 oscuro:ring-red-500/30 ${animacionesCuotasMora ? 'animate-mora-highlight' : ''}` :
                   cuotaData.estado === 'programada'
-                    ? 'bg-gray-50/90 border-[2.5px] border-gray-300/80 shadow-md shadow-gray-100/50 ring-1 ring-gray-200/40' :
+                    ? 'bg-superficie-suave/90 border-[2.5px] border-borde-fuerte/80 shadow-md shadow-gray-100/50 ring-1 ring-borde/40' :
                   cuotaData.estado === 'pendiente'
-                    ? 'bg-amber-50/90 border-[2.5px] border-amber-300/80 shadow-md shadow-amber-100/50 ring-1 ring-amber-200/40' :
-                  'bg-green-50/90 border-[2.5px] border-green-300/80 shadow-md shadow-green-100/50 ring-1 ring-green-200/40'
+                    ? 'bg-amber-50/90 oscuro:bg-amber-500/15 border-[2.5px] border-amber-300/80 oscuro:border-amber-500/30 shadow-md shadow-amber-100/50 ring-1 ring-amber-200/40 oscuro:ring-amber-500/30' :
+                  'bg-green-50/90 oscuro:bg-green-500/15 border-[2.5px] border-green-300/80 oscuro:border-green-500/30 shadow-md shadow-green-100/50 ring-1 ring-green-200/40 oscuro:ring-green-500/30'
                 ]"
               >
                 <!-- Efecto de resaltado para cuotas en mora -->
@@ -1734,7 +1734,7 @@
                         <!-- Badge de ajuste -->
                         <div 
                           v-if="cuotaData.descripcion && (cuotaData.descripcion.includes('Ajuste de valor') || cuotaData.descripcion.includes('Cuota ajustada'))"
-                          class="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0"
+                          class="w-5 h-5 rounded-full bg-blue-100 oscuro:bg-blue-500/15 text-blue-600 oscuro:text-blue-300 flex items-center justify-center flex-shrink-0"
                           :title="cuotaData.descripcion"
                         >
                           <InformationCircleIcon class="w-3.5 h-3.5" />
@@ -1745,42 +1745,42 @@
                           <!-- Pago parcial tiene prioridad sobre estado pagada -->
                           <span 
                             v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))"
-                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-orange-100 text-orange-700"
+                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-orange-100 oscuro:bg-orange-500/15 text-orange-700 oscuro:text-orange-300"
                           >
                             PAGO PARCIAL
                           </span>
                           <span 
                             v-else-if="cuotaData.estado === 'pagada' || (cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0)))"
-                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-100 text-green-700"
+                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-100 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300"
                           >
                             PAGADA
                           </span>
                           <span 
                             v-else-if="cuotaData.estado === 'mora'"
-                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-100 text-red-700"
+                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-100 oscuro:bg-red-500/15 text-red-700 oscuro:text-red-300"
                           >
                             EN MORA
-                            <span v-if="cuotaData.diasMora > 0" class="text-red-800 font-bold">
+                            <span v-if="cuotaData.diasMora > 0" class="text-red-800 oscuro:text-red-300 font-bold">
                               ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
                             </span>
                           </span>
                           <span 
                             v-else-if="cuotaData.estado === 'pendiente' && !(cuotaData.valorPagado > 0)"
-                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-100 text-amber-700"
+                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-100 oscuro:bg-amber-500/15 text-amber-700 oscuro:text-amber-300"
                           >
                             PENDIENTE
                           </span>
                           <span 
                             v-else-if="cuotaData.estado === 'programada' || (!cuotaData.estado && cuotaData.valorPagado === 0)"
-                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700"
+                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-superficie-hundida text-texto-medio"
                           >
                             PROGRAMADA
                           </span>
                         </div>
                         <!-- Fecha de vencimiento -->
                         <div class="flex items-center gap-2 mt-1">
-                          <CalendarDaysIcon class="w-4 h-4 text-gray-500 flex-shrink-0" />
-                          <span class="text-xs text-gray-600">
+                          <CalendarDaysIcon class="w-4 h-4 text-texto-suave flex-shrink-0" />
+                          <span class="text-xs text-texto-secundario">
                             Vence: {{ formatDate(cuotaData.fechaVencimiento) }}
                           </span>
                         </div>
@@ -1788,18 +1788,18 @@
                       <!-- Lado derecho: Montos -->
                       <div class="flex flex-col items-end text-right flex-shrink-0">
                         <!-- Etiqueta según estado -->
-                        <p v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-green-600 mb-1">
+                        <p v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-green-600 oscuro:text-green-300 mb-1">
                           TOTAL PAGADO
                         </p>
-                        <p v-else-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-orange-600 mb-1">
+                        <p v-else-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-orange-600 oscuro:text-orange-300 mb-1">
                           PAGO PARCIAL
                         </p>
-                        <p v-else class="text-xs font-medium text-gray-500 mb-1">
+                        <p v-else class="text-xs font-medium text-texto-suave mb-1">
                           MONTO CUOTA
                         </p>
                         
                         <!-- Monto principal -->
-                        <p class="text-2xl font-bold mb-1" :class="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0)) ? 'text-green-600' : (cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0)) ? 'text-orange-600' : (cuotaData.sancion > 0 ? 'text-red-600' : 'text-gray-800'))">
+                        <p class="text-2xl font-bold mb-1" :class="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0)) ? 'text-green-600 oscuro:text-green-300' : (cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0)) ? 'text-orange-600 oscuro:text-orange-300' : (cuotaData.sancion > 0 ? 'text-red-600 oscuro:text-red-300' : 'text-texto'))">
                           <template v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))">
                             <!-- Pago parcial: mostrar restante -->
                             ${{ formatMoney((cuotaData.valorCuota + (cuotaData.sancion || 0)) - cuotaData.valorPagado) }}
@@ -1816,23 +1816,23 @@
                         
                         <!-- Detalles de la cuota -->
                         <div class="flex flex-col items-end gap-0.5">
-                          <p class="text-xs text-gray-500">
+                          <p class="text-xs text-texto-suave">
                             Cuota: ${{ formatMoney(cuotaData.valorCuota) }}
                           </p>
-                          <p v-if="cuotaData.sancion > 0" class="text-xs text-red-600 font-medium">
+                          <p v-if="cuotaData.sancion > 0" class="text-xs text-red-600 oscuro:text-red-300 font-medium">
                             Sanción: ${{ formatMoney(cuotaData.sancion) }}
                           </p>
                           <!-- En pago parcial: mostrar lo pagado -->
-                          <p v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs text-green-600 font-medium mt-1">
+                          <p v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs text-green-600 oscuro:text-green-300 font-medium mt-1">
                             Pagado: ${{ formatMoney(cuotaData.valorPagado) }}
                           </p>
                         </div>
                       </div>
                     </div>
                     <!-- Fecha de pago (si está pagada o parcialmente pagada) -->
-                    <div v-if="cuotaData.valorPagado > 0 && cuotaData.fechaPago" class="flex items-center gap-2 pt-2 border-t border-gray-200">
-                      <CheckCircleIcon class="w-4 h-4 text-green-600 flex-shrink-0" />
-                      <span class="text-xs text-green-600 font-medium">
+                    <div v-if="cuotaData.valorPagado > 0 && cuotaData.fechaPago" class="flex items-center gap-2 pt-2 border-t border-borde">
+                      <CheckCircleIcon class="w-4 h-4 text-green-600 oscuro:text-green-300 flex-shrink-0" />
+                      <span class="text-xs text-green-600 oscuro:text-green-300 font-medium">
                         Pagado el: {{ formatDate(cuotaData.fechaPago) }}
                       </span>
                     </div>
@@ -1861,28 +1861,28 @@
                         <!-- Badge de estado -->
                         <span 
                           v-if="cuotaData.estado === 'pagada'"
-                          class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold bg-green-100 text-green-700 border border-green-200 shadow-sm"
+                          class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold bg-green-100 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300 border border-green-200 oscuro:border-green-500/30 shadow-sm"
                         >
                           pagada
                         </span>
                         <span 
                           v-else-if="cuotaData.estado === 'mora'"
-                          class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold bg-red-100 text-red-700 border border-red-200 shadow-sm"
+                          class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold bg-red-100 oscuro:bg-red-500/15 text-red-700 oscuro:text-red-300 border border-red-200 oscuro:border-red-500/30 shadow-sm"
                         >
                           en mora
-                          <span v-if="cuotaData.diasMora > 0" class="text-red-800 font-bold">
+                          <span v-if="cuotaData.diasMora > 0" class="text-red-800 oscuro:text-red-300 font-bold">
                             ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
                           </span>
                         </span>
                         <span 
                           v-else-if="cuotaData.estado === 'pendiente'"
-                          class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200 shadow-sm"
+                          class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold bg-amber-100 oscuro:bg-amber-500/15 text-amber-700 oscuro:text-amber-300 border border-amber-200 oscuro:border-amber-500/30 shadow-sm"
                         >
                           pendiente
                         </span>
                         <span 
                           v-else
-                          class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 shadow-sm"
+                          class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold bg-superficie-hundida text-texto-medio border border-borde shadow-sm"
                         >
                           programada
                         </span>
@@ -1892,7 +1892,7 @@
                         v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
                         type="button"
                         @click="enviarWhatsAppCuota(cuotaData)"
-                        class="w-9 h-9 rounded-lg text-[#1B5E37] hover:bg-[#E8F5E9] transition-colors flex items-center justify-center flex-shrink-0 touch-manipulation"
+                        class="w-9 h-9 rounded-lg text-marca-tinta hover:bg-marca-suave transition-colors flex items-center justify-center flex-shrink-0 touch-manipulation"
                         title="Enviar recordatorio por WhatsApp"
                         aria-label="Enviar recordatorio por WhatsApp"
                       >
@@ -1902,28 +1902,28 @@
                     <!-- Fila media: Monto principal -->
                     <div class="flex items-baseline justify-between gap-3">
                       <div class="flex-1">
-                        <p class="text-xl font-bold" :class="cuotaData.sancion > 0 ? 'text-red-600' : 'text-gray-800'">
+                        <p class="text-xl font-bold" :class="cuotaData.sancion > 0 ? 'text-red-600 oscuro:text-red-300' : 'text-texto'">
                           ${{ formatMoney(cuotaData.totalConSanciones > 0 ? cuotaData.totalConSanciones : cuotaData.valorCuota) }}
                         </p>
                         <div class="flex items-center gap-2 mt-1 flex-wrap">
-                          <p class="text-sm text-gray-600 font-medium">
+                          <p class="text-sm text-texto-secundario font-medium">
                             Cuota: ${{ formatMoney(cuotaData.valorCuota) }}
                           </p>
-                          <p v-if="cuotaData.sancion > 0" class="text-sm text-red-600 font-semibold">
+                          <p v-if="cuotaData.sancion > 0" class="text-sm text-red-600 oscuro:text-red-300 font-semibold">
                             + Sanción: ${{ formatMoney(cuotaData.sancion) }}
                           </p>
                         </div>
                       </div>
                     </div>
                     <!-- Fila inferior: Detalles adicionales -->
-                    <div class="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-200">
+                    <div class="flex flex-wrap items-center gap-3 pt-2 border-t border-borde">
                       <div class="flex items-center gap-1.5">
-                        <CalendarDaysIcon class="w-4 h-4 text-gray-500 flex-shrink-0" />
-                        <span class="text-sm text-gray-600">
+                        <CalendarDaysIcon class="w-4 h-4 text-texto-suave flex-shrink-0" />
+                        <span class="text-sm text-texto-secundario">
                           Vence: {{ formatDate(cuotaData.fechaVencimiento) }}
                         </span>
                       </div>
-                      <p v-if="cuotaData.valorPagado > 0" class="text-sm font-semibold text-green-600 whitespace-nowrap">
+                      <p v-if="cuotaData.valorPagado > 0" class="text-sm font-semibold text-green-600 oscuro:text-green-300 whitespace-nowrap">
                         Pagado: ${{ formatMoney(cuotaData.valorPagado) }}
                       </p>
                     </div>
@@ -1938,10 +1938,10 @@
           </div>
         </div>
         <!-- Footer -->
-        <div class="border-t border-gray-200 bg-gray-50 p-4 pb-[calc(max(1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex-shrink-0">
+        <div class="border-t border-borde bg-superficie-suave p-4 pb-[calc(max(1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex-shrink-0">
           <button 
             @click="cerrarModalCuotasSocio"
-            class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all text-sm sm:text-base"
+            class="w-full px-4 py-3 bg-superficie-tarjeta border-2 border-borde-fuerte text-texto-medio font-semibold rounded-lg hover:bg-superficie-suave transition-all text-sm sm:text-base"
           >
             Cerrar
           </button>
@@ -1953,7 +1953,7 @@
       :z-index="50"
       align="bottom"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="relative w-full sm:max-w-md max-h-[85vh] max-h-[85dvh] flex flex-col min-h-0 overflow-hidden rounded-t-3xl sm:rounded-2xl bg-white shadow-xl shadow-gray-900/5 border border-white/50"
+      card-class="relative w-full sm:max-w-md max-h-[85vh] max-h-[85dvh] flex flex-col min-h-0 overflow-hidden rounded-t-3xl sm:rounded-2xl bg-superficie-tarjeta shadow-xl shadow-gray-900/5 border border-white/50"
       card-max-width="28rem"
       @close="modalConfigMeses = false"
     >
@@ -1966,10 +1966,10 @@
             <CalendarDaysIcon class="w-6 h-6 text-white" />
           </div>
           <div>
-            <h3 class="text-xl font-display font-bold text-gray-800">
+            <h3 class="text-xl font-display font-bold text-texto">
               Configurar Período
             </h3>
-            <p class="text-sm text-gray-500">
+            <p class="text-sm text-texto-suave">
               Define los meses de duración de la natillera
             </p>
           </div>
@@ -2012,12 +2012,12 @@
               </select>
             </div>
           </div>
-          <div class="bg-natillera-50 border border-natillera-200 rounded-xl p-4">
-            <p class="text-sm text-natillera-700 font-medium">
+          <div class="bg-natillera-50 oscuro:bg-natillera-500/15 border border-natillera-200 oscuro:border-natillera-500/30 rounded-xl p-4">
+            <p class="text-sm text-natillera-700 oscuro:text-natillera-300 font-medium">
               📅 La natillera tendrá cuotas desde <strong>{{ meses.find(m => m.value === formConfigMeses.mes_inicio)?.label }}</strong> 
               hasta <strong>{{ meses.find(m => m.value === formConfigMeses.mes_fin)?.label }}</strong> de <strong>{{ formConfigMeses.anio }}</strong>
             </p>
-            <p class="text-xs text-natillera-600 mt-1">
+            <p class="text-xs text-natillera-600 oscuro:text-natillera-300 mt-1">
               Total: {{ formConfigMeses.mes_fin >= formConfigMeses.mes_inicio 
                 ? formConfigMeses.mes_fin - formConfigMeses.mes_inicio + 1 
                 : 12 - formConfigMeses.mes_inicio + formConfigMeses.mes_fin + 1 }} meses
@@ -2048,7 +2048,7 @@
       :z-index="50"
       align="bottom"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="relative w-full sm:max-w-4xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      card-class="relative w-full sm:max-w-4xl max-h-[90vh] sm:max-h-[85vh] bg-superficie-tarjeta rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-borde"
       card-max-width="56rem"
       @close="modalSociosEnMora = false"
     >
@@ -2094,64 +2094,64 @@
               : 'grid-cols-2 sm:grid-cols-2'
           ]">
             <div :class="[
-              'bg-white/80 rounded-2xl text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300',
+              'bg-superficie-tarjeta/80 rounded-2xl text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300',
               totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'p-2 sm:p-2.5' : 'p-4 sm:p-5',
-              sociosEnMora.length >= 3 ? 'border-red-300/60 hover:border-red-400' : 'border-amber-300/60 hover:border-amber-400'
+              sociosEnMora.length >= 3 ? 'border-red-300/60 oscuro:border-red-500/30 hover:border-red-400' : 'border-amber-300/60 oscuro:border-amber-500/30 hover:border-amber-400'
             ]">
               <p :class="[
                 'font-bold mb-1',
                 totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-xl sm:text-2xl' : 'text-3xl sm:text-4xl',
-                sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600'
+                sociosEnMora.length >= 3 ? 'text-red-600 oscuro:text-red-300' : 'text-amber-600 oscuro:text-amber-300'
               ]">{{ totalCuotasMora }}</p>
               <p :class="[
                 'font-semibold',
                 totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-[10px] sm:text-xs' : 'text-xs sm:text-sm',
-                sociosEnMora.length >= 3 ? 'text-red-700' : 'text-amber-700'
+                sociosEnMora.length >= 3 ? 'text-red-700 oscuro:text-red-300' : 'text-amber-700 oscuro:text-amber-300'
               ]">Cuotas en mora</p>
             </div>
             <!-- Préstamos vencidos (solo si hay) -->
             <div v-if="totalPrestamosVencidos > 0" :class="[
-              'bg-white/80 rounded-2xl text-center border-2 border-purple-300/60 hover:border-purple-400 shadow-lg hover:shadow-xl transition-all duration-300',
+              'bg-superficie-tarjeta/80 rounded-2xl text-center border-2 border-purple-300/60 oscuro:border-purple-500/30 hover:border-purple-400 shadow-lg hover:shadow-xl transition-all duration-300',
               totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'p-2 sm:p-2.5' : 'p-4 sm:p-5'
             ]">
               <p :class="[
-                'font-bold mb-1 text-purple-600',
+                'font-bold mb-1 text-purple-600 oscuro:text-purple-300',
                 totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-xl sm:text-2xl' : 'text-3xl sm:text-4xl'
               ]">{{ totalPrestamosVencidos }}</p>
               <p :class="[
-                'font-semibold text-purple-700',
+                'font-semibold text-purple-700 oscuro:text-purple-300',
                 totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-[10px] sm:text-xs' : 'text-xs sm:text-sm'
               ]">Préstamos vencidos</p>
               <p :class="[
-                'text-purple-600 mt-0.5',
+                'text-purple-600 oscuro:text-purple-300 mt-0.5',
                 totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-[8px] sm:text-[9px]' : 'text-[10px]'
               ]">{{ totalCuotasPrestamosVencidos }} {{ totalCuotasPrestamosVencidos === 1 ? 'cuota' : 'cuotas' }}</p>
             </div>
             <!-- Sanciones (solo si hay) -->
             <div v-if="totalSancionesMora > 0" :class="[
-              'bg-white/80 rounded-2xl text-center border-2 border-rose-300/60 hover:border-rose-400 shadow-lg hover:shadow-xl transition-all duration-300',
+              'bg-superficie-tarjeta/80 rounded-2xl text-center border-2 border-rose-300/60 oscuro:border-rose-500/30 hover:border-rose-400 shadow-lg hover:shadow-xl transition-all duration-300',
               totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'p-2 sm:p-2.5' : 'p-4 sm:p-5'
             ]">
               <p :class="[
-                'font-bold mb-1 text-rose-600',
+                'font-bold mb-1 text-rose-600 oscuro:text-rose-300',
                 totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-xl sm:text-2xl' : 'text-3xl sm:text-4xl'
               ]">${{ formatMoneyShort(totalSancionesMora) }}</p>
               <p :class="[
-                'font-semibold text-rose-700',
+                'font-semibold text-rose-700 oscuro:text-rose-300',
                 totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-[10px] sm:text-xs' : 'text-xs sm:text-sm'
               ]">Total sanciones</p>
             </div>
             <div :class="[
-              'bg-white/80 rounded-2xl text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300',
+              'bg-superficie-tarjeta/80 rounded-2xl text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300',
               totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'p-2 sm:p-2.5 sm:col-span-2' : 'p-4 sm:p-5',
-              sociosEnMora.length >= 3 ? 'border-orange-300/60 hover:border-orange-400' : 'border-yellow-300/60 hover:border-yellow-400'
+              sociosEnMora.length >= 3 ? 'border-orange-300/60 oscuro:border-orange-500/30 hover:border-orange-400' : 'border-yellow-300/60 oscuro:border-yellow-500/30 hover:border-yellow-400'
             ]">
               <p :class="[
-                'font-bold mb-1 text-orange-600',
+                'font-bold mb-1 text-orange-600 oscuro:text-orange-300',
                 totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-xl sm:text-2xl' : 'text-3xl sm:text-4xl'
               ]">${{ formatMoneyShort(totalDeudaMora + totalDeudaPrestamosVencidos) }}</p>
               <p :class="[
-                'font-semibold text-orange-700',
+                'font-semibold text-orange-700 oscuro:text-orange-300',
                 totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-[10px] sm:text-xs' : 'text-xs sm:text-sm'
               ]">Total a cobrar</p>
             </div>
@@ -2161,11 +2161,11 @@
             <div 
               v-for="socioMora in sociosEnMora" 
               :key="socioMora.id"
-              class="relative overflow-hidden rounded-2xl p-4 sm:p-5 border border-gray-200/60 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
+              class="relative overflow-hidden rounded-2xl p-4 sm:p-5 border border-borde/60 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
               :class="[
                 socioMora.cuotasMora > 0 
-                  ? 'bg-gradient-to-br from-white via-red-50/40 to-rose-50/30 border-red-200/60 hover:border-red-300' 
-                  : 'bg-gradient-to-br from-white via-orange-50/40 to-amber-50/30 border-orange-200/60 hover:border-orange-300'
+                  ? 'bg-gradient-to-br from-superficie-tarjeta via-red-50/40 oscuro:via-red-500/10 to-rose-50/30 oscuro:to-rose-500/10 border-red-200/60 oscuro:border-red-500/30 hover:border-red-300 oscuro:hover:border-red-500/30' 
+                  : 'bg-gradient-to-br from-superficie-tarjeta via-orange-50/40 oscuro:via-orange-500/10 to-amber-50/30 oscuro:to-amber-500/10 border-orange-200/60 oscuro:border-orange-500/30 hover:border-orange-300 oscuro:hover:border-orange-500/30'
               ]"
             >
               <!-- Efectos decorativos de fondo -->
@@ -2192,18 +2192,18 @@
                       :src="getAvatarUrl(socioMora.nombre || socioMora.id, socioMora.avatar_seed, socioMora.avatar_style)" 
                       :alt="socioMora.nombre"
                       class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex-shrink-0 border-2 shadow-md object-cover group-hover:scale-105 transition-transform duration-300"
-                      :class="[socioMora.cuotasMora > 0 ? 'border-red-300' : 'border-orange-300']"
+                      :class="[socioMora.cuotasMora > 0 ? 'border-red-300 oscuro:border-red-500/30' : 'border-orange-300 oscuro:border-orange-500/30']"
                     />
                     <div class="flex-1 min-w-0">
-                      <p class="font-bold text-gray-900 text-base sm:text-lg group-hover:text-natillera-700 transition-colors truncate">{{ socioMora.nombre }}</p>
+                      <p class="font-bold text-texto-fuerte text-base sm:text-lg group-hover:text-natillera-700 oscuro:group-hover:text-natillera-300 transition-colors truncate">{{ socioMora.nombre }}</p>
                       <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                        <span v-if="socioMora.cuotasMora > 0" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 whitespace-nowrap">
+                        <span v-if="socioMora.cuotasMora > 0" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 oscuro:bg-red-500/15 text-red-700 oscuro:text-red-300 border border-red-200 oscuro:border-red-500/30 whitespace-nowrap">
                           {{ socioMora.cuotasMora }} en mora
                         </span>
-                        <span v-if="socioMora.cuotasMora > 0 && socioMora.diasMora > 0" class="text-xs text-red-600 font-semibold whitespace-nowrap">
+                        <span v-if="socioMora.cuotasMora > 0 && socioMora.diasMora > 0" class="text-xs text-red-600 oscuro:text-red-300 font-semibold whitespace-nowrap">
                           {{ socioMora.diasMora }} {{ socioMora.diasMora === 1 ? 'día' : 'días' }}
                         </span>
-                        <span v-if="socioMora.tienePrestamosVencidos" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-700 border border-purple-200 whitespace-nowrap">
+                        <span v-if="socioMora.tienePrestamosVencidos" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 oscuro:bg-purple-500/15 text-purple-700 oscuro:text-purple-300 border border-purple-200 oscuro:border-purple-500/30 whitespace-nowrap">
                           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                           </svg>
@@ -2213,12 +2213,12 @@
                       <!-- Información de préstamo vencido - Móvil compacto -->
                       <div v-if="socioMora.tienePrestamosVencidos && socioMora.fechaVencimientoPrestamo" class="mt-1.5 sm:mt-2">
                         <div class="flex flex-wrap items-center gap-2 text-[10px] sm:text-xs">
-                          <div class="flex items-center gap-1 text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md">
+                          <div class="flex items-center gap-1 text-purple-600 oscuro:text-purple-300 bg-purple-50 oscuro:bg-purple-500/15 px-2 py-0.5 rounded-md">
                             <CalendarDaysIcon class="w-3 h-3 flex-shrink-0" />
                             <span class="font-medium">Fecha de pago:</span>
                             <span class="font-semibold">{{ formatDate(socioMora.fechaVencimientoPrestamo) }}</span>
                           </div>
-                          <div v-if="socioMora.diasMoraPrestamo > 0" class="flex items-center gap-1 text-red-600 bg-red-50 px-2 py-0.5 rounded-md">
+                          <div v-if="socioMora.diasMoraPrestamo > 0" class="flex items-center gap-1 text-red-600 oscuro:text-red-300 bg-red-50 oscuro:bg-red-500/15 px-2 py-0.5 rounded-md">
                             <ExclamationCircleIcon class="w-3 h-3 flex-shrink-0" />
                             <span class="font-medium">{{ socioMora.diasMoraPrestamo }}d</span>
                           </div>
@@ -2228,43 +2228,43 @@
                   </div>
                   
                   <!-- Datos financieros en móvil: debajo del nombre, en una sola línea compacta -->
-                  <div v-if="socioMora.cuotasMora > 0" class="sm:hidden w-full -mt-2 pt-2 border-t border-gray-200/60">
+                  <div v-if="socioMora.cuotasMora > 0" class="sm:hidden w-full -mt-2 pt-2 border-t border-borde/60">
                     <div class="space-y-2">
                       <!-- Cuotas en mora -->
                       <div class="flex items-center justify-between gap-3">
                         <!-- Total a cobrar - destacado -->
-                        <div class="flex-1 bg-gradient-to-r from-red-50 to-rose-50 rounded-lg px-2.5 py-1.5 border border-red-200/60">
-                          <p class="text-[9px] text-gray-600 font-medium mb-0.5">Total a cobrar (cuotas)</p>
-                          <p class="text-base font-bold text-red-600 leading-tight">${{ formatMoney(socioMora.totalConSanciones || socioMora.totalDeuda) }}</p>
+                        <div class="flex-1 bg-gradient-to-r from-red-50 oscuro:from-red-500/15 to-rose-50 oscuro:to-rose-500/10 rounded-lg px-2.5 py-1.5 border border-red-200/60 oscuro:border-red-500/30">
+                          <p class="text-[9px] text-texto-secundario font-medium mb-0.5">Total a cobrar (cuotas)</p>
+                          <p class="text-base font-bold text-red-600 oscuro:text-red-300 leading-tight">${{ formatMoney(socioMora.totalConSanciones || socioMora.totalDeuda) }}</p>
                         </div>
                         
                         <!-- Valor cuota y Sanción - lado derecho compacto -->
                         <div class="flex flex-col gap-1.5 text-right">
                           <div class="flex items-center gap-1.5">
-                            <span class="text-[9px] text-gray-500">Cuota:</span>
-                            <span class="text-[11px] font-semibold text-gray-700">${{ formatMoney(socioMora.valorCuotaPromedio || 0) }}</span>
+                            <span class="text-[9px] text-texto-suave">Cuota:</span>
+                            <span class="text-[11px] font-semibold text-texto-medio">${{ formatMoney(socioMora.valorCuotaPromedio || 0) }}</span>
                           </div>
                           <div class="flex items-center gap-1.5">
-                            <span class="text-[9px] text-gray-500">Sanción:</span>
-                            <span class="text-[11px] font-semibold text-rose-600">${{ formatMoney(socioMora.totalSanciones || 0) }}</span>
+                            <span class="text-[9px] text-texto-suave">Sanción:</span>
+                            <span class="text-[11px] font-semibold text-rose-600 oscuro:text-rose-300">${{ formatMoney(socioMora.totalSanciones || 0) }}</span>
                           </div>
                         </div>
                       </div>
                       
                       <!-- Préstamo en mora (si existe) -->
-                      <div v-if="socioMora.tienePrestamosVencidos" class="flex items-center justify-between gap-2 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg px-2.5 py-1.5 border border-purple-200/60">
+                      <div v-if="socioMora.tienePrestamosVencidos" class="flex items-center justify-between gap-2 bg-gradient-to-r from-purple-50 oscuro:from-purple-500/15 to-purple-100 oscuro:to-purple-500/10 rounded-lg px-2.5 py-1.5 border border-purple-200/60 oscuro:border-purple-500/30">
                         <div class="flex-1">
-                          <p class="text-[9px] text-gray-600 font-medium mb-0.5">Préstamo en mora</p>
-                          <p class="text-base font-bold text-purple-600 leading-tight">${{ formatMoney(socioMora.totalDeudaPrestamo || 0) }}</p>
+                          <p class="text-[9px] text-texto-secundario font-medium mb-0.5">Préstamo en mora</p>
+                          <p class="text-base font-bold text-purple-600 oscuro:text-purple-300 leading-tight">${{ formatMoney(socioMora.totalDeudaPrestamo || 0) }}</p>
                         </div>
                         <div class="flex items-center gap-2 text-right">
                           <div class="flex flex-col">
-                            <span class="text-[9px] text-gray-500">Cuotas</span>
-                            <span class="text-xs font-semibold text-gray-700">{{ socioMora.cuotasVencidasPrestamo }}</span>
+                            <span class="text-[9px] text-texto-suave">Cuotas</span>
+                            <span class="text-xs font-semibold text-texto-medio">{{ socioMora.cuotasVencidasPrestamo }}</span>
                           </div>
                           <div class="flex flex-col">
-                            <span class="text-[9px] text-gray-500">Días</span>
-                            <span class="text-xs font-semibold text-red-600">{{ socioMora.diasMoraPrestamo || 0 }}</span>
+                            <span class="text-[9px] text-texto-suave">Días</span>
+                            <span class="text-xs font-semibold text-red-600 oscuro:text-red-300">{{ socioMora.diasMoraPrestamo || 0 }}</span>
                           </div>
                         </div>
                       </div>
@@ -2272,51 +2272,51 @@
                   </div>
                   
                   <!-- Si solo tiene préstamos vencidos (sin cuotas) en móvil -->
-                  <div v-else-if="socioMora.tienePrestamosVencidos && !socioMora.cuotasMora && !socioMora.cuotasPendientes" class="sm:hidden w-full -mt-1 pt-2 border-t border-gray-200/60">
+                  <div v-else-if="socioMora.tienePrestamosVencidos && !socioMora.cuotasMora && !socioMora.cuotasPendientes" class="sm:hidden w-full -mt-1 pt-2 border-t border-borde/60">
                     <div class="flex items-center justify-between gap-2">
                       <!-- Total a cobrar préstamo - destacado -->
-                      <div class="flex-1 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg px-2.5 py-1.5 border border-purple-200/60">
-                        <p class="text-[9px] text-gray-600 font-medium mb-0.5">Préstamo vencido</p>
-                        <p class="text-base font-bold text-purple-600 leading-tight">${{ formatMoney(socioMora.totalDeudaPrestamo || 0) }}</p>
+                      <div class="flex-1 bg-gradient-to-r from-purple-50 oscuro:from-purple-500/15 to-purple-100 oscuro:to-purple-500/10 rounded-lg px-2.5 py-1.5 border border-purple-200/60 oscuro:border-purple-500/30">
+                        <p class="text-[9px] text-texto-secundario font-medium mb-0.5">Préstamo vencido</p>
+                        <p class="text-base font-bold text-purple-600 oscuro:text-purple-300 leading-tight">${{ formatMoney(socioMora.totalDeudaPrestamo || 0) }}</p>
                       </div>
                       
                       <!-- Información adicional - lado derecho compacto -->
                       <div class="flex items-center gap-2 text-right">
                         <div class="flex flex-col">
-                          <span class="text-[9px] text-gray-500">Cuotas</span>
-                          <span class="text-xs font-semibold text-gray-700">{{ socioMora.cuotasVencidasPrestamo }}</span>
+                          <span class="text-[9px] text-texto-suave">Cuotas</span>
+                          <span class="text-xs font-semibold text-texto-medio">{{ socioMora.cuotasVencidasPrestamo }}</span>
                         </div>
                         <div class="flex flex-col">
-                          <span class="text-[9px] text-gray-500">Días</span>
-                          <span class="text-xs font-semibold text-red-600">{{ socioMora.diasMoraPrestamo || 0 }}</span>
+                          <span class="text-[9px] text-texto-suave">Días</span>
+                          <span class="text-xs font-semibold text-red-600 oscuro:text-red-300">{{ socioMora.diasMoraPrestamo || 0 }}</span>
                         </div>
                       </div>
                     </div>
                   </div>
                   
                   <!-- Si tiene cuotas en mora y también préstamos vencidos en móvil -->
-                  <div v-else-if="socioMora.tienePrestamosVencidos && socioMora.cuotasMora > 0" class="sm:hidden w-full -mt-2 pt-2 border-t border-gray-200/60">
+                  <div v-else-if="socioMora.tienePrestamosVencidos && socioMora.cuotasMora > 0" class="sm:hidden w-full -mt-2 pt-2 border-t border-borde/60">
                     <div class="space-y-2">
                       <!-- Cuotas en mora -->
                       <div class="text-left">
-                        <p class="text-xs font-bold text-red-600">${{ formatMoney(socioMora.totalDeuda) }}</p>
-                        <p class="text-[10px] text-gray-500">cuotas en mora</p>
+                        <p class="text-xs font-bold text-red-600 oscuro:text-red-300">${{ formatMoney(socioMora.totalDeuda) }}</p>
+                        <p class="text-[10px] text-texto-suave">cuotas en mora</p>
                       </div>
                       
                       <!-- Préstamo en mora -->
-                      <div class="flex items-center justify-between gap-2 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg px-2.5 py-1.5 border border-purple-200/60">
+                      <div class="flex items-center justify-between gap-2 bg-gradient-to-r from-purple-50 oscuro:from-purple-500/15 to-purple-100 oscuro:to-purple-500/10 rounded-lg px-2.5 py-1.5 border border-purple-200/60 oscuro:border-purple-500/30">
                         <div class="flex-1">
-                          <p class="text-[9px] text-gray-600 font-medium mb-0.5">Préstamo en mora</p>
-                          <p class="text-base font-bold text-purple-600 leading-tight">${{ formatMoney(socioMora.totalDeudaPrestamo || 0) }}</p>
+                          <p class="text-[9px] text-texto-secundario font-medium mb-0.5">Préstamo en mora</p>
+                          <p class="text-base font-bold text-purple-600 oscuro:text-purple-300 leading-tight">${{ formatMoney(socioMora.totalDeudaPrestamo || 0) }}</p>
                         </div>
                         <div class="flex items-center gap-2 text-right">
                           <div class="flex flex-col">
-                            <span class="text-[9px] text-gray-500">Cuotas</span>
-                            <span class="text-xs font-semibold text-gray-700">{{ socioMora.cuotasVencidasPrestamo }}</span>
+                            <span class="text-[9px] text-texto-suave">Cuotas</span>
+                            <span class="text-xs font-semibold text-texto-medio">{{ socioMora.cuotasVencidasPrestamo }}</span>
                           </div>
                           <div class="flex flex-col">
-                            <span class="text-[9px] text-gray-500">Días</span>
-                            <span class="text-xs font-semibold text-red-600">{{ socioMora.diasMoraPrestamo || 0 }}</span>
+                            <span class="text-[9px] text-texto-suave">Días</span>
+                            <span class="text-xs font-semibold text-red-600 oscuro:text-red-300">{{ socioMora.diasMoraPrestamo || 0 }}</span>
                           </div>
                         </div>
                       </div>
@@ -2326,8 +2326,8 @@
                   <!-- Fallback -->
                   <div v-else class="sm:hidden w-full -mt-2">
                     <div class="text-left">
-                      <p class="text-xs font-bold text-amber-600">${{ formatMoney(socioMora.totalDeuda) }}</p>
-                      <p class="text-[10px] text-gray-500">adeudado</p>
+                      <p class="text-xs font-bold text-amber-600 oscuro:text-amber-300">${{ formatMoney(socioMora.totalDeuda) }}</p>
+                      <p class="text-[10px] text-texto-suave">adeudado</p>
                     </div>
                   </div>
                 
@@ -2355,44 +2355,44 @@
                     <!-- Columna de etiquetas -->
                     <div class="text-right space-y-1">
                       <div class="mb-1">
-                        <p class="text-[10px] text-gray-500">Total a cobrar</p>
+                        <p class="text-[10px] text-texto-suave">Total a cobrar</p>
                       </div>
                       <div class="mb-1">
-                        <p class="text-[10px] text-gray-500">Valor cuota</p>
+                        <p class="text-[10px] text-texto-suave">Valor cuota</p>
                       </div>
                       <div v-if="!socioMora.tienePrestamosVencidos">
-                        <p class="text-[10px] text-gray-500">Sanción</p>
+                        <p class="text-[10px] text-texto-suave">Sanción</p>
                       </div>
                       <div v-if="socioMora.tienePrestamosVencidos" class="mb-1">
-                        <p class="text-[10px] text-gray-500">Sanción</p>
+                        <p class="text-[10px] text-texto-suave">Sanción</p>
                       </div>
                       <div v-if="socioMora.tienePrestamosVencidos" class="mb-1">
-                        <p class="text-[10px] text-gray-500">Préstamo en mora</p>
+                        <p class="text-[10px] text-texto-suave">Préstamo en mora</p>
                       </div>
                       <div v-if="socioMora.tienePrestamosVencidos">
-                        <p class="text-[10px] text-gray-500">Cuotas vencidas</p>
+                        <p class="text-[10px] text-texto-suave">Cuotas vencidas</p>
                       </div>
                     </div>
                     
                     <!-- Columna de valores -->
                     <div class="text-right space-y-1 min-w-[100px]">
                       <div class="mb-1">
-                        <p class="font-bold text-red-600 text-sm sm:text-base">${{ formatMoney(socioMora.totalConSanciones || socioMora.totalDeuda) }}</p>
+                        <p class="font-bold text-red-600 oscuro:text-red-300 text-sm sm:text-base">${{ formatMoney(socioMora.totalConSanciones || socioMora.totalDeuda) }}</p>
                       </div>
                       <div class="mb-1">
-                        <p class="font-semibold text-gray-700 text-xs sm:text-sm">${{ formatMoney(socioMora.valorCuotaPromedio || 0) }}</p>
+                        <p class="font-semibold text-texto-medio text-xs sm:text-sm">${{ formatMoney(socioMora.valorCuotaPromedio || 0) }}</p>
                       </div>
                       <div v-if="!socioMora.tienePrestamosVencidos">
-                        <p class="font-semibold text-rose-600 text-xs sm:text-sm">${{ formatMoney(socioMora.totalSanciones || 0) }}</p>
+                        <p class="font-semibold text-rose-600 oscuro:text-rose-300 text-xs sm:text-sm">${{ formatMoney(socioMora.totalSanciones || 0) }}</p>
                       </div>
                       <div v-if="socioMora.tienePrestamosVencidos" class="mb-1">
-                        <p class="font-semibold text-rose-600 text-xs sm:text-sm">${{ formatMoney(socioMora.totalSanciones || 0) }}</p>
+                        <p class="font-semibold text-rose-600 oscuro:text-rose-300 text-xs sm:text-sm">${{ formatMoney(socioMora.totalSanciones || 0) }}</p>
                       </div>
                       <div v-if="socioMora.tienePrestamosVencidos" class="mb-1">
-                        <p class="font-bold text-purple-600 text-sm sm:text-base">${{ formatMoney(socioMora.totalDeudaPrestamo || 0) }}</p>
+                        <p class="font-bold text-purple-600 oscuro:text-purple-300 text-sm sm:text-base">${{ formatMoney(socioMora.totalDeudaPrestamo || 0) }}</p>
                       </div>
                       <div v-if="socioMora.tienePrestamosVencidos">
-                        <p class="font-semibold text-gray-700 text-xs sm:text-sm">{{ socioMora.cuotasVencidasPrestamo || 0 }}</p>
+                        <p class="font-semibold text-texto-medio text-xs sm:text-sm">{{ socioMora.cuotasVencidasPrestamo || 0 }}</p>
                       </div>
                     </div>
                   </div>
@@ -2421,26 +2421,26 @@
                     <!-- Columna de etiquetas -->
                     <div class="text-right space-y-1">
                       <div class="mb-1">
-                        <p class="text-[10px] text-gray-500">Préstamo vencido</p>
+                        <p class="text-[10px] text-texto-suave">Préstamo vencido</p>
                       </div>
                       <div class="mb-1">
-                        <p class="text-[10px] text-gray-500">Cuotas vencidas</p>
+                        <p class="text-[10px] text-texto-suave">Cuotas vencidas</p>
                       </div>
                       <div>
-                        <p class="text-[10px] text-gray-500">Días sin pago</p>
+                        <p class="text-[10px] text-texto-suave">Días sin pago</p>
                       </div>
                     </div>
                     
                     <!-- Columna de valores -->
                     <div class="text-right space-y-1 min-w-[100px]">
                       <div class="mb-1">
-                        <p class="font-bold text-purple-600 text-sm sm:text-base">${{ formatMoney(socioMora.totalDeudaPrestamo || 0) }}</p>
+                        <p class="font-bold text-purple-600 oscuro:text-purple-300 text-sm sm:text-base">${{ formatMoney(socioMora.totalDeudaPrestamo || 0) }}</p>
                       </div>
                       <div class="mb-1">
-                        <p class="font-semibold text-gray-700 text-xs sm:text-sm">{{ socioMora.cuotasVencidasPrestamo || 0 }}</p>
+                        <p class="font-semibold text-texto-medio text-xs sm:text-sm">{{ socioMora.cuotasVencidasPrestamo || 0 }}</p>
                       </div>
                       <div>
-                        <p class="font-semibold text-red-600 text-xs sm:text-sm">{{ socioMora.diasMoraPrestamo || 0 }}</p>
+                        <p class="font-semibold text-red-600 oscuro:text-red-300 text-xs sm:text-sm">{{ socioMora.diasMoraPrestamo || 0 }}</p>
                       </div>
                     </div>
                   </div>
@@ -2460,26 +2460,26 @@
                     <!-- Columna de etiquetas -->
                     <div class="text-right space-y-1">
                       <div class="mb-1">
-                        <p class="text-[10px] text-gray-500">Cuotas en mora</p>
+                        <p class="text-[10px] text-texto-suave">Cuotas en mora</p>
                       </div>
                       <div class="mb-1">
-                        <p class="text-[10px] text-gray-500">Préstamo en mora</p>
+                        <p class="text-[10px] text-texto-suave">Préstamo en mora</p>
                       </div>
                       <div>
-                        <p class="text-[10px] text-gray-500">Cuotas vencidas</p>
+                        <p class="text-[10px] text-texto-suave">Cuotas vencidas</p>
                       </div>
                     </div>
                     
                     <!-- Columna de valores -->
                     <div class="text-right space-y-1 min-w-[100px]">
                       <div class="mb-1">
-                        <p class="font-bold text-red-600 text-sm sm:text-base">${{ formatMoney(socioMora.totalDeuda) }}</p>
+                        <p class="font-bold text-red-600 oscuro:text-red-300 text-sm sm:text-base">${{ formatMoney(socioMora.totalDeuda) }}</p>
                       </div>
                       <div class="mb-1">
-                        <p class="font-bold text-purple-600 text-sm sm:text-base">${{ formatMoney(socioMora.totalDeudaPrestamo || 0) }}</p>
+                        <p class="font-bold text-purple-600 oscuro:text-purple-300 text-sm sm:text-base">${{ formatMoney(socioMora.totalDeudaPrestamo || 0) }}</p>
                       </div>
                       <div>
-                        <p class="font-semibold text-gray-700 text-xs sm:text-sm">{{ socioMora.cuotasVencidasPrestamo || 0 }}</p>
+                        <p class="font-semibold text-texto-medio text-xs sm:text-sm">{{ socioMora.cuotasVencidasPrestamo || 0 }}</p>
                       </div>
                     </div>
                   </div>
@@ -2504,8 +2504,8 @@
                 <!-- Si solo tiene préstamos vencidos (sin cuotas en mora) en desktop -->
                 <div v-else class="hidden sm:flex flex-shrink-0 flex-col sm:flex-row items-end sm:items-center gap-2">
                   <div class="text-right">
-                    <p class="text-sm sm:text-base font-bold text-purple-600">${{ formatMoney(socioMora.totalDeudaPrestamo) }}</p>
-                    <p class="text-xs text-gray-500">préstamo vencido</p>
+                    <p class="text-sm sm:text-base font-bold text-purple-600 oscuro:text-purple-300">${{ formatMoney(socioMora.totalDeudaPrestamo) }}</p>
+                    <p class="text-xs text-texto-suave">préstamo vencido</p>
                   </div>
                   <button
                     @click.stop="verPrestamoSocio(socioMora)"
@@ -2527,8 +2527,8 @@
       align="bottom"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="32rem"
       @close="cerrarCapaDesglose"
     >
@@ -2537,7 +2537,7 @@
         <div
           class="flex items-center gap-3 pl-4 pr-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] min-h-[4.2rem]"
         >
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm"><!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <SparklesIcon class="h-5 w-5 text-[#1B5E37]" />
           </div>
           <div class="min-w-0 flex-1 py-0.5 pr-1 text-left">
@@ -2565,9 +2565,9 @@
         >
           <div class="w-11 shrink-0" aria-hidden="true" />
           <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
-            <div
-              class="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm"
-            >
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
+            <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm">
+              <!-- tema-fijo: icono verde sobre el círculo blanco -->
               <SparklesIcon class="h-6 w-6 text-[#1B5E37]" />
             </div>
             <h3 class="font-display text-lg font-bold leading-tight text-white">
@@ -2588,65 +2588,65 @@
         </div>
       </div>
       <div
-        class="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white px-4 pb-[calc(max(1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] pt-4 [-webkit-overflow-scrolling:touch] sm:px-6 sm:pb-[calc(1.5rem+var(--tapado-inferior,0px))] sm:pt-5"
+        class="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-superficie-tarjeta px-4 pb-[calc(max(1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] pt-4 [-webkit-overflow-scrolling:touch] sm:px-6 sm:pb-[calc(1.5rem+var(--tapado-inferior,0px))] sm:pt-5"
       >
         <!-- Vista detalle Rifas (al hacer clic en Rifas) -->
         <div v-if="detalleRifasAbierto" class="space-y-4">
           <button
             type="button"
             @click="cerrarCapaDesglose"
-            class="flex items-center gap-2 text-natillera-600 hover:text-natillera-800 font-medium text-sm"
+            class="flex items-center gap-2 text-natillera-600 oscuro:text-natillera-300 hover:text-natillera-800 oscuro:hover:text-natillera-300 font-medium text-sm"
           >
             <ChevronLeftIcon class="w-4 h-4 flex-shrink-0" />
             Volver al desglose
           </button>
-          <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Rifas liquidadas</h4>
+          <h4 class="text-sm font-semibold text-texto-medio uppercase tracking-wide">Rifas liquidadas</h4>
           <CargaCaja v-if="detalleRifas.loading" texto="Cargando rifas liquidadas" />
-          <div v-else-if="!detalleRifas.porMes || detalleRifas.porMes.length === 0" class="text-center py-8 text-gray-500 text-sm">
+          <div v-else-if="!detalleRifas.porMes || detalleRifas.porMes.length === 0" class="text-center py-8 text-texto-suave text-sm">
             No hay rifas liquidadas.
           </div>
           <div v-else class="space-y-6">
             <!-- Totales acumulados (todas las rifas) -->
-            <div class="rounded-xl border-2 border-natillera-200 bg-gradient-to-br from-natillera-50 to-white p-4 shadow-sm">
-              <p class="text-xs font-bold uppercase tracking-wider text-natillera-700 mb-3">Totales acumulados</p>
+            <div class="rounded-xl border-2 border-natillera-200 oscuro:border-natillera-500/30 bg-gradient-to-br from-natillera-50 oscuro:from-natillera-500/15 to-superficie-tarjeta p-4 shadow-sm">
+              <p class="text-xs font-bold uppercase tracking-wider text-natillera-700 oscuro:text-natillera-300 mb-3">Totales acumulados</p>
               <div class="grid grid-cols-3 gap-3 text-center text-xs">
                 <div>
-                  <p class="text-gray-500">Recaudado</p>
-                  <p class="font-bold text-natillera-600 text-sm">${{ formatMoney(totalesAcumuladosRifas.totalRecogido) }}</p>
+                  <p class="text-texto-suave">Recaudado</p>
+                  <p class="font-bold text-natillera-600 oscuro:text-natillera-300 text-sm">${{ formatMoney(totalesAcumuladosRifas.totalRecogido) }}</p>
                 </div>
                 <div>
-                  <p class="text-gray-500">Premio</p>
-                  <p class="font-bold text-red-600 text-sm">${{ formatMoney(totalesAcumuladosRifas.totalPremio) }}</p>
+                  <p class="text-texto-suave">Premio</p>
+                  <p class="font-bold text-red-600 oscuro:text-red-300 text-sm">${{ formatMoney(totalesAcumuladosRifas.totalPremio) }}</p>
                 </div>
                 <div>
-                  <p class="text-gray-500">Utilidad</p>
-                  <p class="font-bold text-green-600 text-sm">${{ formatMoney(totalesAcumuladosRifas.totalUtilidad) }}</p>
+                  <p class="text-texto-suave">Utilidad</p>
+                  <p class="font-bold text-green-600 oscuro:text-green-300 text-sm">${{ formatMoney(totalesAcumuladosRifas.totalUtilidad) }}</p>
                 </div>
               </div>
             </div>
             <!-- Desglose por mes -->
             <div class="space-y-8">
-              <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Desglose por mes</p>
+              <p class="text-[11px] font-semibold uppercase tracking-wider text-texto-tenue">Desglose por mes</p>
               <div
                 v-for="(bloque, idx) in detalleRifas.porMes"
                 :key="idx"
-                class="rounded-xl border-2 border-gray-200 bg-white overflow-hidden shadow-sm"
+                class="rounded-xl border-2 border-borde bg-superficie-tarjeta overflow-hidden shadow-sm"
               >
                 <div class="p-3 space-y-3">
-                  <div v-for="rifa in bloque.rifas" :key="rifa.id" class="rounded-xl bg-slate-50 border-2 border-slate-200 p-2.5 shadow-md shadow-slate-200/50 hover:shadow-lg hover:shadow-slate-300/40 transition-shadow duration-200">
-                  <p class="text-sm font-medium text-gray-800 line-clamp-2">{{ rifa.descripcion }}</p>
-                  <div class="grid grid-cols-3 gap-2 text-center text-xs mt-2.5 py-2 px-2 rounded-lg bg-white/80 border border-gray-100">
+                  <div v-for="rifa in bloque.rifas" :key="rifa.id" class="rounded-xl bg-slate-50 oscuro:bg-superficie-suave border-2 border-slate-200 oscuro:border-borde p-2.5 shadow-md shadow-slate-200/50 hover:shadow-lg hover:shadow-slate-300/40 transition-shadow duration-200">
+                  <p class="text-sm font-medium text-texto line-clamp-2">{{ rifa.descripcion }}</p>
+                  <div class="grid grid-cols-3 gap-2 text-center text-xs mt-2.5 py-2 px-2 rounded-lg bg-superficie-tarjeta/80 border border-borde-suave">
                     <div>
-                      <p class="text-gray-500">Recaudado</p>
-                      <p class="font-semibold text-natillera-600">${{ formatMoney(rifa.totalRecogido) }}</p>
+                      <p class="text-texto-suave">Recaudado</p>
+                      <p class="font-semibold text-natillera-600 oscuro:text-natillera-300">${{ formatMoney(rifa.totalRecogido) }}</p>
                     </div>
                     <div>
-                      <p class="text-gray-500"><span class="sm:hidden">Premio</span><span class="hidden sm:inline">Premio entregado</span></p>
-                      <p class="font-semibold text-red-600">${{ formatMoney(rifa.premio) }}</p>
+                      <p class="text-texto-suave"><span class="sm:hidden">Premio</span><span class="hidden sm:inline">Premio entregado</span></p>
+                      <p class="font-semibold text-red-600 oscuro:text-red-300">${{ formatMoney(rifa.premio) }}</p>
                     </div>
                     <div>
-                      <p class="text-gray-500">Utilidad</p>
-                      <p class="font-semibold text-green-600">${{ formatMoney(rifa.utilidad) }}</p>
+                      <p class="text-texto-suave">Utilidad</p>
+                      <p class="font-semibold text-green-600 oscuro:text-green-300">${{ formatMoney(rifa.utilidad) }}</p>
                     </div>
                   </div>
                   <div v-if="rifa.socios && rifa.socios.length" class="mt-2">
@@ -2654,18 +2654,18 @@
                       type="button"
                       @click="toggleRifaDesplegable(rifa.id)"
                       class="flex items-center justify-between gap-2 w-full text-left py-2 px-2.5 -mx-0.5 rounded-lg border border-transparent transition-all duration-200"
-                      :class="rifasDesplegados[rifa.id] ? 'bg-natillera-100/80 border-natillera-200/60 text-natillera-800' : 'hover:bg-natillera-50/80 border-natillera-100 text-gray-600 hover:text-natillera-700 hover:border-natillera-200/40'"
+                      :class="rifasDesplegados[rifa.id] ? 'bg-natillera-100/80 oscuro:bg-natillera-500/15 border-natillera-200/60 oscuro:border-natillera-500/30 text-natillera-800 oscuro:text-natillera-300' : 'hover:bg-natillera-50/80 oscuro:hover:bg-natillera-500/15 border-natillera-100 oscuro:border-natillera-500/30 text-texto-secundario hover:text-natillera-700 oscuro:hover:text-natillera-300 hover:border-natillera-200/40 oscuro:hover:border-natillera-500/30'"
                     >
                       <span class="flex items-center gap-2">
                         <span class="text-xs font-semibold uppercase tracking-wide">Información de pagos</span>
-                        <span class="text-[11px] text-gray-500 font-normal normal-case">({{ rifa.socios.length }} {{ rifa.socios.length === 1 ? 'pago' : 'pagos' }})</span>
+                        <span class="text-[11px] text-texto-suave font-normal normal-case">({{ rifa.socios.length }} {{ rifa.socios.length === 1 ? 'pago' : 'pagos' }})</span>
                       </span>
-                      <ChevronDownIcon :class="['w-4 h-4 flex-shrink-0 transition-transform duration-200', rifasDesplegados[rifa.id] ? 'rotate-180 text-natillera-600' : 'text-gray-400']" />
+                      <ChevronDownIcon :class="['w-4 h-4 flex-shrink-0 transition-transform duration-200', rifasDesplegados[rifa.id] ? 'rotate-180 text-natillera-600 oscuro:text-natillera-300' : 'text-texto-tenue']" />
                     </button>
-                    <div v-show="rifasDesplegados[rifa.id]" class="mt-2 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+                    <div v-show="rifasDesplegados[rifa.id]" class="mt-2 overflow-hidden rounded-lg border border-borde bg-superficie-tarjeta shadow-sm">
                       <table class="w-full text-xs">
                         <thead>
-                          <tr class="bg-gray-100 text-gray-600 font-semibold">
+                          <tr class="bg-superficie-hundida text-texto-secundario font-semibold">
                             <th class="text-left py-2 px-3">Socio</th>
                             <th class="text-right py-2 px-3">Valor</th>
                             <th class="text-right py-2 px-3">Fecha</th>
@@ -2675,20 +2675,20 @@
                           <tr
                             v-for="(s, i) in [...(rifa.socios || [])].sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''))"
                             :key="i"
-                            class="border-t border-gray-100 transition-colors"
-                            :class="i % 2 === 0 ? 'bg-white' : 'bg-gray-100'"
+                            class="border-t border-borde-suave transition-colors"
+                            :class="i % 2 === 0 ? 'bg-superficie-tarjeta' : 'bg-superficie-hundida'"
                           >
-                            <td class="py-2 px-3 text-gray-700 truncate max-w-[140px]">{{ s.nombre }}</td>
-                            <td class="py-2 px-3 text-right tabular-nums font-medium text-natillera-600">${{ formatMoney(s.valorPagado) }}</td>
-                            <td class="py-2 px-3 text-right text-gray-500">{{ s.fechaPago ? formatDate(s.fechaPago) : '—' }}</td>
+                            <td class="py-2 px-3 text-texto-medio truncate max-w-[140px]">{{ s.nombre }}</td>
+                            <td class="py-2 px-3 text-right tabular-nums font-medium text-natillera-600 oscuro:text-natillera-300">${{ formatMoney(s.valorPagado) }}</td>
+                            <td class="py-2 px-3 text-right text-texto-suave">{{ s.fechaPago ? formatDate(s.fechaPago) : '—' }}</td>
                           </tr>
-                          <tr class="border-t-2 border-gray-300 bg-gray-100/50">
+                          <tr class="border-t-2 border-borde-fuerte bg-superficie-hundida/50">
                             <td colspan="3" class="py-0.5 px-0"></td>
                           </tr>
-                          <tr class="bg-natillera-50/80 font-semibold text-gray-800">
-                            <td class="py-2.5 px-3 border-t border-natillera-200">Total</td>
-                            <td class="py-2.5 px-3 text-right tabular-nums text-natillera-600 border-t border-natillera-200">${{ formatMoney((rifa.socios || []).reduce((sum, s) => sum + (parseFloat(s.valorPagado) || 0), 0)) }}</td>
-                            <td class="py-2.5 px-3 border-t border-natillera-200"></td>
+                          <tr class="bg-natillera-50/80 oscuro:bg-natillera-500/15 font-semibold text-texto">
+                            <td class="py-2.5 px-3 border-t border-natillera-200 oscuro:border-natillera-500/30">Total</td>
+                            <td class="py-2.5 px-3 text-right tabular-nums text-natillera-600 oscuro:text-natillera-300 border-t border-natillera-200 oscuro:border-natillera-500/30">${{ formatMoney((rifa.socios || []).reduce((sum, s) => sum + (parseFloat(s.valorPagado) || 0), 0)) }}</td>
+                            <td class="py-2.5 px-3 border-t border-natillera-200 oscuro:border-natillera-500/30"></td>
                           </tr>
                         </tbody>
                       </table>
@@ -2705,25 +2705,25 @@
           <button
             type="button"
             @click="cerrarCapaDesglose"
-            class="flex items-center gap-2 text-natillera-600 hover:text-natillera-800 font-medium text-sm"
+            class="flex items-center gap-2 text-natillera-600 oscuro:text-natillera-300 hover:text-natillera-800 oscuro:hover:text-natillera-300 font-medium text-sm"
           >
             <ChevronLeftIcon class="w-4 h-4 flex-shrink-0" />
             Volver al desglose
           </button>
-          <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">{{ etiquetaDetalleOtros }} (por descripción de actividad)</h4>
+          <h4 class="text-sm font-semibold text-texto-medio uppercase tracking-wide">{{ etiquetaDetalleOtros }} (por descripción de actividad)</h4>
           <CargaCaja v-if="detalleOtros.loading" texto="Cargando utilidades por actividad" />
-          <div v-else-if="!detalleOtros.porActividad || detalleOtros.porActividad.length === 0" class="text-center py-8 text-gray-500 text-sm">
+          <div v-else-if="!detalleOtros.porActividad || detalleOtros.porActividad.length === 0" class="text-center py-8 text-texto-suave text-sm">
             No hay utilidades registradas en {{ etiquetaDetalleOtros.toLowerCase() }}.
           </div>
           <div v-else class="space-y-3">
             <div
               v-for="item in detalleOtros.porActividad"
               :key="item.id"
-              class="rounded-xl border border-gray-200 bg-white overflow-hidden"
+              class="rounded-xl border border-borde bg-superficie-tarjeta overflow-hidden"
             >
-              <div class="px-3 py-2.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between gap-2">
-                <p class="text-sm font-semibold text-gray-800 line-clamp-2">{{ item.descripcion }}</p>
-                <p class="text-sm font-semibold text-green-600 flex-shrink-0">${{ formatMoney(item.total) }}</p>
+              <div class="px-3 py-2.5 bg-superficie-suave border-b border-borde-suave flex items-center justify-between gap-2">
+                <p class="text-sm font-semibold text-texto line-clamp-2">{{ item.descripcion }}</p>
+                <p class="text-sm font-semibold text-green-600 oscuro:text-green-300 flex-shrink-0">${{ formatMoney(item.total) }}</p>
               </div>
               <div class="p-3">
                 <div v-if="item.pagos && item.pagos.length" class="mt-2">
@@ -2731,18 +2731,18 @@
                     type="button"
                     @click="toggleOtroDesplegable(item.id)"
                     class="flex items-center justify-between gap-2 w-full text-left py-2 px-2.5 -mx-0.5 rounded-lg border border-transparent transition-all duration-200"
-                    :class="otrosDesplegados[item.id] ? 'bg-slate-100/80 border-slate-200/60 text-slate-800' : 'hover:bg-slate-50/80 border-slate-100 text-gray-600 hover:text-slate-700 hover:border-slate-200/40'"
+                    :class="otrosDesplegados[item.id] ? 'bg-slate-100/80 oscuro:bg-superficie-hundida/80 border-slate-200/60 oscuro:border-borde/60 text-slate-800 oscuro:text-texto' : 'hover:bg-slate-50/80 oscuro:hover:bg-superficie-suave/80 border-slate-100 oscuro:border-borde-suave text-texto-secundario hover:text-slate-700 oscuro:hover:text-texto-medio hover:border-slate-200/40 oscuro:hover:border-borde/40'"
                   >
                     <span class="flex items-center gap-2">
                       <span class="text-xs font-semibold uppercase tracking-wide">Información de pagos</span>
-                      <span class="text-[11px] text-gray-500 font-normal normal-case">({{ item.pagos.length }} {{ item.pagos.length === 1 ? 'pago' : 'pagos' }})</span>
+                      <span class="text-[11px] text-texto-suave font-normal normal-case">({{ item.pagos.length }} {{ item.pagos.length === 1 ? 'pago' : 'pagos' }})</span>
                     </span>
-                    <ChevronDownIcon :class="['w-4 h-4 flex-shrink-0 transition-transform duration-200', otrosDesplegados[item.id] ? 'rotate-180 text-slate-600' : 'text-gray-400']" />
+                    <ChevronDownIcon :class="['w-4 h-4 flex-shrink-0 transition-transform duration-200', otrosDesplegados[item.id] ? 'rotate-180 text-slate-600 oscuro:text-texto-secundario' : 'text-texto-tenue']" />
                   </button>
-                  <div v-show="otrosDesplegados[item.id]" class="mt-2 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+                  <div v-show="otrosDesplegados[item.id]" class="mt-2 overflow-hidden rounded-lg border border-borde bg-superficie-tarjeta shadow-sm">
                     <table class="w-full text-xs">
                       <thead>
-                        <tr class="bg-gray-100 text-gray-600 font-semibold">
+                        <tr class="bg-superficie-hundida text-texto-secundario font-semibold">
                           <th class="text-left py-2 px-3">Socio</th>
                           <th class="text-right py-2 px-3">Valor</th>
                           <th class="text-right py-2 px-3">Fecha</th>
@@ -2752,17 +2752,17 @@
                         <tr
                           v-for="(s, i) in [...(item.pagos || [])].sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''))"
                           :key="i"
-                          class="border-t border-gray-100 transition-colors"
-                          :class="i % 2 === 0 ? 'bg-white' : 'bg-gray-100'"
+                          class="border-t border-borde-suave transition-colors"
+                          :class="i % 2 === 0 ? 'bg-superficie-tarjeta' : 'bg-superficie-hundida'"
                         >
-                          <td class="py-2 px-3 text-gray-700 truncate max-w-[140px]">{{ s.nombre }}</td>
-                          <td class="py-2 px-3 text-right tabular-nums font-medium text-green-600">${{ formatMoney(s.valorPagado) }}</td>
-                          <td class="py-2 px-3 text-right text-gray-500">{{ s.fechaPago ? formatDate(s.fechaPago) : '—' }}</td>
+                          <td class="py-2 px-3 text-texto-medio truncate max-w-[140px]">{{ s.nombre }}</td>
+                          <td class="py-2 px-3 text-right tabular-nums font-medium text-green-600 oscuro:text-green-300">${{ formatMoney(s.valorPagado) }}</td>
+                          <td class="py-2 px-3 text-right text-texto-suave">{{ s.fechaPago ? formatDate(s.fechaPago) : '—' }}</td>
                         </tr>
-                        <tr class="bg-slate-50/80 font-semibold text-gray-800">
-                          <td class="py-2.5 px-3 border-t border-slate-200">Total</td>
-                          <td class="py-2.5 px-3 text-right tabular-nums text-green-600 border-t border-slate-200">${{ formatMoney((item.pagos || []).reduce((sum, s) => sum + (parseFloat(s.valorPagado) || 0), 0)) }}</td>
-                          <td class="py-2.5 px-3 border-t border-slate-200"></td>
+                        <tr class="bg-slate-50/80 oscuro:bg-superficie-suave/80 font-semibold text-texto">
+                          <td class="py-2.5 px-3 border-t border-slate-200 oscuro:border-borde">Total</td>
+                          <td class="py-2.5 px-3 text-right tabular-nums text-green-600 oscuro:text-green-300 border-t border-slate-200 oscuro:border-borde">${{ formatMoney((item.pagos || []).reduce((sum, s) => sum + (parseFloat(s.valorPagado) || 0), 0)) }}</td>
+                          <td class="py-2.5 px-3 border-t border-slate-200 oscuro:border-borde"></td>
                         </tr>
                       </tbody>
                     </table>
@@ -2774,7 +2774,7 @@
                   que falta algo, cuando ahí nunca hubo nada que registrar. En una actividad
                   en curso sí informa: quiere decir que todavía no ha pagado nadie.
                 -->
-                <p v-else-if="item.estado !== 'liquidada'" class="text-xs text-gray-500 mt-1">
+                <p v-else-if="item.estado !== 'liquidada'" class="text-xs text-texto-suave mt-1">
                   Todavía no ha pagado ningún socio.
                 </p>
               </div>
@@ -2786,24 +2786,24 @@
           <button
             type="button"
             @click="cerrarCapaDesglose"
-            class="flex items-center gap-2 text-natillera-600 hover:text-natillera-800 font-medium text-sm"
+            class="flex items-center gap-2 text-natillera-600 oscuro:text-natillera-300 hover:text-natillera-800 oscuro:hover:text-natillera-300 font-medium text-sm"
           >
             <ChevronLeftIcon class="w-4 h-4 flex-shrink-0" />
             Volver al desglose
           </button>
           <CargaCaja v-if="detalleSanciones.loading" texto="Cargando multas" />
           <template v-else>
-            <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Multas pagadas (cuotas)</h4>
+            <h4 class="text-sm font-semibold text-texto-medio uppercase tracking-wide">Multas pagadas (cuotas)</h4>
             <p
               v-if="!detalleSanciones.lista || detalleSanciones.lista.length === 0"
-              class="text-center py-6 text-gray-500 text-sm rounded-xl border border-dashed border-gray-200 bg-gray-50/60"
+              class="text-center py-6 text-texto-suave text-sm rounded-xl border border-dashed border-borde bg-superficie-suave/60"
             >
               No hay multas pagadas en cuotas.
             </p>
-            <div v-else class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div v-else class="overflow-hidden rounded-xl border border-borde bg-superficie-tarjeta shadow-sm">
               <table class="w-full text-xs sm:text-sm">
                 <thead>
-                  <tr class="bg-gray-100 text-gray-600 font-semibold">
+                  <tr class="bg-superficie-hundida text-texto-secundario font-semibold">
                     <th class="text-left py-2.5 px-3">Socio</th>
                     <th class="text-right py-2.5 px-3">Valor sanción</th>
                     <th class="text-left py-2.5 px-3">Período</th>
@@ -2813,16 +2813,16 @@
                   <tr
                     v-for="(item, i) in detalleSanciones.lista"
                     :key="i"
-                    class="border-t border-gray-100"
-                    :class="i % 2 === 0 ? 'bg-white' : 'bg-gray-50/80'"
+                    class="border-t border-borde-suave"
+                    :class="i % 2 === 0 ? 'bg-superficie-tarjeta' : 'bg-superficie-suave/80'"
                   >
-                    <td class="py-2.5 px-3 text-gray-800 truncate max-w-[160px]">{{ item.socio }}</td>
-                    <td class="py-2.5 px-3 text-right tabular-nums font-semibold text-red-600">${{ formatMoney(item.valor) }}</td>
-                    <td class="py-2.5 px-3 text-gray-600">{{ item.periodo }}</td>
+                    <td class="py-2.5 px-3 text-texto truncate max-w-[160px]">{{ item.socio }}</td>
+                    <td class="py-2.5 px-3 text-right tabular-nums font-semibold text-red-600 oscuro:text-red-300">${{ formatMoney(item.valor) }}</td>
+                    <td class="py-2.5 px-3 text-texto-secundario">{{ item.periodo }}</td>
                   </tr>
-                  <tr class="border-t-2 border-gray-300 bg-gray-100 font-semibold text-gray-800">
+                  <tr class="border-t-2 border-borde-fuerte bg-superficie-hundida font-semibold text-texto">
                     <td class="py-2.5 px-3">Total</td>
-                    <td class="py-2.5 px-3 text-right tabular-nums text-red-600">${{ formatMoney(detalleSanciones.lista.reduce((s, it) => s + (it.valor || 0), 0)) }}</td>
+                    <td class="py-2.5 px-3 text-right tabular-nums text-red-600 oscuro:text-red-300">${{ formatMoney(detalleSanciones.lista.reduce((s, it) => s + (it.valor || 0), 0)) }}</td>
                     <td class="py-2.5 px-3"></td>
                   </tr>
                 </tbody>
@@ -2836,13 +2836,13 @@
               class="space-y-2 pt-2"
             >
               <div class="flex items-center justify-between gap-2 flex-wrap">
-                <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Sanciones por retiro de socio</h4>
-                <span class="text-[11px] text-gray-500">Aplicadas al desactivar al socio</span>
+                <h4 class="text-sm font-semibold text-texto-medio uppercase tracking-wide">Sanciones por retiro de socio</h4>
+                <span class="text-[11px] text-texto-suave">Aplicadas al desactivar al socio</span>
               </div>
-              <div class="overflow-hidden rounded-xl border border-amber-200 bg-amber-50/40 shadow-sm">
+              <div class="overflow-hidden rounded-xl border border-amber-200 oscuro:border-amber-500/30 bg-amber-50/40 oscuro:bg-amber-500/15 shadow-sm">
                 <table class="w-full text-xs sm:text-sm">
                   <thead>
-                    <tr class="bg-amber-100/80 text-amber-900 font-semibold">
+                    <tr class="bg-amber-100/80 oscuro:bg-amber-500/15 text-amber-900 oscuro:text-amber-300 font-semibold">
                       <th class="text-left py-2.5 px-3">Socio</th>
                       <th class="text-right py-2.5 px-3">Valor</th>
                     </tr>
@@ -2851,15 +2851,15 @@
                     <tr
                       v-for="(item, i) in detalleSanciones.sancionesRetiro"
                       :key="'r-' + i"
-                      class="border-t border-amber-100"
-                      :class="i % 2 === 0 ? 'bg-white' : 'bg-amber-50/40'"
+                      class="border-t border-amber-100 oscuro:border-amber-500/30"
+                      :class="i % 2 === 0 ? 'bg-superficie-tarjeta' : 'bg-amber-50/40 oscuro:bg-amber-500/15'"
                     >
-                      <td class="py-2.5 px-3 text-gray-800 truncate max-w-[200px]">{{ item.socio }}</td>
-                      <td class="py-2.5 px-3 text-right tabular-nums font-semibold text-red-600">${{ formatMoney(item.valor) }}</td>
+                      <td class="py-2.5 px-3 text-texto truncate max-w-[200px]">{{ item.socio }}</td>
+                      <td class="py-2.5 px-3 text-right tabular-nums font-semibold text-red-600 oscuro:text-red-300">${{ formatMoney(item.valor) }}</td>
                     </tr>
-                    <tr class="border-t-2 border-amber-300 bg-amber-100/80 font-semibold text-amber-900">
+                    <tr class="border-t-2 border-amber-300 oscuro:border-amber-500/30 bg-amber-100/80 oscuro:bg-amber-500/15 font-semibold text-amber-900 oscuro:text-amber-300">
                       <td class="py-2.5 px-3">Total retiros</td>
-                      <td class="py-2.5 px-3 text-right tabular-nums text-red-700">${{ formatMoney(detalleSanciones.totalRetiro) }}</td>
+                      <td class="py-2.5 px-3 text-right tabular-nums text-red-700 oscuro:text-red-300">${{ formatMoney(detalleSanciones.totalRetiro) }}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -2869,17 +2869,17 @@
             <!-- Total combinado: ayuda a conciliar con el indicador del desglose -->
             <div
               v-if="((detalleSanciones.lista || []).length > 0) && ((detalleSanciones.sancionesRetiro || []).length > 0)"
-              class="rounded-xl border border-natillera-200 bg-natillera-50 p-3 flex items-center justify-between gap-3"
+              class="rounded-xl border border-natillera-200 oscuro:border-natillera-500/30 bg-natillera-50 oscuro:bg-natillera-500/15 p-3 flex items-center justify-between gap-3"
             >
-              <p class="text-sm font-semibold text-natillera-800">Total general (multas + retiros)</p>
-              <p class="text-base font-bold text-natillera-700 tabular-nums">
+              <p class="text-sm font-semibold text-natillera-800 oscuro:text-natillera-300">Total general (multas + retiros)</p>
+              <p class="text-base font-bold text-natillera-700 oscuro:text-natillera-300 tabular-nums">
                 ${{ formatMoney(detalleSanciones.lista.reduce((s, it) => s + (it.valor || 0), 0) + (detalleSanciones.totalRetiro || 0)) }}
               </p>
             </div>
 
             <p
               v-if="(detalleSanciones.lista || []).length === 0 && (detalleSanciones.sancionesRetiro || []).length === 0"
-              class="text-center py-2 text-gray-500 text-sm"
+              class="text-center py-2 text-texto-suave text-sm"
             >
               No hay sanciones registradas.
             </p>
@@ -2890,30 +2890,30 @@
           <button
             type="button"
             @click="cerrarCapaDesglose"
-            class="flex items-center gap-2 text-natillera-600 hover:text-natillera-800 font-medium text-sm"
+            class="flex items-center gap-2 text-natillera-600 oscuro:text-natillera-300 hover:text-natillera-800 oscuro:hover:text-natillera-300 font-medium text-sm"
           >
             <ChevronLeftIcon class="w-4 h-4 flex-shrink-0" />
             Volver al desglose
           </button>
-          <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Intereses por préstamo</h4>
+          <h4 class="text-sm font-semibold text-texto-medio uppercase tracking-wide">Intereses por préstamo</h4>
           <!--
             La regla no es obvia y cambia la cifra de cada fila, así que se dice aquí en vez
             de dejar que parezca que unos préstamos rinden más que otros.
           -->
-          <p class="-mt-2 text-xs leading-snug text-gray-500">
-            En los préstamos <span class="font-semibold text-amber-700">anticipados</span> el
+          <p class="-mt-2 text-xs leading-snug text-texto-suave">
+            En los préstamos <span class="font-semibold text-amber-700 oscuro:text-amber-300">anticipados</span> el
             interés entra completo al generarlos. En los
-            <span class="font-semibold text-sky-700">normales</span> entra a medida que se
+            <span class="font-semibold text-sky-700 oscuro:text-sky-300">normales</span> entra a medida que se
             paga cada cuota, así que aquí solo aparece lo ya cobrado.
           </p>
           <CargaCaja v-if="detallePrestamos.loading" texto="Cargando intereses de préstamos" />
-          <div v-else-if="!detallePrestamos.lista || detallePrestamos.lista.length === 0" class="text-center py-8 text-gray-500 text-sm">
+          <div v-else-if="!detallePrestamos.lista || detallePrestamos.lista.length === 0" class="text-center py-8 text-texto-suave text-sm">
             No hay intereses de préstamos registrados.
           </div>
-          <div v-else class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div v-else class="overflow-hidden rounded-xl border border-borde bg-superficie-tarjeta shadow-sm">
             <table class="w-full text-xs sm:text-sm">
               <thead>
-                <tr class="bg-gray-100 text-gray-600 font-semibold">
+                <tr class="bg-superficie-hundida text-texto-secundario font-semibold">
                   <th class="text-left py-2.5 px-3">Socio</th>
                   <th class="text-right py-2.5 px-3">Valor préstamo</th>
                   <th class="text-left py-2.5 px-3">Fecha</th>
@@ -2925,30 +2925,30 @@
                 <tr
                   v-for="(item, i) in detallePrestamos.lista"
                   :key="i"
-                  class="border-t border-gray-100"
-                  :class="i % 2 === 0 ? 'bg-white' : 'bg-gray-50/80'"
+                  class="border-t border-borde-suave"
+                  :class="i % 2 === 0 ? 'bg-superficie-tarjeta' : 'bg-superficie-suave/80'"
                 >
-                  <td class="py-2.5 px-3" :class="item.esMora ? 'font-semibold text-gray-600 italic' : 'text-gray-800'">
+                  <td class="py-2.5 px-3" :class="item.esMora ? 'font-semibold text-texto-secundario italic' : 'text-texto'">
                     <span>{{ item.socio }}</span>
                     <span
                       v-if="!item.esMora"
                       class="ml-1.5 inline-block rounded-full px-1.5 py-0.5 align-middle text-[10px] font-semibold"
-                      :class="item.anticipado ? 'bg-amber-100 text-amber-800' : 'bg-sky-100 text-sky-800'"
+                      :class="item.anticipado ? 'bg-amber-100 oscuro:bg-amber-500/15 text-amber-800 oscuro:text-amber-300' : 'bg-sky-100 oscuro:bg-sky-500/15 text-sky-800 oscuro:text-sky-300'"
                     >{{ item.anticipado ? 'Anticipado' : 'Normal' }}</span>
                   </td>
-                  <td class="py-2.5 px-3 text-right tabular-nums font-medium text-gray-800">
+                  <td class="py-2.5 px-3 text-right tabular-nums font-medium text-texto">
                     <span v-if="item.valorPrestamo != null">${{ formatMoney(item.valorPrestamo) }}</span>
-                    <span v-else class="text-gray-400">—</span>
+                    <span v-else class="text-texto-tenue">—</span>
                   </td>
-                  <td class="py-2.5 px-3 text-gray-600">{{ item.fecha ? formatDate(item.fecha) : '—' }}</td>
-                  <td class="py-2.5 px-3 text-right tabular-nums font-semibold text-green-600">${{ formatMoney(item.intereses) }}</td>
-                  <td class="py-2.5 px-3 text-right tabular-nums text-gray-700">{{ item.porcentaje != null ? item.porcentaje + '%' : '—' }}</td>
+                  <td class="py-2.5 px-3 text-texto-secundario">{{ item.fecha ? formatDate(item.fecha) : '—' }}</td>
+                  <td class="py-2.5 px-3 text-right tabular-nums font-semibold text-green-600 oscuro:text-green-300">${{ formatMoney(item.intereses) }}</td>
+                  <td class="py-2.5 px-3 text-right tabular-nums text-texto-medio">{{ item.porcentaje != null ? item.porcentaje + '%' : '—' }}</td>
                 </tr>
-                <tr class="border-t-2 border-gray-300 bg-gray-100 font-semibold text-gray-800">
+                <tr class="border-t-2 border-borde-fuerte bg-superficie-hundida font-semibold text-texto">
                   <td class="py-2.5 px-3">Total</td>
                   <td class="py-2.5 px-3"></td>
                   <td class="py-2.5 px-3"></td>
-                  <td class="py-2.5 px-3 text-right tabular-nums text-green-600">${{ formatMoney(detallePrestamos.lista.reduce((s, it) => s + (it.intereses || 0), 0)) }}</td>
+                  <td class="py-2.5 px-3 text-right tabular-nums text-green-600 oscuro:text-green-300">${{ formatMoney(detallePrestamos.lista.reduce((s, it) => s + (it.intereses || 0), 0)) }}</td>
                   <td class="py-2.5 px-3"></td>
                 </tr>
               </tbody>
@@ -2960,20 +2960,20 @@
           <button
             type="button"
             @click="cerrarCapaDesglose"
-            class="flex items-center gap-2 text-natillera-600 hover:text-natillera-800 font-medium text-sm"
+            class="flex items-center gap-2 text-natillera-600 oscuro:text-natillera-300 hover:text-natillera-800 oscuro:hover:text-natillera-300 font-medium text-sm"
           >
             <ChevronLeftIcon class="w-4 h-4 flex-shrink-0" />
             Volver al desglose
           </button>
-          <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Ingresos y egresos a utilidades</h4>
+          <h4 class="text-sm font-semibold text-texto-medio uppercase tracking-wide">Ingresos y egresos a utilidades</h4>
           <CargaCaja v-if="detalleAjustes.loading" texto="Cargando movimientos de utilidades" />
-          <div v-else-if="detalleAjustes.lista.length === 0" class="text-center py-8 text-gray-500 text-sm">
+          <div v-else-if="detalleAjustes.lista.length === 0" class="text-center py-8 text-texto-suave text-sm">
             No hay movimientos registrados contra utilidades.
           </div>
-          <div v-else class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div v-else class="overflow-hidden rounded-xl border border-borde bg-superficie-tarjeta shadow-sm">
             <table class="w-full text-xs sm:text-sm">
               <thead>
-                <tr class="bg-gray-100 text-left font-semibold text-gray-600">
+                <tr class="bg-superficie-hundida text-left font-semibold text-texto-secundario">
                   <th class="px-3 py-2.5">Concepto</th>
                   <th class="px-3 py-2.5">Fecha</th>
                   <th class="hidden px-3 py-2.5 sm:table-cell">Forma</th>
@@ -2984,24 +2984,24 @@
                 <tr
                   v-for="(item, i) in detalleAjustes.lista"
                   :key="item.id"
-                  class="border-t border-gray-100"
-                  :class="i % 2 === 0 ? 'bg-white' : 'bg-gray-50/80'"
+                  class="border-t border-borde-suave"
+                  :class="i % 2 === 0 ? 'bg-superficie-tarjeta' : 'bg-superficie-suave/80'"
                 >
-                  <td class="px-3 py-2.5 text-gray-800">{{ item.descripcion }}</td>
-                  <td class="whitespace-nowrap px-3 py-2.5 text-gray-600">{{ item.fecha ? formatDate(item.fecha) : '—' }}</td>
-                  <td class="hidden px-3 py-2.5 text-gray-500 sm:table-cell">{{ item.formaPago }}</td>
+                  <td class="px-3 py-2.5 text-texto">{{ item.descripcion }}</td>
+                  <td class="whitespace-nowrap px-3 py-2.5 text-texto-secundario">{{ item.fecha ? formatDate(item.fecha) : '—' }}</td>
+                  <td class="hidden px-3 py-2.5 text-texto-suave sm:table-cell">{{ item.formaPago }}</td>
                   <td
                     class="whitespace-nowrap px-3 py-2.5 text-right font-semibold tabular-nums"
-                    :class="item.esIngreso ? 'text-green-600' : 'text-red-600'"
+                    :class="item.esIngreso ? 'text-green-600 oscuro:text-green-300' : 'text-red-600 oscuro:text-red-300'"
                   >
                     {{ item.esIngreso ? '+' : '−' }} ${{ formatMoney(item.monto) }}
                   </td>
                 </tr>
-                <tr class="border-t-2 border-gray-300 bg-gray-100 font-semibold text-gray-800">
+                <tr class="border-t-2 border-borde-fuerte bg-superficie-hundida font-semibold text-texto">
                   <td class="px-3 py-2.5">Neto</td>
                   <td class="px-3 py-2.5"></td>
                   <td class="hidden px-3 py-2.5 sm:table-cell"></td>
-                  <td class="px-3 py-2.5 text-right tabular-nums text-natillera-700">
+                  <td class="px-3 py-2.5 text-right tabular-nums text-natillera-700 oscuro:text-natillera-300">
                     ${{ formatMoney(detalleAjustes.lista.reduce((s, it) => s + (it.esIngreso ? it.monto : -it.monto), 0)) }}
                   </td>
                 </tr>
@@ -3014,39 +3014,39 @@
           <button
             type="button"
             @click="cerrarCapaDesglose"
-            class="flex items-center gap-2 text-natillera-600 hover:text-natillera-800 font-medium text-sm"
+            class="flex items-center gap-2 text-natillera-600 oscuro:text-natillera-300 hover:text-natillera-800 oscuro:hover:text-natillera-300 font-medium text-sm"
           >
             <ChevronLeftIcon class="w-4 h-4 flex-shrink-0" />
             Volver al desglose
           </button>
-          <div class="rounded-xl border-2 border-dashed border-natillera-200 bg-natillera-50/50 p-8 text-center">
-            <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-natillera-100 text-natillera-500 mb-4">
+          <div class="rounded-xl border-2 border-dashed border-natillera-200 oscuro:border-natillera-500/30 bg-natillera-50/50 oscuro:bg-natillera-500/15 p-8 text-center">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-natillera-100 oscuro:bg-natillera-500/15 text-natillera-500 mb-4">
               <SparklesIcon class="w-7 h-7" />
             </div>
-            <h4 class="text-lg font-semibold text-natillera-800 mb-1">{{ labelConceptoEnDesarrollo(conceptoEnDesarrollo) }}</h4>
-            <p class="text-gray-600 text-sm mb-3">Este desglose está en el taller.</p>
-            <p class="text-gray-500 text-xs max-w-xs mx-auto">Pronto podrás ver aquí el detalle por mes, quién pagó y cuánto. Mientras tanto, el total ya lo tienes en la lista. 🛠️</p>
+            <h4 class="text-lg font-semibold text-natillera-800 oscuro:text-natillera-300 mb-1">{{ labelConceptoEnDesarrollo(conceptoEnDesarrollo) }}</h4>
+            <p class="text-texto-secundario text-sm mb-3">Este desglose está en el taller.</p>
+            <p class="text-texto-suave text-xs max-w-xs mx-auto">Pronto podrás ver aquí el detalle por mes, quién pagó y cuánto. Mientras tanto, el total ya lo tienes en la lista. 🛠️</p>
           </div>
         </div>
         <!-- Vista normal: total + por tipo + egresos/ingresos -->
         <template v-else>
-        <div class="rounded-xl bg-natillera-50 border border-natillera-200 p-4 mb-5">
+        <div class="rounded-xl bg-natillera-50 oscuro:bg-natillera-500/15 border border-natillera-200 oscuro:border-natillera-500/30 p-4 mb-5">
           <div class="flex items-center gap-2 mb-1">
-            <p class="text-sm font-semibold text-natillera-800">Total utilidades (neto)</p>
+            <p class="text-sm font-semibold text-natillera-800 oscuro:text-natillera-300">Total utilidades (neto)</p>
             <span
-              class="inline-flex text-natillera-500 hover:text-natillera-700 cursor-help"
+              class="inline-flex text-natillera-500 hover:text-natillera-700 oscuro:hover:text-natillera-300 cursor-help"
               title="Se calcula: Utilidades recogidas (suma de todos los tipos) − Egresos de utilidades + Ingresos a utilidades."
             >
               <InformationCircleIcon class="w-4 h-4 flex-shrink-0" />
             </span>
           </div>
-          <p class="text-2xl font-bold text-natillera-600 tabular-nums">
+          <p class="text-2xl font-bold text-natillera-600 oscuro:text-natillera-300 tabular-nums">
             ${{ formatMoney(Math.max(0, (estadisticas.utilidadesRecogidas || 0) - (estadisticas.egresosUtilidades ?? 0) + (estadisticas.ingresosUtilidades ?? 0))) }}
           </p>
         </div>
         <!-- Por tipo -->
         <div v-if="(estadisticas.utilidadesDesglose || []).length > 0" class="space-y-3">
-          <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Por tipo</h4>
+          <h4 class="text-sm font-semibold text-texto-medio uppercase tracking-wide">Por tipo</h4>
           <div class="space-y-2">
             <div
               v-for="item in estadisticas.utilidadesDesglose"
@@ -3055,34 +3055,34 @@
               tabindex="0"
               @click="abrirConceptoPorTipo(item)"
               @keydown.enter="abrirConceptoPorTipo(item)"
-              class="flex items-center justify-between gap-3 py-2.5 px-3 rounded-xl border border-gray-100 bg-gray-50 hover:bg-natillera-50/50 hover:border-natillera-200/50 transition-colors cursor-pointer"
+              class="flex items-center justify-between gap-3 py-2.5 px-3 rounded-xl border border-borde-suave bg-superficie-suave hover:bg-natillera-50/50 oscuro:hover:bg-natillera-500/15 hover:border-natillera-200/50 oscuro:hover:border-natillera-500/30 transition-colors cursor-pointer"
             >
               <div class="min-w-0">
-                <p class="font-medium text-gray-800">{{ item.label }}</p>
-                <p v-if="item.desc" class="text-xs text-gray-500 mt-0.5">{{ item.desc }}</p>
+                <p class="font-medium text-texto">{{ item.label }}</p>
+                <p v-if="item.desc" class="text-xs text-texto-suave mt-0.5">{{ item.desc }}</p>
               </div>
               <div class="flex items-center gap-1.5">
-                <span class="font-bold text-natillera-600 tabular-nums whitespace-nowrap">${{ formatMoney(item.value || 0) }}</span>
-                <ChevronRightIcon class="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <span class="font-bold text-natillera-600 oscuro:text-natillera-300 tabular-nums whitespace-nowrap">${{ formatMoney(item.value || 0) }}</span>
+                <ChevronRightIcon class="w-4 h-4 text-texto-tenue flex-shrink-0" />
               </div>
             </div>
           </div>
         </div>
         <!-- Egresos e ingresos de utilidades (solo si hay algún valor) -->
-        <div v-if="(estadisticas.egresosUtilidades ?? 0) > 0 || (estadisticas.ingresosUtilidades ?? 0) > 0" class="mt-4 pt-4 border-t border-gray-200 space-y-2">
-          <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">Egresos e ingresos</h4>
+        <div v-if="(estadisticas.egresosUtilidades ?? 0) > 0 || (estadisticas.ingresosUtilidades ?? 0) > 0" class="mt-4 pt-4 border-t border-borde space-y-2">
+          <h4 class="text-sm font-semibold text-texto-medio uppercase tracking-wide mb-2">Egresos e ingresos</h4>
           <!-- Pulsables, como el resto del desglose: la cifra sola no deja cuadrar nada. -->
           <div
             v-if="(estadisticas.egresosUtilidades ?? 0) > 0"
             role="button"
             tabindex="0"
-            class="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-red-100 bg-red-50 px-3 py-2 transition-colors hover:border-red-200 hover:bg-red-100/70"
+            class="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-red-100 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 px-3 py-2 transition-colors hover:border-red-200 oscuro:hover:border-red-500/30 hover:bg-red-100/70 oscuro:hover:bg-red-500/15"
             @click="cargarDetalleAjustes()"
             @keydown.enter="cargarDetalleAjustes()"
           >
-            <p class="text-sm font-medium text-red-800">Egresos de utilidades</p>
+            <p class="text-sm font-medium text-red-800 oscuro:text-red-300">Egresos de utilidades</p>
             <div class="flex items-center gap-1.5">
-              <span class="font-bold text-red-600 tabular-nums">− ${{ formatMoney(estadisticas.egresosUtilidades) }}</span>
+              <span class="font-bold text-red-600 oscuro:text-red-300 tabular-nums">− ${{ formatMoney(estadisticas.egresosUtilidades) }}</span>
               <ChevronRightIcon class="h-4 w-4 flex-shrink-0 text-red-400" />
             </div>
           </div>
@@ -3090,19 +3090,19 @@
             v-if="(estadisticas.ingresosUtilidades ?? 0) > 0"
             role="button"
             tabindex="0"
-            class="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-green-100 bg-green-50 px-3 py-2 transition-colors hover:border-green-200 hover:bg-green-100/70"
+            class="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-green-100 oscuro:border-green-500/30 bg-green-50 oscuro:bg-green-500/15 px-3 py-2 transition-colors hover:border-green-200 oscuro:hover:border-green-500/30 hover:bg-green-100/70 oscuro:hover:bg-green-500/15"
             @click="cargarDetalleAjustes()"
             @keydown.enter="cargarDetalleAjustes()"
           >
-            <p class="text-sm font-medium text-green-800">Ingresos a utilidades</p>
+            <p class="text-sm font-medium text-green-800 oscuro:text-green-300">Ingresos a utilidades</p>
             <div class="flex items-center gap-1.5">
-              <span class="font-bold text-green-600 tabular-nums">+ ${{ formatMoney(estadisticas.ingresosUtilidades) }}</span>
+              <span class="font-bold text-green-600 oscuro:text-green-300 tabular-nums">+ ${{ formatMoney(estadisticas.ingresosUtilidades) }}</span>
               <ChevronRightIcon class="h-4 w-4 flex-shrink-0 text-green-400" />
             </div>
           </div>
         </div>
         <!-- Sin desglose -->
-        <div v-if="!(estadisticas.utilidadesDesglose || []).length" class="text-center py-8 text-gray-500">
+        <div v-if="!(estadisticas.utilidadesDesglose || []).length" class="text-center py-8 text-texto-suave">
           <SparklesIcon class="w-12 h-12 mx-auto mb-2 text-natillera-200" />
           <p>No hay utilidades registradas aún.</p>
         </div>
@@ -3117,15 +3117,15 @@
       align="bottom"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="32rem"
       @close="cerrarModalTodosMovimientos"
     >
       <!-- Cabecera móvil: icono + títulos + X (skill natillerapp-modals) -->
       <div class="sm:hidden flex-shrink-0 bg-[#1B5E37]">
         <div class="flex items-center gap-3 pl-4 pr-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] min-h-[4.2rem]">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm"><!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <ListBulletIcon class="h-5 w-5 text-[#1B5E37]" />
           </div>
           <div class="min-w-0 flex-1 py-0.5 pr-1 text-left">
@@ -3147,7 +3147,7 @@
         <div class="flex items-start pt-[max(0.5rem,env(safe-area-inset-top))] pl-4 pr-3 pb-5">
           <div class="w-11 shrink-0" aria-hidden="true" />
           <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
-            <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm">
+            <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm"><!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
               <ListBulletIcon class="h-6 w-6 text-[#1B5E37]" />
             </div>
             <h3 class="font-display text-lg font-bold leading-tight text-white">Todos los movimientos</h3>
@@ -3164,11 +3164,11 @@
         </div>
       </div>
 
-      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white [-webkit-overflow-scrolling:touch]">
+      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-superficie-tarjeta [-webkit-overflow-scrolling:touch]">
         <!-- Filtros: chips sticky arriba -->
-        <div class="sticky top-0 z-[1] bg-white/95 border-b border-gray-100 px-4 py-3 sm:px-6">
+        <div class="sticky top-0 z-[1] bg-superficie-tarjeta/95 border-b border-borde-suave px-4 py-3 sm:px-6">
           <div class="flex items-center gap-2 overflow-x-auto">
-            <FunnelIcon class="h-4 w-4 shrink-0 text-gray-400" aria-hidden="true" />
+            <FunnelIcon class="h-4 w-4 shrink-0 text-texto-tenue" aria-hidden="true" />
             <div class="flex items-center gap-2">
               <button
                 v-for="f in filtrosMovimientos"
@@ -3178,8 +3178,8 @@
                 :class="[
                   'px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold border transition-colors touch-manipulation min-h-[32px]',
                   filtroMovimientosPeriodo === f.value
-                    ? 'bg-[#1B5E37] text-white border-[#1B5E37]'
-                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                    ? 'bg-[#1B5E37] text-white border-[#1B5E37] oscuro:border-marca-tinta'
+                    : 'bg-superficie-tarjeta text-texto-secundario border-borde hover:bg-superficie-suave'
                 ]"
               >{{ f.label }}</button>
             </div>
@@ -3188,32 +3188,32 @@
 
         <!-- Lista -->
         <div class="px-4 py-4 sm:px-6 sm:py-5">
-          <div v-if="movimientosFiltrados.length === 0" class="text-center py-10 text-sm text-gray-500">
-            <ListBulletIcon class="w-10 h-10 mx-auto mb-2 text-gray-300" />
+          <div v-if="movimientosFiltrados.length === 0" class="text-center py-10 text-sm text-texto-suave">
+            <ListBulletIcon class="w-10 h-10 mx-auto mb-2 text-gray-300 oscuro:text-texto-tenue" />
             <p>No hay movimientos en este período.</p>
           </div>
-          <ul v-else class="divide-y divide-gray-100">
+          <ul v-else class="divide-y divide-borde-suave">
             <li
               v-for="mov in movimientosFiltrados"
               :key="mov.id"
               class="py-3 flex items-start gap-3"
             >
               <div class="min-w-0 flex-1">
-                <p class="font-medium text-gray-800 truncate">{{ mov.nombre }}</p>
-                <p class="text-xs text-gray-500 truncate mt-0.5">{{ mov.periodo }}</p>
+                <p class="font-medium text-texto truncate">{{ mov.nombre }}</p>
+                <p class="text-xs text-texto-suave truncate mt-0.5">{{ mov.periodo }}</p>
                 <div
                   v-if="mov.fechaPago || mov.formaPago"
-                  class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-gray-500"
+                  class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-texto-suave"
                 >
                   <span v-if="mov.fechaPago" class="inline-flex items-center gap-1">
-                    <CalendarIcon class="h-3 w-3 text-gray-400" aria-hidden="true" />
+                    <CalendarIcon class="h-3 w-3 text-texto-tenue" aria-hidden="true" />
                     {{ formatDate(mov.fechaPago) }}
                   </span>
                   <span
                     v-if="mov.formaPago"
-                    class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium"
+                    class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-superficie-hundida text-texto-secundario font-medium"
                   >
-                    <BanknotesIcon class="h-3 w-3 text-gray-400" aria-hidden="true" />
+                    <BanknotesIcon class="h-3 w-3 text-texto-tenue" aria-hidden="true" />
                     {{ formaPagoLabel(mov.formaPago) }}
                   </span>
                 </div>
@@ -3221,7 +3221,7 @@
               <div class="text-right shrink-0">
                 <p
                   class="font-semibold tabular-nums whitespace-nowrap"
-                  :class="Number(mov.monto) < 0 ? 'text-rose-700' : 'text-gray-800'"
+                  :class="Number(mov.monto) < 0 ? 'text-rose-700 oscuro:text-rose-300' : 'text-texto'"
                 >${{ formatMoney(mov.monto) }}</p>
                 <span
                   class="inline-block mt-1"
@@ -3244,7 +3244,7 @@
       :z-index="9998"
       align="bottom"
       overlay-class="fixed inset-0 z-[9998] flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="relative w-full sm:max-w-md max-h-[90vh] max-h-[85dvh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-[#166534]/20"
+      card-class="relative w-full sm:max-w-md max-h-[90vh] max-h-[85dvh] bg-superficie-tarjeta rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-[#166534]/20 oscuro:border-marca-tinta/20"
       card-max-width="28rem"
       @close="cerrarRecordatorioModal"
     >
@@ -3272,22 +3272,22 @@
               <article
                 v-for="(item, idx) in listRecordatorios"
                 :key="item.id"
-                class="flex overflow-hidden rounded-lg border border-gray-200/90 bg-white shadow-sm"
+                class="flex overflow-hidden rounded-lg border border-borde/90 bg-superficie-tarjeta shadow-sm"
               >
                 <div class="w-1 shrink-0 bg-[#166534]" aria-hidden="true" />
                 <div class="flex min-w-0 flex-1 flex-col gap-1 p-3">
-                  <p class="text-xs font-semibold leading-relaxed text-gray-900 whitespace-pre-wrap sm:text-[13px]">
+                  <p class="text-xs font-semibold leading-relaxed text-texto-fuerte whitespace-pre-wrap sm:text-[13px]">
                     {{ item.texto }}
                   </p>
-                  <div class="flex items-center gap-1 text-[11px] font-medium text-gray-500 sm:text-xs">
-                    <CalendarDaysIcon class="h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden="true" />
+                  <div class="flex items-center gap-1 text-[11px] font-medium text-texto-suave sm:text-xs">
+                    <CalendarDaysIcon class="h-3.5 w-3.5 shrink-0 text-texto-tenue" aria-hidden="true" />
                     <span>Pendiente</span>
                   </div>
-                  <div class="mt-0.5 flex items-center justify-end gap-0 border-t border-gray-100 pt-1">
+                  <div class="mt-0.5 flex items-center justify-end gap-0 border-t border-borde-suave pt-1">
                     <button
                       type="button"
                       @click="abrirRecordatorioParaEditar(idx)"
-                      class="inline-flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 [-webkit-tap-highlight-color:transparent]"
+                      class="inline-flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-md text-texto-suave transition-colors hover:bg-superficie-hundida hover:text-texto-medio [-webkit-tap-highlight-color:transparent]"
                       title="Editar"
                       aria-label="Editar recordatorio"
                     >
@@ -3296,7 +3296,7 @@
                     <button
                       type="button"
                       @click="eliminarRecordatorio(item.id)"
-                      class="inline-flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-md text-red-600 transition-colors hover:bg-red-50 [-webkit-tap-highlight-color:transparent]"
+                      class="inline-flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-md text-red-600 oscuro:text-red-300 transition-colors hover:bg-red-50 oscuro:hover:bg-red-500/15 [-webkit-tap-highlight-color:transparent]"
                       title="Eliminar"
                       aria-label="Eliminar recordatorio"
                     >
@@ -3308,12 +3308,12 @@
             </div>
             <p
               v-else
-              class="rounded-lg border border-emerald-100/80 bg-emerald-50/50 px-2 py-4 text-center text-xs text-gray-800 sm:text-sm"
+              class="rounded-lg border border-emerald-100/80 oscuro:border-emerald-500/30 bg-emerald-50/50 oscuro:bg-emerald-500/15 px-2 py-4 text-center text-xs text-texto sm:text-sm"
             >
-              Aún no tienes recordatorios. Pulsa <span class="font-semibold text-[#124d26]">Agregar recordatorio</span> para crear uno.
+              Aún no tienes recordatorios. Pulsa <span class="font-semibold text-[#124d26] oscuro:text-marca-tinta">Agregar recordatorio</span> para crear uno.
             </p>
           </div>
-          <div class="flex flex-shrink-0 flex-row gap-2 border-t border-emerald-100/90 bg-emerald-50/95 p-3 pb-[calc(max(0.75rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] sm:gap-3 sm:p-4 sm:pb-[calc(1rem+var(--tapado-inferior,0px))]">
+          <div class="flex flex-shrink-0 flex-row gap-2 border-t border-emerald-100/90 oscuro:border-emerald-500/30 bg-emerald-50/95 oscuro:bg-emerald-500/15 p-3 pb-[calc(max(0.75rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] sm:gap-3 sm:p-4 sm:pb-[calc(1rem+var(--tapado-inferior,0px))]">
             <button
               type="button"
               @click="cerrarRecordatorioModal"
@@ -3327,9 +3327,9 @@
             <button
               type="button"
               @click="abrirRecordatorioParaEditar(-1)"
-              class="inline-flex min-h-[42px] min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full border border-gray-200/90 bg-white px-3 py-2 text-sm font-semibold text-gray-950 shadow-sm transition hover:bg-emerald-50/80 sm:gap-2 sm:px-4"
+              class="inline-flex min-h-[42px] min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full border border-borde/90 bg-superficie-tarjeta px-3 py-2 text-sm font-semibold text-gray-950 oscuro:text-texto-fuerte shadow-sm transition hover:bg-emerald-50/80 oscuro:hover:bg-emerald-500/15 sm:gap-2 sm:px-4"
             >
-              <PlusIcon class="h-5 w-5 shrink-0 text-[#124d26]" />
+              <PlusIcon class="h-5 w-5 shrink-0 text-[#124d26] oscuro:text-marca-tinta" />
               <span class="text-center leading-tight">Agregar recordatorio</span>
             </button>
           </div>
@@ -3339,15 +3339,15 @@
           <div
             class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch]"
           >
-            <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-[#124d26]">Tu nota</label>
+            <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-[#124d26] oscuro:text-marca-tinta">Tu nota</label>
             <textarea
               v-model="recordatorioEdicion"
               rows="5"
-              class="w-full rounded-lg border border-emerald-200 bg-emerald-50/40 p-2.5 text-base sm:text-sm text-gray-900 placeholder-gray-500 focus:border-[#166534] focus:ring-2 focus:ring-[#166534]"
+              class="w-full rounded-lg border border-emerald-200 oscuro:border-emerald-500/30 bg-emerald-50/40 oscuro:bg-emerald-500/15 p-2.5 text-base sm:text-sm text-texto-fuerte placeholder-texto-suave focus:border-[#166534] oscuro:focus:border-marca-tinta focus:ring-2 focus:ring-[#166534]"
               placeholder="Escribe aquí tu nota o recordatorio..."
             />
           </div>
-          <div class="flex flex-shrink-0 flex-row gap-2 border-t border-emerald-100/90 bg-emerald-50/95 p-3 pb-[calc(max(0.75rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] sm:gap-3 sm:p-4 sm:pb-[calc(1rem+var(--tapado-inferior,0px))]">
+          <div class="flex flex-shrink-0 flex-row gap-2 border-t border-emerald-100/90 oscuro:border-emerald-500/30 bg-emerald-50/95 oscuro:bg-emerald-500/15 p-3 pb-[calc(max(0.75rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] sm:gap-3 sm:p-4 sm:pb-[calc(1rem+var(--tapado-inferior,0px))]">
             <button
               type="button"
               @click="guardarRecordatorio"
@@ -3359,7 +3359,7 @@
             <button
               type="button"
               @click="cancelarEdicionRecordatorio"
-              class="inline-flex min-h-[42px] min-w-0 flex-1 items-center justify-center rounded-full border border-gray-200/90 bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-emerald-50/80"
+              class="inline-flex min-h-[42px] min-w-0 flex-1 items-center justify-center rounded-full border border-borde/90 bg-superficie-tarjeta px-4 py-2 text-sm font-semibold text-texto-fuerte shadow-sm transition hover:bg-emerald-50/80 oscuro:hover:bg-emerald-500/15"
             >
               Cancelar
             </button>
@@ -3375,15 +3375,15 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="modalSinSocios = false"
     >
           <!-- Móvil: icono izq. + título (más grande) + subtítulo + X -->
           <div class="sm:hidden flex-shrink-0 bg-[#1B5E37]">
             <div class="flex items-center gap-3 pl-4 pr-4 pb-4 pt-[max(0.75rem,env(safe-area-inset-top))] min-h-[5.25rem]">
-              <div class="w-12 h-12 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
+              <div class="w-12 h-12 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm"><!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
                 <UsersIcon class="w-6 h-6 text-[#1B5E37]" />
               </div>
               <div class="min-w-0 flex-1 text-left py-0.5 pr-2">
@@ -3424,8 +3424,8 @@
               class="px-6 pb-7 sm:pt-1"
               :class="modalSinSociosTieneScroll ? 'pt-0' : 'pt-[max(0.5rem,env(safe-area-inset-top))]'"
             >
-              <div class="w-16 h-16 mx-auto mb-4 bg-white rounded-full flex items-center justify-center shadow-sm">
-                <UsersIcon class="w-8 h-8 text-[#1B5E37]" />
+              <div class="w-16 h-16 mx-auto mb-4 bg-superficie-tarjeta rounded-full flex items-center justify-center shadow-sm">
+                <UsersIcon class="w-8 h-8 text-marca-tinta" />
               </div>
               <h3 class="font-display font-bold text-white text-xl sm:text-2xl mb-1.5">
                 Sin Socios
@@ -3438,28 +3438,28 @@
           <!-- Cuerpo (min-h-0 flex-1: scroll iOS con flex) -->
           <div
             ref="scrollAreaModalSinSocios"
-            class="min-h-0 overflow-y-auto flex-1 px-6 pt-6 pb-2 space-y-5 bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+            class="min-h-0 overflow-y-auto flex-1 px-6 pt-6 pb-2 space-y-5 bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch]"
           >
             <div>
-              <h4 class="text-lg font-display font-bold text-gray-900 mb-2">
+              <h4 class="text-lg font-display font-bold text-texto-fuerte mb-2">
                 ¡Comienza tu natillera agregando socios!
               </h4>
-              <p class="text-gray-600 text-sm leading-relaxed">
+              <p class="text-texto-secundario text-sm leading-relaxed">
                 Para que tu natillera pueda empezar a funcionar, necesitas agregar al menos un socio. Los socios son los participantes que realizarán los aportes mensuales o quincenales.
               </p>
             </div>
-            <div class="rounded-xl bg-[#E8F5E9] px-4 py-3.5 flex gap-3 items-start">
-              <InformationCircleIcon class="w-5 h-5 text-[#1B5E37] flex-shrink-0 mt-0.5" />
-              <div class="text-left text-sm text-gray-800 leading-relaxed">
-                <span class="font-semibold text-[#1B5E37]">¿Qué sigue después?</span>
-                <span class="text-gray-700">
+            <div class="rounded-xl bg-marca-suave px-4 py-3.5 flex gap-3 items-start">
+              <InformationCircleIcon class="w-5 h-5 text-marca-tinta flex-shrink-0 mt-0.5" />
+              <div class="text-left text-sm text-texto leading-relaxed">
+                <span class="font-semibold text-marca-tinta">¿Qué sigue después?</span>
+                <span class="text-texto-medio">
                   Una vez agregues socios, podrás gestionar cuotas, préstamos, actividades y mucho más para tu natillera.
                 </span>
               </div>
             </div>
           </div>
           <!-- Pie: safe-area para home indicator en iPhone -->
-          <div class="flex-shrink-0 px-6 pt-2 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-3 bg-white">
+          <div class="flex-shrink-0 px-6 pt-2 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-3 bg-superficie-tarjeta">
             <button
               type="button"
               @click="modalSinSocios = false; if (id && id !== 'undefined' && id !== 'null') { markPendingPrimerSocioNavTourFromModal(id); router.push(`/natilleras/${id}/socios?agregar=true`) } else { router.push('/dashboard') }"
@@ -3486,15 +3486,15 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white my-0 sm:my-4"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta my-0 sm:my-4"
       card-max-width="28rem"
       @close="modalTodasLasAlertas = false"
     >
       <!-- Móvil: fila — icono | títulos | X (flex, sin absolute; skill modales) -->
       <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
         <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm"><!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <BellAlertIcon class="h-5 w-5 text-[#1B5E37]" />
           </div>
           <div class="min-w-0 flex-1 text-left">
@@ -3520,7 +3520,7 @@
         <div class="flex items-start px-4 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
           <div class="w-11 shrink-0" aria-hidden="true" />
           <div class="flex min-w-0 flex-1 flex-col items-center text-center">
-            <div class="flex h-[3.2rem] w-[3.2rem] shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+            <div class="flex h-[3.2rem] w-[3.2rem] shrink-0 items-center justify-center rounded-full bg-white shadow-sm"><!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
               <BellAlertIcon class="h-6 w-6 text-[#1B5E37]" />
             </div>
             <h3 class="mt-2.5 font-display text-lg font-bold leading-tight text-white">
@@ -3543,7 +3543,7 @@
 
       <div
         ref="scrollAreaModalTodasLasAlertas"
-        class="min-h-0 flex-1 space-y-6 overflow-y-auto overflow-x-hidden overscroll-contain bg-white px-6 pt-5 pb-0 [-webkit-overflow-scrolling:touch]"
+        class="min-h-0 flex-1 space-y-6 overflow-y-auto overflow-x-hidden overscroll-contain bg-superficie-tarjeta px-6 pt-5 pb-0 [-webkit-overflow-scrolling:touch]"
       >
         <!-- Cuotas en mora -->
         <div v-if="cantidadCuotasEnMoraAlertas > 0">
@@ -3551,7 +3551,7 @@
             <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-500 text-white" aria-hidden="true">
               <ExclamationTriangleIconSolid class="h-3 w-3" />
             </span>
-            <span class="text-xs font-bold text-red-700 uppercase tracking-wide">Cuotas en mora</span>
+            <span class="text-xs font-bold text-red-700 oscuro:text-red-300 uppercase tracking-wide">Cuotas en mora</span>
             <span class="text-[10px] font-bold text-white bg-red-500 rounded-full px-1.5 py-0.5 leading-none">{{ cantidadCuotasEnMoraAlertas }}</span>
           </div>
           <div class="space-y-0.5">
@@ -3559,25 +3559,25 @@
               v-for="socioMora in sociosCuotasMoraLista"
               :key="'cma-' + socioMora.id"
               type="button"
-              class="flex w-full min-h-[48px] touch-manipulation items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-red-50/40 active:bg-red-50/60 disabled:cursor-wait disabled:opacity-60 [-webkit-tap-highlight-color:transparent]"
+              class="flex w-full min-h-[48px] touch-manipulation items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-red-50/40 oscuro:hover:bg-red-500/15 active:bg-red-50/60 oscuro:active:bg-red-500/15 disabled:cursor-wait disabled:opacity-60 [-webkit-tap-highlight-color:transparent]"
               :aria-label="`Ver estado del socio ${socioMora.nombre || ''}`"
               @click="abrirComprobanteEstadoDesdeAlertaCuotasMora(socioMora)"
             >
-              <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-red-100 text-red-500" aria-hidden="true">
+              <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-red-100 oscuro:bg-red-500/15 text-red-500" aria-hidden="true">
                 <ExclamationTriangleIconSolid class="h-3 w-3" />
               </span>
               <div class="min-w-0 flex-1">
-                <p class="text-sm font-semibold text-gray-900 truncate leading-tight">{{ socioMora.nombre }}</p>
-                <p class="text-[11px] text-gray-400 mt-0.5 leading-tight">
+                <p class="text-sm font-semibold text-texto-fuerte truncate leading-tight">{{ socioMora.nombre }}</p>
+                <p class="text-[11px] text-texto-tenue mt-0.5 leading-tight">
                   {{ socioMora.cuotasMora }} {{ socioMora.cuotasMora === 1 ? 'cuota' : 'cuotas' }}
                   · {{ socioMora.diasMora }} {{ socioMora.diasMora === 1 ? 'día' : 'días' }}
                 </p>
               </div>
               <div class="flex-shrink-0 pl-2 text-right tabular-nums leading-tight">
-                <p class="text-sm font-bold text-red-600">${{ formatMoney(socioMora.totalDeudaCuotas + socioMora.totalSanciones) }}</p>
-                <p v-if="socioMora.totalSanciones > 0" class="text-[10px] text-gray-400 mt-1">
-                  cuota <span class="text-gray-500">${{ formatMoney(socioMora.totalDeudaCuotas) }}</span>
-                  + multa <span class="text-amber-600">${{ formatMoney(socioMora.totalSanciones) }}</span>
+                <p class="text-sm font-bold text-red-600 oscuro:text-red-300">${{ formatMoney(socioMora.totalDeudaCuotas + socioMora.totalSanciones) }}</p>
+                <p v-if="socioMora.totalSanciones > 0" class="text-[10px] text-texto-tenue mt-1">
+                  cuota <span class="text-texto-suave">${{ formatMoney(socioMora.totalDeudaCuotas) }}</span>
+                  + multa <span class="text-amber-600 oscuro:text-amber-300">${{ formatMoney(socioMora.totalSanciones) }}</span>
                 </p>
               </div>
             </button>
@@ -3585,7 +3585,7 @@
         </div>
 
         <!-- Separador -->
-        <div v-if="cantidadCuotasEnMoraAlertas > 0 && prestamosEnMoraLista.length > 0" class="border-t border-gray-100"></div>
+        <div v-if="cantidadCuotasEnMoraAlertas > 0 && prestamosEnMoraLista.length > 0" class="border-t border-borde-suave"></div>
 
         <!-- Préstamos en mora -->
         <div v-if="prestamosEnMoraLista.length > 0">
@@ -3593,7 +3593,7 @@
             <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-violet-500 text-white" aria-hidden="true">
               <BanknotesIconSolid class="h-3 w-3" />
             </span>
-            <span class="text-xs font-bold text-violet-700 uppercase tracking-wide">Préstamos en mora</span>
+            <span class="text-xs font-bold text-violet-700 oscuro:text-violet-300 uppercase tracking-wide">Préstamos en mora</span>
             <span class="text-[10px] font-bold text-white bg-violet-500 rounded-full px-1.5 py-0.5 leading-none">{{ prestamosEnMoraLista.length }}</span>
           </div>
           <div class="space-y-1">
@@ -3601,33 +3601,33 @@
               v-for="p in prestamosEnMoraLista"
               :key="'pma-' + p.prestamoId"
               type="button"
-              class="flex w-full min-h-[48px] touch-manipulation items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-violet-50/40 active:bg-violet-50/60 disabled:cursor-wait disabled:opacity-60 [-webkit-tap-highlight-color:transparent]"
+              class="flex w-full min-h-[48px] touch-manipulation items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-violet-50/40 oscuro:hover:bg-violet-500/15 active:bg-violet-50/60 oscuro:active:bg-violet-500/15 disabled:cursor-wait disabled:opacity-60 [-webkit-tap-highlight-color:transparent]"
               :aria-label="`Ver estado del socio ${p.nombreSocio || ''}`"
               @click="abrirComprobanteEstadoDesdeAlertaPrestamo(p)"
             >
-              <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-violet-100 text-violet-500" aria-hidden="true">
+              <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-violet-100 oscuro:bg-violet-500/15 text-violet-500" aria-hidden="true">
                 <BanknotesIconSolid class="h-3 w-3" />
               </span>
               <div class="min-w-0 flex-1">
-                <p class="text-sm font-semibold text-gray-900 truncate leading-tight">{{ p.nombreSocio }}</p>
-                <p class="text-[11px] text-gray-400 mt-0.5 leading-tight">
+                <p class="text-sm font-semibold text-texto-fuerte truncate leading-tight">{{ p.nombreSocio }}</p>
+                <p class="text-[11px] text-texto-tenue mt-0.5 leading-tight">
                   {{ p.cuotasVencidas }} {{ p.cuotasVencidas === 1 ? 'cuota' : 'cuotas' }}
                   · {{ p.diasMoraPrestamo }} {{ p.diasMoraPrestamo === 1 ? 'día' : 'días' }}
                 </p>
               </div>
               <div class="text-right flex-shrink-0 pl-2">
-                <p class="text-sm font-bold text-violet-600 tabular-nums leading-tight">${{ formatMoney(p.totalDeudaPrestamo) }}</p>
+                <p class="text-sm font-bold text-violet-600 oscuro:text-violet-300 tabular-nums leading-tight">${{ formatMoney(p.totalDeudaPrestamo) }}</p>
               </div>
             </button>
           </div>
         </div>
 
         <div
-          class="space-y-3 border-t border-gray-200 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]"
+          class="space-y-3 border-t border-borde pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]"
         >
           <button
             type="button"
-            class="w-full min-h-[48px] rounded-full border-2 border-gray-200 bg-white py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 active:bg-gray-100 [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            class="w-full min-h-[48px] rounded-full border-2 border-borde bg-superficie-tarjeta py-3 text-sm font-semibold text-texto-medio transition hover:border-borde-fuerte hover:bg-superficie-suave active:bg-superficie-hundida [-webkit-tap-highlight-color:transparent] touch-manipulation"
             @click="modalTodasLasAlertas = false"
           >
             Cerrar
@@ -4587,24 +4587,24 @@ function clasesBadgeUltimoMov(estado) {
     'inline-flex min-w-0 max-w-[6.85rem] sm:max-w-[10.25rem] items-center justify-center rounded-md border px-2 py-1 text-[10px] sm:text-[11px] font-semibold leading-tight shadow-sm truncate whitespace-nowrap'
   const porEstado = {
     // Cuota pagada: verde natillera
-    pago_cuota: 'border-green-500/35 bg-green-50 text-green-950',
-    pago_cuota_parcial: 'border-blue-400/70 bg-blue-50 text-blue-950',
-    pagado: 'border-green-500/35 bg-green-50 text-green-950',
-    mora: 'border-orange-400/80 bg-orange-50 text-orange-950',
-    parcial: 'border-blue-400/70 bg-blue-50 text-blue-950',
+    pago_cuota: 'border-green-500/35 bg-green-50 oscuro:bg-green-500/15 text-green-950 oscuro:text-green-300',
+    pago_cuota_parcial: 'border-blue-400/70 bg-blue-50 oscuro:bg-blue-500/15 text-blue-950 oscuro:text-blue-300',
+    pagado: 'border-green-500/35 bg-green-50 oscuro:bg-green-500/15 text-green-950 oscuro:text-green-300',
+    mora: 'border-orange-400/80 bg-orange-50 oscuro:bg-orange-500/15 text-orange-950 oscuro:text-orange-300',
+    parcial: 'border-blue-400/70 bg-blue-50 oscuro:bg-blue-500/15 text-blue-950 oscuro:text-blue-300',
     // Préstamos: violeta (abono) vs índigo (otorgamiento)
-    abono_prestamo: 'border-purple-400/75 bg-purple-50 text-purple-950',
-    prestamo_nuevo: 'border-indigo-400/80 bg-indigo-100 text-indigo-950',
+    abono_prestamo: 'border-purple-400/75 bg-purple-50 oscuro:bg-purple-500/15 text-purple-950 oscuro:text-purple-300',
+    prestamo_nuevo: 'border-indigo-400/80 bg-indigo-100 oscuro:bg-indigo-500/15 text-indigo-950 oscuro:text-indigo-300',
     // Actividades: turquesa · Rifas: fucsia (no confundir con egreso rojo)
-    pago_actividad: 'border-teal-400/80 bg-teal-50 text-teal-950',
-    pago_rifa: 'border-fuchsia-400/75 bg-fuchsia-50 text-fuchsia-950',
+    pago_actividad: 'border-teal-400/80 bg-teal-50 oscuro:bg-teal-500/15 text-teal-950 oscuro:text-teal-300',
+    pago_rifa: 'border-fuchsia-400/75 bg-fuchsia-50 oscuro:bg-fuchsia-500/15 text-fuchsia-950 oscuro:text-fuchsia-300',
     // Liquidación: ámbar (cierre), distinto del verde de cuota
-    liquidacion: 'border-amber-400/90 bg-amber-100 text-amber-950',
+    liquidacion: 'border-amber-400/90 bg-amber-100 oscuro:bg-amber-500/15 text-amber-950 oscuro:text-amber-300',
     // Caja: cian (entra) vs rojo (sale), distintos del azul parcial y del fucsia rifa
-    ingreso_fondo: 'border-cyan-400/85 bg-cyan-50 text-cyan-950',
-    egreso_fondo: 'border-red-400/90 bg-red-50 text-red-950',
+    ingreso_fondo: 'border-cyan-400/85 bg-cyan-50 oscuro:bg-cyan-500/15 text-cyan-950 oscuro:text-cyan-300',
+    egreso_fondo: 'border-red-400/90 bg-red-50 oscuro:bg-red-500/15 text-red-950 oscuro:text-red-300',
   }
-  return [base, porEstado[estado] || 'border-slate-300 bg-slate-100 text-slate-900']
+  return [base, porEstado[estado] || 'border-slate-300 oscuro:border-borde-fuerte bg-slate-100 oscuro:bg-superficie-hundida text-slate-900 oscuro:text-texto-fuerte']
 }
 
 /**
@@ -8106,5 +8106,26 @@ onUnmounted(() => {
   flex-shrink: 0;
   color: hsl(152 52% 32%);
   margin-top: 0.1rem;
+}
+
+/* Modo oscuro: estado vacío de la natillera. La insignia sigue verde; su borde toma
+   el color de la tarjeta para recortarla igual que el blanco en claro. */
+:where([data-tema=oscuro]) .natillera-empty {
+  --ne-bg: var(--superficie-tarjeta);
+  --ne-mint: var(--marca-suave);
+  --ne-forest: #1B5E37;
+  --ne-pig: var(--marca-tinta);
+  --ne-section: var(--texto-secundario);
+  --ne-muted: var(--texto-suave);
+  border-color: var(--borde);
+}
+:where([data-tema=oscuro]) .natillera-empty__ring-outer { border-color: var(--borde-fuerte); }
+:where([data-tema=oscuro]) .natillera-empty__badge { border-color: var(--superficie-tarjeta); }
+:where([data-tema=oscuro]) .natillera-empty__title { color: var(--texto-fuerte); }
+:where([data-tema=oscuro]) .natillera-empty__divider { background: var(--borde); }
+:where([data-tema=oscuro]) .natillera-empty__hints-item { color: var(--texto-medio); }
+:where([data-tema=oscuro]) .natillera-empty__hints-icon { color: var(--marca-tinta); }
+@media (min-width: 1024px) {
+  :where([data-tema=oscuro]) .natillera-empty__hints { border-left-color: var(--borde); }
 }
 </style>

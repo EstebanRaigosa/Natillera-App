@@ -537,9 +537,13 @@ export function useMovimientosFondo(idNatillera) {
     ))
   }
 
-  /** Borrar. Un traslado se borra completo: dejar medio traslado descuadra la caja. */
-  async function eliminarGrupo(grupo) {
-    if (!grupo?.esManual) throw new Error('Este movimiento lo generó otro módulo y se corrige allí')
+  /**
+   * Borrar. Un traslado se borra completo: dejar medio traslado descuadra la caja.
+   * `permitirAutomatico` solo lo pasa el superusuario: borra el apunte de caja de un
+   * movimiento automático, sin deshacer el proceso que lo generó (el RLS ya se lo permite).
+   */
+  async function eliminarGrupo(grupo, { permitirAutomatico = false } = {}) {
+    if (!grupo?.esManual && !permitirAutomatico) throw new Error('Este movimiento lo generó otro módulo y se corrige allí')
 
     const ids = grupo.filas.map(f => f.id)
     const { data, error: fallo } = await supabase

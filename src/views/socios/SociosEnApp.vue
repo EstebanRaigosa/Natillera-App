@@ -35,10 +35,10 @@
       <!-- Avance -->
       <section class="app-avance" aria-label="Avance">
         <div class="flex items-baseline justify-between gap-3">
-          <p class="font-display text-2xl font-extrabold tabular-nums text-slate-900">
-            {{ conApp.length }} <span class="text-base font-semibold text-slate-400">de {{ sociosActivos.length }}</span>
+          <p class="font-display text-2xl font-extrabold tabular-nums text-slate-900 oscuro:text-texto-fuerte">
+            {{ conApp.length }} <span class="text-base font-semibold text-slate-400 oscuro:text-texto-tenue">de {{ sociosActivos.length }}</span>
           </p>
-          <p class="text-sm font-semibold text-slate-500">usan la app</p>
+          <p class="text-sm font-semibold text-slate-500 oscuro:text-texto-suave">usan la app</p>
         </div>
         <div class="app-avance__barra" aria-hidden="true"><span :style="{ width: porcentaje + '%' }" /></div>
         <ul class="app-avance__cifras">
@@ -160,7 +160,7 @@
 
                 <!-- Desvincular: confirmación en línea -->
                 <div v-else-if="editando?.socio_id === c.socio_id && editando.modo === 'desvincular'" class="app-panel app-panel--peligro">
-                  <p class="text-sm text-red-800">¿Desvincular? Podrá pedir acceso otra vez.</p>
+                  <p class="text-sm text-red-800 oscuro:text-red-300">¿Desvincular? Podrá pedir acceso otra vez.</p>
                   <div class="mt-2 flex gap-2">
                     <button type="button" class="btn-modal-secondary flex-1" :disabled="guardando" @click="editando = null">Cancelar</button>
                     <button type="button" class="app-boton-peligro flex-1" :disabled="guardando" @click="desvincular(c)">
@@ -216,13 +216,13 @@
         <aside class="app-seccion app-invitar">
           <h2 class="app-seccion__titulo">Invitar al grupo</h2>
 
-          <div v-if="cargandoCodigo" class="app-enlace text-slate-400">Preparando enlace…</div>
-          <div v-else-if="errorCodigo" class="ds-callout" role="alert" style="background: #fee2e2; color: #991b1b;">
+          <div v-if="cargandoCodigo" class="app-enlace text-slate-400 oscuro:text-texto-tenue">Preparando enlace…</div>
+          <div v-else-if="errorCodigo" class="ds-callout bg-[#fee2e2] oscuro:bg-red-500/15 text-[#991b1b] oscuro:text-red-300" role="alert">
             {{ errorCodigo }}
           </div>
           <template v-else>
             <div class="app-enlace">
-              <span class="min-w-0 flex-1 truncate text-[13px] text-slate-700">{{ urlInvitacion }}</span>
+              <span class="min-w-0 flex-1 truncate text-[13px] text-slate-700 oscuro:text-texto-medio">{{ urlInvitacion }}</span>
               <button type="button" class="app-enlace__copiar" @click="copiarEnlace">
                 <ClipboardDocumentIcon class="h-4 w-4" aria-hidden="true" />
                 {{ enlaceCopiado ? 'Copiado' : 'Copiar' }}
@@ -239,14 +239,14 @@
             </button>
             <!-- Reserva si falla el menú de compartir: desde el `.catch` Safari bloquea el
                  `window.open` (ya no hay toque), así que se ofrece un enlace para tocar. -->
-            <p v-if="reservaWhatsApp" class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
+            <p v-if="reservaWhatsApp" class="rounded-xl border border-amber-200 oscuro:border-amber-500/30 bg-amber-50 oscuro:bg-amber-500/15 px-3 py-2 text-sm text-amber-900 oscuro:text-amber-300" role="status">
               No se pudo abrir el menú de compartir.
-              <a :href="reservaWhatsApp" target="_blank" rel="noopener" class="inline-flex min-h-11 touch-manipulation items-center font-semibold text-[#1B5E37] underline" @click="reservaWhatsApp = null">Abrir WhatsApp</a>
+              <a :href="reservaWhatsApp" target="_blank" rel="noopener" class="inline-flex min-h-11 touch-manipulation items-center font-semibold text-marca-tinta underline" @click="reservaWhatsApp = null">Abrir WhatsApp</a>
             </p>
 
             <div v-if="qr" class="app-qr">
               <img :src="qr" alt="Código QR del enlace de invitación" width="160" height="160" />
-              <p class="text-xs text-slate-500">Para escanear en la reunión</p>
+              <p class="text-xs text-slate-500 oscuro:text-texto-suave">Para escanear en la reunión</p>
             </div>
 
             <!-- Cambiar el enlace: si se filtró fuera del grupo -->
@@ -255,7 +255,7 @@
                 Cambiar el enlace
               </button>
               <div v-else class="app-panel text-left">
-                <p class="text-sm text-slate-700">El enlace actual dejará de funcionar. Los ya vinculados siguen igual.</p>
+                <p class="text-sm text-slate-700 oscuro:text-texto-medio">El enlace actual dejará de funcionar. Los ya vinculados siguen igual.</p>
                 <div class="mt-2 flex gap-2">
                   <button type="button" class="btn-modal-secondary flex-1" :disabled="regenerando" @click="confirmandoRegenerar = false">No</button>
                   <button type="button" class="btn-modal-primary flex-1" :disabled="regenerando" @click="regenerarEnlace">
@@ -883,7 +883,7 @@ onUnmounted(() => {
   padding: 0.5rem;
   border-radius: var(--radius-lg);
   border: 1px solid var(--surface-divider);
-  background: #fff;
+  background: #fff; /* tema-fijo: margen blanco del QR, lo necesita el escáner */
 }
 .app-regenerar {
   min-height: 2.75rem;
@@ -898,5 +898,94 @@ onUnmounted(() => {
 
 @media (prefers-reduced-motion: reduce) {
   .app-avance__barra > span { transition: none; }
+}
+
+/* ==========================================================================
+   Modo oscuro (skill natillerapp-modo-oscuro). Propuesto con
+   scripts/tema/proponer-oscuro.mjs y revisado a mano. Solo lo que cambia: las
+   reglas de claro de arriba quedan intactas.
+   ========================================================================== */
+:where([data-tema=oscuro]) .app-avance__barra:not(:where([data-tema=claro] *)) {
+  background: var(--marca-suave);
+}
+:where([data-tema=oscuro]) .app-avance__cifras:not(:where([data-tema=claro] *)) {
+  color: var(--texto-medio);
+}
+:where([data-tema=oscuro]) .app-avance__cifras strong:not(:where([data-tema=claro] *)) {
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .app-punto--sin:not(:where([data-tema=claro] *)) {
+  background: var(--borde);
+}
+:where([data-tema=oscuro]) .app-seccion--aprobar:not(:where([data-tema=claro] *)) {
+  border-color: var(--alerta-borde);
+  background: var(--alerta-suave);
+}
+:where([data-tema=oscuro]) .app-seccion__titulo:not(:where([data-tema=claro] *)) {
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .app-seccion__nota:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .app-conteo:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-suave);
+  color: var(--texto-medio);
+}
+:where([data-tema=oscuro]) .app-conteo--aprobar:not(:where([data-tema=claro] *)) {
+  background: var(--alerta-suave);
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .app-vacio:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .app-avatar--sin:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-hundida);
+  color: var(--texto-medio);
+}
+:where([data-tema=oscuro]) .app-fila__nombre:not(:where([data-tema=claro] *)) {
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .app-fila__dato:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .app-fila__dato--aviso:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .app-etiqueta:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-suave);
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .app-etiqueta--aprobar:not(:where([data-tema=claro] *)) {
+  background: var(--alerta-suave);
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .app-icono:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .app-icono--peligro:not(:where([data-tema=claro] *)) {
+  color: var(--peligro);
+}
+:where([data-tema=oscuro]) .app-icono--peligro:hover:not(:where([data-tema=claro] *)) {
+  background: var(--peligro-suave);
+}
+:where([data-tema=oscuro]) .app-panel:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-suave);
+}
+:where([data-tema=oscuro]) .app-panel--peligro:not(:where([data-tema=claro] *)) {
+  background: var(--peligro-suave);
+}
+:where([data-tema=oscuro]) .app-panel__etiqueta:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .app-select:not(:where([data-tema=claro] *)) {
+  border: 1px solid var(--marca-tinta-borde);
+  background: var(--superficie-tarjeta);
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .app-enlace:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-suave);
+}
+:where([data-tema=oscuro]) .app-regenerar:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
 }
 </style>

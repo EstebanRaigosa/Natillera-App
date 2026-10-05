@@ -6,7 +6,7 @@
           'rounded-2xl px-4 py-2.5 shadow-sm',
           esPropio
             ? 'bg-[#1B5E37] text-white rounded-br-md'
-            : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md',
+            : 'bg-superficie-tarjeta text-texto border border-borde rounded-bl-md',
         ]"
       >
         <!--
@@ -28,7 +28,7 @@
               type="button"
               :class="[
                 'relative block w-full overflow-hidden rounded-xl transition touch-manipulation',
-                esPropio ? 'bg-white/15' : 'bg-gray-100',
+                esPropio ? 'bg-white/15' : 'bg-superficie-hundida',
               ]"
               :aria-label="`Ver ${imagen.nombre}`"
               @click="abrirAdjunto(imagen)"
@@ -52,7 +52,7 @@
                 v-else
                 :class="[
                   'flex min-h-[4.5rem] items-center gap-2 px-3 py-3 text-left text-xs',
-                  esPropio ? 'text-white' : 'text-gray-700',
+                  esPropio ? 'text-white' : 'text-texto-medio',
                 ]"
               >
                 <PhotoIcon class="h-5 w-5 shrink-0" />
@@ -81,14 +81,14 @@
               type="button"
               :class="[
                 'flex min-h-[2.75rem] w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs transition touch-manipulation',
-                esPropio ? 'bg-white/15 hover:bg-white/25' : 'bg-gray-50 hover:bg-gray-100 border border-gray-200',
+                esPropio ? 'bg-white/15 hover:bg-white/25' : 'bg-superficie-suave hover:bg-superficie-hundida border border-borde',
               ]"
               @click="abrirAdjunto(documento)"
             >
               <DocumentTextIcon v-if="esTexto(documento.mime)" class="h-4 w-4 shrink-0" />
               <PaperClipIcon v-else class="h-4 w-4 shrink-0" />
               <span class="min-w-0 flex-1 truncate">{{ documento.nombre }}</span>
-              <span :class="['shrink-0 text-[0.6875rem]', esPropio ? 'text-white/70' : 'text-gray-500']">
+              <span :class="['shrink-0 text-[0.6875rem]', esPropio ? 'text-white/70' : 'text-texto-suave']">
                 {{ documento._subiendo ? 'Enviando…' : formatearTamano(documento.bytes) }}
               </span>
             </button>
@@ -97,19 +97,34 @@
       </div>
 
       <div :class="['mt-1 flex items-center gap-1.5 px-1', esPropio ? 'justify-end' : 'justify-start']">
-        <span class="text-[0.6875rem] text-gray-500">{{ hora }}</span>
+        <span class="text-[0.6875rem] text-texto-suave">{{ hora }}</span>
 
         <!--
           Estado del envío (RF-04). Se distingue por FORMA además de por color:
           reloj, marca de verificación o triángulo de alerta.
         -->
         <template v-if="esPropio">
-          <ClockIcon v-if="mensaje._estado === 'enviando'" class="h-3.5 w-3.5 text-gray-400" aria-label="Enviando" />
-          <CheckIcon v-else-if="mensaje._estado === 'enviado'" class="h-3.5 w-3.5 text-gray-400" aria-label="Enviado" />
+          <ClockIcon v-if="mensaje._estado === 'enviando'" class="h-3.5 w-3.5 text-texto-tenue" aria-label="Enviando" />
+          <!-- Leído (solo panel del soporte): doble marca azul y la hora en que lo abrió -->
+          <span
+            v-else-if="mensaje._estado === 'enviado' && lectura"
+            class="inline-flex items-center gap-1 text-[0.6875rem] font-semibold text-sky-600 oscuro:text-sky-300"
+            :title="lectura.titulo"
+          >
+            <svg class="h-3.5 w-[1.1rem]" viewBox="0 0 28 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 11l5 5L18 4" />
+              <path d="M11 15l1 1L24 4" />
+            </svg>
+            {{ lectura.texto }}
+          </span>
+          <template v-else-if="mensaje._estado === 'enviado'">
+            <CheckIcon class="h-3.5 w-3.5 text-texto-tenue" aria-label="Enviado" />
+            <span v-if="mostrarLectura" class="text-[0.6875rem] text-texto-tenue">No leído</span>
+          </template>
           <button
             v-else-if="mensaje._estado === 'fallido'"
             type="button"
-            class="inline-flex min-h-[2.75rem] items-center gap-1 rounded-full bg-red-50 px-3 text-[0.6875rem] font-semibold text-red-700 ring-1 ring-red-200 touch-manipulation"
+            class="inline-flex min-h-[2.75rem] items-center gap-1 rounded-full bg-red-50 oscuro:bg-red-500/15 px-3 text-[0.6875rem] font-semibold text-red-700 oscuro:text-red-300 ring-1 ring-red-200 oscuro:ring-red-500/30 touch-manipulation"
             @click="$emit('reintentar', mensaje)"
           >
             <ExclamationTriangleIcon class="h-3.5 w-3.5" />
@@ -134,6 +149,9 @@ const props = defineProps({
   mensaje: { type: Object, required: true },
   /** 'usuario' en la pantalla del usuario, 'soporte' en el panel */
   ladoPropio: { type: String, default: 'usuario' },
+  /** Ver HiloMensajes: confirmación de lectura, solo para el soporte. */
+  mostrarLectura: { type: Boolean, default: false },
+  leidoHasta: { type: String, default: null },
 })
 
 defineEmits(['reintentar'])
@@ -145,6 +163,30 @@ const firmadas = ref({})          // ruta -> URL firmada de la miniatura
 const rotas = ref(new Set())      // adjuntos que el navegador no supo pintar
 
 const esPropio = computed(() => props.mensaje.autor === props.ladoPropio)
+
+/**
+ * { texto, titulo } si el usuario ya leyó este mensaje; null si no.
+ * Con `leido_at` se muestra la hora exacta. Los mensajes anteriores a la
+ * migración 056 no la tienen: si son de antes de la última lectura, se dan por
+ * leídos sin hora, porque no se sabe cuándo fue.
+ */
+const lectura = computed(() => {
+  if (!props.mostrarLectura || props.mensaje.autor !== 'soporte') return null
+  if (props.mensaje.leido_at) {
+    const fecha = new Date(props.mensaje.leido_at)
+    if (Number.isNaN(fecha.getTime())) return null
+    const horaLectura = fecha.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' })
+    const mismoDia = fecha.toDateString() === new Date(props.mensaje.created_at).toDateString()
+    const texto = mismoDia
+      ? `Leído ${horaLectura}`
+      : `Leído ${fecha.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })} ${horaLectura}`
+    return { texto, titulo: `Leído el ${fecha.toLocaleString('es-CO', { dateStyle: 'long', timeStyle: 'short' })}` }
+  }
+  if (props.leidoHasta && new Date(props.mensaje.created_at) <= new Date(props.leidoHasta)) {
+    return { texto: 'Leído', titulo: 'Leído (mensaje anterior al registro de la hora de lectura)' }
+  }
+  return null
+})
 const adjuntos = computed(() => props.mensaje.soporte_adjuntos ?? [])
 const imagenes = computed(() => adjuntos.value.filter((a) => esImagen(a.mime)))
 const documentos = computed(() => adjuntos.value.filter((a) => !esImagen(a.mime)))

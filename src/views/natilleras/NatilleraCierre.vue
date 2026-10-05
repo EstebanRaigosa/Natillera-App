@@ -7,13 +7,13 @@
 
       <div
         v-else-if="accesoDenegado"
-        class="max-w-lg mx-auto text-center py-20 px-4 rounded-2xl border border-amber-200/80 bg-white/80 shadow-sm backdrop-blur-sm"
+        class="max-w-lg mx-auto text-center py-20 px-4 rounded-2xl border border-amber-200/80 oscuro:border-amber-500/30 bg-superficie-tarjeta/80 shadow-sm backdrop-blur-sm"
       >
-        <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 mb-6">
+        <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 oscuro:bg-amber-500/15 text-amber-600 oscuro:text-amber-300 mb-6">
           <ExclamationTriangleIcon class="w-9 h-9" />
         </div>
-        <h1 class="text-2xl font-display font-bold text-gray-900 mb-2">No disponible</h1>
-        <p class="text-gray-600 leading-relaxed">
+        <h1 class="text-2xl font-display font-bold text-texto-fuerte mb-2">No disponible</h1>
+        <p class="text-texto-secundario leading-relaxed">
           No tienes permiso para cerrar esta natillera o la natillera no está activa.
         </p>
       </div>
@@ -77,7 +77,7 @@
               :aria-pressed="vistaMovil === pestana.valor"
               :class="[
                 'flex min-h-[44px] flex-1 touch-manipulation items-center justify-center gap-1.5 rounded-full text-sm transition-colors',
-                vistaMovil === pestana.valor ? 'bg-white font-extrabold text-[#1B5E37] shadow' : 'font-bold text-white/90'
+                vistaMovil === pestana.valor ? 'bg-superficie-tarjeta font-extrabold text-marca-tinta shadow' : 'font-bold text-white/90'
               ]"
               @click="cambiarVistaMovil(pestana.valor)"
             >
@@ -86,14 +86,14 @@
                 v-if="pestana.valor === 'socios'"
                 :class="[
                   'rounded-full px-1.5 text-[11px] font-extrabold tabular-nums',
-                  vistaMovil === 'socios' ? 'bg-[#E8F5E9] text-[#1B5E37]' : 'bg-white/20 text-white'
+                  vistaMovil === 'socios' ? 'bg-marca-suave text-marca-tinta' : 'bg-white/20 text-white'
                 ]"
               >{{ datosCierre.length }}</span>
             </button>
           </nav>
         </header>
 
-        <div v-if="calculandoCierre" class="rounded-2xl border border-dashed border-gray-200 bg-white/70 py-14">
+        <div v-if="calculandoCierre" class="rounded-2xl border border-dashed border-borde bg-superficie-tarjeta/70 py-14">
           <CargaCaja texto="Calculando datos de cierre" detalle="Consultando ahorros, utilidades y descuentos" />
         </div>
 
@@ -112,42 +112,42 @@
               − administración − deudas descontadas. Así se ve de dónde sale cada peso
               sin abrir nada.
             -->
-            <section class="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm">
-              <div class="bg-[#f6fbf7] px-4 pb-4 pt-5 text-center lg:text-left">
-                <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-600">Total a entregar</p>
-                <p class="mt-1 font-display text-[34px] font-extrabold leading-tight tracking-tight text-[#1B5E37] tabular-nums lg:text-4xl">
+            <section class="overflow-hidden rounded-2xl border border-borde/80 bg-superficie-tarjeta shadow-sm">
+              <div class="bg-[#f6fbf7] oscuro:bg-superficie-suave px-4 pb-4 pt-5 text-center lg:text-left">
+                <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-texto-secundario">Total a entregar</p>
+                <p class="mt-1 font-display text-[34px] font-extrabold leading-tight tracking-tight text-marca-tinta tabular-nums lg:text-4xl">
                   ${{ formatMoney(totalCierreGeneral) }}
                 </p>
-                <p class="mt-1 text-xs text-gray-500">Efectivo a tener listo para liquidar</p>
+                <p class="mt-1 text-xs text-texto-suave">Efectivo a tener listo para liquidar</p>
               </div>
-              <dl class="divide-y divide-gray-100 border-t border-gray-100">
+              <dl class="divide-y divide-borde-suave border-t border-borde-suave">
                 <div class="flex min-h-[48px] items-center justify-between gap-3 px-4">
-                  <dt class="text-sm text-gray-600">Ahorros</dt>
-                  <dd class="font-display text-[15px] font-bold tabular-nums text-gray-900">${{ formatMoney(totalAhorros) }}</dd>
+                  <dt class="text-sm text-texto-secundario">Ahorros</dt>
+                  <dd class="font-display text-[15px] font-bold tabular-nums text-texto-fuerte">${{ formatMoney(totalAhorros) }}</dd>
                 </div>
                 <div v-if="utilidadesCierre && utilidadesCierre.bruto !== 0">
                   <!-- Fila entera como botón: abre el desglose por concepto -->
                   <button
                     v-if="hayDesgloseUtilidades"
                     type="button"
-                    class="flex min-h-[56px] w-full touch-manipulation items-center justify-between gap-3 px-4 text-left hover:bg-[#f6fbf7] active:bg-[#E8F5E9]"
+                    class="flex min-h-[56px] w-full touch-manipulation items-center justify-between gap-3 px-4 text-left hover:bg-[#f6fbf7] oscuro:hover:bg-superficie-suave active:bg-marca-suave"
                     aria-haspopup="dialog"
                     @click="abrirDesgloseUtilidades"
                   >
                     <span class="min-w-0">
-                      <span class="block text-sm text-gray-600">+ Utilidades</span>
-                      <span class="block text-xs font-bold text-[#1B5E37]">Ver desglose</span>
+                      <span class="block text-sm text-texto-secundario">+ Utilidades</span>
+                      <span class="block text-xs font-bold text-marca-tinta">Ver desglose</span>
                     </span>
                     <span class="flex flex-shrink-0 items-center gap-2">
-                      <span class="font-display text-[15px] font-bold tabular-nums text-gray-900">${{ formatMoney(utilidadesCierre.bruto) }}</span>
-                      <span class="flex h-7 w-7 items-center justify-center rounded-full bg-[#E8F5E9] text-[#1B5E37]">
+                      <span class="font-display text-[15px] font-bold tabular-nums text-texto-fuerte">${{ formatMoney(utilidadesCierre.bruto) }}</span>
+                      <span class="flex h-7 w-7 items-center justify-center rounded-full bg-marca-suave text-marca-tinta">
                         <ChevronRightIcon class="h-4 w-4" />
                       </span>
                     </span>
                   </button>
                   <div v-else class="flex min-h-[48px] items-center justify-between gap-3 px-4">
-                    <dt class="text-sm text-gray-600">+ Utilidades</dt>
-                    <dd class="font-display text-[15px] font-bold tabular-nums text-gray-900">${{ formatMoney(utilidadesCierre.bruto) }}</dd>
+                    <dt class="text-sm text-texto-secundario">+ Utilidades</dt>
+                    <dd class="font-display text-[15px] font-bold tabular-nums text-texto-fuerte">${{ formatMoney(utilidadesCierre.bruto) }}</dd>
                   </div>
                 </div>
                 <!--
@@ -159,21 +159,21 @@
                   class="flex min-h-[56px] items-center justify-between gap-3 px-4 py-2"
                 >
                   <dt class="min-w-0">
-                    <span class="block text-sm text-gray-600">− Administración {{ administracionCierre.porcentaje }} %</span>
-                    <span class="block text-xs text-gray-500">
+                    <span class="block text-sm text-texto-secundario">− Administración {{ administracionCierre.porcentaje }} %</span>
+                    <span class="block text-xs text-texto-suave">
                       Sobre {{ administracionCierre.base === 'total' ? 'ahorros + utilidades' : 'las utilidades' }}
                     </span>
                   </dt>
-                  <dd class="flex-shrink-0 font-display text-[15px] font-bold tabular-nums text-red-700">
+                  <dd class="flex-shrink-0 font-display text-[15px] font-bold tabular-nums text-red-700 oscuro:text-red-300">
                     −${{ formatMoney(administracionCierre.monto) }}
                   </dd>
                 </div>
                 <div v-if="totalDescontado > 0" class="flex min-h-[56px] items-center justify-between gap-3 px-4 py-2">
                   <dt class="min-w-0">
-                    <span class="block text-sm text-gray-600">− Deudas descontadas</span>
-                    <span class="block text-xs text-gray-500">Saldo de préstamos pendientes</span>
+                    <span class="block text-sm text-texto-secundario">− Deudas descontadas</span>
+                    <span class="block text-xs text-texto-suave">Saldo de préstamos pendientes</span>
                   </dt>
-                  <dd class="flex-shrink-0 font-display text-[15px] font-bold tabular-nums text-red-700">
+                  <dd class="flex-shrink-0 font-display text-[15px] font-bold tabular-nums text-red-700 oscuro:text-red-300">
                     −${{ formatMoney(totalDescontado) }}
                   </dd>
                 </div>
@@ -188,22 +188,22 @@
             <button
               v-if="totalPorCobrar > 0"
               type="button"
-              class="flex min-h-[64px] w-full touch-manipulation items-center gap-3 rounded-2xl border border-orange-200 bg-orange-50 px-3.5 py-3 text-left hover:bg-orange-100/70"
+              class="flex min-h-[64px] w-full touch-manipulation items-center gap-3 rounded-2xl border border-orange-200 oscuro:border-orange-500/30 bg-orange-50 oscuro:bg-orange-500/15 px-3.5 py-3 text-left hover:bg-orange-100/70 oscuro:hover:bg-orange-500/15"
               @click="verSociosQueDeben"
             >
-              <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-700">
+              <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-orange-100 oscuro:bg-orange-500/15 text-orange-700 oscuro:text-orange-300">
                 <ExclamationTriangleIcon class="h-5 w-5" />
               </span>
               <span class="min-w-0 flex-1">
-                <span class="block text-sm font-extrabold text-orange-800">${{ formatMoney(totalPorCobrar) }} por cobrar</span>
-                <span class="block text-xs text-orange-800">
+                <span class="block text-sm font-extrabold text-orange-800 oscuro:text-orange-300">${{ formatMoney(totalPorCobrar) }} por cobrar</span>
+                <span class="block text-xs text-orange-800 oscuro:text-orange-300">
                   {{ sociosQueDeben }} {{ sociosQueDeben === 1 ? 'socio se va debiendo' : 'socios se van debiendo' }}
                 </span>
               </span>
-              <ChevronRightIcon class="h-4 w-4 flex-shrink-0 text-orange-700" />
+              <ChevronRightIcon class="h-4 w-4 flex-shrink-0 text-orange-700 oscuro:text-orange-300" />
             </button>
 
-            <div class="flex items-start gap-2.5 rounded-2xl bg-[#E8F5E9] px-3.5 py-3 text-[13px] leading-snug text-[#14532d]">
+            <div class="flex items-start gap-2.5 rounded-2xl bg-marca-suave px-3.5 py-3 text-[13px] leading-snug text-[#14532d] oscuro:text-marca-tinta">
               <InformationCircleIcon class="mt-px h-[18px] w-[18px] flex-shrink-0" />
               <span>Exporta los comprobantes antes de confirmar. Al cerrar no se puede deshacer.</span>
             </div>
@@ -230,21 +230,21 @@
             :class="['lg:block', vistaMovil === 'socios' ? 'block' : 'hidden']"
             aria-labelledby="titulo-socios-cierre"
           >
-            <div class="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm">
-              <div class="space-y-3 border-b border-gray-100 p-3 sm:p-4 lg:flex lg:items-center lg:gap-4 lg:space-y-0">
-                <h2 id="titulo-socios-cierre" class="hidden flex-1 font-display text-lg font-extrabold text-gray-900 lg:block">
+            <div class="overflow-hidden rounded-2xl border border-borde/80 bg-superficie-tarjeta shadow-sm">
+              <div class="space-y-3 border-b border-borde-suave p-3 sm:p-4 lg:flex lg:items-center lg:gap-4 lg:space-y-0">
+                <h2 id="titulo-socios-cierre" class="hidden flex-1 font-display text-lg font-extrabold text-texto-fuerte lg:block">
                   Detalle por socio
                 </h2>
                 <!-- Lupa por flex, no por `absolute`: en iOS el search cambia de alto al enfocar -->
-                <div class="flex min-h-[48px] items-center rounded-xl border border-gray-200 bg-white focus-within:border-[#1B5E37] focus-within:ring-2 focus-within:ring-[#1B5E37]/15 lg:w-72">
-                  <span class="flex-shrink-0 pl-3 text-gray-400"><MagnifyingGlassIcon class="h-[18px] w-[18px]" /></span>
+                <div class="flex min-h-[48px] items-center rounded-xl border border-borde bg-superficie-tarjeta focus-within:border-[#1B5E37] oscuro:focus-within:border-marca-tinta focus-within:ring-2 focus-within:ring-[#1B5E37]/15 lg:w-72">
+                  <span class="flex-shrink-0 pl-3 text-texto-tenue"><MagnifyingGlassIcon class="h-[18px] w-[18px]" /></span>
                   <input
                     v-model.trim="busquedaCierre"
                     type="search"
                     placeholder="Buscar socio"
                     aria-label="Buscar socio"
                     autocomplete="off"
-                    class="min-w-0 flex-1 border-none bg-transparent px-2 py-2.5 text-base text-gray-900 placeholder-gray-400 outline-none focus:ring-0 lg:text-sm"
+                    class="min-w-0 flex-1 border-none bg-transparent px-2 py-2.5 text-base text-texto-fuerte placeholder-texto-tenue outline-none focus:ring-0 lg:text-sm"
                   />
                 </div>
                 <div class="flex gap-1.5" role="group" aria-label="Filtrar socios">
@@ -255,7 +255,7 @@
                     :aria-pressed="filtroSocios === filtro.valor"
                     :class="[
                       'min-h-[44px] touch-manipulation whitespace-nowrap rounded-full px-3.5 lg:min-h-[36px] text-[13px] font-bold transition-colors',
-                      filtroSocios === filtro.valor ? 'bg-[#1B5E37] text-white' : 'border border-gray-200 bg-white text-gray-700 hover:border-[#1B5E37]/40'
+                      filtroSocios === filtro.valor ? 'bg-[#1B5E37] text-white' : 'border border-borde bg-superficie-tarjeta text-texto-medio hover:border-[#1B5E37]/40 oscuro:hover:border-marca-tinta/40'
                     ]"
                     @click="filtroSocios = filtro.valor"
                   >
@@ -267,12 +267,12 @@
               <!-- Escritorio: tabla -->
               <table class="hidden w-full border-collapse text-sm lg:table">
                 <thead>
-                  <tr class="bg-gray-50 text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                  <tr class="bg-superficie-suave text-[11px] font-bold uppercase tracking-wider text-texto-suave">
                     <th class="w-12 px-3 py-2.5 text-center">
                       <input
                         v-model="todosSeleccionadosPdf"
                         type="checkbox"
-                        class="h-4 w-4 cursor-pointer rounded border-gray-300 text-[#1B5E37] focus:ring-[#1B5E37]"
+                        class="h-4 w-4 cursor-pointer rounded border-borde-fuerte text-marca-tinta focus:ring-[#1B5E37]"
                         aria-label="Incluir en el PDF a todos los socios visibles"
                       />
                     </th>
@@ -288,7 +288,7 @@
                   <tr
                     v-for="dato in datosCierreFiltrados"
                     :key="idSocioCierre(dato)"
-                    class="cursor-pointer border-t border-gray-100 hover:bg-[#f6fbf7]"
+                    class="cursor-pointer border-t border-borde-suave hover:bg-[#f6fbf7] oscuro:hover:bg-superficie-suave"
                     @click="abrirSocio(dato)"
                   >
                     <td class="px-3 py-2 text-center" @click.stop>
@@ -296,7 +296,7 @@
                         v-model="sociosSeleccionadosPdf"
                         type="checkbox"
                         :value="idSocioCierre(dato)"
-                        class="h-4 w-4 cursor-pointer rounded border-gray-300 text-[#1B5E37] focus:ring-[#1B5E37]"
+                        class="h-4 w-4 cursor-pointer rounded border-borde-fuerte text-marca-tinta focus:ring-[#1B5E37]"
                         :aria-label="`Incluir a ${dato.socio?.nombre || 'este socio'} en el PDF`"
                       />
                     </td>
@@ -305,30 +305,30 @@
                         <span
                           :class="[
                             'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-extrabold',
-                            dato.totalFinal < 0 ? 'bg-orange-100 text-orange-700' : 'bg-[#E8F5E9] text-[#1B5E37]'
+                            dato.totalFinal < 0 ? 'bg-orange-100 oscuro:bg-orange-500/15 text-orange-700 oscuro:text-orange-300' : 'bg-marca-suave text-marca-tinta'
                           ]"
                         >{{ inicialesSocio(dato) }}</span>
                         <span class="min-w-0">
-                          <span class="block max-w-[220px] truncate font-bold text-gray-900" :title="dato.socio?.nombre">{{ dato.socio?.nombre || 'Socio' }}</span>
-                          <span v-if="dato.socio?.telefono" class="block truncate text-xs text-gray-500">{{ dato.socio.telefono }}</span>
+                          <span class="block max-w-[220px] truncate font-bold text-texto-fuerte" :title="dato.socio?.nombre">{{ dato.socio?.nombre || 'Socio' }}</span>
+                          <span v-if="dato.socio?.telefono" class="block truncate text-xs text-texto-suave">{{ dato.socio.telefono }}</span>
                         </span>
                       </div>
                     </td>
-                    <td class="px-3 py-2 text-right tabular-nums text-gray-600">${{ formatMoney(dato.ahorro) }}</td>
-                    <td class="px-3 py-2 text-right tabular-nums text-gray-600">${{ formatMoney(dato.utilidades) }}</td>
-                    <td class="px-3 py-2 text-right tabular-nums" :class="dato.descuentos > 0 ? 'text-red-700' : 'text-gray-400'">
+                    <td class="px-3 py-2 text-right tabular-nums text-texto-secundario">${{ formatMoney(dato.ahorro) }}</td>
+                    <td class="px-3 py-2 text-right tabular-nums text-texto-secundario">${{ formatMoney(dato.utilidades) }}</td>
+                    <td class="px-3 py-2 text-right tabular-nums" :class="dato.descuentos > 0 ? 'text-red-700 oscuro:text-red-300' : 'text-texto-tenue'">
                       {{ dato.descuentos > 0 ? `−$${formatMoney(dato.descuentos)}` : '—' }}
                     </td>
                     <td class="px-3 py-2 text-right">
-                      <span class="block font-display font-extrabold tabular-nums" :class="dato.totalFinal < 0 ? 'text-orange-700' : 'text-[#1B5E37]'">
+                      <span class="block font-display font-extrabold tabular-nums" :class="dato.totalFinal < 0 ? 'text-orange-700 oscuro:text-orange-300' : 'text-marca-tinta'">
                         ${{ formatMoney(Math.abs(dato.totalFinal)) }}
                       </span>
-                      <span v-if="dato.totalFinal < 0" class="block text-[11px] font-bold text-orange-700">Debe</span>
+                      <span v-if="dato.totalFinal < 0" class="block text-[11px] font-bold text-orange-700 oscuro:text-orange-300">Debe</span>
                     </td>
                     <td class="px-2 py-2">
                       <button
                         type="button"
-                        class="flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                        class="flex h-11 w-11 items-center justify-center rounded-full text-texto-tenue hover:bg-superficie-hundida hover:text-texto-medio"
                         :aria-label="`Ver detalle de ${dato.socio?.nombre || 'socio'}`"
                         @click.stop="abrirSocio(dato)"
                       >
@@ -340,42 +340,42 @@
               </table>
 
               <!-- Móvil: lista de filas tocables; el detalle y las acciones van en el modal -->
-              <ul class="divide-y divide-gray-100 lg:hidden">
+              <ul class="divide-y divide-borde-suave lg:hidden">
                 <li v-for="dato in datosCierreFiltrados" :key="'m-' + idSocioCierre(dato)">
                   <button
                     type="button"
-                    class="flex min-h-[64px] w-full touch-manipulation items-center gap-3 px-3.5 py-2.5 text-left active:bg-[#f6fbf7]"
+                    class="flex min-h-[64px] w-full touch-manipulation items-center gap-3 px-3.5 py-2.5 text-left active:bg-[#f6fbf7] oscuro:active:bg-superficie-suave"
                     @click="abrirSocio(dato)"
                   >
                     <span
                       :class="[
                         'flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-full text-[13px] font-extrabold',
-                        dato.totalFinal < 0 ? 'bg-orange-100 text-orange-700' : 'bg-[#E8F5E9] text-[#1B5E37]'
+                        dato.totalFinal < 0 ? 'bg-orange-100 oscuro:bg-orange-500/15 text-orange-700 oscuro:text-orange-300' : 'bg-marca-suave text-marca-tinta'
                       ]"
                     >{{ inicialesSocio(dato) }}</span>
                     <span class="min-w-0 flex-1">
-                      <span class="block truncate text-[15px] font-bold text-gray-900">{{ dato.socio?.nombre || 'Socio' }}</span>
+                      <span class="block truncate text-[15px] font-bold text-texto-fuerte">{{ dato.socio?.nombre || 'Socio' }}</span>
                       <!--
                         Utilidades a la vista, sin abrir el socio. Cada cifra en su propia
                         línea: juntas en una sola, el recorte con «…» se comía la de utilidades.
                       -->
-                      <span class="block whitespace-nowrap text-xs tabular-nums text-gray-500">Ahorro ${{ formatMoney(dato.ahorro) }}</span>
-                      <span class="block whitespace-nowrap text-xs font-bold tabular-nums text-[#1B5E37]">Utilidades ${{ formatMoney(dato.utilidades) }}</span>
+                      <span class="block whitespace-nowrap text-xs tabular-nums text-texto-suave">Ahorro ${{ formatMoney(dato.ahorro) }}</span>
+                      <span class="block whitespace-nowrap text-xs font-bold tabular-nums text-marca-tinta">Utilidades ${{ formatMoney(dato.utilidades) }}</span>
                     </span>
                     <span class="flex flex-shrink-0 flex-col items-end">
-                      <span class="font-display text-[15px] font-extrabold tabular-nums" :class="dato.totalFinal < 0 ? 'text-orange-700' : 'text-[#1B5E37]'">
+                      <span class="font-display text-[15px] font-extrabold tabular-nums" :class="dato.totalFinal < 0 ? 'text-orange-700 oscuro:text-orange-300' : 'text-marca-tinta'">
                         ${{ formatMoney(Math.abs(dato.totalFinal)) }}
                       </span>
-                      <span class="text-[11px] font-bold" :class="dato.totalFinal < 0 ? 'text-orange-700' : 'text-[#1B5E37]'">
+                      <span class="text-[11px] font-bold" :class="dato.totalFinal < 0 ? 'text-orange-700 oscuro:text-orange-300' : 'text-marca-tinta'">
                         {{ dato.totalFinal < 0 ? 'Debe' : 'Recibe' }}
                       </span>
                     </span>
-                    <ChevronRightIcon class="h-4 w-4 flex-shrink-0 text-gray-300" />
+                    <ChevronRightIcon class="h-4 w-4 flex-shrink-0 text-gray-300 oscuro:text-texto-tenue" />
                   </button>
                 </li>
               </ul>
 
-              <p v-if="datosCierreFiltrados.length === 0" class="px-4 py-8 text-center text-sm text-gray-500">
+              <p v-if="datosCierreFiltrados.length === 0" class="px-4 py-8 text-center text-sm text-texto-suave">
                 No hay socios que coincidan.
               </p>
             </div>
@@ -389,7 +389,7 @@
           -->
           <div
             v-if="vistaMovil === 'socios'"
-            class="cierre-barra-acciones sticky z-20 mt-4 rounded-2xl border border-gray-200 bg-white p-3 shadow-[0_8px_24px_-8px_rgba(15,83,45,0.35)] lg:hidden"
+            class="cierre-barra-acciones sticky z-20 mt-4 rounded-2xl border border-borde bg-superficie-tarjeta p-3 shadow-[0_8px_24px_-8px_rgba(15,83,45,0.35)] lg:hidden"
           >
             <div class="flex gap-2.5">
               <button type="button" class="btn-modal-secondary flex-1" @click="abrirExportar">
@@ -405,9 +405,9 @@
 
         <div
           v-else
-          class="rounded-2xl border border-dashed border-gray-200 bg-white/70 px-4 py-20 text-center"
+          class="rounded-2xl border border-dashed border-borde bg-superficie-tarjeta/70 px-4 py-20 text-center"
         >
-          <p class="font-medium text-gray-600">No hay datos para mostrar en este cierre.</p>
+          <p class="font-medium text-texto-secundario">No hay datos para mostrar en este cierre.</p>
         </div>
       </div>
     </div>

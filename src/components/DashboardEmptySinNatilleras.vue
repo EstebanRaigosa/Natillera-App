@@ -348,4 +348,22 @@ defineProps({
   color: hsl(152 52% 32%);
   margin-top: 0.1rem;
 }
+
+/* ── Modo oscuro (skill natillerapp-modo-oscuro): el CTA verde no cambia ── */
+:where([data-tema=oscuro]) .dash-empty-natilleras {
+  --dash-empty-bg: var(--superficie-tarjeta);
+  --dash-empty-mint: var(--marca-suave);
+  --dash-empty-pig: var(--marca-tinta);
+  --dash-empty-section: var(--texto-secundario);
+  --dash-empty-muted: var(--texto-suave);
+  border-color: var(--borde);
+}
+:where([data-tema=oscuro]) .dash-empty-natilleras__ring-outer { border-color: var(--borde-fuerte); }
+:where([data-tema=oscuro]) .dash-empty-natilleras__title { color: var(--texto-fuerte); }
+:where([data-tema=oscuro]) .dash-empty-natilleras__divider { background: var(--borde); }
+@media (min-width: 1024px) {
+  :where([data-tema=oscuro]) .dash-empty-natilleras--with-sidebar .dash-empty-natilleras__how { border-left-color: var(--borde); }
+}
+:where([data-tema=oscuro]) .dash-empty-natilleras__how-item { color: var(--texto-medio); }
+:where([data-tema=oscuro]) .dash-empty-natilleras__how-icon { color: var(--marca-tinta); }
 </style>

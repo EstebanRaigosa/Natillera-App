@@ -175,6 +175,7 @@ onUnmounted(() => document.removeEventListener('pointerdown', cerrarFuera))
 </script>
 
 <style scoped>
+/* tema-fijo-inicio: barra de navegación verde, igual en los dos modos */
 .portal-nav {
   isolation: isolate;
   padding-bottom: calc(max(0.3rem, env(safe-area-inset-bottom, 0px)) + var(--tapado-inferior, 0px));
@@ -212,8 +213,9 @@ onUnmounted(() => document.removeEventListener('pointerdown', cerrarFuera))
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 9999px;
-  background: #fff;
+  background: #fff; /* tema-fijo: punto indicador sobre la barra verde de navegación */
   transform: translateX(-50%);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
+/* tema-fijo-fin */
 </style>

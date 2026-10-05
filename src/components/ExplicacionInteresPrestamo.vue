@@ -15,15 +15,15 @@
     align="bottom"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="cerrar"
   >
     <!-- ── Cabecera marca (móvil = fila) ── -->
     <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
       <div class="flex min-h-[4.2rem] items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
-        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm"><!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <CalculatorIcon class="h-5 w-5 text-[#1B5E37]" />
         </div>
         <div class="min-w-0 flex-1">
@@ -45,7 +45,7 @@
       <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
         <div class="w-11 shrink-0" aria-hidden="true" />
         <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
-          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm"><!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <CalculatorIcon class="h-6 w-6 text-[#1B5E37]" />
           </div>
           <h3 class="mt-2 font-display text-lg font-bold leading-tight text-white">¿Cómo se calcula el interés?</h3>
@@ -66,7 +66,7 @@
     <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
     <div
       ref="scrollRef"
-      class="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-white px-4 pt-4 pb-5 [-webkit-overflow-scrolling:touch]"
+      class="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-superficie-tarjeta px-4 pt-4 pb-5 [-webkit-overflow-scrolling:touch]"
       @scroll.passive="onScroll"
     >
       <!-- Refinanciar: datos del préstamo nuevo + la cuenta -->
@@ -76,18 +76,18 @@
             v-for="(dato, idx) in datos"
             :key="dato.etiqueta"
             class="explicacion-entra rounded-xl px-3 py-3"
-            :class="dato.destacado ? 'bg-[#1B5E37] text-white' : 'bg-[#F6FBF7]'"
+            :class="dato.destacado ? 'bg-[#1B5E37] text-white' : 'bg-[#F6FBF7] oscuro:bg-superficie-suave'"
             :style="{ animationDelay: `${idx * 60}ms` }"
           >
-            <dt class="text-xs" :class="dato.destacado ? 'text-white/85' : 'text-gray-500'">{{ dato.etiqueta }}</dt>
-            <dd class="mt-1 font-display text-xl font-bold tabular-nums leading-tight" :class="dato.destacado ? 'text-white' : 'text-gray-900'">{{ dato.valor }}</dd>
-            <p v-if="dato.nota" class="mt-0.5 text-[0.6875rem]" :class="dato.destacado ? 'text-white/85' : 'text-gray-500'">{{ dato.nota }}</p>
+            <dt class="text-xs" :class="dato.destacado ? 'text-white/85' : 'text-texto-suave'">{{ dato.etiqueta }}</dt>
+            <dd class="mt-1 font-display text-xl font-bold tabular-nums leading-tight" :class="dato.destacado ? 'text-white' : 'text-texto-fuerte'">{{ dato.valor }}</dd>
+            <p v-if="dato.nota" class="mt-0.5 text-[0.6875rem]" :class="dato.destacado ? 'text-white/85' : 'text-texto-suave'">{{ dato.nota }}</p>
           </div>
         </dl>
         <p
           v-for="(frase, idx) in frases"
           :key="frase"
-          class="explicacion-entra mt-4 text-base leading-relaxed text-gray-700"
+          class="explicacion-entra mt-4 text-base leading-relaxed text-texto-medio"
           :style="{ animationDelay: `${240 + idx * 80}ms` }"
         >
           {{ frase }}
@@ -96,11 +96,11 @@
 
       <!-- Crear: el mismo préstamo en cada tipo, con sus dos formas de cobro -->
       <template v-else>
-        <p class="explicacion-entra rounded-xl bg-[#F6FBF7] px-3 py-2.5 text-center text-sm text-gray-700">
-          <span v-if="!usaFormulario" class="text-gray-500">Ejemplo: </span>
-          <strong class="tabular-nums text-gray-900">{{ dinero(prestamo.capital) }}</strong>
-          · <strong class="tabular-nums text-gray-900">{{ porcentaje(prestamo.tasa) }}</strong> mensual
-          · <strong class="tabular-nums text-gray-900">{{ prestamo.cuotas }}</strong> {{ prestamo.cuotas === 1 ? 'cuota' : 'cuotas' }}{{ quincenal ? ' quincenales' : '' }}
+        <p class="explicacion-entra rounded-xl bg-[#F6FBF7] oscuro:bg-superficie-suave px-3 py-2.5 text-center text-sm text-texto-medio">
+          <span v-if="!usaFormulario" class="text-texto-suave">Ejemplo: </span>
+          <strong class="tabular-nums text-texto-fuerte">{{ dinero(prestamo.capital) }}</strong>
+          · <strong class="tabular-nums text-texto-fuerte">{{ porcentaje(prestamo.tasa) }}</strong> mensual
+          · <strong class="tabular-nums text-texto-fuerte">{{ prestamo.cuotas }}</strong> {{ prestamo.cuotas === 1 ? 'cuota' : 'cuotas' }}{{ quincenal ? ' quincenales' : '' }}
         </p>
 
         <section
@@ -109,8 +109,8 @@
           class="explicacion-entra mt-5"
           :style="{ animationDelay: `${120 + t * 120}ms` }"
         >
-          <h4 class="font-display text-base font-bold text-gray-900">{{ tipo.nombre }}</h4>
-          <p class="mt-0.5 text-sm leading-snug text-gray-600">{{ tipo.cuenta }}</p>
+          <h4 class="font-display text-base font-bold text-texto-fuerte">{{ tipo.nombre }}</h4>
+          <p class="mt-0.5 text-sm leading-snug text-texto-secundario">{{ tipo.cuenta }}</p>
 
           <table class="mt-2 w-full table-fixed text-sm tabular-nums">
             <thead>
@@ -120,21 +120,21 @@
                   v-for="col in tipo.columnas"
                   :key="col.id"
                   class="rounded-t-lg px-2 pt-2 pb-1 text-right text-xs font-semibold"
-                  :class="col.elegida ? 'bg-[#1B5E37] text-white' : 'text-gray-500'"
+                  :class="col.elegida ? 'bg-[#1B5E37] text-white' : 'text-texto-suave'"
                 >
                   {{ col.nombre }}
                 </th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(fila, f) in filas" :key="fila.id" class="border-t border-gray-100">
-                <th class="py-2 pr-2 text-left text-xs font-normal text-gray-500">{{ fila.etiqueta }}</th>
+              <tr v-for="(fila, f) in filas" :key="fila.id" class="border-t border-borde-suave">
+                <th class="py-2 pr-2 text-left text-xs font-normal text-texto-suave">{{ fila.etiqueta }}</th>
                 <td
                   v-for="col in tipo.columnas"
                   :key="col.id"
                   class="px-2 py-2 text-right"
                   :class="[
-                    col.elegida ? 'bg-[#E8F5E9] font-bold text-gray-900' : 'text-gray-800',
+                    col.elegida ? 'bg-marca-suave font-bold text-texto-fuerte' : 'text-texto',
                     col.elegida && f === filas.length - 1 ? 'rounded-b-lg' : '',
                     fila.id === 'total' ? 'font-bold' : ''
                   ]"
@@ -147,7 +147,7 @@
           </table>
         </section>
 
-        <p class="mt-4 text-xs leading-relaxed text-gray-500">
+        <p class="mt-4 text-xs leading-relaxed text-texto-suave">
           En los dos casos el socio recibe {{ dinero(prestamo.capital) }} y paga lo mismo; solo cambia cuándo entra la ganancia a la natillera.
           <span class="whitespace-nowrap">En verde, lo que elegiste.</span>
         </p>
@@ -158,7 +158,7 @@
 
     <!-- ── Pie fijo (la barra de Safari lo tapa: se suma `tapado` al padding) ── -->
     <div
-      class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-3"
+      class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 pt-3"
       :style="{ paddingBottom: `calc(max(1.1rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
     >
       <button type="button" class="btn-modal-primary w-full" @click="cerrar">Entendido</button>

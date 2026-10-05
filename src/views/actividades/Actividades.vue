@@ -29,7 +29,7 @@
           <button
             type="button"
             data-guia="boton-recorrido"
-            class="flex h-11 min-w-[2.75rem] flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#166534]/25 bg-white text-[#166534] shadow-sm transition-colors hover:bg-[#f0fdf4] active:bg-[#dcfce7] sm:h-auto sm:px-3 sm:py-2 sm:rounded-lg [-webkit-tap-highlight-color:transparent]"
+            class="flex h-11 min-w-[2.75rem] flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#166534]/25 oscuro:border-marca-tinta/25 bg-superficie-tarjeta text-[#166534] oscuro:text-marca-tinta shadow-sm transition-colors hover:bg-[#f0fdf4] oscuro:hover:bg-green-500/15 oscuro:hover:bg-marca-suave active:bg-[#dcfce7] oscuro:active:bg-green-500/15 oscuro:active:bg-marca-suave sm:h-auto sm:px-3 sm:py-2 sm:rounded-lg [-webkit-tap-highlight-color:transparent]"
             title="¿Cómo funciona esta pantalla?"
             aria-label="¿Cómo funciona esta pantalla? Ver el recorrido guiado"
             @click="abrirGuia({ manual: true })"
@@ -77,8 +77,8 @@
       align="bottom"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="cerrarModalBienvenida"
     >
@@ -120,57 +120,57 @@
           @scroll.passive="onScrollBienvenida"
         >
           <div class="space-y-3">
-            <p class="px-1 text-center text-sm text-gray-500">
-              La diferencia está en <strong class="text-gray-700">quién lleva el cobro</strong>
+            <p class="px-1 text-center text-sm text-texto-suave">
+              La diferencia está en <strong class="text-texto-medio">quién lleva el cobro</strong>
             </p>
             <!-- Liquidar -->
-            <div class="tarjeta-modo overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-sm" style="--retraso: 60ms">
-              <div class="flex items-center gap-3 bg-gradient-to-r from-emerald-50 to-emerald-50/20 px-4 py-3">
+            <div class="tarjeta-modo overflow-hidden rounded-2xl border border-emerald-200 oscuro:border-emerald-500/30 bg-superficie-tarjeta shadow-sm" style="--retraso: 60ms">
+              <div class="flex items-center gap-3 bg-gradient-to-r from-emerald-50 oscuro:from-emerald-500/15 to-emerald-50/20 oscuro:to-emerald-500/10 px-4 py-3">
                 <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-xl shadow-sm">💰</div>
                 <div class="min-w-0">
-                  <h4 class="font-display text-base font-bold leading-tight text-gray-800">Liquidar</h4>
-                  <p class="text-xs font-semibold text-emerald-600">Ya terminó</p>
+                  <h4 class="font-display text-base font-bold leading-tight text-texto">Liquidar</h4>
+                  <p class="text-xs font-semibold text-emerald-600 oscuro:text-emerald-300">Ya terminó</p>
                 </div>
               </div>
               <div class="px-4 py-3">
-                <p class="text-sm leading-relaxed text-gray-700">
+                <p class="text-sm leading-relaxed text-texto-medio">
                   Anotas los <strong>ingresos</strong> y <strong>gastos</strong>; la utilidad entra al fondo.
                 </p>
-                <p class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                <p class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 oscuro:bg-emerald-500/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 oscuro:text-emerald-300">
                   <CheckCircleIcon class="w-3.5 h-3.5" />
                   Nadie queda debiendo
                 </p>
               </div>
             </div>
             <!-- En curso -->
-            <div class="tarjeta-modo overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-sm" style="--retraso: 160ms">
-              <div class="flex items-center gap-3 bg-gradient-to-r from-amber-50 to-amber-50/20 px-4 py-3">
+            <div class="tarjeta-modo overflow-hidden rounded-2xl border border-amber-200 oscuro:border-amber-500/30 bg-superficie-tarjeta shadow-sm" style="--retraso: 160ms">
+              <div class="flex items-center gap-3 bg-gradient-to-r from-amber-50 oscuro:from-amber-500/15 to-amber-50/20 oscuro:to-amber-500/10 px-4 py-3">
                 <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-xl shadow-sm">🔄</div>
                 <div class="min-w-0">
-                  <h4 class="font-display text-base font-bold leading-tight text-gray-800">En curso</h4>
-                  <p class="text-xs font-semibold text-amber-600">Apenas empieza</p>
+                  <h4 class="font-display text-base font-bold leading-tight text-texto">En curso</h4>
+                  <p class="text-xs font-semibold text-amber-600 oscuro:text-amber-300">Apenas empieza</p>
                 </div>
               </div>
               <div class="px-4 py-3">
-                <p class="text-sm leading-relaxed text-gray-700">
+                <p class="text-sm leading-relaxed text-texto-medio">
                   Le cobras a cada socio, como una cuota. Al final la <strong>liquidas</strong>.
                 </p>
-                <p class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                <p class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-50 oscuro:bg-amber-500/15 px-2.5 py-1 text-[11px] font-semibold text-amber-700 oscuro:text-amber-300">
                   <UsersIcon class="w-3.5 h-3.5" />
                   Queda pendiente por socio
                 </p>
               </div>
             </div>
-            <p class="tarjeta-modo px-1 pt-1 text-center text-xs leading-relaxed text-gray-500" style="--retraso: 260ms">
-              ¿Falta recoger la plata? <strong class="text-amber-600">En curso</strong>.<br class="sm:hidden" />
-              ¿Ya están las cuentas? <strong class="text-emerald-600">Liquidar</strong>.
+            <p class="tarjeta-modo px-1 pt-1 text-center text-xs leading-relaxed text-texto-suave" style="--retraso: 260ms">
+              ¿Falta recoger la plata? <strong class="text-amber-600 oscuro:text-amber-300">En curso</strong>.<br class="sm:hidden" />
+              ¿Ya están las cuentas? <strong class="text-emerald-600 oscuro:text-emerald-300">Liquidar</strong>.
             </p>
           </div>
         </div>
           <NatiscrollHint :show="hayMasBienvenida" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <button type="button" @click="cerrarModalBienvenida" class="ds-btn ds-btn--primary w-full">
             Entendido
           </button>
@@ -191,17 +191,17 @@
         <p class="ds-stat-card__label">Ingresos</p>
       </div>
       <div data-guia="actividades-resumen-gastos" class="ds-stat-card">
-        <div class="ds-stat-card__icon bg-red-100 text-red-600">
+        <div class="ds-stat-card__icon bg-red-100 oscuro:bg-red-500/15 text-red-600 oscuro:text-red-300">
           <CurrencyDollarIcon class="w-5 h-5" />
         </div>
-        <p class="ds-stat-card__value text-red-600 whitespace-nowrap tabular-nums max-sm:text-[clamp(0.75rem,3.4vw,1.05rem)]">${{ formatMoney(totalGastos) }}</p>
+        <p class="ds-stat-card__value text-red-600 oscuro:text-red-300 whitespace-nowrap tabular-nums max-sm:text-[clamp(0.75rem,3.4vw,1.05rem)]">${{ formatMoney(totalGastos) }}</p>
         <p class="ds-stat-card__label">Gastos</p>
       </div>
       <div data-guia="actividades-resumen-utilidad" class="ds-stat-card">
-        <div class="ds-stat-card__icon bg-purple-100 text-purple-600">
+        <div class="ds-stat-card__icon bg-purple-100 oscuro:bg-purple-500/15 text-purple-600 oscuro:text-purple-300">
           <BanknotesIcon class="w-5 h-5" />
         </div>
-        <p class="ds-stat-card__value text-purple-600 whitespace-nowrap tabular-nums max-sm:text-[clamp(0.75rem,3.4vw,1.05rem)]">${{ formatMoney(utilidadTotal) }}</p>
+        <p class="ds-stat-card__value text-purple-600 oscuro:text-purple-300 whitespace-nowrap tabular-nums max-sm:text-[clamp(0.75rem,3.4vw,1.05rem)]">${{ formatMoney(utilidadTotal) }}</p>
         <p class="ds-stat-card__label">Utilidad</p>
       </div>
     </div>
@@ -308,9 +308,9 @@
       </div>
 
       <!-- Sin resultados para el filtro actual (sirve a las dos vistas) -->
-      <div v-if="sinResultadosFiltro" class="rounded-2xl border border-dashed border-gray-300 bg-white px-4 py-8 text-center">
-        <p class="text-sm font-semibold text-gray-700">Sin resultados</p>
-        <p class="mt-1 text-xs text-gray-500">Prueba con otro texto o quita el filtro de estado.</p>
+      <div v-if="sinResultadosFiltro" class="rounded-2xl border border-dashed border-borde-fuerte bg-superficie-tarjeta px-4 py-8 text-center">
+        <p class="text-sm font-semibold text-texto-medio">Sin resultados</p>
+        <p class="mt-1 text-xs text-texto-suave">Prueba con otro texto o quita el filtro de estado.</p>
         <button
           type="button"
           class="ds-btn ds-btn--secondary mt-3"
@@ -332,9 +332,9 @@
           @eliminar="confirmarEliminarActividad(actividad)"
           @ver-desglose="abrirModalDesglosePagosRifa(actividad)"
           @ver-por-pagar="abrirModalPorPagarRifa(actividad)"
-          @cambiar-forma-pago="abrirModalFormaPagoLiquidacion(actividad)"
+          @cambiar-forma-pago="abrirEditarActividad(actividad)"
           @ver-miembros="abrirModalMiembrosPagaron(actividad)"
-          @registrar-gastos="abrirModalRegistrarGastos(actividad)"
+          @registrar-gastos="abrirEditarActividad(actividad)"
         />
       </div>
       <!-- Vista Agrupada: series colapsables (con resumen propio) + actividades sueltas -->
@@ -346,18 +346,18 @@
           <template v-if="item.tipo === 'grupo'">
             <div
               :data-guia-serie="item.serieId"
-              class="rounded-2xl overflow-hidden bg-white border shadow-[var(--shadow-xs)] transition-colors"
-              :class="isGrupoExpandido(item.serieId) ? 'border-indigo-300' : 'border-indigo-200/60'"
+              class="rounded-2xl overflow-hidden bg-superficie-tarjeta border shadow-[var(--shadow-xs)] transition-colors"
+              :class="isGrupoExpandido(item.serieId) ? 'border-indigo-300 oscuro:border-indigo-500/30' : 'border-indigo-200/60 oscuro:border-indigo-500/30'"
             >
               <!-- Franja: identifica que es una serie y en qué va -->
-              <div class="flex items-center gap-1.5 px-4 py-2 border-b border-indigo-100 bg-indigo-50 text-indigo-700 text-xs font-semibold">
+              <div class="flex items-center gap-1.5 px-4 py-2 border-b border-indigo-100 oscuro:border-indigo-500/30 bg-indigo-50 oscuro:bg-indigo-500/15 text-indigo-700 oscuro:text-indigo-300 text-xs font-semibold">
                 <RectangleStackIcon class="w-4 h-4 flex-shrink-0" />
                 <span>Serie de {{ item.resumen.total }}</span>
                 <span class="text-indigo-300">·</span>
                 <span class="capitalize font-medium text-indigo-500 truncate">{{ (item.tipoActividad || 'otro').toLowerCase() }}</span>
                 <span
                   class="ml-auto flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold"
-                  :class="item.resumen.todoLiquidado ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
+                  :class="item.resumen.todoLiquidado ? 'bg-emerald-100 oscuro:bg-emerald-500/15 text-emerald-700 oscuro:text-emerald-300' : 'bg-amber-100 oscuro:bg-amber-500/15 text-amber-700 oscuro:text-amber-300'"
                 >
                   {{ item.resumen.todoLiquidado ? 'Finalizada' : `${item.resumen.enCurso} en curso` }}
                 </span>
@@ -368,7 +368,7 @@
                 @click="toggleGrupo(item.serieId)"
                 :class="[
                   'p-3 sm:p-4 cursor-pointer transition-colors duration-200',
-                  isGrupoExpandido(item.serieId) ? 'bg-indigo-50/60' : 'bg-white hover:bg-indigo-50/40'
+                  isGrupoExpandido(item.serieId) ? 'bg-indigo-50/60 oscuro:bg-indigo-500/15' : 'bg-superficie-tarjeta hover:bg-indigo-50/40 oscuro:hover:bg-indigo-500/15'
                 ]"
               >
                 <div class="flex items-start gap-3">
@@ -376,16 +376,16 @@
                     <component :is="iconoDeTipo(item.tipoActividad, item.tipoRifa)" class="w-5 h-5" />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <h3 class="font-display font-semibold text-gray-800 text-base sm:text-lg leading-snug line-clamp-2">
+                    <h3 class="font-display font-semibold text-texto text-base sm:text-lg leading-snug line-clamp-2">
                       {{ item.descripcionBase }}
                     </h3>
-                    <p v-if="item.resumen.rango" class="mt-0.5 text-xs font-medium text-gray-500">
+                    <p v-if="item.resumen.rango" class="mt-0.5 text-xs font-medium text-texto-suave">
                       {{ item.resumen.rango }}
                     </p>
                   </div>
                   <div
                     class="w-9 h-9 flex items-center justify-center rounded-full transition-colors duration-200 flex-shrink-0"
-                    :class="isGrupoExpandido(item.serieId) ? 'bg-indigo-500 text-white' : 'bg-indigo-100 text-indigo-600'"
+                    :class="isGrupoExpandido(item.serieId) ? 'bg-indigo-500 text-white' : 'bg-indigo-100 oscuro:bg-indigo-500/15 text-indigo-600 oscuro:text-indigo-300'"
                   >
                     <ChevronDownIcon class="w-5 h-5 transition-transform duration-300" :class="{ 'rotate-180': isGrupoExpandido(item.serieId) }" />
                   </div>
@@ -394,38 +394,38 @@
                 <!-- Avance de la serie: cuántas se cerraron ya -->
                 <div class="mt-3">
                   <div class="flex items-center justify-between gap-2 text-[11px] font-semibold">
-                    <span class="text-gray-500">{{ item.resumen.liquidadas }} de {{ item.resumen.total }} finalizadas</span>
-                    <span class="text-indigo-600 tabular-nums">{{ item.resumen.pctAvance }}%</span>
+                    <span class="text-texto-suave">{{ item.resumen.liquidadas }} de {{ item.resumen.total }} finalizadas</span>
+                    <span class="text-indigo-600 oscuro:text-indigo-300 tabular-nums">{{ item.resumen.pctAvance }}%</span>
                   </div>
-                  <div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-indigo-100">
+                  <div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-indigo-100 oscuro:bg-indigo-500/15">
                     <div class="h-full rounded-full bg-indigo-500 transition-all duration-500" :style="{ width: `${item.resumen.pctAvance}%` }"></div>
                   </div>
                 </div>
 
                 <!-- Cifras del grupo: lo que evita tener que abrirlo para saber cómo va -->
                 <div class="mt-3 grid grid-cols-2 gap-2">
-                  <div v-if="item.resumen.enCurso" class="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2 min-w-0">
-                    <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 leading-tight">Recaudado</p>
-                    <p class="font-bold text-emerald-600 text-sm leading-tight mt-0.5 whitespace-nowrap tabular-nums">
+                  <div v-if="item.resumen.enCurso" class="rounded-xl bg-slate-50 oscuro:bg-superficie-suave border border-slate-100 oscuro:border-borde-suave px-3 py-2 min-w-0">
+                    <p class="text-[10px] font-semibold uppercase tracking-wide text-texto-tenue leading-tight">Recaudado</p>
+                    <p class="font-bold text-emerald-600 oscuro:text-emerald-300 text-sm leading-tight mt-0.5 whitespace-nowrap tabular-nums">
                       ${{ formatMoney(item.resumen.recaudado) }}
                     </p>
-                    <p class="text-[10px] text-gray-400 leading-tight whitespace-nowrap tabular-nums">de ${{ formatMoney(item.resumen.asignado) }}</p>
+                    <p class="text-[10px] text-texto-tenue leading-tight whitespace-nowrap tabular-nums">de ${{ formatMoney(item.resumen.asignado) }}</p>
                   </div>
-                  <div v-if="item.resumen.liquidadas" class="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2 min-w-0">
-                    <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 leading-tight">Utilidad</p>
-                    <p class="font-bold text-violet-600 text-sm leading-tight mt-0.5 whitespace-nowrap tabular-nums">
+                  <div v-if="item.resumen.liquidadas" class="rounded-xl bg-slate-50 oscuro:bg-superficie-suave border border-slate-100 oscuro:border-borde-suave px-3 py-2 min-w-0">
+                    <p class="text-[10px] font-semibold uppercase tracking-wide text-texto-tenue leading-tight">Utilidad</p>
+                    <p class="font-bold text-violet-600 oscuro:text-violet-300 text-sm leading-tight mt-0.5 whitespace-nowrap tabular-nums">
                       ${{ formatMoney(item.resumen.utilidad) }}
                     </p>
-                    <p class="text-[10px] text-gray-400 leading-tight">ya liquidada</p>
+                    <p class="text-[10px] text-texto-tenue leading-tight">ya liquidada</p>
                   </div>
                 </div>
 
                 <!-- Acciones de la serie -->
-                <div class="mt-3 flex items-center gap-1.5 border-t border-indigo-100/70 pt-2">
+                <div class="mt-3 flex items-center gap-1.5 border-t border-indigo-100/70 oscuro:border-indigo-500/30 pt-2">
                   <button
                     v-if="item.tipoActividad === 'rifa'"
                     @click.stop="abrirModalGanadoresGrupo(item)"
-                    class="inline-flex items-center gap-1.5 px-2.5 py-2 min-h-[44px] rounded-xl transition-colors text-amber-600 hover:text-amber-700 hover:bg-amber-50 touch-manipulation"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-2 min-h-[44px] rounded-xl transition-colors text-amber-600 oscuro:text-amber-300 hover:text-amber-700 oscuro:hover:text-amber-300 hover:bg-amber-50 oscuro:hover:bg-amber-500/15 touch-manipulation"
                     title="Ver ganadores"
                   >
                     <TrophyIcon class="w-5 h-5 flex-shrink-0" />
@@ -433,7 +433,7 @@
                   </button>
                   <button
                     @click.stop="exportarGrupoAExcel(item)"
-                    class="ml-auto p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl transition-colors text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 touch-manipulation"
+                    class="ml-auto p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl transition-colors text-texto-tenue hover:text-indigo-600 oscuro:hover:text-indigo-300 hover:bg-indigo-50 oscuro:hover:bg-indigo-500/15 touch-manipulation"
                     title="Exportar serie a Excel"
                     aria-label="Exportar serie a Excel"
                   >
@@ -442,7 +442,7 @@
                   <button
                     v-if="!soloLectura"
                     @click.stop="confirmarEliminarGrupo(item)"
-                    class="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl transition-colors text-gray-400 hover:text-rose-600 hover:bg-rose-50 touch-manipulation"
+                    class="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl transition-colors text-texto-tenue hover:text-rose-600 oscuro:hover:text-rose-300 hover:bg-rose-50 oscuro:hover:bg-rose-500/15 touch-manipulation"
                     title="Eliminar serie completa"
                     aria-label="Eliminar serie completa"
                   >
@@ -454,10 +454,10 @@
               <!-- Actividades de la serie: el título es el período, que es lo que las distingue -->
               <div
                 v-show="isGrupoExpandido(item.serieId)"
-                class="border-t border-indigo-100 bg-indigo-50/50 pt-3 pb-4 px-3 sm:px-4 overflow-hidden animate-fade-in-up"
+                class="border-t border-indigo-100 oscuro:border-indigo-500/30 bg-indigo-50/50 oscuro:bg-indigo-500/15 pt-3 pb-4 px-3 sm:px-4 overflow-hidden animate-fade-in-up"
               >
                 <!-- Hilo índigo a la izquierda: deja claro que las filas cuelgan de la serie -->
-                <div class="space-y-1.5 border-l-2 border-indigo-200 pl-3">
+                <div class="space-y-1.5 border-l-2 border-indigo-200 oscuro:border-indigo-500/30 pl-3">
                   <ActividadCard
                     :solo-lectura="soloLectura"
                     v-for="actividad in item.actividades"
@@ -470,9 +470,9 @@
                     @eliminar="confirmarEliminarActividad(actividad)"
                     @ver-desglose="abrirModalDesglosePagosRifa(actividad)"
                     @ver-por-pagar="abrirModalPorPagarRifa(actividad)"
-                    @cambiar-forma-pago="abrirModalFormaPagoLiquidacion(actividad)"
+                    @cambiar-forma-pago="abrirEditarActividad(actividad)"
                     @ver-miembros="abrirModalMiembrosPagaron(actividad)"
-                    @registrar-gastos="abrirModalRegistrarGastos(actividad)"
+          @registrar-gastos="abrirEditarActividad(actividad)"
                   />
                 </div>
               </div>
@@ -489,9 +489,9 @@
               @eliminar="confirmarEliminarActividad(item.actividad)"
               @ver-desglose="abrirModalDesglosePagosRifa(item.actividad)"
               @ver-por-pagar="abrirModalPorPagarRifa(item.actividad)"
-              @cambiar-forma-pago="abrirModalFormaPagoLiquidacion(item.actividad)"
+              @cambiar-forma-pago="abrirEditarActividad(item.actividad)"
               @ver-miembros="abrirModalMiembrosPagaron(item.actividad)"
-              @registrar-gastos="abrirModalRegistrarGastos(item.actividad)"
+              @registrar-gastos="abrirEditarActividad(item.actividad)"
             />
           </template>
         </template>
@@ -519,8 +519,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="32rem"
       @close="modalCobroSocio = false"
     >
@@ -581,7 +581,7 @@
                 <XMarkIcon class="w-4 h-4" />
               </button>
             </div>
-            <p v-if="sociosCobroFiltrados.length === 0" class="py-8 text-center text-sm text-slate-500">
+            <p v-if="sociosCobroFiltrados.length === 0" class="py-8 text-center text-sm text-slate-500 oscuro:text-texto-suave">
               Ningún socio coincide con la búsqueda.
             </p>
             <div v-else class="space-y-2">
@@ -589,19 +589,19 @@
                 v-for="sn in sociosCobroFiltrados"
                 :key="sn.id"
                 type="button"
-                class="flex w-full min-h-[56px] items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-left transition-colors hover:border-natillera-300 hover:bg-natillera-50/40 touch-manipulation"
+                class="flex w-full min-h-[56px] items-center gap-3 rounded-xl border border-slate-200 oscuro:border-borde bg-superficie-tarjeta px-3 py-2 text-left transition-colors hover:border-natillera-300 oscuro:hover:border-natillera-500/30 hover:bg-natillera-50/40 oscuro:hover:bg-natillera-500/15 touch-manipulation"
                 @click="elegirSocioCobro(sn)"
               >
                 <img
                   :src="getAvatarUrl(sn.socio?.nombre || '', sn.socio?.avatar_seed, sn.socio?.avatar_style)"
                   :alt="sn.socio?.nombre || 'Socio'"
-                  class="h-10 w-10 flex-shrink-0 rounded-full bg-natillera-50 object-cover"
+                  class="h-10 w-10 flex-shrink-0 rounded-full bg-natillera-50 oscuro:bg-natillera-500/15 object-cover"
                   loading="lazy"
                 />
-                <p class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800">
+                <p class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800 oscuro:text-texto">
                   {{ sn.socio?.nombre || 'Socio' }}
                 </p>
-                <ChevronRightIcon class="w-5 h-5 flex-shrink-0 text-slate-300" />
+                <ChevronRightIcon class="w-5 h-5 flex-shrink-0 text-slate-300 oscuro:text-texto-tenue" />
               </button>
             </div>
           </template>
@@ -610,15 +610,15 @@
           <template v-else>
             <CargaCaja v-if="cargandoPendientesCobro" texto="Buscando lo que debe" />
             <template v-else-if="pendientesSocioCobro.length === 0">
-              <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center">
-                <p class="text-sm font-semibold text-slate-700">Nada por cobrar</p>
-                <p class="mt-1 text-xs text-slate-500">
+              <div class="rounded-xl border border-dashed border-slate-300 oscuro:border-borde-fuerte bg-slate-50 oscuro:bg-superficie-suave px-4 py-8 text-center">
+                <p class="text-sm font-semibold text-slate-700 oscuro:text-texto-medio">Nada por cobrar</p>
+                <p class="mt-1 text-xs text-slate-500 oscuro:text-texto-suave">
                   {{ socioCobro?.socio?.nombre }} no debe ninguna actividad de este mes ni de meses anteriores.
                 </p>
               </div>
             </template>
             <template v-else>
-              <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 oscuro:text-texto-suave">
                 Pendientes hasta {{ mesActualTexto }}
               </p>
               <div class="space-y-2">
@@ -626,7 +626,7 @@
                   v-for="p in pendientesSocioCobro"
                   :key="p.id"
                   class="rounded-xl border-2 p-3 transition-colors"
-                  :class="estaSeleccionada(p) ? 'border-natillera-400 bg-natillera-50/50' : 'border-slate-200 bg-white'"
+                  :class="estaSeleccionada(p) ? 'border-natillera-400 bg-natillera-50/50 oscuro:bg-natillera-500/15' : 'border-slate-200 oscuro:border-borde bg-superficie-tarjeta'"
                 >
                   <button
                     type="button"
@@ -636,13 +636,13 @@
                   >
                     <span
                       class="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border-2 transition-colors"
-                      :class="estaSeleccionada(p) ? 'border-natillera-500 bg-natillera-500 text-white' : 'border-slate-300 bg-white text-transparent'"
+                      :class="estaSeleccionada(p) ? 'border-natillera-500 bg-natillera-500 text-white' : 'border-slate-300 oscuro:border-borde-fuerte bg-superficie-tarjeta text-transparent'"
                     >
                       <CheckIcon class="h-4 w-4" />
                     </span>
                     <span class="min-w-0 flex-1">
-                      <span class="block truncate text-sm font-semibold text-slate-800">{{ p.actividad?.descripcion }}</span>
-                      <span class="block text-xs text-slate-500">
+                      <span class="block truncate text-sm font-semibold text-slate-800 oscuro:text-texto">{{ p.actividad?.descripcion }}</span>
+                      <span class="block text-xs text-slate-500 oscuro:text-texto-suave">
                         Debe ${{ formatMoney(p.pendiente) }}
                         <template v-if="p.pagado > 0"> · ya abonó ${{ formatMoney(p.pagado) }}</template>
                       </span>
@@ -650,22 +650,22 @@
                   </button>
                   <!-- Valor a cobrar: por defecto todo lo pendiente, editable para abonos -->
                   <div v-if="estaSeleccionada(p)" class="mt-2 flex items-center gap-2 pl-9">
-                    <div class="flex h-11 flex-1 items-center rounded-xl border-2 border-natillera-200 bg-white px-3">
-                      <span class="mr-1 text-sm font-medium text-slate-400">$</span>
+                    <div class="flex h-11 flex-1 items-center rounded-xl border-2 border-natillera-200 oscuro:border-natillera-500/30 bg-superficie-tarjeta px-3">
+                      <span class="mr-1 text-sm font-medium text-slate-400 oscuro:text-texto-tenue">$</span>
                       <!-- text-base: iOS hace zoom en inputs con font-size < 16px -->
                       <input
                         :value="seleccionCobro[p.id] ? formatNumberWithSeparator(seleccionCobro[p.id]) : ''"
                         @input="fijarValorCobro(p, parseMilesInput($event.target.value))"
                         type="text"
                         inputmode="decimal"
-                        class="w-full min-w-0 border-0 bg-transparent p-0 text-base font-semibold text-slate-800 outline-none"
+                        class="w-full min-w-0 border-0 bg-transparent p-0 text-base font-semibold text-slate-800 oscuro:text-texto outline-none"
                         :placeholder="formatNumberWithSeparator(p.pendiente)"
                         :aria-label="`Valor a pagar de ${p.actividad?.descripcion}`"
                       />
                     </div>
                     <button
                       type="button"
-                      class="min-h-[44px] flex-shrink-0 rounded-xl border border-natillera-300 bg-white px-3 text-xs font-semibold text-natillera-700 touch-manipulation"
+                      class="min-h-[44px] flex-shrink-0 rounded-xl border border-natillera-300 oscuro:border-natillera-500/30 bg-superficie-tarjeta px-3 text-xs font-semibold text-natillera-700 oscuro:text-natillera-300 touch-manipulation"
                       @click="fijarValorCobro(p, p.pendiente)"
                     >
                       Todo
@@ -674,9 +674,9 @@
                 </div>
               </div>
 
-              <div class="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+              <div class="mt-4 space-y-3 rounded-xl border border-slate-200 oscuro:border-borde bg-slate-50/70 oscuro:bg-superficie-suave/70 p-3">
                 <div>
-                  <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Forma de pago</label>
+                  <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 oscuro:text-texto-suave">Forma de pago</label>
                   <div class="flex gap-2">
                     <button
                       type="button"
@@ -684,7 +684,7 @@
                       :aria-pressed="formCobroSocio.formaPago === 'efectivo'"
                       :class="[
                         'min-h-[44px] flex-1 rounded-xl border-2 px-3 text-[13px] font-semibold transition-colors touch-manipulation',
-                        formCobroSocio.formaPago === 'efectivo' ? 'border-emerald-500 bg-white text-emerald-700' : 'border-slate-200 bg-white text-slate-500'
+                        formCobroSocio.formaPago === 'efectivo' ? 'border-emerald-500 bg-superficie-tarjeta text-emerald-700 oscuro:text-emerald-300' : 'border-slate-200 oscuro:border-borde bg-superficie-tarjeta text-slate-500 oscuro:text-texto-suave'
                       ]"
                     >
                       Efectivo
@@ -695,7 +695,7 @@
                       :aria-pressed="formCobroSocio.formaPago === 'transferencia'"
                       :class="[
                         'min-h-[44px] flex-1 rounded-xl border-2 px-3 text-[13px] font-semibold transition-colors touch-manipulation',
-                        formCobroSocio.formaPago === 'transferencia' ? 'border-blue-500 bg-white text-blue-700' : 'border-slate-200 bg-white text-slate-500'
+                        formCobroSocio.formaPago === 'transferencia' ? 'border-blue-500 bg-superficie-tarjeta text-blue-700 oscuro:text-blue-300' : 'border-slate-200 oscuro:border-borde bg-superficie-tarjeta text-slate-500 oscuro:text-texto-suave'
                       ]"
                     >
                       Transferencia
@@ -703,7 +703,7 @@
                   </div>
                 </div>
                 <div>
-                  <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Fecha del pago</label>
+                  <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 oscuro:text-texto-suave">Fecha del pago</label>
                   <DateInput v-model="formCobroSocio.fecha" />
                 </div>
               </div>
@@ -713,10 +713,10 @@
           <NatiscrollHint :show="hayMasCobroSocio" />
         </div>
 
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 sm:px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div v-if="pasoCobro === 'actividades' && pendientesSocioCobro.length" class="mb-2 flex items-baseline justify-between">
-            <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Total a cobrar</span>
-            <span class="text-lg font-bold tabular-nums text-natillera-600">${{ formatMoney(totalCobroSocio) }}</span>
+            <span class="text-xs font-semibold uppercase tracking-wide text-slate-500 oscuro:text-texto-suave">Total a cobrar</span>
+            <span class="text-lg font-bold tabular-nums text-natillera-600 oscuro:text-natillera-300">${{ formatMoney(totalCobroSocio) }}</span>
           </div>
           <div class="flex gap-3">
             <button
@@ -746,8 +746,8 @@
       align="bottom"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="comprobanteActividad = null"
     >
@@ -771,56 +771,57 @@
         <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="refScrollComprobante"
-          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] bg-emerald-50/60 p-4"
+          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] bg-emerald-50/60 oscuro:bg-emerald-500/15 p-4"
           @scroll.passive="onScrollComprobante"
         >
-          <!-- Lo que se captura con toPng: el recibo, sin botones ni cabecera -->
-          <div ref="comprobanteActividadRef" class="rounded-2xl border border-emerald-200 bg-white p-5">
-            <p class="text-center font-display text-base font-bold text-[#1B5E37]">{{ comprobanteActividad?.natilleraNombre }}</p>
-            <p class="mt-0.5 text-center text-[11px] uppercase tracking-widest text-slate-400">Comprobante de pago</p>
+          <!-- Lo que se captura con toPng: el recibo, sin botones ni cabecera. Siempre en claro
+               (data-tema): se comparte por WhatsApp y se imprime -->
+          <div ref="comprobanteActividadRef" data-tema="claro" class="rounded-2xl border border-emerald-200 oscuro:border-emerald-500/30 bg-superficie-tarjeta p-5">
+            <p class="text-center font-display text-base font-bold text-marca-tinta">{{ comprobanteActividad?.natilleraNombre }}</p>
+            <p class="mt-0.5 text-center text-[11px] uppercase tracking-widest text-slate-400 oscuro:text-texto-tenue">Comprobante de pago</p>
 
-            <div class="my-4 border-t border-dashed border-slate-200"></div>
+            <div class="my-4 border-t border-dashed border-slate-200 oscuro:border-borde"></div>
 
             <div class="space-y-1.5 text-sm">
               <div class="flex justify-between gap-3">
-                <span class="text-slate-500">Socio</span>
-                <span class="min-w-0 truncate font-semibold text-slate-800">{{ comprobanteActividad?.socioNombre }}</span>
+                <span class="text-slate-500 oscuro:text-texto-suave">Socio</span>
+                <span class="min-w-0 truncate font-semibold text-slate-800 oscuro:text-texto">{{ comprobanteActividad?.socioNombre }}</span>
               </div>
               <div class="flex justify-between gap-3">
-                <span class="text-slate-500">Fecha</span>
-                <span class="font-semibold text-slate-800">{{ formatDate(comprobanteActividad?.fecha) }}</span>
+                <span class="text-slate-500 oscuro:text-texto-suave">Fecha</span>
+                <span class="font-semibold text-slate-800 oscuro:text-texto">{{ formatDate(comprobanteActividad?.fecha) }}</span>
               </div>
               <div class="flex justify-between gap-3">
-                <span class="text-slate-500">Forma de pago</span>
-                <span class="font-semibold text-slate-800">{{ comprobanteActividad?.formaPago }}</span>
+                <span class="text-slate-500 oscuro:text-texto-suave">Forma de pago</span>
+                <span class="font-semibold text-slate-800 oscuro:text-texto">{{ comprobanteActividad?.formaPago }}</span>
               </div>
               <div class="flex justify-between gap-3">
-                <span class="text-slate-500">Comprobante</span>
-                <span class="font-mono font-semibold text-slate-800">{{ comprobanteActividad?.codigo }}</span>
+                <span class="text-slate-500 oscuro:text-texto-suave">Comprobante</span>
+                <span class="font-mono font-semibold text-slate-800 oscuro:text-texto">{{ comprobanteActividad?.codigo }}</span>
               </div>
             </div>
 
-            <div class="my-4 border-t border-dashed border-slate-200"></div>
+            <div class="my-4 border-t border-dashed border-slate-200 oscuro:border-borde"></div>
 
-            <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Actividades pagadas</p>
+            <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400 oscuro:text-texto-tenue">Actividades pagadas</p>
             <div class="space-y-2">
               <div v-for="(linea, i) in comprobanteActividad?.lineas || []" :key="i" class="flex items-start justify-between gap-3">
                 <span class="min-w-0">
-                  <span class="block text-sm text-slate-700">{{ linea.nombre }}</span>
-                  <span class="text-[11px] font-semibold" :class="linea.saldada ? 'text-emerald-600' : 'text-amber-600'">
+                  <span class="block text-sm text-slate-700 oscuro:text-texto-medio">{{ linea.nombre }}</span>
+                  <span class="text-[11px] font-semibold" :class="linea.saldada ? 'text-emerald-600 oscuro:text-emerald-300' : 'text-amber-600 oscuro:text-amber-300'">
                     {{ linea.saldada ? 'Queda al día' : 'Abono parcial' }}
                   </span>
                 </span>
-                <span class="flex-shrink-0 text-sm font-bold tabular-nums text-slate-800">${{ formatMoney(linea.valor) }}</span>
+                <span class="flex-shrink-0 text-sm font-bold tabular-nums text-slate-800 oscuro:text-texto">${{ formatMoney(linea.valor) }}</span>
               </div>
             </div>
 
-            <div class="mt-4 flex items-baseline justify-between rounded-xl bg-emerald-50 px-3 py-2.5">
-              <span class="text-xs font-semibold uppercase tracking-wide text-emerald-700">Total pagado</span>
-              <span class="text-xl font-bold tabular-nums text-[#1B5E37]">${{ formatMoney(comprobanteActividad?.total) }}</span>
+            <div class="mt-4 flex items-baseline justify-between rounded-xl bg-emerald-50 oscuro:bg-emerald-500/15 px-3 py-2.5">
+              <span class="text-xs font-semibold uppercase tracking-wide text-emerald-700 oscuro:text-emerald-300">Total pagado</span>
+              <span class="text-xl font-bold tabular-nums text-marca-tinta">${{ formatMoney(comprobanteActividad?.total) }}</span>
             </div>
 
-            <p class="mt-3 text-center text-[10px] leading-relaxed text-slate-400">
+            <p class="mt-3 text-center text-[10px] leading-relaxed text-slate-400 oscuro:text-texto-tenue">
               Pago registrado en Actividades. No corresponde a la cuota del periodo.
             </p>
           </div>
@@ -828,7 +829,7 @@
           <NatiscrollHint :show="hayMasComprobante" />
         </div>
 
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 sm:px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button
               type="button"
@@ -860,8 +861,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="32rem"
       @close="modalNuevaActividad = false"
     >
@@ -896,7 +897,7 @@
           </div>
         </div>
         <!-- Pasos del asistente: siempre a la vista, para saber cuánto falta -->
-        <div class="flex-shrink-0 border-b border-gray-200 bg-white px-4 py-3 sm:px-5">
+        <div class="flex-shrink-0 border-b border-borde bg-superficie-tarjeta px-4 py-3 sm:px-5">
           <ol class="flex items-center gap-2">
             <li
               v-for="(paso, i) in pasosWizard"
@@ -909,16 +910,16 @@
                   ? 'bg-natillera-500 text-white'
                   : i === indicePasoWizard
                     ? 'bg-natillera-500 text-white ring-4 ring-natillera-500/20'
-                    : 'bg-slate-100 text-slate-400'"
+                    : 'bg-slate-100 oscuro:bg-superficie-hundida text-slate-400 oscuro:text-texto-tenue'"
               >
                 <CheckIcon v-if="i < indicePasoWizard" class="h-4 w-4" />
                 <template v-else>{{ i + 1 }}</template>
               </span>
               <span
                 class="min-w-0 truncate text-xs font-semibold"
-                :class="i === indicePasoWizard ? 'text-slate-800' : 'text-slate-400'"
+                :class="i === indicePasoWizard ? 'text-slate-800 oscuro:text-texto' : 'text-slate-400 oscuro:text-texto-tenue'"
               >{{ paso.titulo }}</span>
-              <span v-if="i < pasosWizard.length - 1" class="h-px flex-1 bg-slate-200" aria-hidden="true"></span>
+              <span v-if="i < pasosWizard.length - 1" class="h-px flex-1 bg-slate-200 oscuro:bg-borde" aria-hidden="true"></span>
             </li>
           </ol>
         </div>
@@ -926,24 +927,24 @@
         <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="refScrollNuevaActividad"
-          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] bg-slate-50/60"
+          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] bg-slate-50/60 oscuro:bg-superficie-suave/60"
           @scroll.passive="onScrollNuevaActividad"
         >
           <form @submit.prevent="handleCrearActividad" class="p-4 sm:p-4 space-y-4">
             <!-- Paso «qué actividad es» del asistente -->
             <div v-show="pasoWizard === 'que'" class="space-y-4">
             <!-- Bloque: Tipo de proceso -->
-            <div class="rounded-xl border border-natillera-200/60 bg-white/90 p-4 shadow-md shadow-natillera-900/5">
-              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Tipo de proceso</label>
-              <div class="flex gap-2 rounded-xl bg-slate-100 p-1.5 w-full">
+            <div class="rounded-xl border border-natillera-200/60 oscuro:border-natillera-500/30 bg-superficie-tarjeta/90 p-4 shadow-md shadow-natillera-900/5">
+              <label class="text-xs font-semibold text-slate-500 oscuro:text-texto-suave uppercase tracking-wider mb-3 block">Tipo de proceso</label>
+              <div class="flex gap-2 rounded-xl bg-slate-100 oscuro:bg-superficie-hundida p-1.5 w-full">
                 <button
                   type="button"
                   @click="formActividad.tipoProceso = 'liquidar'; resetearFormularioPorTipo()"
                   :class="[
                     'flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-lg text-sm font-semibold transition-all min-h-[3rem]',
                     formActividad.tipoProceso === 'liquidar'
-                      ? 'bg-white text-natillera-600 shadow-md border-2 border-natillera-200 ring-1 ring-natillera-500/20'
-                      : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50/80'
+                      ? 'bg-superficie-tarjeta text-natillera-600 oscuro:text-natillera-300 shadow-md border-2 border-natillera-200 oscuro:border-natillera-500/30 ring-1 ring-natillera-500/20'
+                      : 'text-slate-600 oscuro:text-texto-secundario hover:text-slate-800 oscuro:hover:text-texto hover:bg-slate-50/80 oscuro:hover:bg-superficie-suave/80'
                   ]"
                 >
                   <CurrencyDollarIcon class="w-5 h-5 flex-shrink-0" />
@@ -955,41 +956,41 @@
                   :class="[
                     'flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-lg text-sm font-semibold transition-all min-h-[3rem]',
                     formActividad.tipoProceso === 'en_curso'
-                      ? 'bg-white text-natillera-600 shadow-md border-2 border-natillera-200 ring-1 ring-natillera-500/20'
-                      : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50/80'
+                      ? 'bg-superficie-tarjeta text-natillera-600 oscuro:text-natillera-300 shadow-md border-2 border-natillera-200 oscuro:border-natillera-500/30 ring-1 ring-natillera-500/20'
+                      : 'text-slate-600 oscuro:text-texto-secundario hover:text-slate-800 oscuro:hover:text-texto hover:bg-slate-50/80 oscuro:hover:bg-superficie-suave/80'
                   ]"
                 >
                   <ArrowPathIcon class="w-5 h-5 flex-shrink-0" />
                   En curso
                 </button>
               </div>
-              <div v-if="formActividad.tipoProceso" class="mt-3 p-3 rounded-lg bg-natillera-50/80 border border-natillera-200/80">
-                <p class="text-xs text-natillera-800 leading-relaxed flex items-start gap-2">
-                  <InformationCircleIcon class="w-4 h-4 flex-shrink-0 mt-0.5 text-natillera-600" />
+              <div v-if="formActividad.tipoProceso" class="mt-3 p-3 rounded-lg bg-natillera-50/80 oscuro:bg-natillera-500/15 border border-natillera-200/80 oscuro:border-natillera-500/30">
+                <p class="text-xs text-natillera-800 oscuro:text-natillera-300 leading-relaxed flex items-start gap-2">
+                  <InformationCircleIcon class="w-4 h-4 flex-shrink-0 mt-0.5 text-natillera-600 oscuro:text-natillera-300" />
                   <span v-if="formActividad.tipoProceso === 'liquidar'">Ingresa valores finales: ingresos, gastos y utilidad.</span>
                   <span v-else>Asigna valores iniciales y haz seguimiento de pagos pendientes.</span>
                 </p>
               </div>
             </div>
             <!-- Bloque: Actividad + Modo rifa (el modo solo existe para rifas en curso) -->
-            <div class="rounded-xl border border-natillera-200/60 bg-white/90 p-4 shadow-md shadow-natillera-900/5 relative" :class="{ 'z-[60]': dropdownTipoActividad }">
+            <div class="rounded-xl border border-natillera-200/60 oscuro:border-natillera-500/30 bg-superficie-tarjeta/90 p-4 shadow-md shadow-natillera-900/5 relative" :class="{ 'z-[60]': dropdownTipoActividad }">
               <div class="grid gap-4" :class="muestraModoRifa ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'">
                 <!-- Columna: Tipo de actividad (dropdown personalizado con ítems estilizados) -->
                 <div class="flex flex-col sm:min-h-[7.5rem]" :class="{ 'sm:min-h-0': !muestraModoRifa }">
-                  <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Tipo de actividad</label>
+                  <label class="text-xs font-semibold text-slate-500 oscuro:text-texto-suave uppercase tracking-wider mb-2 block">Tipo de actividad</label>
                   <div class="relative flex-1" ref="dropdownTipoActividadRef">
                     <button
                       type="button"
                       @click.stop="dropdownTipoActividad = !dropdownTipoActividad"
                       class="w-full flex items-center gap-3 pl-4 pr-12 py-3 rounded-xl border-2 min-h-[3rem] sm:min-h-[3.25rem] transition-all text-left"
                       :class="[
-                        dropdownTipoActividad ? 'border-natillera-400 ring-2 ring-natillera-500/20' : 'hover:border-slate-300',
-                        formActividad.tipo === 'rifa' && 'border-l-4 border-l-natillera-500 bg-natillera-50/50',
-                        formActividad.tipo === 'bingo' && 'border-l-4 border-l-amber-500 bg-amber-50/50',
-                        formActividad.tipo === 'venta' && 'border-l-4 border-l-blue-500 bg-blue-50/50',
-                        formActividad.tipo === 'evento' && 'border-l-4 border-l-purple-500 bg-purple-50/50',
-                        formActividad.tipo === 'otro' && 'border-l-4 border-l-slate-400 bg-slate-50/80',
-                        !['rifa','bingo','venta','evento','otro'].includes(formActividad.tipo) && 'border-slate-200 bg-slate-50/80'
+                        dropdownTipoActividad ? 'border-natillera-400 ring-2 ring-natillera-500/20' : 'hover:border-slate-300 oscuro:hover:border-borde-fuerte',
+                        formActividad.tipo === 'rifa' && 'border-l-4 border-l-natillera-500 bg-natillera-50/50 oscuro:bg-natillera-500/15',
+                        formActividad.tipo === 'bingo' && 'border-l-4 border-l-amber-500 bg-amber-50/50 oscuro:bg-amber-500/15',
+                        formActividad.tipo === 'venta' && 'border-l-4 border-l-blue-500 bg-blue-50/50 oscuro:bg-blue-500/15',
+                        formActividad.tipo === 'evento' && 'border-l-4 border-l-purple-500 bg-purple-50/50 oscuro:bg-purple-500/15',
+                        formActividad.tipo === 'otro' && 'border-l-4 border-l-slate-400 bg-slate-50/80 oscuro:bg-superficie-suave/80',
+                        !['rifa','bingo','venta','evento','otro'].includes(formActividad.tipo) && 'border-slate-200 oscuro:border-borde bg-slate-50/80 oscuro:bg-superficie-suave/80'
                       ]"
                     >
                       <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-white shadow-sm"
@@ -998,7 +999,7 @@
                           'bg-amber-500': formActividad.tipo === 'bingo',
                           'bg-blue-500': formActividad.tipo === 'venta',
                           'bg-purple-500': formActividad.tipo === 'evento',
-                          'bg-slate-500': formActividad.tipo === 'otro'
+                          'bg-slate-500': /* tema-fijo: fondo sólido con icono blanco */ formActividad.tipo === 'otro'
                         }">
                         <TicketIcon v-if="formActividad.tipo === 'rifa'" class="w-5 h-5" />
                         <SparklesIcon v-else-if="formActividad.tipo === 'bingo'" class="w-5 h-5" />
@@ -1006,8 +1007,8 @@
                         <CalendarIcon v-else-if="formActividad.tipo === 'evento'" class="w-5 h-5" />
                         <ClipboardDocumentListIcon v-else class="w-5 h-5" />
                       </div>
-                      <span class="flex-1 font-semibold text-slate-800">{{ opcionesTipoActividad.find(o => o.value === formActividad.tipo)?.label || 'Seleccionar' }}</span>
-                      <ChevronDownIcon class="absolute right-3 w-5 h-5 text-slate-500 transition-transform" :class="{ 'rotate-180': dropdownTipoActividad }" />
+                      <span class="flex-1 font-semibold text-slate-800 oscuro:text-texto">{{ opcionesTipoActividad.find(o => o.value === formActividad.tipo)?.label || 'Seleccionar' }}</span>
+                      <ChevronDownIcon class="absolute right-3 w-5 h-5 text-slate-500 oscuro:text-texto-suave transition-transform" :class="{ 'rotate-180': dropdownTipoActividad }" />
                     </button>
                     <!-- Lista desplegable: Teleport para que quede por encima de todo el modal -->
                     <Teleport to="body">
@@ -1023,7 +1024,7 @@
                           v-if="dropdownTipoActividad && dropdownTipoActividadRef"
                           ref="dropdownTipoActividadPanelRef"
                           data-dropdown-tipo-actividad-panel
-                          class="fixed py-2 rounded-xl bg-white border-2 border-natillera-200/80 shadow-xl shadow-natillera-900/20 max-h-[16rem] overflow-y-auto overflow-x-hidden min-w-[12rem] z-[9999]"
+                          class="fixed py-2 rounded-xl bg-superficie-tarjeta border-2 border-natillera-200/80 oscuro:border-natillera-500/30 shadow-xl shadow-natillera-900/20 max-h-[16rem] overflow-y-auto overflow-x-hidden min-w-[12rem] z-[9999]"
                           :style="dropdownTipoActividadStyle"
                         >
                           <button
@@ -1031,16 +1032,16 @@
                             :key="opcion.value"
                             type="button"
                             @click="formActividad.tipo = opcion.value; dropdownTipoActividad = false"
-                            class="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 first:pt-3 last:pb-3"
-                            :class="formActividad.tipo === opcion.value ? 'bg-natillera-50/80' : ''"
+                            class="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 oscuro:hover:bg-superficie-suave first:pt-3 last:pb-3"
+                            :class="formActividad.tipo === opcion.value ? 'bg-natillera-50/80 oscuro:bg-natillera-500/15' : ''"
                           >
                             <div class="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm"
                               :class="opcion.bgIcon">
                               <component :is="opcion.icon" class="w-5 h-5" />
                             </div>
                             <div class="flex-1 min-w-0">
-                              <p class="font-semibold text-slate-800" :class="opcion.textColor">{{ opcion.label }}</p>
-                              <p class="text-xs text-slate-500 mt-0.5">{{ opcion.desc }}</p>
+                              <p class="font-semibold text-slate-800 oscuro:text-texto" :class="opcion.textColor">{{ opcion.label }}</p>
+                              <p class="text-xs text-slate-500 oscuro:text-texto-suave mt-0.5">{{ opcion.desc }}</p>
                             </div>
                             <div v-if="formActividad.tipo === opcion.value" class="flex-shrink-0 w-5 h-5 rounded-full bg-natillera-500 flex items-center justify-center">
                               <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
@@ -1054,11 +1055,11 @@
                 <!-- Columna: Modo rifa. Solo para rifas en curso: en bingo, venta o evento no
                      hay números que repartir y antes ocupaba media fila con un aviso vacío. -->
                 <div v-if="muestraModoRifa" class="flex flex-col sm:min-h-[7.5rem]">
-                  <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Modo rifa</label>
+                  <label class="text-xs font-semibold text-slate-500 oscuro:text-texto-suave uppercase tracking-wider mb-2 block">Modo rifa</label>
                     <!-- «Manual» y «Auto» decían poco: lo que cambia es QUIÉN reparte los
                          números, así que el nombre visible lo dice y el pie lo concreta. -->
                     <div class="flex-1 flex flex-col gap-2">
-                      <div class="flex rounded-xl bg-slate-100 p-1 w-full min-h-[2.75rem]">
+                      <div class="flex rounded-xl bg-slate-100 oscuro:bg-superficie-hundida p-1 w-full min-h-[2.75rem]">
                         <button
                           type="button"
                           @click="formActividad.tipoRifa = 'manual'"
@@ -1066,8 +1067,8 @@
                           :class="[
                             'flex-1 px-2 py-2 rounded-lg text-sm font-semibold leading-tight transition-all',
                             formActividad.tipoRifa === 'manual'
-                              ? 'bg-white text-natillera-600 shadow-sm border border-slate-200/80'
-                              : 'text-slate-500 hover:text-slate-700'
+                              ? 'bg-superficie-tarjeta text-natillera-600 oscuro:text-natillera-300 shadow-sm border border-slate-200/80 oscuro:border-borde/80'
+                              : 'text-slate-500 oscuro:text-texto-suave hover:text-slate-700 oscuro:hover:text-texto-medio'
                           ]"
                         >
                           Los vendes tú
@@ -1079,53 +1080,53 @@
                           :class="[
                             'flex-1 px-2 py-2 rounded-lg text-sm font-semibold leading-tight transition-all',
                             formActividad.tipoRifa === 'aleatoria'
-                              ? 'bg-white text-natillera-600 shadow-sm border border-slate-200/80'
-                              : 'text-slate-500 hover:text-slate-700'
+                              ? 'bg-superficie-tarjeta text-natillera-600 oscuro:text-natillera-300 shadow-sm border border-slate-200/80 oscuro:border-borde/80'
+                              : 'text-slate-500 oscuro:text-texto-suave hover:text-slate-700 oscuro:hover:text-texto-medio'
                           ]"
                         >
                           Los reparte la app
                         </button>
                       </div>
-                      <p v-if="formActividad.tipoRifa === 'manual'" class="text-xs text-slate-500 leading-snug">
+                      <p v-if="formActividad.tipoRifa === 'manual'" class="text-xs text-slate-500 oscuro:text-texto-suave leading-snug">
                         Los 100 números quedan libres. Vas anotando quién compra cada uno, a quién se lo vendió y por cuánto.
                       </p>
-                      <p v-else-if="formActividad.tipoRifa === 'aleatoria'" class="text-xs text-slate-500 leading-snug">
+                      <p v-else-if="formActividad.tipoRifa === 'aleatoria'" class="text-xs text-slate-500 oscuro:text-texto-suave leading-snug">
                         Al guardar, cada socio recibe sus números al azar y ya queda con su cobro pendiente.
                       </p>
-                      <p v-else class="text-xs text-slate-400 leading-snug">Elige quién reparte los números de la rifa.</p>
+                      <p v-else class="text-xs text-slate-400 oscuro:text-texto-tenue leading-snug">Elige quién reparte los números de la rifa.</p>
                     </div>
                 </div>
               </div>
             </div>
             <!-- Bloque: Descripción + Repetir -->
-            <div class="rounded-xl border border-natillera-200/60 bg-white/90 p-4 shadow-md shadow-natillera-900/5">
-              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Descripción <span class="text-red-500">*</span></label>
+            <div class="rounded-xl border border-natillera-200/60 oscuro:border-natillera-500/30 bg-superficie-tarjeta/90 p-4 shadow-md shadow-natillera-900/5">
+              <label class="text-xs font-semibold text-slate-500 oscuro:text-texto-suave uppercase tracking-wider mb-2 block">Descripción <span class="text-red-500">*</span></label>
               <textarea
                
                 v-model="formActividad.descripcion"
                 rows="2"
-                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-white resize-none transition-colors"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 oscuro:border-borde bg-slate-50/50 oscuro:bg-superficie-suave/50 text-sm text-slate-800 oscuro:text-texto placeholder:text-slate-400 oscuro:placeholder:text-texto-tenue focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-superficie-tarjeta resize-none transition-colors"
                 placeholder="Ej: Rifa de Navidad 2025"
                 required
               />
               <label v-if="formActividad.tipoProceso === 'en_curso'" class="mt-3 flex items-center justify-between gap-3 py-3 px-4 rounded-xl border cursor-pointer transition-all min-h-[3.25rem] select-none active:scale-[0.99]"
-                :class="formActividad.esMultiplesMeses ? 'bg-natillera-50 border-natillera-300 shadow-sm' : 'bg-slate-50/90 border-natillera-200/60 hover:border-natillera-300 hover:bg-natillera-50/50 hover:shadow-sm'">
+                :class="formActividad.esMultiplesMeses ? 'bg-natillera-50 oscuro:bg-natillera-500/15 border-natillera-300 oscuro:border-natillera-500/30 shadow-sm' : 'bg-slate-50/90 oscuro:bg-superficie-suave/90 border-natillera-200/60 oscuro:border-natillera-500/30 hover:border-natillera-300 oscuro:hover:border-natillera-500/30 hover:bg-natillera-50/50 oscuro:hover:bg-natillera-500/15 hover:shadow-sm'">
                 <div class="flex items-center gap-3 min-w-0 flex-1">
                   <div
                     class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all border-2 cursor-pointer ring-2 ring-transparent hover:ring-natillera-500/30 focus-within:ring-natillera-500/50 focus-within:ring-offset-2"
                     :class="formActividad.esMultiplesMeses
                       ? 'bg-natillera-500 border-natillera-500 text-white shadow-sm'
-                      : 'bg-white border-slate-300 text-transparent hover:border-natillera-400 hover:bg-natillera-50/50'"
+                      : 'bg-superficie-tarjeta border-slate-300 oscuro:border-borde-fuerte text-transparent hover:border-natillera-400 hover:bg-natillera-50/50 oscuro:hover:bg-natillera-500/15'"
                   >
                     <input type="checkbox" v-model="formActividad.esMultiplesMeses" class="sr-only" />
                     <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                   </div>
                   <div class="min-w-0">
-                    <span class="text-sm font-semibold text-slate-800">Repetir actividad</span>
-                    <p class="text-xs text-slate-500 mt-0.5">Aplicar a varios meses</p>
+                    <span class="text-sm font-semibold text-slate-800 oscuro:text-texto">Repetir actividad</span>
+                    <p class="text-xs text-slate-500 oscuro:text-texto-suave mt-0.5">Aplicar a varios meses</p>
                   </div>
                 </div>
-                <ArrowPathIcon class="w-5 h-5 text-slate-400 flex-shrink-0 pointer-events-none" />
+                <ArrowPathIcon class="w-5 h-5 text-slate-400 oscuro:text-texto-tenue flex-shrink-0 pointer-events-none" />
               </label>
             </div>
             </div>
@@ -1134,38 +1135,38 @@
             <!-- Período / Mes (solo en curso) - arriba -->
             <template v-if="formActividad.tipoProceso === 'en_curso'">
               <template v-if="!formActividad.esMultiplesMeses">
-                <div class="rounded-xl border border-natillera-200/60 bg-white/90 p-4 shadow-md shadow-natillera-900/5">
-                  <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Período y fecha</label>
+                <div class="rounded-xl border border-natillera-200/60 oscuro:border-natillera-500/30 bg-superficie-tarjeta/90 p-4 shadow-md shadow-natillera-900/5">
+                  <label class="text-xs font-semibold text-slate-500 oscuro:text-texto-suave uppercase tracking-wider mb-3 block">Período y fecha</label>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="flex flex-col">
-                      <label class="text-xs text-slate-500 mb-2 block">Período *</label>
+                      <label class="text-xs text-slate-500 oscuro:text-texto-suave mb-2 block">Período *</label>
                       <!-- Con appearance-none iOS no dibuja flecha: va un chevron propio. text-base (16px) evita el zoom al enfocar -->
                       <div class="relative">
                         <select 
                           v-model="periodoSeleccionadoValue" 
-                          class="w-full h-11 pl-3 pr-10 py-2.5 rounded-xl border-2 border-slate-200 bg-slate-50/50 text-base font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-white appearance-none cursor-pointer"
+                          class="w-full h-11 pl-3 pr-10 py-2.5 rounded-xl border-2 border-slate-200 oscuro:border-borde bg-slate-50/50 oscuro:bg-superficie-suave/50 text-base font-medium text-slate-800 oscuro:text-texto focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-superficie-tarjeta appearance-none cursor-pointer"
                         >
                           <option :value="null">Seleccione período</option>
                           <option v-for="opcion in opcionesPeriodo" :key="opcion.value" :value="opcion.value">{{ opcion.label }}</option>
                         </select>
-                        <ChevronDownIcon class="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+                        <ChevronDownIcon class="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500 oscuro:text-texto-suave" aria-hidden="true" />
                       </div>
-                      <p v-if="opcionesPeriodo.length === 0" class="text-xs text-slate-500 mt-1.5">No hay períodos disponibles</p>
+                      <p v-if="opcionesPeriodo.length === 0" class="text-xs text-slate-500 oscuro:text-texto-suave mt-1.5">No hay períodos disponibles</p>
                     </div>
                     <div class="flex flex-col">
-                      <label class="text-xs text-slate-500 mb-2 block">Fecha límite *</label>
+                      <label class="text-xs text-slate-500 oscuro:text-texto-suave mb-2 block">Fecha límite *</label>
                       <DateInput 
                         v-model="formActividad.fechaLimitePago"
                         placeholder="Se calcula automático"
                         required
                         :disabled="false"
-                        input-class="!h-11 !pl-10 !py-2.5 text-sm rounded-xl border-2 border-slate-200 bg-slate-50/50 focus:bg-white focus:border-natillera-400"
+                        input-class="!h-11 !pl-10 !py-2.5 text-sm rounded-xl border-2 border-slate-200 oscuro:border-borde bg-slate-50/50 oscuro:bg-superficie-suave/50 focus:bg-superficie-tarjeta focus:border-natillera-400"
                       />
                     </div>
                   </div>
                   <!-- Quincena de pago -->
                   <div v-if="natillera && natillera.periodicidad === 'quincenal'" class="mt-4">
-                    <p class="text-xs text-slate-500 mb-2">Quincena de pago *</p>
+                    <p class="text-xs text-slate-500 oscuro:text-texto-suave mb-2">Quincena de pago *</p>
                     <div class="grid grid-cols-2 gap-2 sm:gap-2">
                       <button
                         type="button"
@@ -1173,15 +1174,15 @@
                         :class="[
                           'relative p-3 rounded-xl border text-left transition-all',
                           formActividad.quincenaPago === 1
-                            ? 'border-natillera-400 bg-natillera-50 shadow-sm'
-                            : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 hover:bg-slate-50'
+                            ? 'border-natillera-400 bg-natillera-50 oscuro:bg-natillera-500/15 shadow-sm'
+                            : 'border-slate-200 oscuro:border-borde bg-slate-50/50 oscuro:bg-superficie-suave/50 hover:border-slate-300 oscuro:hover:border-borde-fuerte hover:bg-slate-50 oscuro:hover:bg-superficie-suave'
                         ]"
                       >
                         <div class="flex items-center gap-2">
-                          <div :class="['w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold', formActividad.quincenaPago === 1 ? 'bg-natillera-500 text-white' : 'bg-slate-200 text-slate-500']">1</div>
+                          <div :class="['w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold', formActividad.quincenaPago === 1 ? 'bg-natillera-500 text-white' : 'bg-slate-200 oscuro:bg-borde text-slate-500 oscuro:text-texto-suave']">1</div>
                           <div>
-                            <p class="font-semibold text-sm text-slate-800">1ra Quincena</p>
-                            <p class="text-xs text-slate-500">Día 15</p>
+                            <p class="font-semibold text-sm text-slate-800 oscuro:text-texto">1ra Quincena</p>
+                            <p class="text-xs text-slate-500 oscuro:text-texto-suave">Día 15</p>
                           </div>
                         </div>
                         <div v-if="formActividad.quincenaPago === 1" class="absolute top-2 right-2 w-4 h-4 rounded-full bg-natillera-500 flex items-center justify-center">
@@ -1194,15 +1195,15 @@
                         :class="[
                           'relative p-3 rounded-xl border text-left transition-all',
                           formActividad.quincenaPago === 2
-                            ? 'border-natillera-400 bg-natillera-50 shadow-sm'
-                            : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 hover:bg-slate-50'
+                            ? 'border-natillera-400 bg-natillera-50 oscuro:bg-natillera-500/15 shadow-sm'
+                            : 'border-slate-200 oscuro:border-borde bg-slate-50/50 oscuro:bg-superficie-suave/50 hover:border-slate-300 oscuro:hover:border-borde-fuerte hover:bg-slate-50 oscuro:hover:bg-superficie-suave'
                         ]"
                       >
                         <div class="flex items-center gap-2">
-                          <div :class="['w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold', formActividad.quincenaPago === 2 ? 'bg-natillera-500 text-white' : 'bg-slate-200 text-slate-500']">2</div>
+                          <div :class="['w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold', formActividad.quincenaPago === 2 ? 'bg-natillera-500 text-white' : 'bg-slate-200 oscuro:bg-borde text-slate-500 oscuro:text-texto-suave']">2</div>
                           <div>
-                            <p class="font-semibold text-sm text-slate-800">2da Quincena</p>
-                            <p class="text-xs text-slate-500">Fin de mes</p>
+                            <p class="font-semibold text-sm text-slate-800 oscuro:text-texto">2da Quincena</p>
+                            <p class="text-xs text-slate-500 oscuro:text-texto-suave">Fin de mes</p>
                           </div>
                         </div>
                         <div v-if="formActividad.quincenaPago === 2" class="absolute top-2 right-2 w-4 h-4 rounded-full bg-natillera-500 flex items-center justify-center">
@@ -1215,12 +1216,12 @@
               </template>
               <!-- Panel para múltiples meses -->
               <template v-else>
-                <div class="rounded-xl border border-natillera-200/60 bg-white/90 p-4 shadow-md shadow-natillera-900/5 space-y-4">
+                <div class="rounded-xl border border-natillera-200/60 oscuro:border-natillera-500/30 bg-superficie-tarjeta/90 p-4 shadow-md shadow-natillera-900/5 space-y-4">
                   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Selecciona los meses *</label>
+                    <label class="text-xs font-semibold text-slate-500 oscuro:text-texto-suave uppercase tracking-wider">Selecciona los meses *</label>
                     <!-- Par excluyente: el verde marca cuál está aplicado. Con una selección
                          parcial no se enciende ninguno, que es lo que de verdad pasa. -->
-                    <div v-if="mesesDelPeriodo.length > 0" class="flex gap-1 flex-shrink-0 rounded-lg bg-slate-100 p-1" role="group" aria-label="Seleccionar meses">
+                    <div v-if="mesesDelPeriodo.length > 0" class="flex gap-1 flex-shrink-0 rounded-lg bg-slate-100 oscuro:bg-superficie-hundida p-1" role="group" aria-label="Seleccionar meses">
                       <button
                         type="button"
                         @click="marcarTodosMeses"
@@ -1229,7 +1230,7 @@
                           'px-3 py-1.5 text-xs font-semibold rounded-md transition-colors touch-manipulation',
                           todosLosMesesMarcados
                             ? 'bg-natillera-500 text-white shadow-sm'
-                            : 'text-slate-600 hover:bg-white/70'
+                            : 'text-slate-600 oscuro:text-texto-secundario hover:bg-superficie-tarjeta/70'
                         ]"
                       >
                         Todos
@@ -1242,14 +1243,14 @@
                           'px-3 py-1.5 text-xs font-semibold rounded-md transition-colors touch-manipulation',
                           ningunMesMarcado
                             ? 'bg-natillera-500 text-white shadow-sm'
-                            : 'text-slate-600 hover:bg-white/70'
+                            : 'text-slate-600 oscuro:text-texto-secundario hover:bg-superficie-tarjeta/70'
                         ]"
                       >
                         Ninguno
                       </button>
                     </div>
                   </div>
-                  <div v-if="mesesDelPeriodo.length === 0" class="text-sm text-slate-500 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <div v-if="mesesDelPeriodo.length === 0" class="text-sm text-slate-500 oscuro:text-texto-suave p-4 bg-slate-50 oscuro:bg-superficie-suave rounded-xl border border-slate-100 oscuro:border-borde-suave">
                     No hay meses disponibles en el período de la natillera
                   </div>
                   <div v-else class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-1">
@@ -1259,34 +1260,34 @@
                       type="button"
                       @click="toggleMesSeleccionado(mesPeriodo.mes, mesPeriodo.anio)"
                       class="flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-all text-left w-full"
-                      :class="estaMesSeleccionado(mesPeriodo.mes, mesPeriodo.anio) ? 'border-natillera-400 bg-natillera-50' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 hover:bg-slate-50'"
+                      :class="estaMesSeleccionado(mesPeriodo.mes, mesPeriodo.anio) ? 'border-natillera-400 bg-natillera-50 oscuro:bg-natillera-500/15' : 'border-slate-200 oscuro:border-borde bg-slate-50/50 oscuro:bg-superficie-suave/50 hover:border-slate-300 oscuro:hover:border-borde-fuerte hover:bg-slate-50 oscuro:hover:bg-superficie-suave'"
                     >
                       <div class="flex-shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-colors"
-                        :class="estaMesSeleccionado(mesPeriodo.mes, mesPeriodo.anio) ? 'border-natillera-500 bg-natillera-500' : 'border-slate-300 bg-white'">
+                        :class="estaMesSeleccionado(mesPeriodo.mes, mesPeriodo.anio) ? 'border-natillera-500 bg-natillera-500' : 'border-slate-300 oscuro:border-borde-fuerte bg-superficie-tarjeta'">
                         <svg v-if="estaMesSeleccionado(mesPeriodo.mes, mesPeriodo.anio)" class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                       </div>
                       <div class="flex-1 min-w-0">
-                        <p class="font-semibold text-xs text-slate-800">{{ meses.find(m => m.value === mesPeriodo.mes)?.label || `Mes ${mesPeriodo.mes}` }}</p>
-                        <p class="text-xs text-slate-500">{{ mesPeriodo.anio }}</p>
+                        <p class="font-semibold text-xs text-slate-800 oscuro:text-texto">{{ meses.find(m => m.value === mesPeriodo.mes)?.label || `Mes ${mesPeriodo.mes}` }}</p>
+                        <p class="text-xs text-slate-500 oscuro:text-texto-suave">{{ mesPeriodo.anio }}</p>
                       </div>
                     </button>
                   </div>
-                  <p class="text-xs text-slate-500">Seleccionados: {{ formActividad.mesesSeleccionados.length }} mes(es)</p>
+                  <p class="text-xs text-slate-500 oscuro:text-texto-suave">Seleccionados: {{ formActividad.mesesSeleccionados.length }} mes(es)</p>
                   <div v-if="natillera && natillera.periodicidad === 'quincenal'">
-                    <p class="text-xs text-slate-500 mb-2">Quincena de pago *</p>
+                    <p class="text-xs text-slate-500 oscuro:text-texto-suave mb-2">Quincena de pago *</p>
                     <div class="grid grid-cols-2 gap-2">
                       <button type="button" @click="formActividad.quincenaPago = 1; actualizarQuincenaMeses()"
-                        :class="['p-2.5 rounded-xl border text-left transition-all', formActividad.quincenaPago === 1 ? 'border-natillera-400 bg-natillera-50' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300']">
+                        :class="['p-2.5 rounded-xl border text-left transition-all', formActividad.quincenaPago === 1 ? 'border-natillera-400 bg-natillera-50 oscuro:bg-natillera-500/15' : 'border-slate-200 oscuro:border-borde bg-slate-50/50 oscuro:bg-superficie-suave/50 hover:border-slate-300 oscuro:hover:border-borde-fuerte']">
                         <div class="flex items-center gap-2">
-                          <div :class="['w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold', formActividad.quincenaPago === 1 ? 'bg-natillera-500 text-white' : 'bg-slate-200 text-slate-500']">1</div>
-                          <div><p class="font-semibold text-xs text-slate-800">1ra</p><p class="text-xs text-slate-500">Día 15</p></div>
+                          <div :class="['w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold', formActividad.quincenaPago === 1 ? 'bg-natillera-500 text-white' : 'bg-slate-200 oscuro:bg-borde text-slate-500 oscuro:text-texto-suave']">1</div>
+                          <div><p class="font-semibold text-xs text-slate-800 oscuro:text-texto">1ra</p><p class="text-xs text-slate-500 oscuro:text-texto-suave">Día 15</p></div>
                         </div>
                       </button>
                       <button type="button" @click="formActividad.quincenaPago = 2; actualizarQuincenaMeses()"
-                        :class="['p-2.5 rounded-xl border text-left transition-all', formActividad.quincenaPago === 2 ? 'border-natillera-400 bg-natillera-50' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300']">
+                        :class="['p-2.5 rounded-xl border text-left transition-all', formActividad.quincenaPago === 2 ? 'border-natillera-400 bg-natillera-50 oscuro:bg-natillera-500/15' : 'border-slate-200 oscuro:border-borde bg-slate-50/50 oscuro:bg-superficie-suave/50 hover:border-slate-300 oscuro:hover:border-borde-fuerte']">
                         <div class="flex items-center gap-2">
-                          <div :class="['w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold', formActividad.quincenaPago === 2 ? 'bg-natillera-500 text-white' : 'bg-slate-200 text-slate-500']">2</div>
-                          <div><p class="font-semibold text-xs text-slate-800">2da</p><p class="text-xs text-slate-500">Fin de mes</p></div>
+                          <div :class="['w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold', formActividad.quincenaPago === 2 ? 'bg-natillera-500 text-white' : 'bg-slate-200 oscuro:bg-borde text-slate-500 oscuro:text-texto-suave']">2</div>
+                          <div><p class="font-semibold text-xs text-slate-800 oscuro:text-texto">2da</p><p class="text-xs text-slate-500 oscuro:text-texto-suave">Fin de mes</p></div>
                         </div>
                       </button>
                     </div>
@@ -1295,9 +1296,9 @@
               </template>
             </template>
             <!-- Fecha de juego de la rifa (solo rifas en curso) -->
-            <div v-if="formActividad.tipo === 'rifa' && formActividad.tipoProceso === 'en_curso'" class="rounded-xl border border-natillera-200/60 bg-white/90 p-4 shadow-md shadow-natillera-900/5">
-              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Fecha de juego de la rifa *</label>
-              <p class="text-xs text-slate-500 mb-3">Indica cuándo se jugará el sorteo. Si necesitas una fecha concreta, elige "Fecha específica" y asigna la fecha por mes.</p>
+            <div v-if="formActividad.tipo === 'rifa' && formActividad.tipoProceso === 'en_curso'" class="rounded-xl border border-natillera-200/60 oscuro:border-natillera-500/30 bg-superficie-tarjeta/90 p-4 shadow-md shadow-natillera-900/5">
+              <label class="text-xs font-semibold text-slate-500 oscuro:text-texto-suave uppercase tracking-wider mb-3 block">Fecha de juego de la rifa *</label>
+              <p class="text-xs text-slate-500 oscuro:text-texto-suave mb-3">Indica cuándo se jugará el sorteo. Si necesitas una fecha concreta, elige "Fecha específica" y asigna la fecha por mes.</p>
               <div class="space-y-3">
                 <div class="grid grid-cols-2 gap-2">
                   <button
@@ -1308,35 +1309,35 @@
                     :class="[
                       'p-3 rounded-xl border text-left transition-all',
                       formActividad.cuandoJuegoRifa === opcion.value
-                        ? 'border-natillera-400 bg-natillera-50 shadow-sm'
-                        : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 hover:bg-slate-50'
+                        ? 'border-natillera-400 bg-natillera-50 oscuro:bg-natillera-500/15 shadow-sm'
+                        : 'border-slate-200 oscuro:border-borde bg-slate-50/50 oscuro:bg-superficie-suave/50 hover:border-slate-300 oscuro:hover:border-borde-fuerte hover:bg-slate-50 oscuro:hover:bg-superficie-suave'
                     ]"
                   >
-                    <p class="font-semibold text-sm text-slate-800">{{ opcion.label }}</p>
+                    <p class="font-semibold text-sm text-slate-800 oscuro:text-texto">{{ opcion.label }}</p>
                   </button>
                 </div>
                 <!-- Fecha específica: un solo mes -->
                 <div v-if="formActividad.cuandoJuegoRifa === 'fecha_especifica' && !formActividad.esMultiplesMeses" class="mt-3">
-                  <label class="text-xs text-slate-500 mb-2 block">Fecha de juego</label>
+                  <label class="text-xs text-slate-500 oscuro:text-texto-suave mb-2 block">Fecha de juego</label>
                   <DateInput
                     v-model="formActividad.fechaJuegoRifa"
                     placeholder="Seleccione fecha"
                     :disabled="false"
-                    input-class="!h-11 !pl-10 !py-2.5 text-sm rounded-xl border-2 border-slate-200 bg-slate-50/50 focus:bg-white focus:border-natillera-400"
+                    input-class="!h-11 !pl-10 !py-2.5 text-sm rounded-xl border-2 border-slate-200 oscuro:border-borde bg-slate-50/50 oscuro:bg-superficie-suave/50 focus:bg-superficie-tarjeta focus:border-natillera-400"
                   />
                 </div>
                 <!-- Fecha específica: varios meses → lista por mes -->
                 <div v-if="formActividad.cuandoJuegoRifa === 'fecha_especifica' && formActividad.esMultiplesMeses && formActividad.mesesSeleccionados.length > 0" class="mt-3 space-y-3">
-                  <p class="text-xs text-slate-500">Asigna la fecha de juego para cada mes:</p>
+                  <p class="text-xs text-slate-500 oscuro:text-texto-suave">Asigna la fecha de juego para cada mes:</p>
                   <div class="space-y-2 max-h-48 overflow-y-auto p-1">
-                    <div v-for="mesInfo in formActividad.mesesSeleccionados" :key="`${mesInfo.mes}-${mesInfo.anio}`" class="flex flex-col sm:flex-row sm:items-center gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50/30">
-                      <span class="font-semibold text-sm text-slate-800 sm:w-28 flex-shrink-0">{{ meses.find(m => m.value === mesInfo.mes)?.label || `Mes ${mesInfo.mes}` }} {{ mesInfo.anio }}</span>
+                    <div v-for="mesInfo in formActividad.mesesSeleccionados" :key="`${mesInfo.mes}-${mesInfo.anio}`" class="flex flex-col sm:flex-row sm:items-center gap-2 p-2.5 rounded-xl border border-slate-200 oscuro:border-borde bg-slate-50/30 oscuro:bg-superficie-suave/30">
+                      <span class="font-semibold text-sm text-slate-800 oscuro:text-texto sm:w-28 flex-shrink-0">{{ meses.find(m => m.value === mesInfo.mes)?.label || `Mes ${mesInfo.mes}` }} {{ mesInfo.anio }}</span>
                       <DateInput
                         :model-value="formActividad.fechasJuegoPorMes[`${mesInfo.mes}-${mesInfo.anio}`] || ''"
                         @update:model-value="formActividad.fechasJuegoPorMes[`${mesInfo.mes}-${mesInfo.anio}`] = $event"
                         placeholder="Fecha de juego"
                         :disabled="false"
-                        input-class="!h-10 !pl-10 !py-2 text-sm rounded-lg border-2 border-slate-200 bg-white focus:border-natillera-400 flex-1"
+                        input-class="!h-10 !pl-10 !py-2 text-sm rounded-lg border-2 border-slate-200 oscuro:border-borde bg-superficie-tarjeta focus:border-natillera-400 flex-1"
                       />
                     </div>
                   </div>
@@ -1348,79 +1349,79 @@
             <div v-show="pasoWizard === 'valores'" class="space-y-4">
             <!-- Números por socio: solo si reparte la app. Vendiéndolos tú, cada socio se
                  queda con los que compre, así que el campo no tiene sentido. -->
-            <div v-if="formActividad.tipo === 'rifa' && formActividad.tipoProceso === 'en_curso' && formActividad.tipoRifa === 'aleatoria'" class="rounded-xl border border-natillera-200/60 bg-white/90 p-4 shadow-md shadow-natillera-900/5">
-              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Números por socio <span class="text-red-500">*</span></label>
+            <div v-if="formActividad.tipo === 'rifa' && formActividad.tipoProceso === 'en_curso' && formActividad.tipoRifa === 'aleatoria'" class="rounded-xl border border-natillera-200/60 oscuro:border-natillera-500/30 bg-superficie-tarjeta/90 p-4 shadow-md shadow-natillera-900/5">
+              <label class="text-xs font-semibold text-slate-500 oscuro:text-texto-suave uppercase tracking-wider mb-2 block">Números por socio <span class="text-red-500">*</span></label>
               <input 
                 v-model.number="formActividad.cantidadNumerosPorSocio"
                 type="number"
                 inputmode="numeric"
-                class="w-full sm:max-w-[140px] h-11 px-3 py-2.5 rounded-xl border-2 border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 transition-colors"
+                class="w-full sm:max-w-[140px] h-11 px-3 py-2.5 rounded-xl border-2 border-slate-200 oscuro:border-borde bg-slate-50/50 oscuro:bg-superficie-suave/50 text-sm font-medium text-slate-800 oscuro:text-texto focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 transition-colors"
                 placeholder="Ej: 5"
                 min="1"
                 step="1"
                 required
               />
-              <p class="text-xs text-slate-500 mt-1.5">
+              <p class="text-xs text-slate-500 oscuro:text-texto-suave mt-1.5">
                 Entre todos no pueden pasar de 100. Ahora mismo: {{ socios.length }} × {{ formActividad.cantidadNumerosPorSocio || 0 }} =
-                <span :class="totalNumerosRifaAuto > 100 ? 'font-bold text-rose-600' : 'font-semibold text-natillera-600'">{{ totalNumerosRifaAuto }}</span>.
+                <span :class="totalNumerosRifaAuto > 100 ? 'font-bold text-rose-600 oscuro:text-rose-300' : 'font-semibold text-natillera-600 oscuro:text-natillera-300'">{{ totalNumerosRifaAuto }}</span>.
               </p>
             </div>
             <!-- Bloque: Liquidar -->
             <template v-if="formActividad.tipoProceso === 'liquidar'">
-              <div class="rounded-xl border border-natillera-200/60 bg-white/90 p-4 shadow-md shadow-natillera-900/5">
-                <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Valores de la actividad</label>
+              <div class="rounded-xl border border-natillera-200/60 oscuro:border-natillera-500/30 bg-superficie-tarjeta/90 p-4 shadow-md shadow-natillera-900/5">
+                <label class="text-xs font-semibold text-slate-500 oscuro:text-texto-suave uppercase tracking-wider mb-3 block">Valores de la actividad</label>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div class="flex flex-col">
-                    <label class="text-xs text-slate-500 mb-2 block">Ingresos *</label>
+                    <label class="text-xs text-slate-500 oscuro:text-texto-suave mb-2 block">Ingresos *</label>
                     <div class="relative flex-1">
-                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">$</span>
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 oscuro:text-texto-tenue font-medium text-sm">$</span>
                       <input 
                         :value="formatMilesInput(formActividad.ingresos)"
                         type="text"
                         inputmode="decimal"
-                        class="w-full h-11 pl-8 pr-3 py-2.5 rounded-xl border-2 border-slate-200 bg-slate-50/50 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-white"
+                        class="w-full h-11 pl-8 pr-3 py-2.5 rounded-xl border-2 border-slate-200 oscuro:border-borde bg-slate-50/50 oscuro:bg-superficie-suave/50 text-sm font-semibold text-slate-800 oscuro:text-texto focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-superficie-tarjeta"
                         placeholder="150.000"
                         @input="formActividad.ingresos = parseMilesInput($event.target.value)"
                       />
                     </div>
                   </div>
                   <div class="flex flex-col">
-                    <label class="text-xs text-slate-500 mb-2 block">Gastos</label>
+                    <label class="text-xs text-slate-500 oscuro:text-texto-suave mb-2 block">Gastos</label>
                     <div class="relative flex-1">
-                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">$</span>
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 oscuro:text-texto-tenue font-medium text-sm">$</span>
                       <input 
                         :value="formatMilesInput(formActividad.gastos)"
                         type="text"
                         inputmode="decimal"
-                        class="w-full h-11 pl-8 pr-3 py-2.5 rounded-xl border-2 border-slate-200 bg-slate-50/50 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-white"
+                        class="w-full h-11 pl-8 pr-3 py-2.5 rounded-xl border-2 border-slate-200 oscuro:border-borde bg-slate-50/50 oscuro:bg-superficie-suave/50 text-sm font-semibold text-slate-800 oscuro:text-texto focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-superficie-tarjeta"
                         placeholder="20.000"
                         @input="formActividad.gastos = parseMilesInput($event.target.value)"
                       />
                     </div>
                   </div>
                 </div>
-                <div class="mt-3 p-3 rounded-xl bg-natillera-50/80 border border-natillera-200/80">
-                  <p class="text-xs text-natillera-800">Utilidad estimada: <span class="font-bold text-natillera-600">${{ formatMoney((formActividad.ingresos || 0) - (formActividad.gastos || 0)) }}</span></p>
+                <div class="mt-3 p-3 rounded-xl bg-natillera-50/80 oscuro:bg-natillera-500/15 border border-natillera-200/80 oscuro:border-natillera-500/30">
+                  <p class="text-xs text-natillera-800 oscuro:text-natillera-300">Utilidad estimada: <span class="font-bold text-natillera-600 oscuro:text-natillera-300">${{ formatMoney((formActividad.ingresos || 0) - (formActividad.gastos || 0)) }}</span></p>
                 </div>
               </div>
             </template>
             <!-- Formulario para Actividad en curso -->
             <template v-else>
               <!-- Bloque: Asignación y valores -->
-              <div class="rounded-xl border border-natillera-200/60 bg-white/90 p-4 shadow-md shadow-natillera-900/5">
-                <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Asignación de valores</label>
-                <div class="flex rounded-xl bg-slate-100 p-1 mb-4 w-full">
+              <div class="rounded-xl border border-natillera-200/60 oscuro:border-natillera-500/30 bg-superficie-tarjeta/90 p-4 shadow-md shadow-natillera-900/5">
+                <label class="text-xs font-semibold text-slate-500 oscuro:text-texto-suave uppercase tracking-wider mb-3 block">Asignación de valores</label>
+                <div class="flex rounded-xl bg-slate-100 oscuro:bg-superficie-hundida p-1 mb-4 w-full">
                   <button type="button" @click="formActividad.tipoValores = 'iguales'; aplicarValorIgual()"
-                    :class="['flex-1 min-h-[2.75rem] px-4 py-2.5 rounded-lg text-sm font-medium transition-all', formActividad.tipoValores === 'iguales' ? 'bg-white text-natillera-600 shadow-sm border border-slate-200/80' : 'text-slate-600 hover:text-slate-800']">
+                    :class="['flex-1 min-h-[2.75rem] px-4 py-2.5 rounded-lg text-sm font-medium transition-all', formActividad.tipoValores === 'iguales' ? 'bg-superficie-tarjeta text-natillera-600 oscuro:text-natillera-300 shadow-sm border border-slate-200/80 oscuro:border-borde/80' : 'text-slate-600 oscuro:text-texto-secundario hover:text-slate-800 oscuro:hover:text-texto']">
                     Iguales
                   </button>
                   <button type="button" @click="formActividad.tipoValores = 'diferentes'; limpiarValorIgual(); fetchSocios()"
-                    :class="['flex-1 min-h-[2.75rem] px-4 py-2.5 rounded-lg text-sm font-medium transition-all', formActividad.tipoValores === 'diferentes' ? 'bg-white text-natillera-600 shadow-sm border border-slate-200/80' : 'text-slate-600 hover:text-slate-800']">
+                    :class="['flex-1 min-h-[2.75rem] px-4 py-2.5 rounded-lg text-sm font-medium transition-all', formActividad.tipoValores === 'diferentes' ? 'bg-superficie-tarjeta text-natillera-600 oscuro:text-natillera-300 shadow-sm border border-slate-200/80 oscuro:border-borde/80' : 'text-slate-600 oscuro:text-texto-secundario hover:text-slate-800 oscuro:hover:text-texto']">
                     Diferentes
                   </button>
                 </div>
                 <!-- Una línea: lo que cambia es si todos pagan lo mismo o no -->
-                <p class="-mt-2 mb-4 text-xs leading-snug text-slate-500">
+                <p class="-mt-2 mb-4 text-xs leading-snug text-slate-500 oscuro:text-texto-suave">
                   <template v-if="formActividad.tipoValores === 'iguales'">
                     Los {{ socios.length }} socios pagan lo mismo. Escribes el valor una vez.
                   </template>
@@ -1431,47 +1432,47 @@
                 <!-- Valor por socio + Total (cuando se elige Iguales) -->
                 <div v-if="formActividad.tipoValores === 'iguales'" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div class="flex flex-col">
-                    <label class="text-xs text-slate-500 mb-2 block">Valor por socio</label>
+                    <label class="text-xs text-slate-500 oscuro:text-texto-suave mb-2 block">Valor por socio</label>
                     <div class="relative flex-1">
-                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">$</span>
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 oscuro:text-texto-tenue font-medium text-sm">$</span>
                       <input 
                         :value="formatNumberWithSeparator(formActividad.valorIgual)"
                         @input="handleValorIgualInput($event)"
                         type="text" 
                         inputmode="decimal"
-                        class="w-full h-11 pl-8 pr-3 py-2.5 rounded-xl border-2 border-slate-200 bg-slate-50/50 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-white"
+                        class="w-full h-11 pl-8 pr-3 py-2.5 rounded-xl border-2 border-slate-200 oscuro:border-borde bg-slate-50/50 oscuro:bg-superficie-suave/50 text-sm font-semibold text-slate-800 oscuro:text-texto focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-superficie-tarjeta"
                         placeholder="0"
                         pattern="[0-9.]*"
                         @blur="aplicarValorIgual()"
                       />
                     </div>
-                    <p v-if="formActividad.tipo === 'rifa' && formActividad.tipoRifa === 'manual'" class="text-xs text-slate-500 mt-1.5">Por defecto por número vendido</p>
+                    <p v-if="formActividad.tipo === 'rifa' && formActividad.tipoRifa === 'manual'" class="text-xs text-slate-500 oscuro:text-texto-suave mt-1.5">Por defecto por número vendido</p>
                   </div>
                   <div class="flex flex-col">
-                    <label class="text-xs text-slate-500 mb-2 block">Total ({{ socios.length }} socios)</label>
-                    <div class="flex items-center h-11 rounded-xl border-2 border-slate-100 bg-natillera-50/50 px-3 border-natillera-200/50">
-                      <p class="text-lg font-bold text-natillera-600">${{ formatMoney(totalARecaudar) }}</p>
+                    <label class="text-xs text-slate-500 oscuro:text-texto-suave mb-2 block">Total ({{ socios.length }} socios)</label>
+                    <div class="flex items-center h-11 rounded-xl border-2 border-slate-100 oscuro:border-borde-suave bg-natillera-50/50 oscuro:bg-natillera-500/15 px-3 border-natillera-200/50 oscuro:border-natillera-500/30">
+                      <p class="text-lg font-bold text-natillera-600 oscuro:text-natillera-300">${{ formatMoney(totalARecaudar) }}</p>
                     </div>
                   </div>
                 </div>
                 <!-- Lista de socios (cuando se elige Diferentes) -->
                 <div v-else>
-                  <p class="text-xs text-slate-500 mb-2">Valor por socio</p>
-                  <div v-if="socios.length === 0" class="text-sm text-slate-500 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <p class="text-xs text-slate-500 oscuro:text-texto-suave mb-2">Valor por socio</p>
+                  <div v-if="socios.length === 0" class="text-sm text-slate-500 oscuro:text-texto-suave p-4 bg-slate-50 oscuro:bg-superficie-suave rounded-xl border border-slate-100 oscuro:border-borde-suave">
                     No hay socios activos en esta natillera
                   </div>
                   <div v-else class="space-y-2 max-h-48 overflow-y-auto p-1">
-                    <div v-for="socio in socios" :key="socio.id" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-xl border border-slate-200 bg-slate-50/30 hover:border-slate-300 hover:bg-slate-50/50 transition-colors">
+                    <div v-for="socio in socios" :key="socio.id" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-xl border border-slate-200 oscuro:border-borde bg-slate-50/30 oscuro:bg-superficie-suave/30 hover:border-slate-300 oscuro:hover:border-borde-fuerte hover:bg-slate-50/50 oscuro:hover:bg-superficie-suave/50 transition-colors">
                       <div class="flex-1 min-w-0">
-                        <p class="font-semibold text-sm text-slate-800">{{ socio.socio?.nombre || 'Sin nombre' }}</p>
-                        <p class="text-xs text-slate-500 truncate">{{ socio.socio?.telefono || '' }}</p>
+                        <p class="font-semibold text-sm text-slate-800 oscuro:text-texto">{{ socio.socio?.nombre || 'Sin nombre' }}</p>
+                        <p class="text-xs text-slate-500 oscuro:text-texto-suave truncate">{{ socio.socio?.telefono || '' }}</p>
                       </div>
                       <div class="relative w-full sm:w-28 flex-shrink-0">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">$</span>
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 oscuro:text-texto-tenue font-medium text-sm">$</span>
                         <input 
                           v-model.number="formActividad.valoresPorSocio[socio.id]"
                           type="number" 
-                          class="w-full pl-7 pr-3 py-2.5 rounded-xl border-2 border-slate-200 bg-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-natillera-500/30 min-h-[2.75rem] sm:w-28"
+                          class="w-full pl-7 pr-3 py-2.5 rounded-xl border-2 border-slate-200 oscuro:border-borde bg-superficie-tarjeta text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-natillera-500/30 min-h-[2.75rem] sm:w-28"
                           placeholder="0"
                           min="0"
                           step="0.01"
@@ -1479,7 +1480,7 @@
                       </div>
                     </div>
                   </div>
-                  <p class="text-xs text-slate-500 mt-2">Total: <span class="font-bold text-natillera-600">${{ formatMoney(totalARecaudar) }}</span></p>
+                  <p class="text-xs text-slate-500 oscuro:text-texto-suave mt-2">Total: <span class="font-bold text-natillera-600 oscuro:text-natillera-300">${{ formatMoney(totalARecaudar) }}</span></p>
                 </div>
               </div>
             </template>
@@ -1489,9 +1490,9 @@
           <NatiscrollHint :show="hayMasNuevaActividad" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 sm:px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <!-- Qué falta para poder seguir; evita un «Siguiente» apagado sin explicación -->
-          <p v-if="!esUltimoPasoWizard && faltaEnPasoWizard" class="mb-2 text-center text-xs text-slate-500">
+          <p v-if="!esUltimoPasoWizard && faltaEnPasoWizard" class="mb-2 text-center text-xs text-slate-500 oscuro:text-texto-suave">
             {{ faltaEnPasoWizard }}
           </p>
           <div class="flex gap-3">
@@ -1530,8 +1531,8 @@
       align="bottom"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-4xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-4xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="56rem"
       @close="modalDetalleActividad = false"
     >
@@ -1579,45 +1580,56 @@
             class="grid gap-2.5 mb-3"
             :class="actividadSeleccionada.tipo === 'rifa' ? 'grid-cols-2' : 'grid-cols-1'"
           >
-            <div class="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2 min-w-0">
-              <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 leading-tight">Fecha límite</p>
-              <p class="font-semibold text-gray-700 text-[13px] sm:text-sm leading-tight mt-0.5 break-words">
+            <div class="rounded-xl bg-slate-50 oscuro:bg-superficie-suave border border-slate-100 oscuro:border-borde-suave px-3 py-2 min-w-0">
+              <p class="text-[10px] font-semibold uppercase tracking-wide text-texto-tenue leading-tight">Fecha límite</p>
+              <p class="font-semibold text-texto-medio text-[13px] sm:text-sm leading-tight mt-0.5 break-words">
                 {{ actividadSeleccionada.fecha_limite_pago ? formatDate(actividadSeleccionada.fecha_limite_pago) : 'No definida' }}
               </p>
             </div>
-            <div v-if="actividadSeleccionada.tipo === 'rifa'" class="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2 min-w-0">
-              <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 leading-tight">Fecha de juego</p>
-              <p class="font-semibold text-gray-700 text-[13px] sm:text-sm leading-tight mt-0.5 break-words">
+            <div v-if="actividadSeleccionada.tipo === 'rifa'" class="rounded-xl bg-slate-50 oscuro:bg-superficie-suave border border-slate-100 oscuro:border-borde-suave px-3 py-2 min-w-0">
+              <p class="text-[10px] font-semibold uppercase tracking-wide text-texto-tenue leading-tight">Fecha de juego</p>
+              <p class="font-semibold text-texto-medio text-[13px] sm:text-sm leading-tight mt-0.5 break-words">
                 {{ actividadSeleccionada.fecha_juego_rifa ? formatDate(actividadSeleccionada.fecha_juego_rifa) : (actividadSeleccionada.cuando_juego_rifa ? etiquetaCuandoJuegoRifa(actividadSeleccionada.cuando_juego_rifa) : '—') }}
               </p>
             </div>
           </div>
+          <!-- En curso la tarjeta no tiene botón de editar: se entra por aquí.
+               Cierra el detalle antes de abrir la edición (anidar overlays rompe iOS). -->
+          <button
+            v-if="!soloLectura"
+            type="button"
+            class="mb-3 w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl border border-borde-fuerte bg-superficie-tarjeta px-3 py-2 text-[13px] font-semibold text-texto-secundario transition-colors hover:bg-superficie-suave touch-manipulation"
+            @click="editarDesdeDetalle"
+          >
+            <PencilSquareIcon class="w-4 h-4" />
+            Editar actividad
+          </button>
           <!-- Totales destacados (jerarquía: valor grande + acento de color) -->
           <div class="grid grid-cols-2 gap-2.5 sm:gap-3 mb-3">
             <!-- Asignado / Proyecto -->
-            <div class="rounded-2xl border border-blue-200/60 bg-gradient-to-br from-blue-50 to-white p-3 sm:p-4">
+            <div class="rounded-2xl border border-blue-200/60 oscuro:border-blue-500/30 bg-gradient-to-br from-blue-50 oscuro:from-blue-500/15 to-superficie-tarjeta p-3 sm:p-4">
               <div class="flex items-center gap-1.5 mb-1.5">
-                <div class="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                <div class="w-6 h-6 rounded-lg bg-blue-100 oscuro:bg-blue-500/15 text-blue-600 oscuro:text-blue-300 flex items-center justify-center flex-shrink-0">
                   <CurrencyDollarIcon class="w-4 h-4" />
                 </div>
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-blue-700/80 leading-tight">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-blue-700/80 oscuro:text-blue-300/80 oscuro:text-blue-300 leading-tight">
                   {{ actividadSeleccionada.tipo === 'rifa' && actividadSeleccionada.tipo_rifa === 'manual' ? 'Proyecto' : 'Asignado' }}
                 </p>
               </div>
-              <p class="font-display font-extrabold text-blue-700 text-2xl sm:text-3xl leading-none break-all">
+              <p class="font-display font-extrabold text-blue-700 oscuro:text-blue-300 text-2xl sm:text-3xl leading-none break-all">
                 <span class="sm:hidden">${{ formatMoneyCompact(detalleAsignado) }}</span>
                 <span class="hidden sm:inline">${{ formatMoney(detalleAsignado) }}</span>
               </p>
             </div>
             <!-- Recaudado -->
-            <div class="rounded-2xl border border-emerald-200/60 bg-gradient-to-br from-emerald-50 to-white p-3 sm:p-4">
+            <div class="rounded-2xl border border-emerald-200/60 oscuro:border-emerald-500/30 bg-gradient-to-br from-emerald-50 oscuro:from-emerald-500/15 to-superficie-tarjeta p-3 sm:p-4">
               <div class="flex items-center gap-1.5 mb-1.5">
-                <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                <div class="w-6 h-6 rounded-lg bg-emerald-100 oscuro:bg-emerald-500/15 text-emerald-600 oscuro:text-emerald-300 flex items-center justify-center flex-shrink-0">
                   <BanknotesIcon class="w-4 h-4" />
                 </div>
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-emerald-700/80 leading-tight">Recaudado</p>
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-emerald-700/80 oscuro:text-emerald-300/80 oscuro:text-emerald-300 leading-tight">Recaudado</p>
               </div>
-              <p class="font-display font-extrabold text-emerald-700 text-2xl sm:text-3xl leading-none break-all">
+              <p class="font-display font-extrabold text-emerald-700 oscuro:text-emerald-300 text-2xl sm:text-3xl leading-none break-all">
                 <span class="sm:hidden">${{ formatMoneyCompact(detalleRecaudado) }}</span>
                 <span class="hidden sm:inline">${{ formatMoney(detalleRecaudado) }}</span>
               </p>
@@ -1626,12 +1638,12 @@
           <!-- Progreso recaudado / asignado -->
           <div v-if="detalleAsignado > 0" class="mb-5">
             <div class="flex items-center justify-between mb-1.5 text-[11px] sm:text-xs">
-              <span class="font-semibold text-gray-600">{{ detallePctRecaudado }}% recaudado</span>
-              <span class="font-medium text-gray-400">
+              <span class="font-semibold text-texto-secundario">{{ detallePctRecaudado }}% recaudado</span>
+              <span class="font-medium text-texto-tenue">
                 ${{ formatMoney(detalleRecaudado) }} de ${{ formatMoney(detalleAsignado) }}
               </span>
             </div>
-            <div class="h-2 rounded-full bg-slate-100 overflow-hidden">
+            <div class="h-2 rounded-full bg-slate-100 oscuro:bg-superficie-hundida overflow-hidden">
               <div
                 class="h-full rounded-full bg-emerald-500 transition-all duration-500"
                 :style="{ width: detallePctRecaudado + '%' }"
@@ -1642,25 +1654,25 @@
           <div v-if="actividadSeleccionada.tipo === 'rifa' && actividadSeleccionada.tipo_rifa === 'manual'">
             <!-- Total vendido (arriba, visible en móvil y desktop) -->
             <div class="mb-4 text-center text-sm sm:text-base">
-              <p class="text-gray-700">
-                Total vendido: <span class="font-bold text-natillera-600 text-lg">{{ numerosRifaOrdenados.filter(n => n.estado === 'vendido' || n.estado === 'pagado').length }}</span> de <span class="font-bold text-lg">100</span> números
-                <span v-if="filtroEstadoRifa !== 'todos'" class="ml-2 text-gray-500 text-sm">(Mostrando: {{ numerosRifaFiltrados.length }})</span>
+              <p class="text-texto-medio">
+                Total vendido: <span class="font-bold text-natillera-600 oscuro:text-natillera-300 text-lg">{{ numerosRifaOrdenados.filter(n => n.estado === 'vendido' || n.estado === 'pagado').length }}</span> de <span class="font-bold text-lg">100</span> números
+                <span v-if="filtroEstadoRifa !== 'todos'" class="ml-2 text-texto-suave text-sm">(Mostrando: {{ numerosRifaFiltrados.length }})</span>
               </p>
             </div>
             
             <div class="flex flex-col gap-4 mb-6">
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <h4 class="font-bold text-gray-800 text-lg">Números de la rifa</h4>
+                <h4 class="font-bold text-texto text-lg">Números de la rifa</h4>
                 
                 <!-- Filtro de estados con botones estilizados -->
-                <div class="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-br from-gray-50 to-gray-100 p-1 sm:p-1.5 rounded-xl border-2 border-gray-200 shadow-inner flex-wrap sm:flex-nowrap">
+                <div class="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-br from-superficie-suave to-superficie-hundida p-1 sm:p-1.5 rounded-xl border-2 border-borde shadow-inner flex-wrap sm:flex-nowrap">
                   <button
                     @click="filtroEstadoRifa = 'todos'"
                     :class="[
                       'px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-1 sm:gap-2 flex-shrink-0',
                       filtroEstadoRifa === 'todos'
                         ? 'bg-gradient-to-br from-natillera-500 to-natillera-600 text-white shadow-lg shadow-natillera-200 scale-105'
-                        : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
+                        : 'text-texto-secundario hover:text-texto hover:bg-superficie-tarjeta/50'
                     ]"
                   >
                     <svg class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1673,11 +1685,11 @@
                     :class="[
                       'px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-1 sm:gap-2 flex-shrink-0',
                       filtroEstadoRifa === 'libre'
-                        ? 'bg-white text-gray-800 shadow-md border-2 border-gray-300 scale-105'
-                        : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
+                        ? 'bg-superficie-tarjeta text-texto shadow-md border-2 border-borde-fuerte scale-105'
+                        : 'text-texto-secundario hover:text-texto hover:bg-superficie-tarjeta/50'
                     ]"
                   >
-                    <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-gray-400 border border-gray-500 flex-shrink-0"></div>
+                    <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-gray-400 oscuro:bg-texto-tenue border border-gray-500 oscuro:border-texto-suave flex-shrink-0"></div>
                     <span class="whitespace-nowrap">Libres</span>
                   </button>
                   <button
@@ -1685,8 +1697,8 @@
                     :class="[
                       'px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-1 sm:gap-2 flex-shrink-0',
                       filtroEstadoRifa === 'vendido'
-                        ? 'bg-gradient-to-br from-amber-100 to-amber-50 text-amber-800 shadow-md border-2 border-amber-400 scale-105'
-                        : 'text-amber-700 hover:text-amber-800 hover:bg-amber-50/50'
+                        ? 'bg-gradient-to-br from-amber-100 oscuro:from-amber-500/15 to-amber-50 oscuro:to-amber-500/10 text-amber-800 oscuro:text-amber-300 shadow-md border-2 border-amber-400 scale-105'
+                        : 'text-amber-700 oscuro:text-amber-300 hover:text-amber-800 oscuro:hover:text-amber-300 hover:bg-amber-50/50 oscuro:hover:bg-amber-500/15'
                     ]"
                   >
                     <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-amber-400 border border-amber-500 flex-shrink-0"></div>
@@ -1697,8 +1709,8 @@
                     :class="[
                       'px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-1 sm:gap-2 flex-shrink-0',
                       filtroEstadoRifa === 'pagado'
-                        ? 'bg-gradient-to-br from-green-100 to-emerald-50 text-green-800 shadow-md border-2 border-green-500 scale-105'
-                        : 'text-green-700 hover:text-green-800 hover:bg-green-50/50'
+                        ? 'bg-gradient-to-br from-green-100 oscuro:from-green-500/15 to-emerald-50 oscuro:to-emerald-500/10 text-green-800 oscuro:text-green-300 shadow-md border-2 border-green-500 scale-105'
+                        : 'text-green-700 oscuro:text-green-300 hover:text-green-800 oscuro:hover:text-green-300 hover:bg-green-50/50 oscuro:hover:bg-green-500/15'
                     ]"
                   >
                     <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-500 border border-green-600 flex-shrink-0"></div>
@@ -1707,7 +1719,7 @@
                 </div>
               </div>
             </div>
-            <div class="grid grid-cols-6 sm:grid-cols-10 gap-2 sm:gap-2.5 p-3 sm:p-4 bg-gradient-to-br from-gray-50 via-gray-50/50 to-gray-100 rounded-xl border-2 border-gray-200 shadow-inner">
+            <div class="grid grid-cols-6 sm:grid-cols-10 gap-2 sm:gap-2.5 p-3 sm:p-4 bg-gradient-to-br from-superficie-suave via-superficie-suave/50 to-superficie-hundida rounded-xl border-2 border-borde shadow-inner">
               <div
                 v-for="numero in numerosRifaFiltrados"
                 :key="numero.numero"
@@ -1715,10 +1727,10 @@
                 :class="[
                   'aspect-square flex items-center justify-center rounded-lg text-sm sm:text-base md:text-lg font-semibold transition-all duration-200 leading-none relative p-2 shadow-sm',
                   numero.estado === 'libre' 
-                    ? 'bg-white hover:bg-gray-50 border-2 border-gray-300 hover:border-natillera-400 hover:shadow-md cursor-pointer hover:scale-105 active:scale-95 text-gray-700 hover:text-natillera-700' 
+                    ? 'bg-superficie-tarjeta hover:bg-superficie-suave border-2 border-borde-fuerte hover:border-natillera-400 hover:shadow-md cursor-pointer hover:scale-105 active:scale-95 text-texto-medio hover:text-natillera-700 oscuro:hover:text-natillera-300' 
                     : numero.estado === 'vendido'
-                    ? 'bg-gradient-to-br from-amber-100 via-amber-50 to-amber-100 border-2 border-amber-400 text-amber-800 cursor-pointer hover:scale-105 hover:shadow-md active:scale-95 hover:border-amber-500 hover:from-amber-200 hover:to-amber-100'
-                    : 'bg-gradient-to-br from-green-100 via-emerald-50 to-green-100 border-2 border-green-500 text-green-800 cursor-pointer hover:scale-105 hover:shadow-md active:scale-95 hover:border-green-600 hover:from-green-200 hover:to-green-100',
+                    ? 'bg-gradient-to-br from-amber-100 oscuro:from-amber-500/15 via-amber-50 oscuro:via-amber-500/10 to-amber-100 oscuro:to-amber-500/10 border-2 border-amber-400 text-amber-800 oscuro:text-amber-300 cursor-pointer hover:scale-105 hover:shadow-md active:scale-95 hover:border-amber-500 hover:from-amber-200 oscuro:hover:from-amber-500/15 hover:to-amber-100 oscuro:hover:to-amber-500/10'
+                    : 'bg-gradient-to-br from-green-100 oscuro:from-green-500/15 via-emerald-50 oscuro:via-emerald-500/10 to-green-100 oscuro:to-green-500/10 border-2 border-green-500 text-green-800 oscuro:text-green-300 cursor-pointer hover:scale-105 hover:shadow-md active:scale-95 hover:border-green-600 hover:from-green-200 oscuro:hover:from-green-500/15 hover:to-green-100 oscuro:hover:to-green-500/10',
                   (numero.estado === 'vendido' || numero.estado === 'pagado') ? 'cursor-pointer' : ''
                 ]"
                 :title="numero.estado === 'libre' ? 'Click para vender' : numero.estado === 'vendido' ? `Click para gestionar pago - ${numero.nombreComprador || 'Número'} - $${formatMoney(numero.valor || 0)}` : numero.estado === 'pagado' ? `Click para gestionar pago - ${numero.nombreComprador || 'Número'} - $${formatMoney(numero.valor || 0)} - Pagado` : ''"
@@ -1730,12 +1742,12 @@
           <!-- Lista de socios (solo si NO es rifa manual) -->
           <div v-else>
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-              <h4 class="font-bold text-gray-800">Socios participantes</h4>
+              <h4 class="font-bold text-texto">Socios participantes</h4>
               
               <!-- Buscador: por número (rifa aleatoria) y/o por nombre. Icono/borrar por flex (iOS-safe) -->
               <div v-if="sociosActividad.length > 0" class="flex-1 sm:max-w-xs">
-                <div class="flex items-center border-2 border-natillera-300 rounded-xl bg-white focus-within:ring-2 focus-within:ring-natillera-500/50 focus-within:border-natillera-500 transition-colors">
-                  <span class="pl-3 flex-shrink-0 text-gray-400 pointer-events-none">
+                <div class="flex items-center border-2 border-natillera-300 oscuro:border-natillera-500/30 rounded-xl bg-superficie-tarjeta focus-within:ring-2 focus-within:ring-natillera-500/50 focus-within:border-natillera-500 transition-colors">
+                  <span class="pl-3 flex-shrink-0 text-texto-tenue pointer-events-none">
                     <MagnifyingGlassIcon class="w-5 h-5" />
                   </span>
                   <input
@@ -1747,7 +1759,7 @@
                   <button
                     v-if="busquedaNumero.trim()"
                     type="button"
-                    class="flex h-11 w-11 flex-shrink-0 items-center justify-center text-gray-400 hover:text-gray-600 touch-manipulation"
+                    class="flex h-11 w-11 flex-shrink-0 items-center justify-center text-texto-tenue hover:text-texto-secundario touch-manipulation"
                     aria-label="Limpiar búsqueda"
                     @click="busquedaNumero = ''"
                   >
@@ -1757,37 +1769,37 @@
               </div>
             </div>
             
-            <div v-if="sociosActividad.length === 0" class="text-center py-8 text-gray-500">
+            <div v-if="sociosActividad.length === 0" class="text-center py-8 text-texto-suave">
               <p>No hay socios asignados a esta actividad</p>
             </div>
-            <div v-else-if="busquedaNumero && sociosFiltrados.length === 0 && faltantesFiltrados.length === 0" class="text-center py-8 text-gray-500">
+            <div v-else-if="busquedaNumero && sociosFiltrados.length === 0 && faltantesFiltrados.length === 0" class="text-center py-8 text-texto-suave">
               <p>No se encontraron resultados para "{{ busquedaNumero }}"</p>
             </div>
             <div v-else class="space-y-3">
               <div
                 v-for="socioAct in sociosFiltrados"
                 :key="socioAct.id"
-                class="p-3 sm:p-4 bg-white rounded-xl border transition-all"
+                class="p-3 sm:p-4 bg-superficie-tarjeta rounded-xl border transition-all"
                 :class="{
-                  'border-green-200 bg-green-50/30': getEstadoDisplaySocio(socioAct) === 'pagado',
-                  'border-amber-200 bg-amber-50/30': getEstadoDisplaySocio(socioAct) === 'parcial',
-                  'border-red-200 bg-red-50/30': getEstadoDisplaySocio(socioAct) === 'mora',
-                  'border-gray-200 bg-gray-50/30': getEstadoDisplaySocio(socioAct) === 'pendiente'
+                  'border-green-200 oscuro:border-green-500/30 bg-green-50/30 oscuro:bg-green-500/15': getEstadoDisplaySocio(socioAct) === 'pagado',
+                  'border-amber-200 oscuro:border-amber-500/30 bg-amber-50/30 oscuro:bg-amber-500/15': getEstadoDisplaySocio(socioAct) === 'parcial',
+                  'border-red-200 oscuro:border-red-500/30 bg-red-50/30 oscuro:bg-red-500/15': getEstadoDisplaySocio(socioAct) === 'mora',
+                  'border-borde bg-superficie-suave/30': getEstadoDisplaySocio(socioAct) === 'pendiente'
                 }"
               >
                 <!-- Header: Nombre + Badge en una sola fila (compacto en móvil). En rifa aleatoria el estado se deriva de los números para coincidir con Pagado/Saldo -->
                 <div class="flex items-center justify-between gap-2 mb-2.5">
                   <div class="flex-1 min-w-0">
-                    <p class="font-semibold text-gray-800 text-sm truncate">{{ socioAct.socio_natillera?.socio?.nombre || 'Sin nombre' }}</p>
-                    <p v-if="socioAct.socio_natillera?.socio?.telefono" class="text-xs text-gray-500 truncate">{{ socioAct.socio_natillera.socio.telefono }}</p>
+                    <p class="font-semibold text-texto text-sm truncate">{{ socioAct.socio_natillera?.socio?.nombre || 'Sin nombre' }}</p>
+                    <p v-if="socioAct.socio_natillera?.socio?.telefono" class="text-xs text-texto-suave truncate">{{ socioAct.socio_natillera.socio.telefono }}</p>
                   </div>
                   <span
                     class="flex-shrink-0 inline-block px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap"
                     :class="{
-                      'bg-green-100 text-green-700 border border-green-200': getEstadoDisplaySocio(socioAct) === 'pagado',
-                      'bg-amber-100 text-amber-700 border border-amber-200': getEstadoDisplaySocio(socioAct) === 'parcial',
-                      'bg-red-100 text-red-700 border border-red-200': getEstadoDisplaySocio(socioAct) === 'mora',
-                      'bg-gray-100 text-gray-700 border border-gray-200': getEstadoDisplaySocio(socioAct) === 'pendiente'
+                      'bg-green-100 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300 border border-green-200 oscuro:border-green-500/30': getEstadoDisplaySocio(socioAct) === 'pagado',
+                      'bg-amber-100 oscuro:bg-amber-500/15 text-amber-700 oscuro:text-amber-300 border border-amber-200 oscuro:border-amber-500/30': getEstadoDisplaySocio(socioAct) === 'parcial',
+                      'bg-red-100 oscuro:bg-red-500/15 text-red-700 oscuro:text-red-300 border border-red-200 oscuro:border-red-500/30': getEstadoDisplaySocio(socioAct) === 'mora',
+                      'bg-superficie-hundida text-texto-medio border border-borde': getEstadoDisplaySocio(socioAct) === 'pendiente'
                     }"
                   >
                     {{ getEstadoLabel(getEstadoDisplaySocio(socioAct)) }}
@@ -1796,26 +1808,26 @@
                 
                 <!-- Números asignados (solo para rifa automática) -->
                 <div v-if="actividadSeleccionada.tipo === 'rifa' && actividadSeleccionada.tipo_rifa === 'aleatoria'" class="mb-3">
-                  <p class="text-xs text-gray-500 mb-2">Números asignados:</p>
+                  <p class="text-xs text-texto-suave mb-2">Números asignados:</p>
                   <div class="flex flex-wrap gap-1.5">
                     <span 
                       v-for="numero in getValoresSocioRifaAutomatica(socioAct).numeros"
                       :key="numero"
-                      class="px-2 py-1 bg-gradient-to-br from-natillera-100 to-emerald-100 border border-natillera-300 rounded-lg text-xs font-semibold text-natillera-700"
+                      class="px-2 py-1 bg-gradient-to-br from-natillera-100 oscuro:from-natillera-500/15 to-emerald-100 oscuro:to-emerald-500/10 border border-natillera-300 oscuro:border-natillera-500/30 rounded-lg text-xs font-semibold text-natillera-700 oscuro:text-natillera-300"
                     >
                       {{ numero }}
                     </span>
-                    <span v-if="getValoresSocioRifaAutomatica(socioAct).numeros.length === 0" class="text-xs text-gray-400 italic">
+                    <span v-if="getValoresSocioRifaAutomatica(socioAct).numeros.length === 0" class="text-xs text-texto-tenue italic">
                       Sin números asignados
                     </span>
                   </div>
                 </div>
                 
                 <!-- Valores: tira compacta de 3 segmentos con divisores (legible en móvil) -->
-                <div class="grid grid-cols-3 rounded-xl bg-slate-50 border border-slate-100 divide-x divide-slate-200/70 overflow-hidden">
+                <div class="grid grid-cols-3 rounded-xl bg-slate-50 oscuro:bg-superficie-suave border border-slate-100 oscuro:border-borde-suave divide-x divide-slate-200/70 oscuro:divide-borde/70 overflow-hidden">
                   <div class="px-2 py-2 text-center min-w-0">
-                    <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 leading-tight">A pagar</p>
-                    <p class="font-bold text-gray-800 text-[13px] sm:text-sm leading-tight mt-0.5 break-all">
+                    <p class="text-[10px] font-semibold uppercase tracking-wide text-texto-tenue leading-tight">A pagar</p>
+                    <p class="font-bold text-texto text-[13px] sm:text-sm leading-tight mt-0.5 break-all">
                       <span v-if="actividadSeleccionada.tipo === 'rifa' && actividadSeleccionada.tipo_rifa === 'aleatoria'">
                         <span class="sm:hidden">${{ formatMoneyCompact(getValoresSocioRifaAutomatica(socioAct).valorAPagar) }}</span>
                         <span class="hidden sm:inline">${{ formatMoney(getValoresSocioRifaAutomatica(socioAct).valorAPagar) }}</span>
@@ -1827,8 +1839,8 @@
                     </p>
                   </div>
                   <div class="px-2 py-2 text-center min-w-0">
-                    <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 leading-tight">Pagado</p>
-                    <p class="font-bold text-emerald-600 text-[13px] sm:text-sm leading-tight mt-0.5 break-all">
+                    <p class="text-[10px] font-semibold uppercase tracking-wide text-texto-tenue leading-tight">Pagado</p>
+                    <p class="font-bold text-emerald-600 oscuro:text-emerald-300 text-[13px] sm:text-sm leading-tight mt-0.5 break-all">
                       <span v-if="actividadSeleccionada.tipo === 'rifa' && actividadSeleccionada.tipo_rifa === 'aleatoria'">
                         <span class="sm:hidden">${{ formatMoneyCompact(getValoresSocioRifaAutomatica(socioAct).valorPagado) }}</span>
                         <span class="hidden sm:inline">${{ formatMoney(getValoresSocioRifaAutomatica(socioAct).valorPagado) }}</span>
@@ -1840,8 +1852,8 @@
                     </p>
                   </div>
                   <div class="px-2 py-2 text-center min-w-0">
-                    <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 leading-tight">Saldo</p>
-                    <p class="font-bold text-rose-600 text-[13px] sm:text-sm leading-tight mt-0.5 break-all">
+                    <p class="text-[10px] font-semibold uppercase tracking-wide text-texto-tenue leading-tight">Saldo</p>
+                    <p class="font-bold text-rose-600 oscuro:text-rose-300 text-[13px] sm:text-sm leading-tight mt-0.5 break-all">
                       <span v-if="actividadSeleccionada.tipo === 'rifa' && actividadSeleccionada.tipo_rifa === 'aleatoria'">
                         <span class="sm:hidden">${{ formatMoneyCompact(getValoresSocioRifaAutomatica(socioAct).saldo) }}</span>
                         <span class="hidden sm:inline">${{ formatMoney(getValoresSocioRifaAutomatica(socioAct).saldo) }}</span>
@@ -1860,38 +1872,38 @@
                   <button
                     v-if="socioACobrar !== socioAct.id"
                     type="button"
-                    class="w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-[13px] font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 touch-manipulation"
+                    class="w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 oscuro:border-emerald-500/30 bg-emerald-50 oscuro:bg-emerald-500/15 px-3 py-2 text-[13px] font-semibold text-emerald-700 oscuro:text-emerald-300 transition-colors hover:bg-emerald-100 oscuro:hover:bg-emerald-500/15 touch-manipulation"
                     @click="abrirCobroSocio(socioAct)"
                   >
                     <BanknotesIcon class="w-4 h-4" />
                     Registrar pago
                   </button>
 
-                  <div v-else class="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 space-y-3">
-                    <p class="text-[13px] font-bold text-emerald-900">
+                  <div v-else class="rounded-xl border border-emerald-200 oscuro:border-emerald-500/30 bg-emerald-50/70 oscuro:bg-emerald-500/15 p-3 space-y-3">
+                    <p class="text-[13px] font-bold text-emerald-900 oscuro:text-emerald-300">
                       Cobrar solo esta actividad
-                      <span class="block font-normal text-emerald-800">
+                      <span class="block font-normal text-emerald-800 oscuro:text-emerald-300">
                         Debe ${{ formatMoney(pendienteSocio(socioAct)) }}. No toca su cuota del mes.
                       </span>
                     </p>
                     <div>
-                      <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-emerald-700">Valor</label>
+                      <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-emerald-700 oscuro:text-emerald-300">Valor</label>
                       <div class="flex items-center gap-2">
-                        <div class="flex h-11 flex-1 items-center rounded-xl border-2 border-emerald-200 bg-white px-3">
-                          <span class="mr-1 text-sm font-medium text-slate-400">$</span>
+                        <div class="flex h-11 flex-1 items-center rounded-xl border-2 border-emerald-200 oscuro:border-emerald-500/30 bg-superficie-tarjeta px-3">
+                          <span class="mr-1 text-sm font-medium text-slate-400 oscuro:text-texto-tenue">$</span>
                           <!-- text-base: iOS hace zoom en inputs con font-size < 16px -->
                           <input
                             :value="formatNumberWithSeparator(formCobro.valor)"
                             @input="formCobro.valor = parseMilesInput($event.target.value)"
                             type="text"
                             inputmode="decimal"
-                            class="w-full min-w-0 border-0 bg-transparent p-0 text-base font-semibold text-slate-800 outline-none"
+                            class="w-full min-w-0 border-0 bg-transparent p-0 text-base font-semibold text-slate-800 oscuro:text-texto outline-none"
                             :placeholder="String(pendienteSocio(socioAct))"
                           />
                         </div>
                         <button
                           type="button"
-                          class="min-h-[44px] flex-shrink-0 rounded-xl border border-emerald-300 bg-white px-3 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 touch-manipulation"
+                          class="min-h-[44px] flex-shrink-0 rounded-xl border border-emerald-300 oscuro:border-emerald-500/30 bg-superficie-tarjeta px-3 text-xs font-semibold text-emerald-700 oscuro:text-emerald-300 transition-colors hover:bg-emerald-50 oscuro:hover:bg-emerald-500/15 touch-manipulation"
                           @click="formCobro.valor = pendienteSocio(socioAct)"
                         >
                           Todo
@@ -1899,7 +1911,7 @@
                       </div>
                     </div>
                     <div>
-                      <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-emerald-700">Forma de pago</label>
+                      <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-emerald-700 oscuro:text-emerald-300">Forma de pago</label>
                       <div class="flex gap-2">
                         <button
                           type="button"
@@ -1907,7 +1919,7 @@
                           :aria-pressed="formCobro.formaPago === 'efectivo'"
                           :class="[
                             'min-h-[44px] flex-1 rounded-xl border-2 px-3 text-[13px] font-semibold transition-colors touch-manipulation',
-                            formCobro.formaPago === 'efectivo' ? 'border-emerald-500 bg-white text-emerald-700' : 'border-transparent bg-white/60 text-slate-500'
+                            formCobro.formaPago === 'efectivo' ? 'border-emerald-500 bg-superficie-tarjeta text-emerald-700 oscuro:text-emerald-300' : 'border-transparent bg-superficie-tarjeta/60 text-slate-500 oscuro:text-texto-suave'
                           ]"
                         >
                           Efectivo
@@ -1918,7 +1930,7 @@
                           :aria-pressed="formCobro.formaPago === 'transferencia'"
                           :class="[
                             'min-h-[44px] flex-1 rounded-xl border-2 px-3 text-[13px] font-semibold transition-colors touch-manipulation',
-                            formCobro.formaPago === 'transferencia' ? 'border-blue-500 bg-white text-blue-700' : 'border-transparent bg-white/60 text-slate-500'
+                            formCobro.formaPago === 'transferencia' ? 'border-blue-500 bg-superficie-tarjeta text-blue-700 oscuro:text-blue-300' : 'border-transparent bg-superficie-tarjeta/60 text-slate-500 oscuro:text-texto-suave'
                           ]"
                         >
                           Transferencia
@@ -1928,7 +1940,7 @@
                     <div class="flex gap-2">
                       <button
                         type="button"
-                        class="min-h-[44px] flex-1 rounded-xl border border-slate-300 bg-white px-3 text-[13px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 touch-manipulation"
+                        class="min-h-[44px] flex-1 rounded-xl border border-slate-300 oscuro:border-borde-fuerte bg-superficie-tarjeta px-3 text-[13px] font-semibold text-slate-600 oscuro:text-texto-secundario transition-colors hover:bg-slate-50 oscuro:hover:bg-superficie-suave touch-manipulation"
                         :disabled="registrandoCobro"
                         @click="cancelarCobroSocio"
                       >
@@ -1951,32 +1963,32 @@
                   <button
                     v-if="pagoAEliminar !== socioAct.id"
                     type="button"
-                    class="w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[13px] font-semibold text-red-700 transition-colors hover:bg-red-100 touch-manipulation"
+                    class="w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 px-3 py-2 text-[13px] font-semibold text-red-700 oscuro:text-red-300 transition-colors hover:bg-red-100 oscuro:hover:bg-red-500/15 touch-manipulation"
                     @click="pedirConfirmacionEliminarPago(socioAct)"
                   >
                     <TrashIcon class="w-4 h-4" />
                     Eliminar pago
                   </button>
 
-                  <div v-else class="rounded-xl border border-red-200 bg-red-50 p-3">
-                    <p v-if="cargandoPreviewPago" class="text-[13px] text-red-800">Calculando el impacto…</p>
+                  <div v-else class="rounded-xl border border-red-200 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 p-3">
+                    <p v-if="cargandoPreviewPago" class="text-[13px] text-red-800 oscuro:text-red-300">Calculando el impacto…</p>
                     <template v-else>
-                      <p class="text-[13px] font-bold text-red-800">
+                      <p class="text-[13px] font-bold text-red-800 oscuro:text-red-300">
                         Se revertirán ${{ formatMoney(previewPago?.valorTotal || getValorPagadoSocio(socioAct)) }}
                       </p>
                       <ul v-if="previewPago?.avisos?.length" class="mt-2 space-y-1">
-                        <li v-for="(aviso, i) in previewPago.avisos" :key="i" class="flex gap-1.5 text-[11px] leading-snug text-red-700">
+                        <li v-for="(aviso, i) in previewPago.avisos" :key="i" class="flex gap-1.5 text-[11px] leading-snug text-red-700 oscuro:text-red-300">
                           <span class="mt-1 h-1 w-1 flex-shrink-0 rounded-full bg-red-500"></span>
                           <span>{{ aviso }}</span>
                         </li>
                       </ul>
-                      <p class="mt-2 text-[11px] text-red-600">La actividad volverá a quedar pendiente para este socio.</p>
+                      <p class="mt-2 text-[11px] text-red-600 oscuro:text-red-300">La actividad volverá a quedar pendiente para este socio.</p>
                     </template>
                     <div class="mt-3 flex gap-2">
                       <button
                         type="button"
                         :disabled="eliminandoPagoActividad"
-                        class="flex-1 min-h-[44px] rounded-xl border border-gray-300 bg-white px-3 text-[13px] font-semibold text-gray-700 disabled:opacity-50 touch-manipulation"
+                        class="flex-1 min-h-[44px] rounded-xl border border-borde-fuerte bg-superficie-tarjeta px-3 text-[13px] font-semibold text-texto-medio disabled:opacity-50 touch-manipulation"
                         @click="cancelarEliminarPago()"
                       >
                         Cancelar
@@ -1997,18 +2009,18 @@
               
               <!-- Faltantes (solo para rifa automática) -->
               <div v-if="actividadSeleccionada.tipo === 'rifa' && actividadSeleccionada.tipo_rifa === 'aleatoria' && faltantesFiltrados.length > 0" class="mt-6">
-                <h4 class="font-bold text-gray-800 mb-4">Faltantes</h4>
+                <h4 class="font-bold text-texto mb-4">Faltantes</h4>
                 <div class="space-y-3">
                   <div 
                     v-for="faltante in faltantesFiltrados" 
                     :key="faltante.nombre"
-                    class="p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-gray-300 transition-all"
+                    class="p-4 bg-gradient-to-br from-superficie-suave to-superficie-hundida rounded-xl border-2 border-borde-fuerte transition-all"
                   >
                     <!-- Header: Nombre del faltante + Asignar (solo desktop) -->
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
                       <div class="flex-1 min-w-0">
-                        <p class="font-semibold text-gray-800 truncate">{{ faltante.nombre }}</p>
-                        <p class="text-xs text-gray-500 truncate">Números no asignados a socios</p>
+                        <p class="font-semibold text-texto truncate">{{ faltante.nombre }}</p>
+                        <p class="text-xs text-texto-suave truncate">Números no asignados a socios</p>
                       </div>
                       <button
                         v-if="!soloLectura"
@@ -2022,15 +2034,15 @@
                     
                     <!-- Números asignados -->
                     <div class="mb-3">
-                      <p class="text-xs text-gray-500 mb-2">Números asignados:</p>
+                      <p class="text-xs text-texto-suave mb-2">Números asignados:</p>
                       <div class="flex flex-wrap gap-1.5">
                         <span 
                           v-for="numero in faltante.numeros"
                           :key="numero.numero"
                           class="px-2 py-1 rounded-lg text-xs font-semibold transition-all"
                           :class="{
-                            'bg-gradient-to-br from-yellow-200 to-yellow-300 border-2 border-yellow-400 text-yellow-900 shadow-md scale-105': busquedaNumero && numero.numero === busquedaNumero.trim().padStart(2, '0'),
-                            'bg-gradient-to-br from-gray-200 to-gray-300 border border-gray-400 text-gray-700': !busquedaNumero || numero.numero !== busquedaNumero.trim().padStart(2, '0')
+                            'bg-gradient-to-br from-yellow-200 oscuro:from-yellow-500/15 to-yellow-300 oscuro:to-yellow-500/10 border-2 border-yellow-400 oscuro:border-yellow-500/40 text-yellow-900 oscuro:text-yellow-300 shadow-md scale-105': busquedaNumero && numero.numero === busquedaNumero.trim().padStart(2, '0'),
+                            'bg-gradient-to-br from-gray-200 oscuro:from-superficie-elevada to-gray-300 oscuro:to-superficie-suave border border-gray-400 oscuro:border-borde-fuerte text-texto-medio': !busquedaNumero || numero.numero !== busquedaNumero.trim().padStart(2, '0')
                           }"
                         >
                           {{ numero.numero }}
@@ -2041,29 +2053,29 @@
                     <!-- Valores: Grid responsive -->
                     <div class="grid grid-cols-3 gap-2 sm:gap-4">
                       <div class="text-center sm:text-right">
-                        <p class="text-xs text-gray-500 mb-1">Valor a pagar</p>
-                        <p class="font-bold text-gray-800 text-[13px] sm:text-base break-words">
+                        <p class="text-xs text-texto-suave mb-1">Valor a pagar</p>
+                        <p class="font-bold text-texto text-[13px] sm:text-base break-words">
                           <span class="sm:hidden">${{ formatMoneyCompact(faltante.numeros.reduce((sum, n) => sum + (n.valor || 0), 0)) }}</span>
                           <span class="hidden sm:inline">${{ formatMoney(faltante.numeros.reduce((sum, n) => sum + (n.valor || 0), 0)) }}</span>
                         </p>
                       </div>
                       <div class="text-center sm:text-right">
-                        <p class="text-xs text-gray-500 mb-1">Valor pagado</p>
-                        <p class="font-bold text-green-600 text-[13px] sm:text-base break-words">
+                        <p class="text-xs text-texto-suave mb-1">Valor pagado</p>
+                        <p class="font-bold text-green-600 oscuro:text-green-300 text-[13px] sm:text-base break-words">
                           <span class="sm:hidden">${{ formatMoneyCompact(faltante.numeros.filter(n => n.estado === 'pagado').reduce((sum, n) => sum + (n.valor || 0), 0)) }}</span>
                           <span class="hidden sm:inline">${{ formatMoney(faltante.numeros.filter(n => n.estado === 'pagado').reduce((sum, n) => sum + (n.valor || 0), 0)) }}</span>
                         </p>
                       </div>
                       <div class="text-center sm:text-right">
-                        <p class="text-xs text-gray-500 mb-1">Saldo</p>
-                        <p class="font-bold text-red-600 text-[13px] sm:text-base break-words">
+                        <p class="text-xs text-texto-suave mb-1">Saldo</p>
+                        <p class="font-bold text-red-600 oscuro:text-red-300 text-[13px] sm:text-base break-words">
                           <span class="sm:hidden">${{ formatMoneyCompact(faltante.numeros.reduce((sum, n) => sum + (n.valor || 0), 0) - faltante.numeros.filter(n => n.estado === 'pagado').reduce((sum, n) => sum + (n.valor || 0), 0)) }}</span>
                           <span class="hidden sm:inline">${{ formatMoney(faltante.numeros.reduce((sum, n) => sum + (n.valor || 0), 0) - faltante.numeros.filter(n => n.estado === 'pagado').reduce((sum, n) => sum + (n.valor || 0), 0)) }}</span>
                         </p>
                       </div>
                     </div>
                     <!-- Botón Asignar al final (solo móvil) -->
-                    <div v-if="!soloLectura" class="mt-4 pt-3 border-t border-gray-300 sm:hidden">
+                    <div v-if="!soloLectura" class="mt-4 pt-3 border-t border-borde-fuerte sm:hidden">
                       <button
                         @click="abrirModalAsignarFaltante(faltante)"
                         class="w-full px-4 py-2 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-sm"
@@ -2082,7 +2094,7 @@
         </div>
         <!-- Footer de acciones fijo -->
         <!-- Footer de liquidación: solo disponible (visible + habilitado) para actividades tipo rifa -->
-        <div v-if="actividadSeleccionada.tipo === 'rifa' && !soloLectura" class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div v-if="actividadSeleccionada.tipo === 'rifa' && !soloLectura" class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <button
             type="button"
             @click="abrirModalLiquidar"
@@ -2101,8 +2113,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="modalLiquidarActividad = false"
     >
@@ -2147,13 +2159,13 @@
           <div>
             <label class="label mb-2 block">Total recaudado</label>
             <div class="relative">
-              <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold text-lg z-10">
+              <div class="absolute left-4 top-1/2 -translate-y-1/2 text-texto-suave font-semibold text-lg z-10">
                 $
               </div>
               <input 
                 :value="formatNumberWithSeparator(totalRecaudadoLiquidar)"
                 type="text" 
-                class="input-field pl-10 text-lg font-semibold bg-gray-100"
+                class="input-field pl-10 text-lg font-semibold bg-superficie-hundida"
                 readonly
                 disabled
               />
@@ -2163,7 +2175,7 @@
           <div>
             <label class="label mb-2 block">Premio entregado *</label>
             <div class="relative">
-              <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold text-lg z-10">
+              <div class="absolute left-4 top-1/2 -translate-y-1/2 text-texto-suave font-semibold text-lg z-10">
                 $
               </div>
               <input 
@@ -2188,12 +2200,12 @@
                 :class="[
                   'relative p-3 rounded-xl border-2 transition-all duration-200',
                   formLiquidar.forma_pago === 'efectivo'
-                    ? 'border-emerald-500 bg-gradient-to-br from-emerald-50 to-green-50 shadow-md'
-                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                    ? 'border-emerald-500 bg-gradient-to-br from-emerald-50 oscuro:from-emerald-500/15 to-green-50 oscuro:to-green-500/10 shadow-md'
+                    : 'border-borde bg-superficie-tarjeta hover:border-borde-fuerte hover:bg-superficie-suave'
                 ]"
               >
                 <span class="text-2xl">💵</span>
-                <span :class="formLiquidar.forma_pago === 'efectivo' ? 'font-semibold text-emerald-700' : 'text-gray-600'">Efectivo</span>
+                <span :class="formLiquidar.forma_pago === 'efectivo' ? 'font-semibold text-emerald-700 oscuro:text-emerald-300' : 'text-texto-secundario'">Efectivo</span>
               </button>
               <button
                 type="button"
@@ -2201,12 +2213,12 @@
                 :class="[
                   'relative p-3 rounded-xl border-2 transition-all duration-200',
                   formLiquidar.forma_pago === 'transferencia'
-                    ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md'
-                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                    ? 'border-blue-500 bg-gradient-to-br from-blue-50 oscuro:from-blue-500/15 to-indigo-50 oscuro:to-indigo-500/10 shadow-md'
+                    : 'border-borde bg-superficie-tarjeta hover:border-borde-fuerte hover:bg-superficie-suave'
                 ]"
               >
                 <span class="text-2xl">💳</span>
-                <span :class="formLiquidar.forma_pago === 'transferencia' ? 'font-semibold text-blue-700' : 'text-gray-600'">Transferencia</span>
+                <span :class="formLiquidar.forma_pago === 'transferencia' ? 'font-semibold text-blue-700 oscuro:text-blue-300' : 'text-texto-secundario'">Transferencia</span>
               </button>
             </div>
           </div>
@@ -2224,45 +2236,45 @@
                 :disabled="loadingNumeroGanador"
                 @input="formLiquidar.numeroGanador = formLiquidar.numeroGanador.replace(/\D/g, '').slice(0, 2)"
               />
-              <span v-if="loadingNumeroGanador" class="text-xs text-gray-500 whitespace-nowrap">Obteniendo...</span>
+              <span v-if="loadingNumeroGanador" class="text-xs text-texto-suave whitespace-nowrap">Obteniendo...</span>
             </div>
-            <p class="text-xs text-gray-500 mt-1">Número de la rifa que ganó (00-99). Si hay fecha de juego, se completa con las 2 últimas cifras del resultado de la Lotería de Medellín.</p>
+            <p class="text-xs text-texto-suave mt-1">Número de la rifa que ganó (00-99). Si hay fecha de juego, se completa con las 2 últimas cifras del resultado de la Lotería de Medellín.</p>
             <!-- Ganador del número digitado -->
-            <div v-if="cargandoGanadorPrevio" class="mt-3 text-xs text-gray-500">Buscando ganador...</div>
+            <div v-if="cargandoGanadorPrevio" class="mt-3 text-xs text-texto-suave">Buscando ganador...</div>
             <div
               v-else-if="ganadorPrevioLiquidar?.tipo === 'socio'"
-              class="mt-3 flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-natillera-50 via-emerald-50/80 to-teal-50 border-2 border-natillera-200"
+              class="mt-3 flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-natillera-50 oscuro:from-natillera-500/15 via-emerald-50/80 oscuro:via-emerald-500/10 to-teal-50 oscuro:to-teal-500/10 border-2 border-natillera-200 oscuro:border-natillera-500/30"
             >
-              <div class="w-10 h-10 flex-shrink-0 rounded-full bg-amber-100 border-2 border-amber-300 flex items-center justify-center text-lg">🏆</div>
+              <div class="w-10 h-10 flex-shrink-0 rounded-full bg-amber-100 oscuro:bg-amber-500/15 border-2 border-amber-300 oscuro:border-amber-500/30 flex items-center justify-center text-lg">🏆</div>
               <div class="min-w-0 flex-1">
-                <p class="text-xs font-medium text-natillera-600">Ganador/a</p>
-                <p class="font-display font-bold text-base text-natillera-800 truncate">{{ ganadorPrevioLiquidar.nombre }}</p>
-                <p v-if="ganadorPrevioLiquidar.vendedor" class="text-xs text-gray-500 truncate">Vendido por {{ ganadorPrevioLiquidar.vendedor }}</p>
+                <p class="text-xs font-medium text-natillera-600 oscuro:text-natillera-300">Ganador/a</p>
+                <p class="font-display font-bold text-base text-natillera-800 oscuro:text-natillera-300 truncate">{{ ganadorPrevioLiquidar.nombre }}</p>
+                <p v-if="ganadorPrevioLiquidar.vendedor" class="text-xs text-texto-suave truncate">Vendido por {{ ganadorPrevioLiquidar.vendedor }}</p>
               </div>
             </div>
             <div
               v-else-if="ganadorPrevioLiquidar?.tipo === 'natillera'"
-              class="mt-3 flex items-center gap-3 p-3 rounded-xl bg-natillera-50 border-2 border-natillera-200"
+              class="mt-3 flex items-center gap-3 p-3 rounded-xl bg-natillera-50 oscuro:bg-natillera-500/15 border-2 border-natillera-200 oscuro:border-natillera-500/30"
             >
               <div class="w-10 h-10 flex-shrink-0 rounded-full bg-gradient-to-br from-natillera-400 to-emerald-600 flex items-center justify-center text-lg">🏦</div>
               <div class="min-w-0 flex-1">
-                <p class="font-display font-bold text-base text-natillera-800">¡Gana la natillera!</p>
-                <p class="text-xs text-gray-600">El número no estaba asignado: premio y utilidad pasan al fondo.</p>
+                <p class="font-display font-bold text-base text-natillera-800 oscuro:text-natillera-300">¡Gana la natillera!</p>
+                <p class="text-xs text-texto-secundario">El número no estaba asignado: premio y utilidad pasan al fondo.</p>
               </div>
             </div>
             <div
               v-else-if="ganadorPrevioLiquidar?.tipo === 'sin_vender'"
-              class="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800"
+              class="mt-3 p-3 rounded-xl bg-amber-50 oscuro:bg-amber-500/15 border border-amber-200 oscuro:border-amber-500/30 text-xs text-amber-800 oscuro:text-amber-300"
             >
               Este número no está registrado en la rifa: quedará como ganador «Desconocido».
             </div>
           </div>
           <!-- Utilidad calculada -->
-          <div class="relative bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-50/50 border-2 border-purple-200 rounded-xl p-4 overflow-hidden">
-            <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-200/30 to-indigo-200/20 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
+          <div class="relative bg-gradient-to-br from-purple-50 oscuro:from-purple-500/15 via-indigo-50 oscuro:via-indigo-500/10 to-purple-50/50 oscuro:to-purple-500/10 border-2 border-purple-200 oscuro:border-purple-500/30 rounded-xl p-4 overflow-hidden">
+            <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-200/30 oscuro:from-purple-500/15 to-indigo-200/20 oscuro:to-indigo-500/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
             <div class="relative z-10">
-              <p class="text-sm text-gray-600 font-medium mb-1">Utilidad:</p>
-              <p class="font-bold text-2xl text-purple-600">
+              <p class="text-sm text-texto-secundario font-medium mb-1">Utilidad:</p>
+              <p class="font-bold text-2xl text-purple-600 oscuro:text-purple-300">
                 ${{ formatMoney(utilidadLiquidar) }}
               </p>
             </div>
@@ -2271,7 +2283,7 @@
           <NatiscrollHint :show="hayMasLiquidar" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button type="button" @click="modalLiquidarActividad = false" class="btn-modal-secondary flex-1">Cancelar</button>
             <button
@@ -2292,8 +2304,8 @@
       align="bottom"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="modalConfirmarLiquidacionNegativa = false"
     >
@@ -2334,25 +2346,25 @@
           class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] p-4 sm:p-6 space-y-4"
           @scroll.passive="onScrollConfirmarNegativa"
         >
-          <div class="bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 rounded-xl p-4 border-2 border-amber-200">
+          <div class="bg-gradient-to-br from-amber-50 oscuro:from-amber-500/15 via-orange-50 oscuro:via-orange-500/10 to-red-50 oscuro:to-red-500/10 rounded-xl p-4 border-2 border-amber-200 oscuro:border-amber-500/30">
             <div class="flex items-start gap-3">
               <div class="flex-shrink-0 mt-0.5">
-                <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-6 h-6 text-amber-600 oscuro:text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
               <div class="flex-1">
-                <h4 class="font-bold text-gray-800 mb-2">Utilidad Negativa</h4>
-                <p class="text-sm text-gray-700 leading-relaxed mb-3">
-                  El valor calculado de la utilidad es <span class="font-bold text-red-600">${{ formatMoney(Math.abs(utilidadLiquidar)) }}</span> negativo.
+                <h4 class="font-bold text-texto mb-2">Utilidad Negativa</h4>
+                <p class="text-sm text-texto-medio leading-relaxed mb-3">
+                  El valor calculado de la utilidad es <span class="font-bold text-red-600 oscuro:text-red-300">${{ formatMoney(Math.abs(utilidadLiquidar)) }}</span> negativo.
                 </p>
-                <p class="text-sm text-gray-700 leading-relaxed mb-3">
-                  Este valor se <span class="font-bold text-red-600">restará de las utilidades</span> de la natillera, lo que puede generar <span class="font-bold text-red-600">pérdidas</span> en el fondo común.
+                <p class="text-sm text-texto-medio leading-relaxed mb-3">
+                  Este valor se <span class="font-bold text-red-600 oscuro:text-red-300">restará de las utilidades</span> de la natillera, lo que puede generar <span class="font-bold text-red-600 oscuro:text-red-300">pérdidas</span> en el fondo común.
                 </p>
-                <p class="text-sm text-gray-700 leading-relaxed">
+                <p class="text-sm text-texto-medio leading-relaxed">
                   <span class="font-semibold">Se sugiere revisar:</span>
                 </p>
-                <ul class="text-sm text-gray-600 mt-2 space-y-1 list-disc list-inside">
+                <ul class="text-sm text-texto-secundario mt-2 space-y-1 list-disc list-inside">
                   <li>El total recaudado de la actividad</li>
                   <li>El valor del premio entregado</li>
                   <li>Los valores registrados en los números vendidos</li>
@@ -2361,19 +2373,19 @@
             </div>
           </div>
           <!-- Resumen de valores -->
-          <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+          <div class="bg-superficie-suave rounded-xl p-4 border border-borde">
             <div class="space-y-2 text-sm">
               <div class="flex justify-between">
-                <span class="text-gray-600">Total recaudado:</span>
-                <span class="font-semibold text-gray-800">${{ formatMoney(totalRecaudadoLiquidar) }}</span>
+                <span class="text-texto-secundario">Total recaudado:</span>
+                <span class="font-semibold text-texto">${{ formatMoney(totalRecaudadoLiquidar) }}</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-gray-600">Premio entregado:</span>
-                <span class="font-semibold text-gray-800">${{ formatMoney(formLiquidar.premioEntregado) }}</span>
+                <span class="text-texto-secundario">Premio entregado:</span>
+                <span class="font-semibold text-texto">${{ formatMoney(formLiquidar.premioEntregado) }}</span>
               </div>
-              <div class="flex justify-between pt-2 border-t border-gray-300">
-                <span class="text-gray-700 font-semibold">Utilidad:</span>
-                <span class="font-bold text-red-600">${{ formatMoney(utilidadLiquidar) }}</span>
+              <div class="flex justify-between pt-2 border-t border-borde-fuerte">
+                <span class="text-texto-medio font-semibold">Utilidad:</span>
+                <span class="font-bold text-red-600 oscuro:text-red-300">${{ formatMoney(utilidadLiquidar) }}</span>
               </div>
             </div>
           </div>
@@ -2381,7 +2393,7 @@
           <NatiscrollHint :show="hayMasConfirmarNegativa" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button type="button" @click="modalConfirmarLiquidacionNegativa = false" class="btn-modal-secondary flex-1">Cancelar</button>
             <!-- Acción destructiva/irreversible → rojo (excepción a btn-modal-primary verde marca) -->
@@ -2403,8 +2415,8 @@
       align="bottom"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="modalGanadorRifa = false"
     >
@@ -2443,44 +2455,44 @@
         >
           <!-- Ganador / Ganadora o Gana la natillera (arriba) -->
           <div v-if="actividadSeleccionada.ganador_es_faltante" class="text-center">
-            <div class="inline-flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-natillera-50 via-emerald-50/80 to-teal-50 border-2 border-natillera-200 shadow-md">
-              <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-natillera-400 to-emerald-600 flex items-center justify-center shadow-lg ring-2 ring-natillera-200 text-2xl sm:text-3xl">🏦</div>
-              <p class="font-display font-bold text-base sm:text-lg text-natillera-800">¡Gana la natillera!</p>
-              <p class="text-xs text-gray-600 max-w-xs leading-snug">
+            <div class="inline-flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-natillera-50 oscuro:from-natillera-500/15 via-emerald-50/80 oscuro:via-emerald-500/10 to-teal-50 oscuro:to-teal-500/10 border-2 border-natillera-200 oscuro:border-natillera-500/30 shadow-md">
+              <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-natillera-400 to-emerald-600 flex items-center justify-center shadow-lg ring-2 ring-natillera-200 oscuro:ring-natillera-500/30 text-2xl sm:text-3xl">🏦</div>
+              <p class="font-display font-bold text-base sm:text-lg text-natillera-800 oscuro:text-natillera-300">¡Gana la natillera!</p>
+              <p class="text-xs text-texto-secundario max-w-xs leading-snug">
                 Este número no estaba asignado. El premio y la utilidad se suman al fondo.
               </p>
             </div>
           </div>
           <div v-else-if="actividadSeleccionada.ganador_nombre && !actividadSeleccionada.ganador_es_faltante" class="text-center w-full">
-            <div class="w-full flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-natillera-50 via-emerald-50/80 to-teal-50 border-2 border-natillera-200 shadow-md">
-              <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-amber-100 flex items-center justify-center text-2xl sm:text-3xl border-2 border-amber-300 shadow-lg ring-2 ring-natillera-200">🏆</div>
-              <p class="text-xs font-medium text-natillera-600">Ganador/a</p>
-              <p class="font-display font-bold text-lg sm:text-xl text-natillera-800">{{ actividadSeleccionada.ganador_nombre }}</p>
+            <div class="w-full flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-natillera-50 oscuro:from-natillera-500/15 via-emerald-50/80 oscuro:via-emerald-500/10 to-teal-50 oscuro:to-teal-500/10 border-2 border-natillera-200 oscuro:border-natillera-500/30 shadow-md">
+              <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-amber-100 oscuro:bg-amber-500/15 flex items-center justify-center text-2xl sm:text-3xl border-2 border-amber-300 oscuro:border-amber-500/30 shadow-lg ring-2 ring-natillera-200 oscuro:ring-natillera-500/30">🏆</div>
+              <p class="text-xs font-medium text-natillera-600 oscuro:text-natillera-300">Ganador/a</p>
+              <p class="font-display font-bold text-lg sm:text-xl text-natillera-800 oscuro:text-natillera-300">{{ actividadSeleccionada.ganador_nombre }}</p>
             </div>
           </div>
           <!-- Número ganador (justo después del ganador) -->
           <div v-if="actividadSeleccionada.numero_ganador != null && actividadSeleccionada.numero_ganador !== ''" class="text-center">
-            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Número ganador</p>
-            <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-amber-100 to-yellow-200 border-2 border-amber-300 shadow-md">
-              <span class="text-3xl sm:text-4xl font-black text-amber-800 tracking-widest">
+            <p class="text-xs font-semibold text-texto-suave uppercase tracking-wider mb-1.5">Número ganador</p>
+            <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-amber-100 oscuro:from-amber-500/15 to-yellow-200 oscuro:to-yellow-500/10 border-2 border-amber-300 oscuro:border-amber-500/30 shadow-md">
+              <span class="text-3xl sm:text-4xl font-black text-amber-800 oscuro:text-amber-300 tracking-widest">
                 {{ String(actividadSeleccionada.numero_ganador).padStart(2, '0') }}
               </span>
             </div>
           </div>
           <!-- Bloque: información del sorteo Lotería de Medellín -->
-          <div v-if="actividadSeleccionada.sorteo_loteria_medellin || actividadSeleccionada.numero_completo_loteria_medellin" class="rounded-xl border-2 border-red-200 bg-white p-3 shadow-md">
-            <p class="text-red-700 font-bold text-sm sm:text-base mb-2">Resultado Lotería de Medellín</p>
-            <p class="text-red-600 font-bold text-base mb-0.5">Sorteo {{ actividadSeleccionada.sorteo_loteria_medellin || '—' }}</p>
-            <p class="text-red-600 text-xs mb-2">{{ formatDateSorteoDisplay(actividadSeleccionada.fecha_juego_rifa) || '—' }}</p>
+          <div v-if="actividadSeleccionada.sorteo_loteria_medellin || actividadSeleccionada.numero_completo_loteria_medellin" class="rounded-xl border-2 border-red-200 oscuro:border-red-500/30 bg-superficie-tarjeta p-3 shadow-md">
+            <p class="text-red-700 oscuro:text-red-300 font-bold text-sm sm:text-base mb-2">Resultado Lotería de Medellín</p>
+            <p class="text-red-600 oscuro:text-red-300 font-bold text-base mb-0.5">Sorteo {{ actividadSeleccionada.sorteo_loteria_medellin || '—' }}</p>
+            <p class="text-red-600 oscuro:text-red-300 text-xs mb-2">{{ formatDateSorteoDisplay(actividadSeleccionada.fecha_juego_rifa) || '—' }}</p>
             <div class="grid grid-cols-2 gap-2">
               <div>
-                <p class="text-red-600 text-xs font-semibold uppercase tracking-wider mb-1">Número</p>
+                <p class="text-red-600 oscuro:text-red-300 text-xs font-semibold uppercase tracking-wider mb-1">Número</p>
                 <div class="rounded-lg bg-red-600 text-white text-center py-2 px-2">
                   <span class="text-lg font-bold">{{ actividadSeleccionada.numero_completo_loteria_medellin || '—' }}</span>
                 </div>
               </div>
               <div>
-                <p class="text-red-600 text-xs font-semibold uppercase tracking-wider mb-1">Serie</p>
+                <p class="text-red-600 oscuro:text-red-300 text-xs font-semibold uppercase tracking-wider mb-1">Serie</p>
                 <div class="rounded-lg bg-red-600 text-white text-center py-2 px-2">
                   <span class="text-lg font-bold">{{ actividadSeleccionada.serie_loteria_medellin || '—' }}</span>
                 </div>
@@ -2489,13 +2501,13 @@
           </div>
           <!-- Sin datos de ganador -->
           <div v-else-if="actividadSeleccionada.numero_ganador == null || actividadSeleccionada.numero_ganador === ''" class="text-center py-3">
-            <p class="text-xs text-gray-500 italic">Datos del ganador no registrados para esta rifa.</p>
+            <p class="text-xs text-texto-suave italic">Datos del ganador no registrados para esta rifa.</p>
           </div>
         </div>
           <NatiscrollHint :show="hayMasGanadorRifa" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-3 sm:px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-2">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-3 sm:px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-2">
           <div class="flex gap-3">
             <button 
               type="button"
@@ -2518,7 +2530,7 @@
               <span>{{ compartiendoODescargando ? 'Preparando…' : 'WhatsApp' }}</span>
             </button>
           </div>
-          <p v-if="!isMobile" class="text-center text-xs text-gray-500 py-1.5 px-2">
+          <p v-if="!isMobile" class="text-center text-xs text-texto-suave py-1.5 px-2">
             En móvil puedes compartir por WhatsApp desde este mismo modal.
           </p>
           <!-- Solo en desarrollo: revertir liquidación para pruebas -->
@@ -2527,91 +2539,10 @@
             type="button"
             @click="revertirLiquidacionRifa"
             :disabled="revertiendoLiquidacion"
-            class="w-full px-4 py-2.5 text-sm font-medium rounded-xl border-2 border-amber-400 bg-amber-50 text-amber-800 hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            class="w-full px-4 py-2.5 text-sm font-medium rounded-xl border-2 border-amber-400 bg-amber-50 oscuro:bg-amber-500/15 text-amber-800 oscuro:text-amber-300 hover:bg-amber-100 oscuro:hover:bg-amber-500/15 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {{ revertiendoLiquidacion ? 'Revirtiendo...' : 'Revertir liquidación (solo dev)' }}
           </button>
-        </div>
-    </ModalWrapper>
-    <!-- Modal Cambiar forma de pago entrega premio (rifa liquidada) -->
-    <ModalWrapper
-      :show="!!actividadParaFormaPago"
-      :z-index="50"
-      align="bottom"
-      :ios-soft-backdrop="true"
-      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-sm max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
-      card-max-width="24rem"
-      @close="actividadParaFormaPago = null"
-    >
-        <!-- Cabecera marca compacta: móvil = fila; sm+ = icono arriba + textos centrados; X por flex -->
-        <div class="relative w-full flex-shrink-0 bg-[#1B5E37] text-white overflow-hidden">
-          <div class="sm:hidden flex min-h-[4.2rem] items-center gap-2 pb-3 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top))]">
-            <div class="flex min-w-0 flex-1 items-center gap-2">
-              <div class="w-10 h-10 flex-shrink-0 rounded-xl border border-white/25 bg-white/15 flex items-center justify-center">
-                <CurrencyDollarIcon class="w-5 h-5 text-white" />
-              </div>
-              <div class="min-w-0 flex-1">
-                <h3 class="text-base font-display font-bold leading-tight">Forma de pago del premio</h3>
-                <p class="mt-0.5 truncate text-[0.6875rem] text-white/90">{{ actividadParaFormaPago?.descripcion }}</p>
-              </div>
-            </div>
-            <button type="button" class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15 touch-manipulation" aria-label="Cerrar" @click="actividadParaFormaPago = null">
-              <XMarkIcon class="w-6 h-6" />
-            </button>
-          </div>
-          <div class="hidden sm:flex items-start w-full px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
-            <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
-            <div class="flex-1 min-w-0 flex flex-col items-center text-center">
-              <div class="w-[3.2rem] h-[3.2rem] bg-white/15 rounded-xl flex items-center justify-center border border-white/25">
-                <CurrencyDollarIcon class="w-6 h-6 text-white" />
-              </div>
-              <h3 class="text-lg font-display font-bold mt-3">Forma de pago del premio</h3>
-              <p class="text-white/90 text-xs mt-1 line-clamp-2">{{ actividadParaFormaPago?.descripcion }}</p>
-            </div>
-            <button type="button" class="h-11 w-11 flex-shrink-0 flex items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15" aria-label="Cerrar" @click="actividadParaFormaPago = null">
-              <XMarkIcon class="w-6 h-6" />
-            </button>
-          </div>
-        </div>
-        <!-- Cuerpo scrolleable (corto: 2 opciones; natiscroll omitido por cuerpo mínimo que no desborda) -->
-        <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] p-4 sm:p-5">
-          <div class="flex gap-2">
-            <button
-              type="button"
-              @click="formFormaPagoLiquidacion.forma_pago = 'efectivo'"
-              :class="[
-                'flex-1 p-3 rounded-xl border-2 transition-all text-sm font-medium',
-                formFormaPagoLiquidacion.forma_pago === 'efectivo'
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-              ]"
-            >
-              Efectivo
-            </button>
-            <button
-              type="button"
-              @click="formFormaPagoLiquidacion.forma_pago = 'transferencia'"
-              :class="[
-                'flex-1 p-3 rounded-xl border-2 transition-all text-sm font-medium',
-                formFormaPagoLiquidacion.forma_pago === 'transferencia'
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-              ]"
-            >
-              Transferencia
-            </button>
-          </div>
-        </div>
-        <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
-          <div class="flex gap-3">
-            <button type="button" @click="actividadParaFormaPago = null" class="btn-modal-secondary flex-1">Cancelar</button>
-            <button type="button" @click="guardarFormaPagoLiquidacion" :disabled="guardandoFormaPago" class="btn-modal-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed">
-              {{ guardandoFormaPago ? 'Guardando...' : 'Guardar' }}
-            </button>
-          </div>
         </div>
     </ModalWrapper>
     <!-- Modal Desglose valores pagados (rifa liquidada) -->
@@ -2621,8 +2552,8 @@
       align="bottom"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="actividadParaDesglosePagos = null"
     >
@@ -2668,35 +2599,35 @@
           overflow:hidden se vuelve el contenedor del sticky y no lo deja pegarse: donde hay
           overflow:clip (recorta igual sin crear contenedor de scroll) se usa ese.
         -->
-        <div class="border border-gray-200 rounded-xl overflow-hidden supports-[overflow:clip]:overflow-clip">
+        <div class="border border-borde rounded-xl overflow-hidden supports-[overflow:clip]:overflow-clip">
           <table class="w-full text-sm">
-            <thead class="bg-gray-100">
+            <thead class="bg-superficie-hundida">
               <tr>
-                <th class="sticky top-0 z-[1] bg-gray-100 w-12 text-center py-2.5 px-2 font-semibold text-gray-700">Nº</th>
-                <th class="sticky top-0 z-[1] bg-gray-100 text-left py-2.5 px-3 font-semibold text-gray-700">Nombre del socio</th>
-                <th class="sticky top-0 z-[1] bg-gray-100 text-right py-2.5 px-3 font-semibold text-gray-700">Valor pagado</th>
+                <th class="sticky top-0 z-[1] bg-superficie-hundida w-12 text-center py-2.5 px-2 font-semibold text-texto-medio">Nº</th>
+                <th class="sticky top-0 z-[1] bg-superficie-hundida text-left py-2.5 px-3 font-semibold text-texto-medio">Nombre del socio</th>
+                <th class="sticky top-0 z-[1] bg-superficie-hundida text-right py-2.5 px-3 font-semibold text-texto-medio">Valor pagado</th>
               </tr>
             </thead>
             <tbody>
               <tr
                 v-for="(p, i) in (actividadParaDesglosePagos?.valores_pagados_rifa || [])"
                 :key="i"
-                :class="i % 2 === 0 ? 'bg-white' : 'bg-gray-50/80'"
-                class="border-b border-gray-100"
+                :class="i % 2 === 0 ? 'bg-superficie-tarjeta' : 'bg-superficie-suave/80'"
+                class="border-b border-borde-suave"
               >
-                <td class="py-2 px-2 text-center text-gray-500 font-medium">{{ i + 1 }}</td>
-                <td class="py-2 px-3 text-gray-800">{{ p.nombre }}</td>
-                <td class="py-2 px-3 text-right font-medium text-green-700">${{ formatMoney(p.valor_pagado) }}</td>
+                <td class="py-2 px-2 text-center text-texto-suave font-medium">{{ i + 1 }}</td>
+                <td class="py-2 px-3 text-texto">{{ p.nombre }}</td>
+                <td class="py-2 px-3 text-right font-medium text-green-700 oscuro:text-green-300">${{ formatMoney(p.valor_pagado) }}</td>
               </tr>
-              <tr v-if="!(actividadParaDesglosePagos?.valores_pagados_rifa || []).length" class="bg-white">
-                <td colspan="3" class="py-6 px-3 text-center text-gray-500">No hay registros de pagos.</td>
+              <tr v-if="!(actividadParaDesglosePagos?.valores_pagados_rifa || []).length" class="bg-superficie-tarjeta">
+                <td colspan="3" class="py-6 px-3 text-center text-texto-suave">No hay registros de pagos.</td>
               </tr>
             </tbody>
-            <tfoot v-if="(actividadParaDesglosePagos?.valores_pagados_rifa || []).length > 0" class="bg-emerald-50 border-t-2 border-emerald-200">
+            <tfoot v-if="(actividadParaDesglosePagos?.valores_pagados_rifa || []).length > 0" class="bg-emerald-50 oscuro:bg-emerald-500/15 border-t-2 border-emerald-200 oscuro:border-emerald-500/30">
               <tr>
                 <td class="py-2.5 px-2"></td>
-                <td class="py-2.5 px-3 font-bold text-gray-800">Total</td>
-                <td class="py-2.5 px-3 text-right font-bold text-emerald-700">
+                <td class="py-2.5 px-3 font-bold text-texto">Total</td>
+                <td class="py-2.5 px-3 text-right font-bold text-emerald-700 oscuro:text-emerald-300">
                   ${{ formatMoney((actividadParaDesglosePagos?.valores_pagados_rifa || []).reduce((s, p) => s + (p.valor_pagado || 0), 0)) }}
                 </td>
               </tr>
@@ -2707,7 +2638,7 @@
           <NatiscrollHint :show="hayMasDesglose" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 sm:px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <button type="button" @click="actividadParaDesglosePagos = null" class="btn-modal-primary w-full">
             Cerrar
           </button>
@@ -2721,8 +2652,8 @@
       align="bottom"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="actividadParaPorPagar = null"
     >
@@ -2763,19 +2694,19 @@
           class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] p-4 sm:p-5"
           @scroll.passive="onScrollPorPagar"
         >
-          <p v-if="!cargandoPagosRifaLiquidada && saldoPendienteRifa > 0" class="mb-3 text-sm text-gray-600">
-            Faltan <span class="font-bold text-red-600">${{ formatMoney(saldoPendienteRifa) }}</span> por pagar.
+          <p v-if="!cargandoPagosRifaLiquidada && saldoPendienteRifa > 0" class="mb-3 text-sm text-texto-secundario">
+            Faltan <span class="font-bold text-red-600 oscuro:text-red-300">${{ formatMoney(saldoPendienteRifa) }}</span> por pagar.
           </p>
           <CargaCaja v-if="cargandoPagosRifaLiquidada" texto="Cargando pagos de la rifa" />
-          <p v-else-if="pagosRifaLiquidada.length === 0" class="text-xs text-gray-500 italic py-2">No hay números asignados en esta rifa.</p>
+          <p v-else-if="pagosRifaLiquidada.length === 0" class="text-xs text-texto-suave italic py-2">No hay números asignados en esta rifa.</p>
           <template v-else>
-            <div class="grid grid-cols-2 gap-1 p-1 rounded-xl bg-gray-100 mb-2" role="tablist">
+            <div class="grid grid-cols-2 gap-1 p-1 rounded-xl bg-superficie-hundida mb-2" role="tablist">
               <button
                 type="button"
                 role="tab"
                 :aria-selected="vistaPagosRifa === 'faltan'"
                 class="min-h-[44px] rounded-lg text-sm font-semibold transition-colors touch-manipulation"
-                :class="vistaPagosRifa === 'faltan' ? 'bg-white text-red-700 shadow-sm' : 'text-gray-600'"
+                :class="vistaPagosRifa === 'faltan' ? 'bg-superficie-tarjeta text-red-700 oscuro:text-red-300 shadow-sm' : 'text-texto-secundario'"
                 @click="vistaPagosRifa = 'faltan'"
               >
                 Faltan ({{ faltanPagarRifa.length }})
@@ -2785,34 +2716,34 @@
                 role="tab"
                 :aria-selected="vistaPagosRifa === 'pagaron'"
                 class="min-h-[44px] rounded-lg text-sm font-semibold transition-colors touch-manipulation"
-                :class="vistaPagosRifa === 'pagaron' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-600'"
+                :class="vistaPagosRifa === 'pagaron' ? 'bg-superficie-tarjeta text-emerald-700 oscuro:text-emerald-300 shadow-sm' : 'text-texto-secundario'"
                 @click="vistaPagosRifa = 'pagaron'"
               >
                 Pagaron ({{ yaPagaronRifa.length }})
               </button>
             </div>
-            <ul class="divide-y divide-gray-100">
+            <ul class="divide-y divide-borde-suave">
               <li
                 v-for="p in (vistaPagosRifa === 'faltan' ? faltanPagarRifa : yaPagaronRifa)"
                 :key="p.clave"
                 class="flex items-center gap-3 py-2"
               >
                 <div class="min-w-0 flex-1">
-                  <p class="text-sm font-medium text-gray-800 truncate">{{ p.nombre }}</p>
-                  <p v-if="p.numeros.length" class="text-xs text-gray-500 truncate">Nº {{ p.numeros.join(', ') }}</p>
+                  <p class="text-sm font-medium text-texto truncate">{{ p.nombre }}</p>
+                  <p v-if="p.numeros.length" class="text-xs text-texto-suave truncate">Nº {{ p.numeros.join(', ') }}</p>
                 </div>
                 <div class="text-right flex-shrink-0">
                   <template v-if="p.saldo > 0">
-                    <p class="text-sm font-bold text-red-600">${{ formatMoney(p.saldo) }}</p>
-                    <p v-if="p.valorPagado > 0" class="text-[0.6875rem] text-gray-500">abonó ${{ formatMoney(p.valorPagado) }}</p>
+                    <p class="text-sm font-bold text-red-600 oscuro:text-red-300">${{ formatMoney(p.saldo) }}</p>
+                    <p v-if="p.valorPagado > 0" class="text-[0.6875rem] text-texto-suave">abonó ${{ formatMoney(p.valorPagado) }}</p>
                   </template>
-                  <p v-else class="text-sm font-bold text-emerald-700">${{ formatMoney(p.valorPagado) }}</p>
+                  <p v-else class="text-sm font-bold text-emerald-700 oscuro:text-emerald-300">${{ formatMoney(p.valorPagado) }}</p>
                 </div>
               </li>
             </ul>
             <p
               v-if="(vistaPagosRifa === 'faltan' ? faltanPagarRifa : yaPagaronRifa).length === 0"
-              class="text-xs text-gray-500 italic py-2 text-center"
+              class="text-xs text-texto-suave italic py-2 text-center"
             >
               {{ vistaPagosRifa === 'faltan' ? 'Todos pagaron.' : 'Nadie ha pagado todavía.' }}
             </p>
@@ -2821,38 +2752,40 @@
           <NatiscrollHint :show="hayMasPorPagar" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 sm:px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <button type="button" @click="actividadParaPorPagar = null" class="btn-modal-primary w-full">
             Cerrar
           </button>
         </div>
     </ModalWrapper>
-    <!-- Modal Registrar gastos (actividades finalizadas que no son rifa) -->
+    <!-- Modal Editar actividad: descripción, observación y los valores que admite su estado
+         (ingresos y gastos si está finalizada; fecha límite y valor por socio si está en curso).
+         Sustituye al antiguo «Registrar gastos», que solo editaba los gastos. -->
     <ModalWrapper
-      :show="!!(modalRegistrarGastos && actividadParaGastos)"
+      :show="!!(modalEditarActividad && actividadEnEdicion)"
       :z-index="50"
       align="bottom"
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
-      @close="modalRegistrarGastos = false"
+      @close="cerrarEditarActividad"
     >
         <!-- Cabecera marca compacta: móvil = fila; sm+ = icono arriba + textos centrados; X por flex -->
         <div class="relative w-full flex-shrink-0 bg-[#1B5E37] text-white overflow-hidden">
           <div class="sm:hidden flex min-h-[4.2rem] items-center gap-2 pb-3 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top))]">
             <div class="flex min-w-0 flex-1 items-center gap-2">
               <div class="w-10 h-10 flex-shrink-0 rounded-xl border border-white/25 bg-white/15 flex items-center justify-center">
-                <CurrencyDollarIcon class="w-5 h-5 text-white" />
+                <PencilSquareIcon class="w-5 h-5 text-white" />
               </div>
               <div class="min-w-0 flex-1">
-                <h3 class="text-base font-display font-bold leading-tight">Registrar gastos</h3>
-                <p class="mt-0.5 truncate text-[0.6875rem] text-white/90">{{ actividadParaGastos?.descripcion }}</p>
+                <h3 class="text-base font-display font-bold leading-tight">Editar actividad</h3>
+                <p class="mt-0.5 truncate text-[0.6875rem] text-white/90">{{ actividadEnEdicion?.descripcion }}</p>
               </div>
             </div>
-            <button type="button" class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15 touch-manipulation" aria-label="Cerrar" @click="modalRegistrarGastos = false">
+            <button type="button" class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15 touch-manipulation" aria-label="Cerrar" @click="cerrarEditarActividad">
               <XMarkIcon class="w-6 h-6" />
             </button>
           </div>
@@ -2860,54 +2793,165 @@
             <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
             <div class="flex-1 min-w-0 flex flex-col items-center text-center">
               <div class="w-[3.2rem] h-[3.2rem] bg-white/15 rounded-xl flex items-center justify-center border border-white/25">
-                <CurrencyDollarIcon class="w-6 h-6 text-white" />
+                <PencilSquareIcon class="w-6 h-6 text-white" />
               </div>
-              <h3 class="text-lg font-display font-bold mt-3">Registrar gastos</h3>
-              <p class="text-white/90 text-xs mt-1 line-clamp-2">{{ actividadParaGastos?.descripcion }}</p>
+              <h3 class="text-lg font-display font-bold mt-3">Editar actividad</h3>
+              <p class="text-white/90 text-xs mt-1 line-clamp-2">{{ actividadEnEdicion?.descripcion }}</p>
             </div>
-            <button type="button" class="h-11 w-11 flex-shrink-0 flex items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15" aria-label="Cerrar" @click="modalRegistrarGastos = false">
+            <button type="button" class="h-11 w-11 flex-shrink-0 flex items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15" aria-label="Cerrar" @click="cerrarEditarActividad">
               <XMarkIcon class="w-6 h-6" />
             </button>
           </div>
         </div>
-        <!-- Cuerpo scrolleable (corto; natiscroll omitido, footer fijo asegura la CTA) -->
-        <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] p-4 sm:p-6 space-y-4">
-          <!-- Ingresos (solo lectura) -->
-          <div class="flex items-center justify-between rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5">
-            <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Ingresos</span>
-            <span class="font-bold text-emerald-600 text-sm">${{ formatMoney(actividadParaGastos?.ingresos || 0) }}</span>
-          </div>
-          <!-- Gastos (editable) -->
+        <!-- Cuerpo scrolleable + natiscroll -->
+        <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="refScrollEditarActividad"
+          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] p-4 sm:p-6 space-y-4"
+          @scroll.passive="onScrollEditarActividad"
+        >
           <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1.5">Gastos totales</label>
-            <div class="flex items-center border-2 border-gray-200 rounded-xl bg-white focus-within:ring-2 focus-within:ring-natillera-500/40 focus-within:border-natillera-400 transition-colors">
-              <span class="pl-3 flex-shrink-0 text-gray-400 font-semibold pointer-events-none">$</span>
+            <label for="edicion-descripcion" class="block text-sm font-medium text-texto-secundario mb-1.5">Descripción</label>
+            <input
+              id="edicion-descripcion"
+              v-model="formEdicion.descripcion"
+              type="text"
+              maxlength="200"
+              class="w-full rounded-xl border-2 border-borde bg-superficie-tarjeta px-3 py-3 text-base text-texto outline-none transition-colors focus:border-natillera-400 focus:ring-2 focus:ring-natillera-500/40"
+            />
+          </div>
+
+          <!-- Finalizada: ingresos y gastos (en rifa, recaudado y premio); la utilidad se recalcula -->
+          <template v-if="edicionEsLiquidada">
+            <div class="grid gap-3" :class="edicionSinPremio ? 'grid-cols-1' : 'grid-cols-2'">
+              <div>
+                <label class="block text-sm font-medium text-texto-secundario mb-1.5">{{ edicionEsRifaLiquidada ? 'Recaudado' : 'Ingresos' }}</label>
+                <div class="flex items-center border-2 border-borde rounded-xl bg-superficie-tarjeta focus-within:ring-2 focus-within:ring-natillera-500/40 focus-within:border-natillera-400 transition-colors">
+                  <span class="pl-3 flex-shrink-0 text-texto-tenue font-semibold pointer-events-none">$</span>
+                  <input
+                    :value="formatMilesInput(formEdicion.ingresos)"
+                    @input="formEdicion.ingresos = parseMilesInput($event.target.value)"
+                    type="text"
+                    inputmode="decimal"
+                    pattern="[0-9.]*"
+                    placeholder="0"
+                    aria-label="Ingresos"
+                    class="flex-1 min-w-0 py-3 px-2 bg-transparent text-base font-semibold text-texto outline-none border-none focus:ring-0"
+                  />
+                </div>
+              </div>
+              <div v-if="!edicionSinPremio">
+                <label class="block text-sm font-medium text-texto-secundario mb-1.5">{{ edicionEsRifaLiquidada ? 'Premio' : 'Gastos' }}</label>
+                <div class="flex items-center border-2 border-borde rounded-xl bg-superficie-tarjeta focus-within:ring-2 focus-within:ring-natillera-500/40 focus-within:border-natillera-400 transition-colors">
+                  <span class="pl-3 flex-shrink-0 text-texto-tenue font-semibold pointer-events-none">$</span>
+                  <input
+                    :value="formatMilesInput(formEdicion.gastos)"
+                    @input="formEdicion.gastos = parseMilesInput($event.target.value)"
+                    type="text"
+                    inputmode="decimal"
+                    pattern="[0-9.]*"
+                    placeholder="0"
+                    :aria-label="edicionEsRifaLiquidada ? 'Premio' : 'Gastos'"
+                    class="flex-1 min-w-0 py-3 px-2 bg-transparent text-base font-semibold text-texto outline-none border-none focus:ring-0"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="rounded-xl border-2 px-4 py-3" :class="utilidadEdicionPreview >= 0 ? 'border-violet-200 oscuro:border-violet-500/30 bg-violet-50/60 oscuro:bg-violet-500/15' : 'border-rose-200 oscuro:border-rose-500/30 bg-rose-50/60 oscuro:bg-rose-500/15'">
+              <p class="text-sm text-texto-secundario font-medium mb-0.5">Utilidad</p>
+              <p class="font-display font-extrabold text-2xl leading-none" :class="utilidadEdicionPreview >= 0 ? 'text-violet-600 oscuro:text-violet-300' : 'text-rose-600 oscuro:text-rose-300'">
+                ${{ formatMoney(utilidadEdicionPreview) }}
+              </p>
+            </div>
+          </template>
+
+            <div v-if="edicionEsRifaLiquidada && !edicionSinPremio">
+              <p class="block text-sm font-medium text-texto-secundario mb-1.5">Premio pagado en</p>
+              <div class="flex gap-2" role="radiogroup" aria-label="Forma de pago del premio">
+                <button
+                  v-for="op in opcionesFormaPagoPremio"
+                  :key="op.valor"
+                  type="button"
+                  role="radio"
+                  :aria-checked="formEdicion.formaPagoPremio === op.valor"
+                  @click="formEdicion.formaPagoPremio = op.valor"
+                  :class="[
+                    'flex-1 min-h-[44px] p-3 rounded-xl border-2 transition-all text-sm font-medium touch-manipulation',
+                    formEdicion.formaPagoPremio === op.valor
+                      ? op.claseActiva
+                      : 'border-borde bg-superficie-tarjeta text-texto-secundario hover:border-borde-fuerte'
+                  ]"
+                >
+                  {{ op.texto }}
+                </button>
+              </div>
+            </div>
+            <p v-if="edicionSinPremio" class="-mt-1 text-xs text-texto-suave leading-snug">
+              El número ganador no se vendió: el premio quedó en la natillera y la utilidad es todo lo recaudado.
+            </p>
+
+          <!-- En curso: fecha límite y, si todos tienen el mismo valor, el valor por socio -->
+          <template v-if="edicionEnCurso">
+            <div>
+              <label for="edicion-fecha-limite" class="block text-sm font-medium text-texto-secundario mb-1.5">Fecha límite de pago</label>
               <input
-                :value="formatMilesInput(formGastos.gastos)"
-                @input="formGastos.gastos = parseMilesInput($event.target.value)"
-                type="text"
-                inputmode="decimal"
-                pattern="[0-9.]*"
-                placeholder="0"
-                class="flex-1 min-w-0 py-3 px-2 bg-transparent text-base font-semibold text-gray-800 outline-none border-none focus:ring-0"
+                id="edicion-fecha-limite"
+                v-model="formEdicion.fechaLimitePago"
+                type="date"
+                class="w-full min-h-[3rem] rounded-xl border-2 border-borde bg-superficie-tarjeta px-3 py-2.5 text-base text-texto outline-none transition-colors focus:border-natillera-400 focus:ring-2 focus:ring-natillera-500/40"
               />
             </div>
-            <p class="text-xs text-gray-500 mt-1.5">Registra el total de gastos de la actividad. La utilidad se recalcula automáticamente.</p>
-          </div>
-          <!-- Utilidad calculada -->
-          <div class="rounded-xl border-2 px-4 py-3" :class="utilidadGastosPreview >= 0 ? 'border-violet-200 bg-violet-50/60' : 'border-rose-200 bg-rose-50/60'">
-            <p class="text-sm text-gray-600 font-medium mb-0.5">Utilidad</p>
-            <p class="font-display font-extrabold text-2xl leading-none" :class="utilidadGastosPreview >= 0 ? 'text-violet-600' : 'text-rose-600'">
-              ${{ formatMoney(utilidadGastosPreview) }}
-            </p>
+            <div v-if="edicionPermiteValorSocio">
+              <CargaCaja v-if="cargandoSociosEdicion" texto="Cargando valores" />
+              <template v-else-if="valorUniformeEdicion !== null">
+                <label class="block text-sm font-medium text-texto-secundario mb-1.5">Valor por socio</label>
+                <div class="flex items-center border-2 border-borde rounded-xl bg-superficie-tarjeta focus-within:ring-2 focus-within:ring-natillera-500/40 focus-within:border-natillera-400 transition-colors">
+                  <span class="pl-3 flex-shrink-0 text-texto-tenue font-semibold pointer-events-none">$</span>
+                  <input
+                    :value="formatMilesInput(formEdicion.valorPorSocio)"
+                    @input="formEdicion.valorPorSocio = parseMilesInput($event.target.value)"
+                    type="text"
+                    inputmode="decimal"
+                    pattern="[0-9.]*"
+                    placeholder="0"
+                    aria-label="Valor por socio"
+                    class="flex-1 min-w-0 py-3 px-2 bg-transparent text-base font-semibold text-texto outline-none border-none focus:ring-0"
+                  />
+                </div>
+                <p class="text-xs text-texto-suave mt-1.5">
+                  Se aplica a los {{ sociosEdicion.length }} socios. Lo que ya pagaron se conserva.
+                </p>
+              </template>
+              <p v-else class="rounded-xl bg-slate-50 oscuro:bg-superficie-suave border border-slate-100 oscuro:border-borde-suave px-3 py-2.5 text-xs text-texto-suave leading-snug">
+                Cada socio tiene un valor distinto, así que el valor por socio no se edita en bloque.
+              </p>
+            </div>
+          </template>
+
+          <div>
+            <label for="edicion-observacion" class="block text-sm font-medium text-texto-secundario mb-1.5">
+              Observación <span class="font-normal text-texto-tenue">(opcional)</span>
+            </label>
+            <textarea
+              id="edicion-observacion"
+              v-model="formEdicion.observacion"
+              rows="3"
+              maxlength="500"
+              placeholder="Se verá en la tarjeta de la actividad"
+              class="w-full resize-none rounded-xl border-2 border-borde bg-superficie-tarjeta px-3 py-2.5 text-base text-texto outline-none transition-colors focus:border-natillera-400 focus:ring-2 focus:ring-natillera-500/40"
+            ></textarea>
+            <p class="mt-1 text-right text-[11px] tabular-nums text-texto-tenue">{{ (formEdicion.observacion || '').length }}/500</p>
           </div>
         </div>
+          <NatiscrollHint :show="hayMasEditarActividad" />
+        </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
-            <button type="button" @click="modalRegistrarGastos = false" class="btn-modal-secondary flex-1">Cancelar</button>
-            <button type="button" @click="guardarGastos" :disabled="guardandoGastos" class="btn-modal-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed">
-              {{ guardandoGastos ? 'Guardando...' : 'Guardar' }}
+            <button type="button" @click="cerrarEditarActividad" class="btn-modal-secondary flex-1">Cancelar</button>
+            <button type="button" @click="guardarEdicionActividad" :disabled="guardandoEdicion || cargandoSociosEdicion" class="btn-modal-primary flex-1 inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+              <CargaBoton v-if="guardandoEdicion" pequena />
+              <span>{{ guardandoEdicion ? 'Guardando…' : 'Guardar' }}</span>
             </button>
           </div>
         </div>
@@ -2919,12 +2963,13 @@
       align="bottom"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="32rem"
       @close="grupoGanadoresSeleccionado = null"
     >
         <!-- Cabecera celebración (dorado, excepción temática). Compacta móvil-fila / desktop-columna; X por flex -->
+        <!-- tema-fijo: cabecera dorada de ganadores, igual en los dos modos (como el verde de marca) -->
         <div class="relative w-full flex-shrink-0 bg-gradient-to-br from-[#F5CB5C] via-[#E0A620] to-[#BE870F] text-white overflow-hidden">
           <div class="sm:hidden flex min-h-[4.2rem] items-center gap-2 pb-3 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top))]">
             <div class="flex min-w-0 flex-1 items-center gap-2">
@@ -2957,44 +3002,44 @@
           class="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] p-3 sm:p-4 space-y-2.5 min-h-0"
           @scroll.passive="onScrollGanadoresGrupo"
         >
-          <div v-if="!(grupoGanadoresSeleccionado?.actividades || []).filter(a => a.tipo === 'rifa').length" class="text-center py-8 text-gray-500 text-sm">No hay rifas en este grupo.</div>
+          <div v-if="!(grupoGanadoresSeleccionado?.actividades || []).filter(a => a.tipo === 'rifa').length" class="text-center py-8 text-texto-suave text-sm">No hay rifas en este grupo.</div>
           <template v-else v-for="actividad in (grupoGanadoresSeleccionado?.actividades || []).filter(a => a.tipo === 'rifa')" :key="actividad.id">
-            <div class="rounded-xl border border-[#E7C877]/70 bg-[#FCF6E3]/70 overflow-hidden">
-              <div class="px-3 py-2 border-b border-[#EAD79B]/70">
-                <p class="text-sm font-semibold text-gray-800 line-clamp-2">{{ actividad.descripcion }}</p>
+            <div class="rounded-xl border border-[#E7C877]/70 oscuro:border-amber-500/30 bg-[#FCF6E3]/70 oscuro:bg-amber-500/15 overflow-hidden">
+              <div class="px-3 py-2 border-b border-[#EAD79B]/70 oscuro:border-amber-500/30">
+                <p class="text-sm font-semibold text-texto line-clamp-2">{{ actividad.descripcion }}</p>
               </div>
               <div class="px-3 py-2.5 flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3">
                 <!-- Info ganador / estado (arriba en móvil, izquierda en desktop) -->
                 <div class="min-w-0 flex-1 flex items-center gap-2">
                   <template v-if="actividad.estado !== 'liquidada'">
                     <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0"></span>
-                    <span class="text-sm text-slate-500">Pendiente de liquidar</span>
+                    <span class="text-sm text-slate-500 oscuro:text-texto-suave">Pendiente de liquidar</span>
                   </template>
                   <template v-else-if="actividad.numero_ganador == null || actividad.numero_ganador === ''">
-                    <span class="text-sm text-slate-500 italic">Datos del ganador no registrados</span>
+                    <span class="text-sm text-slate-500 oscuro:text-texto-suave italic">Datos del ganador no registrados</span>
                   </template>
                   <template v-else>
-                    <div v-if="actividad.ganador_es_faltante" class="w-9 h-9 rounded-lg bg-natillera-200 flex items-center justify-center text-base flex-shrink-0">🏦</div>
-                    <img v-else :src="getAvatarUrl(actividad.ganador_nombre || '', actividad.ganador_socio_natillera?.socio?.avatar_seed, actividad.ganador_socio_natillera?.socio?.avatar_style || 'adventurer')" :alt="actividad.ganador_nombre" class="w-9 h-9 rounded-full ring-2 ring-[#E7C877] object-cover flex-shrink-0" />
+                    <div v-if="actividad.ganador_es_faltante" class="w-9 h-9 rounded-lg bg-natillera-200 oscuro:bg-natillera-500/25 flex items-center justify-center text-base flex-shrink-0">🏦</div>
+                    <img v-else :src="getAvatarUrl(actividad.ganador_nombre || '', actividad.ganador_socio_natillera?.socio?.avatar_seed, actividad.ganador_socio_natillera?.socio?.avatar_style || 'adventurer')" :alt="actividad.ganador_nombre" class="w-9 h-9 rounded-full ring-2 ring-[#E7C877] oscuro:ring-amber-500/40 object-cover flex-shrink-0" />
                     <div class="min-w-0">
-                      <span class="text-xs px-1.5 py-0.5 rounded bg-[#EAD79B]/80 text-[#8A6A12] font-bold">Nº {{ String(actividad.numero_ganador).padStart(2, '0') }}</span>
-                      <p class="text-sm font-semibold text-gray-800 truncate mt-0.5">{{ actividad.ganador_es_faltante ? '¡Gana la natillera!' : (actividad.ganador_nombre || 'Desconocido') }}</p>
+                      <span class="text-xs px-1.5 py-0.5 rounded bg-[#EAD79B]/80 oscuro:bg-amber-500/25 text-[#8A6A12] oscuro:text-amber-300 font-bold">Nº {{ String(actividad.numero_ganador).padStart(2, '0') }}</span>
+                      <p class="text-sm font-semibold text-texto truncate mt-0.5">{{ actividad.ganador_es_faltante ? '¡Gana la natillera!' : (actividad.ganador_nombre || 'Desconocido') }}</p>
                     </div>
                   </template>
                 </div>
                 <!-- Resultados R/E/N (full width en móvil, a la derecha en desktop) -->
                 <div v-if="actividad.estado === 'liquidada' && ((actividad.ingresos ?? 0) || (actividad.gastos ?? 0) || (actividad.utilidad ?? 0))" class="grid grid-cols-3 gap-2 text-center w-full sm:w-auto sm:shrink-0">
-                  <div class="rounded-lg bg-emerald-50 border border-emerald-200/70 py-1.5 px-2">
-                    <p class="text-[10px] font-semibold text-emerald-600 uppercase">Recogido</p>
-                    <p class="text-xs font-bold text-gray-800">${{ formatMoney(actividad.ingresos || 0) }}</p>
+                  <div class="rounded-lg bg-emerald-50 oscuro:bg-emerald-500/15 border border-emerald-200/70 oscuro:border-emerald-500/30 py-1.5 px-2">
+                    <p class="text-[10px] font-semibold text-emerald-600 oscuro:text-emerald-300 uppercase">Recogido</p>
+                    <p class="text-xs font-bold text-texto">${{ formatMoney(actividad.ingresos || 0) }}</p>
                   </div>
-                  <div class="rounded-lg bg-[#FCF6E3] border border-[#E7C877]/70 py-1.5 px-2">
-                    <p class="text-[10px] font-semibold text-[#B7860E] uppercase">Entregado</p>
-                    <p class="text-xs font-bold text-gray-800">${{ formatMoney(actividad.gastos || 0) }}</p>
+                  <div class="rounded-lg bg-[#FCF6E3] oscuro:bg-amber-500/15 border border-[#E7C877]/70 oscuro:border-amber-500/30 py-1.5 px-2">
+                    <p class="text-[10px] font-semibold text-[#B7860E] oscuro:text-amber-300 uppercase">Entregado</p>
+                    <p class="text-xs font-bold text-texto">${{ formatMoney(actividad.gastos || 0) }}</p>
                   </div>
-                  <div class="rounded-lg bg-natillera-50 border border-natillera-200/70 py-1.5 px-2">
-                    <p class="text-[10px] font-semibold text-natillera-600 uppercase">Natillera</p>
-                    <p class="text-xs font-bold text-natillera-700">${{ formatMoney(actividad.utilidad || 0) }}</p>
+                  <div class="rounded-lg bg-natillera-50 oscuro:bg-natillera-500/15 border border-natillera-200/70 oscuro:border-natillera-500/30 py-1.5 px-2">
+                    <p class="text-[10px] font-semibold text-natillera-600 oscuro:text-natillera-300 uppercase">Natillera</p>
+                    <p class="text-xs font-bold text-natillera-700 oscuro:text-natillera-300">${{ formatMoney(actividad.utilidad || 0) }}</p>
                   </div>
                 </div>
               </div>
@@ -3004,25 +3049,25 @@
           <NatiscrollHint :show="hayMasGanadoresGrupo" />
         </div>
         <!-- Totalizador -->
-        <div v-if="(grupoGanadoresSeleccionado?.actividades || []).filter(a => a.tipo === 'rifa' && a.estado === 'liquidada').length" class="flex-shrink-0 border-t border-[#E7C877]/50 bg-[#FCF6E3]/80 px-3 py-3">
-          <p class="text-[10px] font-bold text-[#8A6A12] uppercase tracking-wider mb-2">Totales (rifas liquidadas)</p>
+        <div v-if="(grupoGanadoresSeleccionado?.actividades || []).filter(a => a.tipo === 'rifa' && a.estado === 'liquidada').length" class="flex-shrink-0 border-t border-[#E7C877]/50 oscuro:border-amber-500/30 bg-[#FCF6E3]/80 oscuro:bg-amber-500/15 px-3 py-3">
+          <p class="text-[10px] font-bold text-[#8A6A12] oscuro:text-amber-300 uppercase tracking-wider mb-2">Totales (rifas liquidadas)</p>
           <div class="grid grid-cols-3 gap-2">
-            <div class="rounded-xl bg-emerald-50 border border-emerald-200/70 px-2 py-2 text-center">
-              <p class="text-[10px] font-bold text-emerald-600 uppercase">Recogido</p>
-              <p class="text-sm font-bold text-gray-900">${{ formatMoney(totalesGanadoresGrupo.recogido) }}</p>
+            <div class="rounded-xl bg-emerald-50 oscuro:bg-emerald-500/15 border border-emerald-200/70 oscuro:border-emerald-500/30 px-2 py-2 text-center">
+              <p class="text-[10px] font-bold text-emerald-600 oscuro:text-emerald-300 uppercase">Recogido</p>
+              <p class="text-sm font-bold text-texto-fuerte">${{ formatMoney(totalesGanadoresGrupo.recogido) }}</p>
             </div>
-            <div class="rounded-xl bg-[#FCF6E3] border border-[#E7C877]/70 px-2 py-2 text-center">
-              <p class="text-[10px] font-bold text-[#B7860E] uppercase">Entregado</p>
-              <p class="text-sm font-bold text-gray-900">${{ formatMoney(totalesGanadoresGrupo.entregado) }}</p>
+            <div class="rounded-xl bg-[#FCF6E3] oscuro:bg-amber-500/15 border border-[#E7C877]/70 oscuro:border-amber-500/30 px-2 py-2 text-center">
+              <p class="text-[10px] font-bold text-[#B7860E] oscuro:text-amber-300 uppercase">Entregado</p>
+              <p class="text-sm font-bold text-texto-fuerte">${{ formatMoney(totalesGanadoresGrupo.entregado) }}</p>
             </div>
-            <div class="rounded-xl bg-natillera-50 border border-natillera-200/70 px-2 py-2 text-center">
-              <p class="text-[10px] font-bold text-natillera-600 uppercase">Natillera</p>
-              <p class="text-sm font-bold text-natillera-700">${{ formatMoney(totalesGanadoresGrupo.natillera) }}</p>
+            <div class="rounded-xl bg-natillera-50 oscuro:bg-natillera-500/15 border border-natillera-200/70 oscuro:border-natillera-500/30 px-2 py-2 text-center">
+              <p class="text-[10px] font-bold text-natillera-600 oscuro:text-natillera-300 uppercase">Natillera</p>
+              <p class="text-sm font-bold text-natillera-700 oscuro:text-natillera-300">${{ formatMoney(totalesGanadoresGrupo.natillera) }}</p>
             </div>
           </div>
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-3 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-3 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <button type="button" @click="grupoGanadoresSeleccionado = null" class="btn-modal-primary w-full">
             Cerrar
           </button>
@@ -3036,8 +3081,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="modalVentaRifa = false"
     >
@@ -3104,27 +3149,27 @@
               <button
                 @click="desplegableSocioAbierto = !desplegableSocioAbierto"
                 type="button"
-                class="w-full px-4 py-3 pr-10 rounded-xl border-2 border-gray-200 bg-white text-gray-800 font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500 hover:border-gray-300 cursor-pointer flex items-center gap-3 text-left"
-                :class="formVentaRifa.socioVendedor ? '' : 'text-gray-400'"
+                class="w-full px-4 py-3 pr-10 rounded-xl border-2 border-borde bg-superficie-tarjeta text-texto font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500 hover:border-borde-fuerte cursor-pointer flex items-center gap-3 text-left"
+                :class="formVentaRifa.socioVendedor ? '' : 'text-texto-tenue'"
               >
                 <template v-if="formVentaRifa.socioVendedor">
                   <img
                     :src="getAvatarUrl(socios.find(s => s.id === formVentaRifa.socioVendedor)?.socio?.nombre || '', socios.find(s => s.id === formVentaRifa.socioVendedor)?.socio?.avatar_seed, socios.find(s => s.id === formVentaRifa.socioVendedor)?.socio?.avatar_style)"
                     :alt="socios.find(s => s.id === formVentaRifa.socioVendedor)?.socio?.nombre || ''"
-                    class="w-8 h-8 rounded-lg border-2 border-gray-200 object-cover flex-shrink-0"
+                    class="w-8 h-8 rounded-lg border-2 border-borde object-cover flex-shrink-0"
                   />
                   <span class="flex-1">{{ socios.find(s => s.id === formVentaRifa.socioVendedor)?.socio?.nombre || 'Sin nombre' }}</span>
                 </template>
                 <template v-else>
-                  <div class="w-8 h-8 rounded-lg bg-gray-100 border-2 border-gray-200 flex items-center justify-center flex-shrink-0">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="w-8 h-8 rounded-lg bg-superficie-hundida border-2 border-borde flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-texto-tenue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
                   <span class="flex-1">Seleccione un socio</span>
                 </template>
                 <svg 
-                  class="w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-200"
+                  class="w-5 h-5 text-texto-tenue flex-shrink-0 transition-transform duration-200"
                   :class="desplegableSocioAbierto ? 'rotate-180' : ''"
                   fill="none" 
                   stroke="currentColor" 
@@ -3136,7 +3181,7 @@
               <!-- Lista desplegable -->
               <div
                 v-if="desplegableSocioAbierto"
-                class="absolute z-50 w-full mt-2 bg-white rounded-xl border-2 border-gray-200 shadow-xl max-h-64 overflow-y-auto"
+                class="absolute z-50 w-full mt-2 bg-superficie-tarjeta rounded-xl border-2 border-borde shadow-xl max-h-64 overflow-y-auto"
                 @click.stop
               >
                 <div class="p-2">
@@ -3144,17 +3189,17 @@
                     v-for="socio in socios"
                     :key="socio.id"
                     @click="formVentaRifa.socioVendedor = socio.id; desplegableSocioAbierto = false"
-                    class="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all hover:bg-natillera-50 hover:border-natillera-200 border-2"
-                    :class="formVentaRifa.socioVendedor === socio.id ? 'bg-natillera-50 border-natillera-300' : 'border-transparent'"
+                    class="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all hover:bg-natillera-50 oscuro:hover:bg-natillera-500/15 hover:border-natillera-200 oscuro:hover:border-natillera-500/30 border-2"
+                    :class="formVentaRifa.socioVendedor === socio.id ? 'bg-natillera-50 oscuro:bg-natillera-500/15 border-natillera-300 oscuro:border-natillera-500/30' : 'border-transparent'"
                   >
                     <img
                       :src="getAvatarUrl(socio.socio?.nombre || '', socio.socio?.avatar_seed, socio.socio?.avatar_style)"
                       :alt="socio.socio?.nombre || ''"
-                      class="w-10 h-10 rounded-lg border-2 border-gray-200 object-cover flex-shrink-0"
+                      class="w-10 h-10 rounded-lg border-2 border-borde object-cover flex-shrink-0"
                     />
                     <div class="flex-1 min-w-0">
-                      <p class="font-semibold text-gray-800 truncate">{{ socio.socio?.nombre || 'Sin nombre' }}</p>
-                      <p class="text-xs text-gray-500 truncate">{{ socio.socio?.telefono || '' }}</p>
+                      <p class="font-semibold text-texto truncate">{{ socio.socio?.nombre || 'Sin nombre' }}</p>
+                      <p class="text-xs text-texto-suave truncate">{{ socio.socio?.telefono || '' }}</p>
                     </div>
                     <div
                       v-if="formVentaRifa.socioVendedor === socio.id"
@@ -3178,7 +3223,7 @@
           <div>
             <label class="label">Valor de la venta *</label>
             <div class="relative">
-              <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold text-lg z-10">
+              <div class="absolute left-4 top-1/2 -translate-y-1/2 text-texto-suave font-semibold text-lg z-10">
                 $
               </div>
               <input 
@@ -3194,7 +3239,7 @@
             </div>
           </div>
           <!-- Checkbox para indicar si ya pagó -->
-          <div class="flex items-center gap-3 p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200 hover:border-emerald-300 transition-all">
+          <div class="flex items-center gap-3 p-4 bg-gradient-to-r from-emerald-50 oscuro:from-emerald-500/15 to-green-50 oscuro:to-green-500/10 rounded-xl border-2 border-emerald-200 oscuro:border-emerald-500/30 hover:border-emerald-300 oscuro:hover:border-emerald-500/30 transition-all">
             <label class="flex items-center gap-3 cursor-pointer flex-1 group">
               <!-- Checkbox personalizado circular -->
               <div class="relative flex-shrink-0">
@@ -3208,7 +3253,7 @@
                   class="w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-300 ease-in-out shadow-sm group-hover:scale-110"
                   :class="formVentaRifa.yaPago 
                     ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 border-emerald-600 shadow-lg shadow-emerald-200' 
-                    : 'bg-white border-emerald-400 group-hover:border-emerald-500'"
+                    : 'bg-superficie-tarjeta border-emerald-400 group-hover:border-emerald-500'"
                 >
                   <!-- Checkmark con animación -->
                   <svg 
@@ -3227,12 +3272,12 @@
                   <div 
                     v-else
                     class="w-3 h-3 rounded-full transition-all duration-300"
-                    :class="formVentaRifa.yaPago ? 'bg-white opacity-100' : 'bg-transparent'"
+                    :class="formVentaRifa.yaPago ? 'bg-superficie-tarjeta opacity-100' : 'bg-transparent'"
                   ></div>
                 </div>
               </div>
               <div class="flex items-center gap-2 flex-1">
-                <span class="font-semibold text-emerald-800">Marcar como pagada</span>
+                <span class="font-semibold text-emerald-800 oscuro:text-emerald-300">Marcar como pagada</span>
               </div>
             </label>
           </div>
@@ -3240,7 +3285,7 @@
           <NatiscrollHint :show="hayMasVentaRifa" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button type="button" @click="modalVentaRifa = false" class="btn-modal-secondary flex-1">Cancelar</button>
             <button type="button" @click="guardarVentaRifa" class="btn-modal-primary flex-1">Guardar Venta</button>
@@ -3255,8 +3300,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="modalPagarRifa = false"
     >
@@ -3297,20 +3342,20 @@
           class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] p-4 sm:p-6 space-y-4"
           @scroll.passive="onScrollPagarRifa"
         >
-          <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border-2 border-amber-200">
+          <div class="bg-gradient-to-br from-amber-50 oscuro:from-amber-500/15 to-orange-50 oscuro:to-orange-500/10 rounded-xl p-4 border-2 border-amber-200 oscuro:border-amber-500/30">
             <div class="space-y-2">
               <div>
-                <label class="text-xs font-semibold text-amber-800 uppercase tracking-wide">Comprador</label>
-                <p class="text-gray-800 font-medium">{{ formPagarRifa.nombreComprador || 'Sin nombre' }}</p>
+                <label class="text-xs font-semibold text-amber-800 oscuro:text-amber-300 uppercase tracking-wide">Comprador</label>
+                <p class="text-texto font-medium">{{ formPagarRifa.nombreComprador || 'Sin nombre' }}</p>
               </div>
               <div>
-                <label class="text-xs font-semibold text-amber-800 uppercase tracking-wide">Valor</label>
-                <p class="text-gray-800 font-semibold text-lg">${{ formatMoney(formPagarRifa.valor || 0) }}</p>
+                <label class="text-xs font-semibold text-amber-800 oscuro:text-amber-300 uppercase tracking-wide">Valor</label>
+                <p class="text-texto font-semibold text-lg">${{ formatMoney(formPagarRifa.valor || 0) }}</p>
               </div>
             </div>
           </div>
           <!-- Checkbox para indicar si ya pagó -->
-          <div class="flex items-center gap-3 p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200 hover:border-emerald-300 transition-all">
+          <div class="flex items-center gap-3 p-4 bg-gradient-to-r from-emerald-50 oscuro:from-emerald-500/15 to-green-50 oscuro:to-green-500/10 rounded-xl border-2 border-emerald-200 oscuro:border-emerald-500/30 hover:border-emerald-300 oscuro:hover:border-emerald-500/30 transition-all">
             <label class="flex items-center gap-3 cursor-pointer flex-1 group">
               <!-- Checkbox personalizado circular -->
               <div class="relative flex-shrink-0">
@@ -3324,7 +3369,7 @@
                   class="w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-300 ease-in-out shadow-sm group-hover:scale-110"
                   :class="formPagarRifa.yaPago 
                     ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 border-emerald-600 shadow-lg shadow-emerald-200' 
-                    : 'bg-white border-emerald-400 group-hover:border-emerald-500'"
+                    : 'bg-superficie-tarjeta border-emerald-400 group-hover:border-emerald-500'"
                 >
                   <!-- Checkmark con animación -->
                   <svg 
@@ -3343,12 +3388,12 @@
                   <div 
                     v-else
                     class="w-3 h-3 rounded-full transition-all duration-300"
-                    :class="formPagarRifa.yaPago ? 'bg-white opacity-100' : 'bg-transparent'"
+                    :class="formPagarRifa.yaPago ? 'bg-superficie-tarjeta opacity-100' : 'bg-transparent'"
                   ></div>
                 </div>
               </div>
               <div class="flex items-center gap-2 flex-1">
-                <span class="font-semibold text-emerald-800">Marcar como pagada</span>
+                <span class="font-semibold text-emerald-800 oscuro:text-emerald-300">Marcar como pagada</span>
               </div>
             </label>
           </div>
@@ -3356,7 +3401,7 @@
           <NatiscrollHint :show="hayMasPagarRifa" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button type="button" @click="modalPagarRifa = false" class="btn-modal-secondary flex-1">Cancelar</button>
             <button type="button" @click="guardarPagoRifa" class="btn-modal-primary flex-1">Guardar</button>
@@ -3370,8 +3415,8 @@
       align="bottom"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="actividadAEliminar = null"
     >
@@ -3407,17 +3452,17 @@
         </div>
           <!-- Cuerpo scrolleable (confirmación; natiscroll omitido: cuerpo corto y footer fijo asegura la CTA) -->
           <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] p-4 sm:p-6">
-            <p class="text-gray-700 mb-4">
-              ¿Estás seguro de que deseas eliminar la actividad <strong class="text-gray-900">"{{ actividadAEliminar?.descripcion }}"</strong>?
+            <p class="text-texto-medio mb-4">
+              ¿Estás seguro de que deseas eliminar la actividad <strong class="text-texto-fuerte">"{{ actividadAEliminar?.descripcion }}"</strong>?
             </p>
-            <div class="bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200 rounded-xl p-4">
+            <div class="bg-gradient-to-br from-red-50 oscuro:from-red-500/15 to-orange-50 oscuro:to-orange-500/10 border-2 border-red-200 oscuro:border-red-500/30 rounded-xl p-4">
               <div class="flex items-start gap-3">
-                <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span class="text-red-600 text-lg">⚠️</span>
+                <div class="w-8 h-8 bg-red-100 oscuro:bg-red-500/15 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span class="text-red-600 oscuro:text-red-300 text-lg">⚠️</span>
                 </div>
                 <div class="flex-1">
-                  <p class="font-bold text-red-800 mb-2 text-sm">Se perderá permanentemente:</p>
-                  <ul class="space-y-2 text-sm text-red-700">
+                  <p class="font-bold text-red-800 oscuro:text-red-300 mb-2 text-sm">Se perderá permanentemente:</p>
+                  <ul class="space-y-2 text-sm text-red-700 oscuro:text-red-300">
                     <li class="flex items-center gap-2">
                       <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
                       <span>El registro completo de la actividad</span>
@@ -3431,7 +3476,7 @@
                       <span>Todo el historial de pagos y asignaciones</span>
                     </li>
                   </ul>
-                  <p class="mt-3 text-xs text-red-600 font-semibold bg-white/50 rounded-lg p-2">
+                  <p class="mt-3 text-xs text-red-600 oscuro:text-red-300 font-semibold bg-superficie-tarjeta/50 rounded-lg p-2">
                     💡 Esta acción es irreversible. Asegúrate de que realmente deseas eliminar esta actividad.
                   </p>
                 </div>
@@ -3439,7 +3484,7 @@
             </div>
           </div>
           <!-- Footer de acciones fijo -->
-          <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+          <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
             <div class="flex gap-3">
               <button type="button" @click="actividadAEliminar = null" :disabled="eliminando" class="btn-modal-secondary flex-1 disabled:opacity-50">Cancelar</button>
               <!-- Acción destructiva irreversible → rojo (excepción a btn-modal-primary) -->
@@ -3462,8 +3507,8 @@
     align="bottom"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="grupoAEliminar = null"
   >
@@ -3499,17 +3544,17 @@
         </div>
         <!-- Cuerpo scrolleable (confirmación; natiscroll omitido: cuerpo corto y footer fijo asegura la CTA) -->
         <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] p-4 sm:p-6">
-          <p class="text-gray-700 mb-4">
-            ¿Estás seguro de que deseas eliminar el grupo completo <strong class="text-gray-900">"{{ grupoAEliminar?.descripcionBase }}"</strong>?
+          <p class="text-texto-medio mb-4">
+            ¿Estás seguro de que deseas eliminar el grupo completo <strong class="text-texto-fuerte">"{{ grupoAEliminar?.descripcionBase }}"</strong>?
           </p>
-          <div class="bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200 rounded-xl p-4">
+          <div class="bg-gradient-to-br from-red-50 oscuro:from-red-500/15 to-orange-50 oscuro:to-orange-500/10 border-2 border-red-200 oscuro:border-red-500/30 rounded-xl p-4">
             <div class="flex items-start gap-3">
-              <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span class="text-red-600 text-lg">⚠️</span>
+              <div class="w-8 h-8 bg-red-100 oscuro:bg-red-500/15 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span class="text-red-600 oscuro:text-red-300 text-lg">⚠️</span>
               </div>
               <div class="flex-1">
-                <p class="font-bold text-red-800 mb-2 text-sm">Se eliminarán permanentemente:</p>
-                <ul class="space-y-2 text-sm text-red-700">
+                <p class="font-bold text-red-800 oscuro:text-red-300 mb-2 text-sm">Se eliminarán permanentemente:</p>
+                <ul class="space-y-2 text-sm text-red-700 oscuro:text-red-300">
                   <li class="flex items-center gap-2">
                     <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
                     <span><strong>{{ grupoAEliminar?.actividades?.length || 0 }} actividades</strong> del grupo</span>
@@ -3523,7 +3568,7 @@
                     <span>Todo el historial de pagos y asignaciones</span>
                   </li>
                 </ul>
-                <p class="mt-3 text-xs text-red-600 font-semibold bg-white/50 rounded-lg p-2">
+                <p class="mt-3 text-xs text-red-600 oscuro:text-red-300 font-semibold bg-superficie-tarjeta/50 rounded-lg p-2">
                   💡 Esta acción es irreversible. Asegúrate de que realmente deseas eliminar todas las actividades de este grupo.
                 </p>
               </div>
@@ -3531,7 +3576,7 @@
           </div>
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button type="button" @click="grupoAEliminar = null" :disabled="eliminandoGrupo" class="btn-modal-secondary flex-1 disabled:opacity-50">Cancelar</button>
             <!-- Acción destructiva irreversible → rojo (excepción a btn-modal-primary) -->
@@ -3554,8 +3599,8 @@
     align="bottom"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="modalAsignarFaltante = false"
   >
@@ -3597,29 +3642,29 @@
           @scroll.passive="onScrollAsignarFaltante"
         >
         <!-- Información del faltante -->
-        <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
-          <p class="text-sm font-semibold text-gray-700 mb-2">Números a asignar:</p>
+        <div class="bg-superficie-suave rounded-xl p-4 border border-borde">
+          <p class="text-sm font-semibold text-texto-medio mb-2">Números a asignar:</p>
           <div class="flex flex-wrap gap-2">
             <span
               v-for="numero in faltanteSeleccionado.numeros"
               :key="numero.numero"
-              class="px-3 py-1 bg-gradient-to-br from-gray-200 to-gray-300 border border-gray-400 rounded-lg text-sm font-semibold text-gray-700"
+              class="px-3 py-1 bg-gradient-to-br from-gray-200 oscuro:from-superficie-elevada to-gray-300 oscuro:to-superficie-suave border border-gray-400 oscuro:border-borde-fuerte rounded-lg text-sm font-semibold text-texto-medio"
             >
               {{ numero.numero }}
             </span>
           </div>
-          <p class="text-xs text-gray-500 mt-2">
+          <p class="text-xs text-texto-suave mt-2">
             Total: {{ faltanteSeleccionado.numeros.length }} número(s)
           </p>
         </div>
         <!-- Selector de socio -->
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
+          <label class="block text-sm font-semibold text-texto-medio mb-2">
             Seleccionar socio:
           </label>
           <select
             v-model="socioSeleccionadoParaFaltante"
-            class="w-full px-4 py-3 border-2 border-natillera-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-natillera-500 focus:border-transparent text-sm font-medium"
+            class="w-full px-4 py-3 border-2 border-natillera-300 oscuro:border-natillera-500/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-natillera-500 focus:border-transparent text-sm font-medium"
           >
             <option value="">-- Seleccione un socio --</option>
             <option
@@ -3630,7 +3675,7 @@
               {{ socio.socio_natillera?.socio?.nombre || 'Sin nombre' }} - {{ socio.socio_natillera?.socio?.telefono || 'Sin teléfono' }}
             </option>
           </select>
-          <p v-if="sociosSinNumeros.length === 0" class="text-xs text-amber-600 mt-2">
+          <p v-if="sociosSinNumeros.length === 0" class="text-xs text-amber-600 oscuro:text-amber-300 mt-2">
             No hay socios disponibles sin números asignados
           </p>
         </div>
@@ -3638,7 +3683,7 @@
           <NatiscrollHint :show="hayMasAsignarFaltante" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button type="button" @click="modalAsignarFaltante = false" class="btn-modal-secondary flex-1">Cancelar</button>
             <button
@@ -3659,8 +3704,8 @@
     align="bottom"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="modalConfirmarAsignarFaltanteTodosMeses = false"
   >
@@ -3696,12 +3741,12 @@
         </div>
         <!-- Cuerpo scrolleable (confirmación corta; natiscroll omitido, footer fijo asegura la CTA) -->
         <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] p-6">
-          <p class="text-gray-600 text-sm">
+          <p class="text-texto-secundario text-sm">
             Se asignará el faltante <strong>{{ faltanteSeleccionado?.nombre }}</strong> al socio seleccionado desde <strong>este mes en adelante</strong> ({{ actividadesDelGrupoDesdeActualEnAdelante.length }} rifa(s)). Los meses anteriores quedarán sin asignar. ¿Desea continuar?
           </p>
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+        <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button type="button" @click="modalConfirmarAsignarFaltanteTodosMeses = false" class="btn-modal-secondary flex-1">Cancelar</button>
             <button type="button" @click="confirmarAsignarFaltanteTodosMeses" :disabled="asignandoFaltante" class="btn-modal-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed">Aceptar</button>
@@ -3716,7 +3761,8 @@
   <div
     v-show="capturandoTarjetaGanador && modalGanadorRifa && actividadSeleccionada"
     ref="tarjetaGanadorRef"
-    class="fixed left-0 top-0 w-[400px] bg-white rounded-2xl shadow-2xl overflow-hidden z-40"
+    data-tema="claro"
+    class="fixed left-0 top-0 w-[400px] bg-superficie-tarjeta rounded-2xl shadow-2xl overflow-hidden z-40"
     style="top: 0; left: 0"
   >
     <div class="bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 py-4 px-4 text-white">
@@ -3724,36 +3770,36 @@
     </div>
     <div class="p-5 space-y-4">
       <!-- Ganador / Ganadora o Gana la natillera (arriba) -->
-      <div v-if="actividadSeleccionada?.ganador_es_faltante" class="text-center py-3 px-4 rounded-xl bg-natillera-50 border-2 border-natillera-200">
+      <div v-if="actividadSeleccionada?.ganador_es_faltante" class="text-center py-3 px-4 rounded-xl bg-natillera-50 oscuro:bg-natillera-500/15 border-2 border-natillera-200 oscuro:border-natillera-500/30">
         <span class="text-3xl">🏦</span>
-        <p class="font-bold text-natillera-800 text-lg mt-1">¡Gana la natillera!</p>
-        <p class="text-xs text-gray-600 max-w-xs mx-auto leading-snug mt-1.5">
+        <p class="font-bold text-natillera-800 oscuro:text-natillera-300 text-lg mt-1">¡Gana la natillera!</p>
+        <p class="text-xs text-texto-secundario max-w-xs mx-auto leading-snug mt-1.5">
           Este número no estaba asignado. El premio y la utilidad se suman al fondo.
         </p>
       </div>
-      <div v-else-if="actividadSeleccionada?.ganador_nombre" class="w-full text-center py-3 px-4 rounded-xl bg-gradient-to-br from-natillera-50 via-emerald-50/80 to-teal-50 border-2 border-natillera-200">
-        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-amber-100 flex items-center justify-center text-2xl sm:text-3xl border-2 border-amber-300 shadow-lg ring-2 ring-natillera-200 mx-auto">🏆</div>
-        <p class="text-xs font-medium text-natillera-600 mt-2">Ganador/a</p>
-        <p class="font-bold text-lg sm:text-xl text-natillera-800 mt-0.5">{{ actividadSeleccionada.ganador_nombre }}</p>
+      <div v-else-if="actividadSeleccionada?.ganador_nombre" class="w-full text-center py-3 px-4 rounded-xl bg-gradient-to-br from-natillera-50 oscuro:from-natillera-500/15 via-emerald-50/80 oscuro:via-emerald-500/10 to-teal-50 oscuro:to-teal-500/10 border-2 border-natillera-200 oscuro:border-natillera-500/30">
+        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-amber-100 oscuro:bg-amber-500/15 flex items-center justify-center text-2xl sm:text-3xl border-2 border-amber-300 oscuro:border-amber-500/30 shadow-lg ring-2 ring-natillera-200 oscuro:ring-natillera-500/30 mx-auto">🏆</div>
+        <p class="text-xs font-medium text-natillera-600 oscuro:text-natillera-300 mt-2">Ganador/a</p>
+        <p class="font-bold text-lg sm:text-xl text-natillera-800 oscuro:text-natillera-300 mt-0.5">{{ actividadSeleccionada.ganador_nombre }}</p>
       </div>
       <!-- Número ganador (justo después del ganador) -->
       <div v-if="actividadSeleccionada?.numero_ganador != null && actividadSeleccionada?.numero_ganador !== ''" class="text-center">
-        <p class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Número ganador</p>
-        <div class="inline-flex w-20 h-20 items-center justify-center rounded-full bg-amber-100 border-2 border-amber-300">
-          <span class="text-3xl font-black text-amber-800">{{ String(actividadSeleccionada?.numero_ganador || '').padStart(2, '0') }}</span>
+        <p class="text-texto-suave text-xs font-semibold uppercase tracking-wider mb-1">Número ganador</p>
+        <div class="inline-flex w-20 h-20 items-center justify-center rounded-full bg-amber-100 oscuro:bg-amber-500/15 border-2 border-amber-300 oscuro:border-amber-500/30">
+          <span class="text-3xl font-black text-amber-800 oscuro:text-amber-300">{{ String(actividadSeleccionada?.numero_ganador || '').padStart(2, '0') }}</span>
         </div>
       </div>
-      <div v-if="actividadSeleccionada?.sorteo_loteria_medellin || actividadSeleccionada?.numero_completo_loteria_medellin" class="rounded-xl border-2 border-red-200 bg-white p-3">
-        <p class="text-red-700 font-bold text-sm sm:text-base mb-2">Resultado Lotería de Medellín</p>
-        <p class="text-red-600 font-bold text-base mb-0.5">Sorteo {{ actividadSeleccionada?.sorteo_loteria_medellin || '—' }}</p>
-        <p class="text-red-600 text-xs mb-3">{{ formatDateSorteoDisplay(actividadSeleccionada?.fecha_juego_rifa) || '—' }}</p>
+      <div v-if="actividadSeleccionada?.sorteo_loteria_medellin || actividadSeleccionada?.numero_completo_loteria_medellin" class="rounded-xl border-2 border-red-200 oscuro:border-red-500/30 bg-superficie-tarjeta p-3">
+        <p class="text-red-700 oscuro:text-red-300 font-bold text-sm sm:text-base mb-2">Resultado Lotería de Medellín</p>
+        <p class="text-red-600 oscuro:text-red-300 font-bold text-base mb-0.5">Sorteo {{ actividadSeleccionada?.sorteo_loteria_medellin || '—' }}</p>
+        <p class="text-red-600 oscuro:text-red-300 text-xs mb-3">{{ formatDateSorteoDisplay(actividadSeleccionada?.fecha_juego_rifa) || '—' }}</p>
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <p class="text-red-600 text-xs font-semibold uppercase mb-1">Número</p>
+            <p class="text-red-600 oscuro:text-red-300 text-xs font-semibold uppercase mb-1">Número</p>
             <div class="rounded-lg bg-red-600 text-white text-center py-2"><span class="text-lg font-bold">{{ actividadSeleccionada?.numero_completo_loteria_medellin || '—' }}</span></div>
           </div>
           <div>
-            <p class="text-red-600 text-xs font-semibold uppercase mb-1">Serie</p>
+            <p class="text-red-600 oscuro:text-red-300 text-xs font-semibold uppercase mb-1">Serie</p>
             <div class="rounded-lg bg-red-600 text-white text-center py-2"><span class="text-lg font-bold">{{ actividadSeleccionada?.serie_loteria_medellin || '—' }}</span></div>
           </div>
         </div>
@@ -3776,6 +3822,7 @@ import NatiscrollHint from '../../components/NatiscrollHint.vue'
 import ActividadCard from '../../components/ActividadCard.vue'
 import CargaCuadricula from '../../components/CargaCuadricula.vue'
 import CargaCaja from '../../components/carga/CargaCaja.vue'
+import { editarValoresRifaLiquidada } from '../../composables/useRecaudoRifaLiquidada'
 import CargaBoton from '../../components/carga/CargaBoton.vue'
 import { detectIosPlatform } from '../../composables/useIsIos'
 import { useRegistrarPagoActividad, generarComprobanteDirecto } from '../../composables/useRegistrarPagoActividad'
@@ -4231,16 +4278,28 @@ const gruposExpandidos = ref({}) // Objeto { serieId: true/false } para rastrear
 const modalConfirmarLiquidacionNegativa = ref(false)
 const modalGanadorRifa = ref(false) // Modal para rifa liquidada: número ganador + ganador
 const grupoGanadoresSeleccionado = ref(null) // Grupo de rifas para modal "Ver ganadores"
-const actividadParaFormaPago = ref(null) // Rifa liquidada para editar forma de pago entrega premio
 const actividadParaDesglosePagos = ref(null) // Rifa liquidada para modal grilla valores pagados
 const actividadParaPorPagar = ref(null) // Rifa liquidada cuyo modal «Por pagar» está abierto
-const formFormaPagoLiquidacion = reactive({ forma_pago: 'efectivo' })
-const guardandoFormaPago = ref(false)
 // Registrar gastos (actividades finalizadas que no son rifa)
-const modalRegistrarGastos = ref(false)
-const actividadParaGastos = ref(null)
-const formGastos = reactive({ gastos: 0 })
-const guardandoGastos = ref(false)
+const modalEditarActividad = ref(false)
+const actividadEnEdicion = ref(null)
+const formEdicion = reactive({
+  descripcion: '',
+  observacion: '',
+  ingresos: 0,
+  gastos: 0,
+  fechaLimitePago: '',
+  valorPorSocio: 0,
+  formaPagoPremio: 'efectivo'
+})
+const opcionesFormaPagoPremio = [
+  { valor: 'efectivo', texto: 'Efectivo', claseActiva: 'border-emerald-500 bg-emerald-50 oscuro:bg-emerald-500/15 text-emerald-700 oscuro:text-emerald-300' },
+  { valor: 'transferencia', texto: 'Transferencia', claseActiva: 'border-blue-500 bg-blue-50 oscuro:bg-blue-500/15 text-blue-700 oscuro:text-blue-300' }
+]
+const guardandoEdicion = ref(false)
+// Filas socios_actividad de la actividad en curso que se edita (para el valor por socio)
+const sociosEdicion = ref([])
+const cargandoSociosEdicion = ref(false)
 const modalAsignarFaltante = ref(false)
 const modalConfirmarAsignarFaltanteTodosMeses = ref(false)
 const faltanteSeleccionado = ref(null)
@@ -4331,10 +4390,9 @@ useBodyScrollLock(modalLiquidarActividad)
 useBodyScrollLock(modalConfirmarLiquidacionNegativa)
 useBodyScrollLock(modalGanadorRifa)
 useBodyScrollLock(computed(() => !!grupoGanadoresSeleccionado.value))
-useBodyScrollLock(computed(() => !!actividadParaFormaPago.value))
 useBodyScrollLock(computed(() => !!actividadParaDesglosePagos.value))
 useBodyScrollLock(computed(() => !!actividadParaPorPagar.value))
-useBodyScrollLock(modalRegistrarGastos)
+useBodyScrollLock(modalEditarActividad)
 useBodyScrollLock(modalAsignarFaltante)
 useBodyScrollLock(modalConfirmarAsignarFaltanteTodosMeses)
 useBodyScrollLock(computed(() => !!actividadAEliminar.value))
@@ -4360,9 +4418,9 @@ const mostrarFab = computed(() =>
 const hayModalAbiertaActividades = computed(() =>
   modalNuevaActividad.value || modalDetalleActividad.value || mostrarModalBienvenida.value ||
   modalVentaRifa.value || modalPagarRifa.value || modalLiquidarActividad.value ||
-  modalConfirmarLiquidacionNegativa.value || modalGanadorRifa.value || modalRegistrarGastos.value ||
+  modalConfirmarLiquidacionNegativa.value || modalGanadorRifa.value || modalEditarActividad.value ||
   modalAsignarFaltante.value || modalConfirmarAsignarFaltanteTodosMeses.value ||
-  !!grupoGanadoresSeleccionado.value || !!actividadParaFormaPago.value ||
+  !!grupoGanadoresSeleccionado.value ||
   !!actividadParaDesglosePagos.value || !!actividadParaPorPagar.value || !!actividadAEliminar.value || !!grupoAEliminar.value
 )
 
@@ -4382,15 +4440,16 @@ const { scrollRef: refScrollAsignarFaltante, hayMas: hayMasAsignarFaltante, onSc
 const { scrollRef: refScrollBienvenida, hayMas: hayMasBienvenida, onScroll: onScrollBienvenida } = useNatiscroll(mostrarModalBienvenida)
 const { scrollRef: refScrollCobroSocio, hayMas: hayMasCobroSocio, onScroll: onScrollCobroSocio } = useNatiscroll(modalCobroSocio)
 const { scrollRef: refScrollComprobante, hayMas: hayMasComprobante, onScroll: onScrollComprobante } = useNatiscroll(computed(() => !!comprobanteActividad.value))
+const { scrollRef: refScrollEditarActividad, hayMas: hayMasEditarActividad, onScroll: onScrollEditarActividad } = useNatiscroll(modalEditarActividad)
 const { scrollRef: refScrollConfirmarNegativa, hayMas: hayMasConfirmarNegativa, onScroll: onScrollConfirmarNegativa } = useNatiscroll(modalConfirmarLiquidacionNegativa)
 
 // Opciones para el dropdown de tipo de actividad (ítems estilizados)
 const opcionesTipoActividad = [
-  { value: 'rifa', label: 'Rifa', icon: TicketIcon, bgIcon: 'bg-natillera-500', textColor: 'text-natillera-700', desc: 'Números y sorteos' },
-  { value: 'bingo', label: 'Bingo', icon: SparklesIcon, bgIcon: 'bg-amber-500', textColor: 'text-amber-700', desc: 'Juego de azar' },
-  { value: 'venta', label: 'Venta', icon: ShoppingBagIcon, bgIcon: 'bg-blue-500', textColor: 'text-blue-700', desc: 'Venta de productos' },
-  { value: 'evento', label: 'Evento', icon: CalendarIcon, bgIcon: 'bg-purple-500', textColor: 'text-purple-700', desc: 'Eventos y celebraciones' },
-  { value: 'otro', label: 'Otro', icon: ClipboardDocumentListIcon, bgIcon: 'bg-slate-500', textColor: 'text-slate-700', desc: 'Otra actividad' }
+  { value: 'rifa', label: 'Rifa', icon: TicketIcon, bgIcon: 'bg-natillera-500', textColor: 'text-natillera-700 oscuro:text-natillera-300', desc: 'Números y sorteos' },
+  { value: 'bingo', label: 'Bingo', icon: SparklesIcon, bgIcon: 'bg-amber-500', textColor: 'text-amber-700 oscuro:text-amber-300', desc: 'Juego de azar' },
+  { value: 'venta', label: 'Venta', icon: ShoppingBagIcon, bgIcon: 'bg-blue-500', textColor: 'text-blue-700 oscuro:text-blue-300', desc: 'Venta de productos' },
+  { value: 'evento', label: 'Evento', icon: CalendarIcon, bgIcon: 'bg-purple-500', textColor: 'text-purple-700 oscuro:text-purple-300', desc: 'Eventos y celebraciones' },
+  { value: 'otro', label: 'Otro', icon: ClipboardDocumentListIcon, bgIcon: 'bg-slate-500', /* tema-fijo: fondo sólido con icono blanco */ textColor: 'text-slate-700 oscuro:text-texto-medio', desc: 'Otra actividad' }
 ]
 // Opciones para cuándo se juega la rifa (solo actividades tipo rifa en curso)
 const opcionesCuandoJuegoRifa = [
@@ -6046,11 +6105,6 @@ function abrirModalPorPagarRifa(actividad) {
   vistaPagosRifa.value = 'faltan'
   cargarPagosRifaLiquidada(actividad.id)
 }
-function abrirModalFormaPagoLiquidacion(actividad) {
-  if (soloLectura.value) return
-  actividadParaFormaPago.value = actividad
-  formFormaPagoLiquidacion.forma_pago = (actividad.forma_pago_liquidacion || 'efectivo').toLowerCase().trim() === 'transferencia' ? 'transferencia' : 'efectivo'
-}
 function abrirModalDesglosePagosRifa(actividad) {
   actividadParaDesglosePagos.value = actividad
 }
@@ -6072,76 +6126,217 @@ async function abrirModalMiembrosPagaron(actividad) {
     .sort((a, b) => b.valor_pagado - a.valor_pagado)
   actividadParaDesglosePagos.value = { ...actividad, valores_pagados_rifa: pagos }
 }
-// Registrar gastos de una actividad finalizada (no rifa): edita el total de gastos y
-// recalcula la utilidad (ingresos - gastos).
-function abrirModalRegistrarGastos(actividad) {
-  if (soloLectura.value) return
-  actividadParaGastos.value = actividad
-  formGastos.gastos = Number(actividad.gastos) || 0
-  modalRegistrarGastos.value = true
-}
-const utilidadGastosPreview = computed(() => {
-  const ing = Number(actividadParaGastos.value?.ingresos) || 0
-  return ing - (Number(formGastos.gastos) || 0)
+// Editar actividad. Qué valores admite depende de su estado:
+//  · finalizada que no es rifa → ingresos y gastos (la utilidad es su diferencia);
+//  · rifa finalizada → recaudado y premio, moviendo con ellos su utilidad y la salida del premio;
+//  · en curso → fecha límite y, si no es rifa, el valor por socio.
+// Descripción y observación, siempre.
+const edicionEsLiquidada = computed(() => {
+  const act = actividadEnEdicion.value
+  return !!act && (act.estado === 'liquidada' || !act.estado)
 })
-async function guardarGastos() {
+const edicionEsRifaLiquidada = computed(() => edicionEsLiquidada.value && actividadEnEdicion.value?.tipo === 'rifa')
+const edicionValoresLiquidacion = computed(() => edicionEsLiquidada.value && actividadEnEdicion.value?.tipo !== 'rifa')
+// Rifa cuyo número ganador era un faltante: no hubo premio que pagar
+const edicionSinPremio = computed(() => edicionEsRifaLiquidada.value && !!actividadEnEdicion.value?.ganador_es_faltante)
+const edicionEnCurso = computed(() => actividadEnEdicion.value?.estado === 'en_curso')
+// En rifas lo asignado depende de los números de cada socio: no hay un valor por socio único
+const edicionPermiteValorSocio = computed(() => edicionEnCurso.value && actividadEnEdicion.value?.tipo !== 'rifa')
+const valorUniformeEdicion = computed(() => {
+  const valores = [...new Set(sociosEdicion.value.map((sa) => Number(sa.valor_asignado) || 0))]
+  return valores.length === 1 ? valores[0] : null
+})
+const utilidadEdicionPreview = computed(() => {
+  const ingresos = Number(formEdicion.ingresos) || 0
+  return edicionSinPremio.value ? ingresos : ingresos - (Number(formEdicion.gastos) || 0)
+})
+
+async function abrirEditarActividad(actividad) {
+  if (soloLectura.value || !actividad?.id) return
+  actividadEnEdicion.value = actividad
+  formEdicion.descripcion = actividad.descripcion || ''
+  formEdicion.observacion = actividad.observacion || ''
+  formEdicion.ingresos = Number(actividad.ingresos) || 0
+  formEdicion.gastos = Number(actividad.gastos) || 0
+  formEdicion.fechaLimitePago = actividad.fecha_limite_pago || ''
+  formEdicion.valorPorSocio = 0
+  formEdicion.formaPagoPremio = formaPagoPremioDe(actividad)
+  sociosEdicion.value = []
+  modalEditarActividad.value = true
+  if (!edicionPermiteValorSocio.value) return
+
+  cargandoSociosEdicion.value = true
+  const { data, error } = await supabase
+    .from('socios_actividad')
+    .select('id, valor_asignado, valor_pagado, fecha_limite_pago')
+    .eq('actividad_id', actividad.id)
+  cargandoSociosEdicion.value = false
+  if (error) {
+    console.error('Error cargando valores de la actividad:', error)
+    return
+  }
+  sociosEdicion.value = data || []
+  formEdicion.valorPorSocio = valorUniformeEdicion.value ?? 0
+}
+
+function formaPagoPremioDe(actividad) {
+  return (actividad?.forma_pago_liquidacion || 'efectivo').toLowerCase().trim() === 'transferencia'
+    ? 'transferencia'
+    : 'efectivo'
+}
+
+function editarDesdeDetalle() {
+  const actividad = actividadSeleccionada.value
+  modalDetalleActividad.value = false
+  abrirEditarActividad(actividad)
+}
+
+function cerrarEditarActividad() {
+  modalEditarActividad.value = false
+  actividadEnEdicion.value = null
+  sociosEdicion.value = []
+}
+
+function estadoSocioActividad(asignado, pagado) {
+  if (pagado >= asignado) return 'pagado'
+  if (pagado > 0) return 'parcial'
+  return 'pendiente'
+}
+
+async function guardarEdicionActividad() {
   if (soloLectura.value) return
-  const act = actividadParaGastos.value
+  const act = actividadEnEdicion.value
   if (!act?.id) return
-  guardandoGastos.value = true
+
+  const descripcion = formEdicion.descripcion.trim()
+  if (!descripcion) {
+    notificationStore.error('La descripción es requerida', 'Error')
+    return
+  }
+  const ingresos = Math.max(0, Number(formEdicion.ingresos) || 0)
+  const gastos = Math.max(0, Number(formEdicion.gastos) || 0)
+  const valorPorSocio = Number(formEdicion.valorPorSocio) || 0
+  const cambiaValorSocio = edicionPermiteValorSocio.value &&
+    valorUniformeEdicion.value !== null &&
+    valorPorSocio !== valorUniformeEdicion.value
+  if (cambiaValorSocio && valorPorSocio <= 0) {
+    notificationStore.error('El valor por socio debe ser mayor a cero', 'Error')
+    return
+  }
+  if (edicionEnCurso.value && !formEdicion.fechaLimitePago) {
+    notificationStore.error('La fecha límite es requerida', 'Error')
+    return
+  }
+
+  guardandoEdicion.value = true
   try {
-    const gastos = Math.max(0, Number(formGastos.gastos) || 0)
-    const ingresos = Number(act.ingresos) || 0
-    const { error } = await supabase
-      .from('actividades')
-      .update({ gastos, utilidad: ingresos - gastos })
-      .eq('id', act.id)
+    const cambios = {
+      descripcion,
+      observacion: formEdicion.observacion.trim() || null
+    }
+    const cambiaFormaPremio = edicionEsRifaLiquidada.value && !edicionSinPremio.value &&
+      formEdicion.formaPagoPremio !== formaPagoPremioDe(act)
+    if (cambiaFormaPremio) cambios.forma_pago_liquidacion = formEdicion.formaPagoPremio
+    if (edicionValoresLiquidacion.value) {
+      cambios.ingresos = ingresos
+      cambios.gastos = gastos
+      cambios.utilidad = ingresos - gastos
+    }
+    if (edicionEnCurso.value) cambios.fecha_limite_pago = formEdicion.fechaLimitePago
+
+    const { error } = await supabase.from('actividades').update(cambios).eq('id', act.id)
     if (error) throw error
-    notificationStore.success('Gastos actualizados correctamente', 'Listo')
-    modalRegistrarGastos.value = false
-    actividadParaGastos.value = null
+
+    await sincronizarMovimientoDeActividad(act, descripcion, ingresos)
+
+    let problemas = []
+    if (edicionEsRifaLiquidada.value) {
+      const cambiaronCifras = ingresos !== (Number(act.ingresos) || 0) ||
+        gastos !== (Number(act.gastos) || 0) || descripcion !== (act.descripcion || '')
+      if (cambiaronCifras) {
+        const res = await editarValoresRifaLiquidada(act, { ingresos, gastos, descripcion })
+        problemas = res.problemas
+      }
+      if (cambiaFormaPremio) {
+        // Va después de mover el premio: la salida ya tiene su descripción y monto nuevos
+        const { data: movs } = await supabase
+          .from('movimientos_fondo')
+          .select('id')
+          .eq('natillera_id', act.natillera_id)
+          .eq('tipo', 'salida')
+          .eq('descripcion', `Premio rifa liquidada: ${descripcion || 'Rifa'}`)
+          .eq('monto', Math.max(0, gastos))
+          .limit(1)
+        if (movs?.length) {
+          const { error: errForma } = await supabase
+            .from('movimientos_fondo')
+            .update({ forma_pago: formEdicion.formaPagoPremio })
+            .eq('id', movs[0].id)
+          if (errForma) problemas.push(`La forma de pago del premio no se cambió en el fondo: ${errForma.message}`)
+        }
+      }
+    }
+
+    if (edicionEnCurso.value && act.fecha_limite_pago && formEdicion.fechaLimitePago !== act.fecha_limite_pago) {
+      // Solo las filas que seguían la fecha de la actividad: una fecha propia del socio se respeta
+      const { error: errFecha } = await supabase
+        .from('socios_actividad')
+        .update({ fecha_limite_pago: formEdicion.fechaLimitePago })
+        .eq('actividad_id', act.id)
+        .eq('fecha_limite_pago', act.fecha_limite_pago)
+      if (errFecha) console.warn('No se actualizó la fecha límite de los socios:', errFecha)
+    }
+
+    if (cambiaValorSocio) {
+      const resultados = await Promise.all(sociosEdicion.value.map((sa) =>
+        supabase
+          .from('socios_actividad')
+          .update({
+            valor_asignado: valorPorSocio,
+            estado: estadoSocioActividad(valorPorSocio, Number(sa.valor_pagado) || 0)
+          })
+          .eq('id', sa.id)
+      ))
+      const fallo = resultados.find((r) => r.error)
+      if (fallo) throw fallo.error
+    }
+
+    if (problemas.length) notificationStore.warning(problemas.join(' '), 'Actividad actualizada con avisos')
+    else notificationStore.success('Actividad actualizada', 'Listo')
+    cerrarEditarActividad()
     await fetchActividades()
   } catch (e) {
-    console.error('Error al guardar gastos:', e)
-    notificationStore.error('No se pudieron guardar los gastos', 'Error')
+    console.error('Error al editar la actividad:', e)
+    notificationStore.error(e?.message || 'No se pudo actualizar la actividad', 'Error')
   } finally {
-    guardandoGastos.value = false
+    guardandoEdicion.value = false
   }
 }
-async function guardarFormaPagoLiquidacion() {
-  if (soloLectura.value) return
-  const act = actividadParaFormaPago.value
-  if (!act?.id) return
-  const nuevaForma = (formFormaPagoLiquidacion.forma_pago || 'efectivo').toLowerCase().trim() === 'transferencia' ? 'transferencia' : 'efectivo'
-  guardandoFormaPago.value = true
-  try {
-    const { error: errAct } = await supabase
-      .from('actividades')
-      .update({ forma_pago_liquidacion: nuevaForma })
-      .eq('id', act.id)
-    if (errAct) throw errAct
-    const descPremio = `Premio rifa liquidada: ${act.descripcion || 'Rifa'}`
-    const montoPremio = parseFloat(act.gastos) || 0
+
+// Los movimientos del fondo de una actividad se encuentran por su descripción y monto
+// (no guardan el id de la actividad). Si cambian, hay que moverlos con ella o se pierde
+// el rastro.
+async function sincronizarMovimientoDeActividad(act, descripcionNueva, ingresosNuevos) {
+  const descripcionVieja = act.descripcion || ''
+  if (edicionValoresLiquidacion.value) {
+    const ingresosViejos = Number(act.ingresos) || 0
+    if (descripcionNueva === descripcionVieja && ingresosNuevos === ingresosViejos) return
     const { data: movs } = await supabase
       .from('movimientos_fondo')
       .select('id')
       .eq('natillera_id', act.natillera_id)
-      .eq('tipo', 'salida')
-      .eq('descripcion', descPremio)
-      .eq('monto', montoPremio)
+      .eq('tipo', 'entrada')
+      .eq('descripcion', `Recaudo actividad liquidada: ${descripcionVieja}`)
+      .eq('monto', ingresosViejos)
       .limit(1)
-    if (movs?.length) {
-      await supabase.from('movimientos_fondo').update({ forma_pago: nuevaForma }).eq('id', movs[0].id)
-    }
-    await fetchActividades()
-    actividadParaFormaPago.value = null
-    notificationStore.success('Forma de pago actualizada', 'Listo')
-  } catch (e) {
-    console.error('Error actualizando forma de pago:', e)
-    notificationStore.error(e?.message || 'No se pudo actualizar', 'Error')
-  } finally {
-    guardandoFormaPago.value = false
+    if (!movs?.length) return
+    await supabase
+      .from('movimientos_fondo')
+      .update({ monto: ingresosNuevos, descripcion: `Recaudo actividad liquidada: ${descripcionNueva}` })
+      .eq('id', movs[0].id)
+    return
   }
+  // El premio de una rifa lo mueve `editarValoresRifaLiquidada`, junto con su utilidad
 }
 /** Solo dev: revierte una rifa liquidada a "en curso" (elimina utilidades_clasificadas, movimiento premio, actualiza actividad) */
 async function revertirLiquidacionRifa() {

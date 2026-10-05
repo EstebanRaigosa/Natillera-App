@@ -198,6 +198,7 @@ function estiloArrastre(id) {
 </script>
 
 <style scoped>
+/* tema-fijo-inicio: los avisos son sólidos (verde, ámbar, rojo) con texto blanco y se leen igual sobre la app clara u oscura */
 /* =========================================================================
    Nati-Notificación — toast del sistema de diseño Natillerapp
 
@@ -508,4 +509,5 @@ function estiloArrastre(id) {
     display: none;
   }
 }
+/* tema-fijo-fin */
 </style>

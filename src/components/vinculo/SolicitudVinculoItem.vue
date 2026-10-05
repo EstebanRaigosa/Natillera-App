@@ -187,4 +187,51 @@ function telefonoLegible(tel) {
 .sol-item__boton--rechazar { background: #fef2f2; color: #b91c1c; }
 .sol-item__boton--aprobar { flex-grow: 1.4; background: #1B5E37; color: #fff; }
 .sol-item__boton:disabled { opacity: 0.5; }
+
+/* ==========================================================================
+   Modo oscuro (skill natillerapp-modo-oscuro). Propuesto con
+   scripts/tema/proponer-oscuro.mjs y revisado a mano. Solo lo que cambia: las
+   reglas de claro de arriba quedan intactas.
+   ========================================================================== */
+:where([data-tema=oscuro]) .sol-item:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-tarjeta);
+}
+:where([data-tema=oscuro]) .sol-item__avatar:not(:where([data-tema=claro] *)) {
+  background: var(--marca-suave);
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .sol-item__nombre:not(:where([data-tema=claro] *)) {
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .sol-item__dato:not(:where([data-tema=claro] *)) {
+  color: var(--texto-medio);
+}
+:where([data-tema=oscuro]) .sol-item__dato svg:not(:where([data-tema=claro] *)) {
+  color: var(--texto-tenue);
+}
+:where([data-tema=oscuro]) .sol-item__natillera:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-suave);
+  color: var(--texto-medio);
+}
+:where([data-tema=oscuro]) .sol-item__destino:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-suave);
+}
+:where([data-tema=oscuro]) .sol-item__destino-etiqueta:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .sol-item__select:not(:where([data-tema=claro] *)) {
+  border: 1px solid var(--marca-tinta-borde);
+  background: var(--superficie-tarjeta);
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .sol-item__socio-fijo:not(:where([data-tema=claro] *)) {
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .sol-item__aviso:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .sol-item__boton--rechazar:not(:where([data-tema=claro] *)) {
+  background: var(--peligro-suave);
+  color: var(--peligro);
+}
 </style>

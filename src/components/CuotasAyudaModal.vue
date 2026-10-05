@@ -12,14 +12,15 @@
     align="bottom"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="cerrar"
   >
     <!-- ── Cabecera marca (móvil = fila) ── -->
     <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
       <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+        <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
           <SparklesIcon class="h-5 w-5 text-[#1B5E37]" />
         </div>
@@ -42,6 +43,7 @@
       <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
         <div class="w-11 shrink-0" aria-hidden="true" />
         <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
             <SparklesIcon class="h-6 w-6 text-[#1B5E37]" />
           </div>
@@ -71,12 +73,13 @@
         <Transition :name="dir === 1 ? 'ayuda-slide-next' : 'ayuda-slide-prev'" mode="out-in">
           <div :key="pasoActivo" class="px-5 pt-5 pb-6">
             <!-- ══════════ Escenario (mockup fiel) ══════════ -->
-            <div class="ayuda-stage">
+            <!-- Ilustración de la pantalla de Cuotas en claro: igual en los dos modos -->
+            <div class="ayuda-stage" data-tema="claro">
 
               <!-- 0 · Intro: mini pantalla de Cuotas -->
               <template v-if="paso.escena === 'intro'">
                 <div class="ph ayuda-float">
-                  <div class="ph-topbar"><span class="ph-topbar-title">Cuotas y Pagos</span><span class="ph-cal"><CalendarDaysIcon class="h-3 w-3 text-[#1B5E37]" /></span></div>
+                  <div class="ph-topbar"><span class="ph-topbar-title">Cuotas y Pagos</span><span class="ph-cal"><CalendarDaysIcon class="h-3 w-3 text-marca-tinta" /></span></div>
                   <div class="ph-tabs">
                     <span class="ph-tab">Ene</span>
                     <span class="ph-tab ph-tab--on">Feb</span>
@@ -99,7 +102,7 @@
                       <template v-if="sub === 0">
                         <div class="ph-topbar">
                           <span class="ph-topbar-title">Cuotas y Pagos</span>
-                          <span class="ph-cal"><CalendarDaysIcon class="h-3 w-3 text-[#1B5E37]" /></span>
+                          <span class="ph-cal"><CalendarDaysIcon class="h-3 w-3 text-marca-tinta" /></span>
                         </div>
                         <div class="ph-cta ph-cta--top">
                           <BanknotesIcon class="h-3.5 w-3.5 text-white" />
@@ -119,11 +122,11 @@
                       <!-- sub 1: selector de socio -->
                       <template v-else-if="sub === 1">
                         <div class="ph-sheet-head">Registrar pago</div>
-                        <div class="ph-search"><MagnifyingGlassIcon class="h-3 w-3 text-gray-400" /><i></i></div>
+                        <div class="ph-search"><MagnifyingGlassIcon class="h-3 w-3 text-texto-tenue" /><i></i></div>
                         <div class="ph-socio">
                           <span class="ph-ava ph-ava--sm"></span>
                           <span class="ph-socio-info"><b></b><em>Mensual</em></span>
-                          <ChevronRightIcon class="h-3.5 w-3.5 text-gray-400" />
+                          <ChevronRightIcon class="h-3.5 w-3.5 text-texto-tenue" />
                           <span class="ayuda-tap-ring" style="left:auto;right:1.2rem"></span>
                         </div>
                         <span class="ayuda-finger" style="top:5.4rem;right:1.4rem"></span>
@@ -195,7 +198,7 @@
                           <span class="ph-cuota-emoji">💚</span>
                           <div class="ph-cuota-row-info"><b>Mensual</b><em>Febrero 2026</em></div>
                           <span class="ph-badge ph-badge--pend">Pendiente</span>
-                          <ChevronRightIcon class="h-3 w-3 text-gray-400 shrink-0" />
+                          <ChevronRightIcon class="h-3 w-3 text-texto-tenue shrink-0" />
                           <span class="ayuda-tap-ring" style="top:50%;left:50%"></span>
                         </div>
                         <div class="ph-cuota-row ph-cuota-row--ok ph-dim">
@@ -233,7 +236,7 @@
                 <div class="ph ph--tabs">
                   <div class="ph-topbar">
                     <span class="ph-topbar-title">Cuotas y Pagos</span>
-                    <span class="ph-cal"><CalendarDaysIcon class="h-3 w-3 text-[#1B5E37]" /></span>
+                    <span class="ph-cal"><CalendarDaysIcon class="h-3 w-3 text-marca-tinta" /></span>
                   </div>
                   <div class="ph-folder">
                     <span
@@ -262,7 +265,7 @@
                         <div class="ph-topbar">
                           <span class="ph-topbar-title">Cuotas y Pagos</span>
                           <span class="ph-cal ph-cal--target">
-                            <CalendarDaysIcon class="h-3.5 w-3.5 text-[#1B5E37]" />
+                            <CalendarDaysIcon class="h-3.5 w-3.5 text-marca-tinta" />
                             <span class="ayuda-tap-ring" style="width:2rem;height:2rem;margin:-1rem 0 0 -1rem"></span>
                           </span>
                         </div>
@@ -306,12 +309,12 @@
 
             <!-- Texto del paso -->
             <div class="mt-5 text-center">
-              <div class="mb-2 inline-flex items-center gap-1.5 rounded-full bg-[#E8F5E9] px-3 py-1">
-                <component :is="paso.icon" class="h-4 w-4 text-[#1B5E37]" />
-                <span class="font-display text-xs font-semibold text-[#1B5E37]">{{ paso.tag }}</span>
+              <div class="mb-2 inline-flex items-center gap-1.5 rounded-full bg-marca-suave px-3 py-1">
+                <component :is="paso.icon" class="h-4 w-4 text-marca-tinta" />
+                <span class="font-display text-xs font-semibold text-marca-tinta">{{ paso.tag }}</span>
               </div>
-              <h4 class="font-display text-lg font-bold leading-snug text-gray-800">{{ paso.titulo }}</h4>
-              <p class="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-gray-600">{{ paso.descripcion }}</p>
+              <h4 class="font-display text-lg font-bold leading-snug text-texto">{{ paso.titulo }}</h4>
+              <p class="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-texto-secundario">{{ paso.descripcion }}</p>
             </div>
           </div>
         </Transition>
@@ -321,7 +324,7 @@
     </div>
 
     <!-- ── Footer de acciones ── -->
-    <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 pt-3 pb-[calc(max(1.1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+    <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-5 pt-3 pb-[calc(max(1.1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
       <div class="mb-3 flex items-center justify-center gap-1.5">
         <button
           v-for="(p, i) in pasos"
@@ -516,6 +519,7 @@ onUnmounted(detenerSub)
 </script>
 
 <style scoped>
+/* tema-fijo-inicio: todo este CSS dibuja un teléfono con la pantalla de Cuotas en modo claro (ilustración de la ayuda) */
 /* ══════════ Escenario ══════════ */
 .ayuda-stage {
   position: relative;
@@ -820,4 +824,5 @@ onUnmounted(detenerSub)
     animation: none !important;
   }
 }
+/* tema-fijo-fin */
 </style>

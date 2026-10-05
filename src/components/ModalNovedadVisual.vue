@@ -10,8 +10,8 @@
     :persistent="true"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="$emit('cerrar')"
   >
@@ -106,10 +106,10 @@
     <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
     <div
       ref="areaScroll"
-      class="novedad__cuerpo flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-white px-5 pb-2 pt-5 [-webkit-overflow-scrolling:touch]"
+      class="novedad__cuerpo flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-superficie-tarjeta px-5 pb-2 pt-5 [-webkit-overflow-scrolling:touch]"
       @scroll.passive="programarNatiscroll"
     >
-      <p class="novedad__fila text-center text-sm leading-relaxed text-gray-600" :style="{ '--n': -1 }">
+      <p class="novedad__fila text-center text-sm leading-relaxed text-texto-secundario" :style="{ '--n': -1 }">
         Le cambiamos el diseño a la app.<br class="hidden sm:block" />
         Está todo donde estaba, pero se ve —y se usa— mucho mejor.
       </p>
@@ -123,7 +123,7 @@
         <li
           v-for="(novedad, n) in NOVEDADES"
           :key="novedad.titulo"
-          class="novedad__tarjeta relative flex flex-col items-center overflow-hidden rounded-2xl border border-gray-100 bg-white px-3 pb-3.5 pt-4 text-center shadow-[0_1px_2px_rgba(16,24,40,0.04),0_10px_26px_-16px_rgba(16,24,40,0.22)]"
+          class="novedad__tarjeta relative flex flex-col items-center overflow-hidden rounded-2xl border border-borde-suave bg-superficie-tarjeta px-3 pb-3.5 pt-4 text-center shadow-[0_1px_2px_rgba(16,24,40,0.04),0_10px_26px_-16px_rgba(16,24,40,0.22)]"
           :style="{ '--n': n, '--d': diagonalTarjeta(n) }"
         >
           <span class="novedad__brillo" aria-hidden="true" />
@@ -133,17 +133,17 @@
           >
             <component :is="novedad.icono" class="h-6 w-6 text-white" />
           </span>
-          <span class="relative mt-2.5 block font-display text-[0.8125rem] font-bold leading-tight text-gray-900">
+          <span class="relative mt-2.5 block font-display text-[0.8125rem] font-bold leading-tight text-texto-fuerte">
             {{ novedad.titulo }}
           </span>
-          <span class="relative mt-1 block text-[0.6875rem] leading-snug text-gray-500">
+          <span class="relative mt-1 block text-[0.6875rem] leading-snug text-texto-suave">
             {{ novedad.texto }}
           </span>
         </li>
       </ul>
 
       <p
-        class="novedad__fila mt-4 flex items-center justify-center gap-2 rounded-2xl border border-[#1B5E37]/12 bg-gradient-to-br from-[#E8F5E9] to-[#F3FAF4] px-3 py-3 text-center text-xs leading-snug text-[#1B5E37]"
+        class="novedad__fila mt-4 flex items-center justify-center gap-2 rounded-2xl border border-[#1B5E37]/12 oscuro:border-marca-tinta/12 bg-gradient-to-br from-marca-suave to-[#F3FAF4] oscuro:to-superficie-suave px-3 py-3 text-center text-xs leading-snug text-marca-tinta"
         :style="{ '--n': NOVEDADES.length }"
       >
         <ShieldCheckIcon class="h-4 w-4 flex-shrink-0" />
@@ -152,9 +152,9 @@
     </div>
 
       <div v-show="hayNatiscroll" class="pointer-events-none absolute inset-x-0 bottom-0 z-10" aria-hidden="true">
-        <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent" />
+        <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent" />
         <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
-          <span class="novedad__hint rounded-full bg-white/90 px-3 py-1 font-display text-[0.6875rem] font-semibold text-[#1B5E37] shadow-sm">
+          <span class="novedad__hint rounded-full bg-superficie-tarjeta/90 px-3 py-1 font-display text-[0.6875rem] font-semibold text-marca-tinta shadow-sm">
             Desliza para ver más
           </span>
         </div>
@@ -164,7 +164,7 @@
     <!-- Acciones. Safe-area abajo y, además, `--tapado-inferior` (lo publica ModalWrapper):
          en móvil la card es una hoja pegada al borde inferior, y la barra de Safari tapa
          ese borde aunque el botón no sea `fixed` (manual iOS §4.1). -->
-    <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+    <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
       <button type="button" class="novedad__cta btn-modal-primary w-full" @click="$emit('cerrar')">
         Ver qué cambió
       </button>
@@ -352,7 +352,7 @@ const NOVEDADES = [
   left: -12%;
   width: 62%;
   height: 170%;
-  background: rgba(93, 222, 152, 0.34);
+  background: rgba(93, 222, 152, 0.34); /* tema-fijo: aurora sobre la cabecera de marca */
   -webkit-animation: novedad-entrada-aurora 1500ms cubic-bezier(0.22, 1, 0.36, 1) both,
                      novedad-deriva-a 15s ease-in-out 1500ms infinite;
   animation: novedad-entrada-aurora 1500ms cubic-bezier(0.22, 1, 0.36, 1) both,
@@ -364,7 +364,7 @@ const NOVEDADES = [
   right: -16%;
   width: 55%;
   height: 185%;
-  background: rgba(154, 246, 199, 0.22);
+  background: rgba(154, 246, 199, 0.22); /* tema-fijo: aurora sobre la cabecera de marca */
   -webkit-animation: novedad-entrada-aurora 1500ms cubic-bezier(0.22, 1, 0.36, 1) 160ms both,
                      novedad-deriva-b 18s ease-in-out 1660ms infinite;
   animation: novedad-entrada-aurora 1500ms cubic-bezier(0.22, 1, 0.36, 1) 160ms both,
@@ -377,7 +377,7 @@ const NOVEDADES = [
   width: 4px;
   height: 4px;
   border-radius: 9999px;
-  background: #fff;
+  background: #fff; /* tema-fijo: chispa blanca sobre la cabecera de marca */
   box-shadow: 0 0 6px 1px rgba(255, 255, 255, 0.75);
   opacity: 0;
   pointer-events: none;
@@ -671,4 +671,12 @@ const NOVEDADES = [
   }
 }
 
+/* ==========================================================================
+   Modo oscuro (skill natillerapp-modo-oscuro). Propuesto con
+   scripts/tema/proponer-oscuro.mjs y revisado a mano. Solo lo que cambia: las
+   reglas de claro de arriba quedan intactas.
+   ========================================================================== */
+:where([data-tema=oscuro]) .novedad__brillo:not(:where([data-tema=claro] *)) {
+  background: linear-gradient(100deg, transparent 0%, var(--marca-suave) 50%, transparent 100%);
+}
 </style>

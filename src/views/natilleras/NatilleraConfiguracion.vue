@@ -27,7 +27,7 @@
             'w-full relative overflow-hidden rounded-2xl border transition-all duration-300 touch-manipulation',
           seccionActiva === 'basica'
               ? 'bg-[var(--brand-primary)] border-transparent shadow-lg'
-              : 'bg-white border-gray-200 shadow-sm hover:border-gray-300 hover:shadow-md'
+              : 'bg-superficie-tarjeta border-borde shadow-sm hover:border-borde-fuerte hover:shadow-md'
           ]"
         >
           <div class="relative p-4 sm:p-5 flex items-center gap-4">
@@ -35,15 +35,15 @@
               <CurrencyDollarIcon :class="['w-6 h-6', seccionActiva === 'basica' ? 'text-white' : 'text-[var(--brand-primary)]']" />
           </div>
             <div class="flex-1 text-left min-w-0">
-              <h3 :class="['text-lg font-display font-bold', seccionActiva === 'basica' ? 'text-white' : 'text-gray-800']">
+              <h3 :class="['text-lg font-display font-bold', seccionActiva === 'basica' ? 'text-white' : 'text-texto']">
             Configuración General
           </h3>
-              <p :class="['text-sm', seccionActiva === 'basica' ? 'text-white/80' : 'text-gray-500']">
+              <p :class="['text-sm', seccionActiva === 'basica' ? 'text-white/80' : 'text-texto-suave']">
                 Período, cierre, sanciones y datos básicos
           </p>
           </div>
-            <div :class="['w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0', seccionActiva === 'basica' ? 'bg-white/20' : 'bg-gray-100']">
-              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'basica' ? 'text-white rotate-180' : 'text-gray-500']" />
+            <div :class="['w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0', seccionActiva === 'basica' ? 'bg-white/20' : 'bg-superficie-hundida']">
+              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'basica' ? 'text-white rotate-180' : 'text-texto-suave']" />
           </div>
         </div>
       </button>
@@ -57,7 +57,7 @@
       leave-from-class="opacity-100 translate-y-0"
           leave-to-class="opacity-0 -translate-y-2"
         >
-          <div v-if="seccionActiva === 'basica'" class="relative overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-200 ml-4 sm:ml-6">
+          <div v-if="seccionActiva === 'basica'" class="relative overflow-hidden bg-superficie-tarjeta rounded-2xl shadow-sm border border-borde ml-4 sm:ml-6">
             <div class="absolute top-0 left-0 w-1 h-full bg-[var(--brand-primary)]"></div>
             <div class="relative p-5 sm:p-6 space-y-4">
               <!-- Guardando: caja de carga flotante (carga/CargaCaja.vue) -->
@@ -159,7 +159,7 @@
                     <div>
                       <div class="flex items-baseline justify-between gap-2">
                         <label class="ds-label" for="cfg-descripcion">Descripción</label>
-                        <span class="text-xs text-gray-400 tabular-nums">
+                        <span class="text-xs text-texto-tenue tabular-nums">
                           {{ (configBasica.descripcion || '').length }}/200
                         </span>
                       </div>
@@ -234,7 +234,7 @@
                                 <span class="cfg-select__titulo">{{ opcion.label }}</span>
                                 <span class="cfg-select__ayuda">{{ opcion.ayuda }}</span>
                               </span>
-                              <CheckIcon v-if="configBasica.periodicidad === opcion.value" class="w-4 h-4 shrink-0 text-[color:var(--brand-primary)]" aria-hidden="true" />
+                              <CheckIcon v-if="configBasica.periodicidad === opcion.value" class="w-4 h-4 shrink-0 text-[color:var(--brand-primary)] oscuro:text-marca-tinta" aria-hidden="true" />
                             </li>
                           </ul>
                         </Transition>
@@ -251,7 +251,7 @@
                         :disabled="esVisor"
                         required
                       />
-                      <p class="text-xs text-gray-500 mt-2">
+                      <p class="text-xs text-texto-suave mt-2">
                         Fecha en que inició o iniciará la natillera.
                       </p>
                     </div>
@@ -306,11 +306,11 @@
                   <!-- Pie de la tarjeta: el rango ya resuelto, para confirmar de un vistazo -->
                   <div class="cfg-card__pie">
                     <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                      <span class="font-display font-bold text-[color:var(--brand-primary)]">
+                      <span class="font-display font-bold text-[color:var(--brand-primary)] oscuro:text-marca-tinta">
                         {{ meses.find(m => m.value === configPeriodo.mes_inicio)?.label }} {{ configPeriodo.anio_inicio }}
                       </span>
-                      <ArrowLongRightIcon class="w-5 h-5 text-gray-400 shrink-0" aria-hidden="true" />
-                      <span class="font-display font-bold text-[color:var(--brand-primary)]">
+                      <ArrowLongRightIcon class="w-5 h-5 text-texto-tenue shrink-0" aria-hidden="true" />
+                      <span class="font-display font-bold text-[color:var(--brand-primary)] oscuro:text-marca-tinta">
                         {{ meses.find(m => m.value === configPeriodo.mes_fin)?.label }} {{ configPeriodo.anio }}
                       </span>
                     </div>
@@ -349,9 +349,9 @@
                       max="30"
                       :disabled="esVisor"
                     />
-                    <p class="text-sm text-gray-600 basis-full sm:basis-auto">
+                    <p class="text-sm text-texto-secundario basis-full sm:basis-auto">
                       Las cuotas tendrán
-                      <strong class="text-gray-900">{{ configDiasGracia.dias_gracia }}</strong>
+                      <strong class="text-texto-fuerte">{{ configDiasGracia.dias_gracia }}</strong>
                       {{ configDiasGracia.dias_gracia === 1 ? 'día' : 'días' }} de gracia.
                     </p>
                   </div>
@@ -434,7 +434,7 @@
                         step="0.5"
                         :disabled="esVisor"
                       />
-                      <p class="text-sm text-gray-600">
+                      <p class="text-sm text-texto-secundario">
                         <template v-if="configPrestamos.tasa_mora > 0">
                           Mora diaria ≈ <strong>{{ (configPrestamos.tasa_mora / 30).toFixed(3) }}%</strong> del capital pendiente por día de atraso.
                         </template>
@@ -455,7 +455,7 @@
 
                         <div v-if="configPrestamos.dias_gracia_activo" class="space-y-2">
                           <div class="flex items-center gap-3">
-                            <label class="text-sm font-semibold text-gray-700">Días</label>
+                            <label class="text-sm font-semibold text-texto-medio">Días</label>
                             <!-- text-base: con menos de 16 px iOS hace zoom al enfocar -->
                             <input
                               v-model.number="configPrestamos.dias_gracia"
@@ -466,7 +466,7 @@
                               :disabled="esVisor"
                             />
                           </div>
-                          <p class="text-sm text-gray-600">
+                          <p class="text-sm text-texto-secundario">
                             La mora de una cuota del préstamo empieza a contar
                             <strong>{{ Number(configPrestamos.dias_gracia) || 0 }}</strong>
                             {{ Number(configPrestamos.dias_gracia) === 1 ? 'día' : 'días' }} después de su fecha.
@@ -478,7 +478,7 @@
                             </template>
                           </p>
                         </div>
-                        <p v-else class="text-sm text-gray-600">
+                        <p v-else class="text-sm text-texto-secundario">
                           Apagado: la mora corre desde el día siguiente a la fecha de cada cuota.
                         </p>
                       </div>
@@ -565,7 +565,7 @@
                                   <span class="cfg-select__titulo">{{ tipo.label }}</span>
                                   <span class="cfg-select__ayuda">{{ tipo.ayuda }}</span>
                                 </span>
-                                <CheckIcon v-if="configSanciones.tipo === tipo.value" class="w-4 h-4 shrink-0 text-[color:var(--brand-primary)]" aria-hidden="true" />
+                                <CheckIcon v-if="configSanciones.tipo === tipo.value" class="w-4 h-4 shrink-0 text-[color:var(--brand-primary)] oscuro:text-marca-tinta" aria-hidden="true" />
                               </li>
                             </ul>
                           </Transition>
@@ -621,7 +621,7 @@
                       <!-- Por día -->
                       <div v-if="configSanciones.tipo === 'diaria'">
                         <label class="ds-label" for="cfg-valor-dia">Valor por día de mora</label>
-                        <p class="text-xs text-gray-500 -mt-1 mb-2">Por cada día de atraso se suma este valor a la sanción.</p>
+                        <p class="text-xs text-texto-suave -mt-1 mb-2">Por cada día de atraso se suma este valor a la sanción.</p>
                         <div class="cfg-money">
                           <span class="cfg-money__signo" aria-hidden="true">$</span>
                           <input
@@ -647,7 +647,7 @@
                         <label class="ds-label">Multa según cuotas vencidas</label>
                         <div class="space-y-2">
                           <div v-for="(nivel, index) in configSanciones.niveles" :key="index" class="flex items-center gap-2.5">
-                            <span class="text-sm text-gray-600 w-20 shrink-0 font-medium">
+                            <span class="text-sm text-texto-secundario w-20 shrink-0 font-medium">
                               {{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}
                             </span>
                             <div class="cfg-money flex-1 max-w-[150px]">
@@ -731,7 +731,7 @@
                     >
                       <div v-if="configSanciones.interesesAdicionales.activo" class="cfg-card__body">
                         <div class="flex flex-wrap items-center gap-2 text-sm">
-                          <span class="text-gray-600 font-medium">Cada</span>
+                          <span class="text-texto-secundario font-medium">Cada</span>
                           <input
                             v-model.number="configSanciones.interesesAdicionales.dias"
                             type="number"
@@ -740,7 +740,7 @@
                             class="ds-input w-20 text-center font-semibold"
                             :disabled="esVisor"
                           />
-                          <span class="text-gray-600 font-medium">días, sumar</span>
+                          <span class="text-texto-secundario font-medium">días, sumar</span>
                           <div class="cfg-money w-full sm:w-40">
                             <span class="cfg-money__signo" aria-hidden="true">$</span>
                             <input
@@ -802,7 +802,7 @@
                     >
                       <div v-if="configSanciones.devolucion.activo" class="cfg-card__body space-y-4">
                         <div class="flex flex-wrap items-center gap-2 text-sm">
-                          <span class="text-gray-600 font-medium">Después de</span>
+                          <span class="text-texto-secundario font-medium">Después de</span>
                           <input
                             v-model.number="configSanciones.devolucion.cuotasLimite"
                             type="number"
@@ -811,7 +811,7 @@
                             class="ds-input w-20 text-center font-semibold"
                             :disabled="esVisor"
                           />
-                          <span class="text-gray-600 font-medium">cuotas, multa del</span>
+                          <span class="text-texto-secundario font-medium">cuotas, multa del</span>
                           <input
                             v-model.number="configSanciones.devolucion.porcentajeMulta"
                             type="number"
@@ -820,7 +820,7 @@
                             class="ds-input w-20 text-center font-semibold"
                             :disabled="esVisor"
                           />
-                          <span class="text-gray-600 font-medium">%</span>
+                          <span class="text-texto-secundario font-medium">%</span>
                         </div>
                         <label class="cfg-switch" @click.prevent.stop="toggleSinUtilidades">
                           <input
@@ -893,10 +893,35 @@
                         </span>
                       </span>
                     </label>
-                    <p class="text-xs leading-relaxed text-gray-500">
+                    <p class="text-xs leading-relaxed text-texto-suave">
                       Se calculan igual que en el cierre, cada vez que abres la natillera (como mucho cada
                       3 horas) o calculas el cierre.
                     </p>
+                  </div>
+                </section>
+
+                <section class="cfg-card">
+                  <header class="cfg-card__header">
+                    <span class="cfg-card__icono"><ScaleIcon class="w-5 h-5" /></span>
+                    <div class="min-w-0">
+                      <p class="cfg-card__overline">Sus cuotas</p>
+                      <h3 class="cfg-card__titulo">Detalle de sanciones</h3>
+                      <p class="cfg-card__sub">Cómo se calculó cada sanción y cómo las maneja la natillera.</p>
+                    </div>
+                  </header>
+                  <div class="cfg-card__body space-y-3">
+                    <label class="cfg-switch">
+                      <input type="checkbox" v-model="configPortal.mostrar_sanciones" class="cfg-switch__input" :disabled="esVisor" />
+                      <span class="cfg-switch__pista" aria-hidden="true"></span>
+                      <span class="min-w-0">
+                        <span class="cfg-switch__titulo">Mostrar el detalle de sus sanciones</span>
+                        <span class="cfg-switch__ayuda">
+                          {{ configPortal.mostrar_sanciones
+                            ? 'Ve los días de retraso, la base, los intereses y lo pagado, y tus reglas de sanción explicadas.'
+                            : 'Solo ve el total que ha pagado en sanciones.' }}
+                        </span>
+                      </span>
+                    </label>
                   </div>
                 </section>
 
@@ -973,7 +998,7 @@
                     </div>
 
                     <div class="mb-3 flex items-center gap-2">
-                      <label for="admin-porcentaje" class="text-xs text-gray-600 whitespace-nowrap">Otro valor</label>
+                      <label for="admin-porcentaje" class="text-xs text-texto-secundario whitespace-nowrap">Otro valor</label>
                       <div class="relative flex-1">
                         <input
                           id="admin-porcentaje"
@@ -986,7 +1011,7 @@
                           class="ds-input w-full pr-8"
                           placeholder="0"
                         />
-                        <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">%</span>
+                        <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-texto-tenue">%</span>
                       </div>
                     </div>
 
@@ -1015,17 +1040,17 @@
                       v-if="Number(configCierre.administracion.porcentaje) > 0"
                       class="cfg-estimado mt-3"
                     >
-                      <div v-if="baseAdministracion.cargando" class="text-xs text-gray-500">
+                      <div v-if="baseAdministracion.cargando" class="text-xs text-texto-suave">
                         Calculando con los datos de hoy…
                       </div>
                       <template v-else-if="baseAdministracion.total > 0">
                         <div class="flex items-baseline justify-between gap-3">
-                          <span class="text-xs text-gray-600">Hoy serían</span>
-                          <span class="font-display text-lg font-extrabold tabular-nums text-[color:var(--brand-primary)]">
+                          <span class="text-xs text-texto-secundario">Hoy serían</span>
+                          <span class="font-display text-lg font-extrabold tabular-nums text-[color:var(--brand-primary)] oscuro:text-marca-tinta">
                             ${{ formatMoney(montoAdministracionEstimado) }}
                           </span>
                         </div>
-                        <p class="mt-1 text-[11px] leading-snug text-gray-500">
+                        <p class="mt-1 text-[11px] leading-snug text-texto-suave">
                           {{ configCierre.administracion.porcentaje }}% de
                           ${{ formatMoney(baseAdministracion.total) }}
                           ({{ configCierre.administracion.base === 'total'
@@ -1035,7 +1060,7 @@
                           para repartir entre los socios.
                         </p>
                       </template>
-                      <p v-else class="text-xs text-gray-500">
+                      <p v-else class="text-xs text-texto-suave">
                         Todavía no hay nada recogido para estimarlo.
                       </p>
                     </div>
@@ -1084,8 +1109,8 @@
                       class="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                     >
                       <div class="min-w-0">
-                        <h4 class="font-semibold text-gray-800 text-sm">{{ tipo.label }}</h4>
-                        <p class="text-xs text-gray-500 mt-0.5">{{ tipo.descripcion }}</p>
+                        <h4 class="font-semibold text-texto text-sm">{{ tipo.label }}</h4>
+                        <p class="text-xs text-texto-suave mt-0.5">{{ tipo.descripcion }}</p>
                       </div>
                       <SwitchSegmentado
                         v-model="configCierre.actividades[tipo.valor]"
@@ -1158,7 +1183,7 @@
                   <p
                     v-show="tooltipUtilidadesAdicionales"
                     id="ayuda-utilidades-adicionales"
-                    class="mb-4 rounded-lg bg-emerald-50 px-3 py-2 text-xs leading-snug text-emerald-900"
+                    class="mb-4 rounded-lg bg-emerald-50 oscuro:bg-emerald-500/15 px-3 py-2 text-xs leading-snug text-emerald-900 oscuro:text-emerald-300"
                   >
                     Son las que se ingresan desde el <strong>Cuadre de Caja</strong> con
                     <em>Ingreso → Utilidades</em> (donaciones, intereses extra, ajustes a favor
@@ -1175,7 +1200,7 @@
                 </div>
                 </div>
 
-              <div class="flex justify-end pt-4 border-t border-gray-200 mt-4">
+              <div class="flex justify-end pt-4 border-t border-borde mt-4">
           <button
             @click="guardarConfigBasica"
             :disabled="guardandoBasica || esVisor"
@@ -1201,7 +1226,7 @@
             'w-full relative overflow-hidden rounded-2xl border transition-all duration-300 touch-manipulation',
           seccionActiva === 'mensajes'
               ? 'bg-[var(--brand-primary)] border-transparent shadow-lg'
-              : 'bg-white border-gray-200 shadow-sm hover:border-gray-300 hover:shadow-md'
+              : 'bg-superficie-tarjeta border-borde shadow-sm hover:border-borde-fuerte hover:shadow-md'
           ]"
         >
           <div class="relative p-4 sm:p-5 flex items-center gap-4">
@@ -1209,15 +1234,15 @@
               <ChatBubbleLeftRightIcon :class="['w-6 h-6', seccionActiva === 'mensajes' ? 'text-white' : 'text-[var(--brand-primary)]']" />
           </div>
             <div class="flex-1 text-left min-w-0">
-              <h3 :class="['text-lg font-display font-bold', seccionActiva === 'mensajes' ? 'text-white' : 'text-gray-800']">
+              <h3 :class="['text-lg font-display font-bold', seccionActiva === 'mensajes' ? 'text-white' : 'text-texto']">
             Mensajes
           </h3>
-              <p :class="['text-sm', seccionActiva === 'mensajes' ? 'text-white/80' : 'text-gray-500']">
+              <p :class="['text-sm', seccionActiva === 'mensajes' ? 'text-white/80' : 'text-texto-suave']">
                 Personaliza los mensajes de WhatsApp
           </p>
           </div>
-            <div :class="['w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0', seccionActiva === 'mensajes' ? 'bg-white/20' : 'bg-gray-100']">
-              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'mensajes' ? 'text-white rotate-180' : 'text-gray-500']" />
+            <div :class="['w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0', seccionActiva === 'mensajes' ? 'bg-white/20' : 'bg-superficie-hundida']">
+              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'mensajes' ? 'text-white rotate-180' : 'text-texto-suave']" />
           </div>
         </div>
       </button>
@@ -1231,17 +1256,17 @@
       leave-from-class="opacity-100 translate-y-0"
           leave-to-class="opacity-0 -translate-y-2"
         >
-          <div v-if="seccionActiva === 'mensajes'" class="relative overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-200 ml-4 sm:ml-6">
+          <div v-if="seccionActiva === 'mensajes'" class="relative overflow-hidden bg-superficie-tarjeta rounded-2xl shadow-sm border border-borde ml-4 sm:ml-6">
             <div class="absolute top-0 left-0 w-1 h-full bg-[var(--brand-primary)]"></div>
             <div class="relative p-5 sm:p-6">
               <!-- Tabs para tipos de mensajes - Destacado -->
-              <div class="mb-6 bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-xl border-2 border-gray-200 shadow-lg p-4">
+              <div class="mb-6 bg-gradient-to-br from-superficie-suave via-superficie-tarjeta to-superficie-suave rounded-xl border-2 border-borde shadow-lg p-4">
                 <div class="mb-2">
-                  <h3 class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <h3 class="text-sm font-bold text-texto-medio flex items-center gap-2">
                     <span class="w-2 h-2 bg-green-500 rounded-full"></span>
                     Tipo de Mensaje
                   </h3>
-                  <p class="text-xs text-gray-500 mt-0.5">Selecciona el tipo de mensaje que deseas configurar</p>
+                  <p class="text-xs text-texto-suave mt-0.5">Selecciona el tipo de mensaje que deseas configurar</p>
                 </div>
                 <div class="grid grid-cols-2 sm:flex sm:flex-nowrap gap-2 overflow-visible">
                   <button
@@ -1249,8 +1274,8 @@
                     :class="[
                       'px-3 sm:px-5 py-2.5 sm:py-3 text-sm font-semibold transition-all rounded-lg shadow-sm border-2 flex items-center justify-center gap-1.5 sm:gap-2',
                       tipoMensajeActivo === 'individual'
-                        ? 'border-green-500 text-green-700 bg-green-50 shadow-md sm:scale-105'
-                        : 'border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow'
+                        ? 'border-green-500 text-green-700 oscuro:text-green-300 bg-green-50 oscuro:bg-green-500/15 shadow-md sm:scale-105'
+                        : 'border-borde text-texto-suave hover:text-texto-medio hover:bg-superficie-suave hover:border-borde-fuerte hover:shadow'
                     ]"
                   >
                     <UserIcon class="w-5 h-5 flex-shrink-0" />
@@ -1261,8 +1286,8 @@
                     :class="[
                       'px-3 sm:px-5 py-2.5 sm:py-3 text-sm font-semibold transition-all rounded-lg shadow-sm border-2 flex items-center justify-center gap-1.5 sm:gap-2',
                       tipoMensajeActivo === 'general'
-                        ? 'border-purple-500 text-purple-700 bg-purple-50 shadow-md sm:scale-105'
-                        : 'border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow'
+                        ? 'border-purple-500 text-purple-700 oscuro:text-purple-300 bg-purple-50 oscuro:bg-purple-500/15 shadow-md sm:scale-105'
+                        : 'border-borde text-texto-suave hover:text-texto-medio hover:bg-superficie-suave hover:border-borde-fuerte hover:shadow'
                     ]"
                   >
                     <UsersIcon class="w-5 h-5 flex-shrink-0" />
@@ -1273,8 +1298,8 @@
                     :class="[
                       'px-3 sm:px-5 py-2.5 sm:py-3 text-sm font-semibold transition-all rounded-lg shadow-sm border-2 flex items-center justify-center gap-1.5 sm:gap-2',
                       tipoMensajeActivo === 'mora'
-                        ? 'border-red-500 text-red-700 bg-red-50 shadow-md sm:scale-105'
-                        : 'border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow'
+                        ? 'border-red-500 text-red-700 oscuro:text-red-300 bg-red-50 oscuro:bg-red-500/15 shadow-md sm:scale-105'
+                        : 'border-borde text-texto-suave hover:text-texto-medio hover:bg-superficie-suave hover:border-borde-fuerte hover:shadow'
                     ]"
                   >
                     <ExclamationTriangleIcon class="w-5 h-5 flex-shrink-0" />
@@ -1285,8 +1310,8 @@
                     :class="[
                       'px-3 sm:px-5 py-2.5 sm:py-3 text-sm font-semibold transition-all rounded-lg shadow-sm border-2 flex items-center justify-center gap-1.5 sm:gap-2',
                       tipoMensajeActivo === 'pendiente'
-                        ? 'border-amber-500 text-amber-700 bg-amber-50 shadow-md sm:scale-105'
-                        : 'border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow'
+                        ? 'border-amber-500 text-amber-700 oscuro:text-amber-300 bg-amber-50 oscuro:bg-amber-500/15 shadow-md sm:scale-105'
+                        : 'border-borde text-texto-suave hover:text-texto-medio hover:bg-superficie-suave hover:border-borde-fuerte hover:shadow'
                     ]"
                   >
                     <ClockIcon class="w-5 h-5 flex-shrink-0" />
@@ -1299,35 +1324,35 @@
               <div class="space-y-4">
                 <!-- Mensaje Individual -->
                 <div v-if="tipoMensajeActivo === 'individual'" class="space-y-4">
-                  <p class="text-xs text-gray-500">
+                  <p class="text-xs text-texto-suave">
                     Mensaje enviado a cada socio individualmente.
                   </p>
                   
                   <!-- Variables disponibles para Individual -->
-                  <div class="p-3 bg-green-50/50 rounded-lg border border-green-200">
-                    <h5 class="text-xs font-semibold text-green-700 mb-2">Variables Disponibles</h5>
+                  <div class="p-3 bg-green-50/50 oscuro:bg-green-500/15 rounded-lg border border-green-200 oscuro:border-green-500/30">
+                    <h5 class="text-xs font-semibold text-green-700 oscuro:text-green-300 mb-2">Variables Disponibles</h5>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <button 
                         type="button"
                         @click="insertarVariable('nombre')"
-                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all text-left group"
+                        class="flex items-center justify-between p-2.5 bg-superficie-tarjeta rounded-lg border border-green-200 oscuro:border-green-500/30 hover:border-green-300 oscuro:hover:border-green-500/30 hover:shadow-sm transition-all text-left group"
                       >
                         <div>
-                          <code class="text-xs font-mono text-blue-600 font-semibold">{{nombre}}</code>
-                          <p class="text-[10px] text-gray-500 mt-0.5">Nombre del socio</p>
+                          <code class="text-xs font-mono text-blue-600 oscuro:text-blue-300 font-semibold">{{nombre}}</code>
+                          <p class="text-[10px] text-texto-suave mt-0.5">Nombre del socio</p>
                         </div>
-                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-green-600 transition-colors" />
+                        <PlusIcon class="w-4 h-4 text-texto-tenue group-hover:text-green-600 oscuro:group-hover:text-green-300 transition-colors" />
                       </button>
                       <button 
                         type="button"
                         @click="insertarVariable('monto')"
-                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all text-left group"
+                        class="flex items-center justify-between p-2.5 bg-superficie-tarjeta rounded-lg border border-green-200 oscuro:border-green-500/30 hover:border-green-300 oscuro:hover:border-green-500/30 hover:shadow-sm transition-all text-left group"
                       >
                         <div>
-                          <code class="text-xs font-mono text-green-600 font-semibold">{{monto}}</code>
-                          <p class="text-[10px] text-gray-500 mt-0.5">Monto de la cuota</p>
+                          <code class="text-xs font-mono text-green-600 oscuro:text-green-300 font-semibold">{{monto}}</code>
+                          <p class="text-[10px] text-texto-suave mt-0.5">Monto de la cuota</p>
                         </div>
-                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-green-600 transition-colors" />
+                        <PlusIcon class="w-4 h-4 text-texto-tenue group-hover:text-green-600 oscuro:group-hover:text-green-300 transition-colors" />
                       </button>
                     </div>
                   </div>
@@ -1339,15 +1364,15 @@
                     class="input-field min-h-[140px] font-mono text-sm"
                     placeholder="Escribe el mensaje individual..."
                   ></textarea>
-                  <div class="p-3 bg-green-50/50 border border-green-200 rounded-lg">
-                    <p class="text-xs font-semibold text-green-700 mb-1.5">Vista previa</p>
-                    <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ vistaPreviewIndividual }}</p>
+                  <div class="p-3 bg-green-50/50 oscuro:bg-green-500/15 border border-green-200 oscuro:border-green-500/30 rounded-lg">
+                    <p class="text-xs font-semibold text-green-700 oscuro:text-green-300 mb-1.5">Vista previa</p>
+                    <p class="text-sm text-texto-medio whitespace-pre-wrap leading-relaxed">{{ vistaPreviewIndividual }}</p>
                   </div>
                 </div>
 
                 <!-- Mensaje General -->
                 <div v-if="tipoMensajeActivo === 'general'" class="space-y-4">
-                  <p class="text-xs text-gray-500">
+                  <p class="text-xs text-texto-suave">
                     Mensaje que se puede enviar a todos los socios a la vez. No usa variables personalizadas.
                   </p>
                   <textarea
@@ -1356,101 +1381,101 @@
                     class="input-field min-h-[140px] font-mono text-sm"
                     placeholder="Escribe el mensaje general..."
                   ></textarea>
-                  <div class="p-3 bg-purple-50/50 border border-purple-200 rounded-lg">
-                    <p class="text-xs font-semibold text-purple-700 mb-1.5">Vista previa</p>
-                    <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ mensajeGeneral }}</p>
+                  <div class="p-3 bg-purple-50/50 oscuro:bg-purple-500/15 border border-purple-200 oscuro:border-purple-500/30 rounded-lg">
+                    <p class="text-xs font-semibold text-purple-700 oscuro:text-purple-300 mb-1.5">Vista previa</p>
+                    <p class="text-sm text-texto-medio whitespace-pre-wrap leading-relaxed">{{ mensajeGeneral }}</p>
                   </div>
                 </div>
 
                 <!-- Mensaje Cuota en Mora -->
                 <div v-if="tipoMensajeActivo === 'mora'" class="space-y-4">
-                  <p class="text-xs text-gray-500">
+                  <p class="text-xs text-texto-suave">
                     Mensaje que se envía cuando una cuota está en mora.
                   </p>
                   
                   <!-- Variables disponibles para Cuota en Mora -->
-                  <div class="p-3 bg-red-50/50 rounded-lg border border-red-200">
-                    <h5 class="text-xs font-semibold text-red-700 mb-2">Variables Disponibles</h5>
+                  <div class="p-3 bg-red-50/50 oscuro:bg-red-500/15 rounded-lg border border-red-200 oscuro:border-red-500/30">
+                    <h5 class="text-xs font-semibold text-red-700 oscuro:text-red-300 mb-2">Variables Disponibles</h5>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <button 
                         @click="insertarVariableCuota('nombre', 'mensajeCuotaMora')"
-                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-red-200 hover:border-red-300 hover:shadow-sm transition-all text-left group"
+                        class="flex items-center justify-between p-2.5 bg-superficie-tarjeta rounded-lg border border-red-200 oscuro:border-red-500/30 hover:border-red-300 oscuro:hover:border-red-500/30 hover:shadow-sm transition-all text-left group"
                       >
                         <div>
-                          <code class="text-xs font-mono text-blue-600 font-semibold">{{nombre}}</code>
-                          <p class="text-[10px] text-gray-500 mt-0.5">Nombre del socio</p>
+                          <code class="text-xs font-mono text-blue-600 oscuro:text-blue-300 font-semibold">{{nombre}}</code>
+                          <p class="text-[10px] text-texto-suave mt-0.5">Nombre del socio</p>
                         </div>
-                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-colors" />
+                        <PlusIcon class="w-4 h-4 text-texto-tenue group-hover:text-red-600 oscuro:group-hover:text-red-300 transition-colors" />
                       </button>
                       <button 
                         @click="insertarVariableCuota('mes', 'mensajeCuotaMora')"
-                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-red-200 hover:border-red-300 hover:shadow-sm transition-all text-left group"
+                        class="flex items-center justify-between p-2.5 bg-superficie-tarjeta rounded-lg border border-red-200 oscuro:border-red-500/30 hover:border-red-300 oscuro:hover:border-red-500/30 hover:shadow-sm transition-all text-left group"
                       >
                         <div>
-                          <code class="text-xs font-mono text-green-600 font-semibold">{{mes}}</code>
-                          <p class="text-[10px] text-gray-500 mt-0.5">Mes de la cuota</p>
+                          <code class="text-xs font-mono text-green-600 oscuro:text-green-300 font-semibold">{{mes}}</code>
+                          <p class="text-[10px] text-texto-suave mt-0.5">Mes de la cuota</p>
                         </div>
-                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-colors" />
+                        <PlusIcon class="w-4 h-4 text-texto-tenue group-hover:text-red-600 oscuro:group-hover:text-red-300 transition-colors" />
                       </button>
                       <button 
                         @click="insertarVariableCuota('anio', 'mensajeCuotaMora')"
-                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-red-200 hover:border-red-300 hover:shadow-sm transition-all text-left group"
+                        class="flex items-center justify-between p-2.5 bg-superficie-tarjeta rounded-lg border border-red-200 oscuro:border-red-500/30 hover:border-red-300 oscuro:hover:border-red-500/30 hover:shadow-sm transition-all text-left group"
                       >
                         <div>
-                          <code class="text-xs font-mono text-green-600 font-semibold">{{anio}}</code>
-                          <p class="text-[10px] text-gray-500 mt-0.5">Año de la cuota</p>
+                          <code class="text-xs font-mono text-green-600 oscuro:text-green-300 font-semibold">{{anio}}</code>
+                          <p class="text-[10px] text-texto-suave mt-0.5">Año de la cuota</p>
                         </div>
-                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-colors" />
+                        <PlusIcon class="w-4 h-4 text-texto-tenue group-hover:text-red-600 oscuro:group-hover:text-red-300 transition-colors" />
                       </button>
                       <button 
                         @click="insertarVariableCuota('valor_cuota', 'mensajeCuotaMora')"
-                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-red-200 hover:border-red-300 hover:shadow-sm transition-all text-left group"
+                        class="flex items-center justify-between p-2.5 bg-superficie-tarjeta rounded-lg border border-red-200 oscuro:border-red-500/30 hover:border-red-300 oscuro:hover:border-red-500/30 hover:shadow-sm transition-all text-left group"
                       >
                         <div>
-                          <code class="text-xs font-mono text-green-600 font-semibold">{{valor_cuota}}</code>
-                          <p class="text-[10px] text-gray-500 mt-0.5">Valor de la cuota</p>
+                          <code class="text-xs font-mono text-green-600 oscuro:text-green-300 font-semibold">{{valor_cuota}}</code>
+                          <p class="text-[10px] text-texto-suave mt-0.5">Valor de la cuota</p>
                         </div>
-                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-colors" />
+                        <PlusIcon class="w-4 h-4 text-texto-tenue group-hover:text-red-600 oscuro:group-hover:text-red-300 transition-colors" />
                       </button>
                       <button 
                         @click="insertarVariableCuota('sancion', 'mensajeCuotaMora')"
-                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-red-200 hover:border-red-300 hover:shadow-sm transition-all text-left group"
+                        class="flex items-center justify-between p-2.5 bg-superficie-tarjeta rounded-lg border border-red-200 oscuro:border-red-500/30 hover:border-red-300 oscuro:hover:border-red-500/30 hover:shadow-sm transition-all text-left group"
                       >
                         <div>
-                          <code class="text-xs font-mono text-orange-600 font-semibold">{{sancion}}</code>
-                          <p class="text-[10px] text-gray-500 mt-0.5">Sanción aplicada</p>
+                          <code class="text-xs font-mono text-orange-600 oscuro:text-orange-300 font-semibold">{{sancion}}</code>
+                          <p class="text-[10px] text-texto-suave mt-0.5">Sanción aplicada</p>
                         </div>
-                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-colors" />
+                        <PlusIcon class="w-4 h-4 text-texto-tenue group-hover:text-red-600 oscuro:group-hover:text-red-300 transition-colors" />
                       </button>
                       <button 
                         @click="insertarVariableCuota('total', 'mensajeCuotaMora')"
-                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-red-200 hover:border-red-300 hover:shadow-sm transition-all text-left group"
+                        class="flex items-center justify-between p-2.5 bg-superficie-tarjeta rounded-lg border border-red-200 oscuro:border-red-500/30 hover:border-red-300 oscuro:hover:border-red-500/30 hover:shadow-sm transition-all text-left group"
                       >
                         <div>
-                          <code class="text-xs font-mono text-purple-600 font-semibold">{{total}}</code>
-                          <p class="text-[10px] text-gray-500 mt-0.5">Total a pagar (cuota + sanción)</p>
+                          <code class="text-xs font-mono text-purple-600 oscuro:text-purple-300 font-semibold">{{total}}</code>
+                          <p class="text-[10px] text-texto-suave mt-0.5">Total a pagar (cuota + sanción)</p>
                         </div>
-                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-colors" />
+                        <PlusIcon class="w-4 h-4 text-texto-tenue group-hover:text-red-600 oscuro:group-hover:text-red-300 transition-colors" />
                       </button>
                       <button 
                         @click="insertarVariableCuota('fecha_vencimiento', 'mensajeCuotaMora')"
-                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-red-200 hover:border-red-300 hover:shadow-sm transition-all text-left group"
+                        class="flex items-center justify-between p-2.5 bg-superficie-tarjeta rounded-lg border border-red-200 oscuro:border-red-500/30 hover:border-red-300 oscuro:hover:border-red-500/30 hover:shadow-sm transition-all text-left group"
                       >
                         <div>
-                          <code class="text-xs font-mono text-gray-600 font-semibold">{{fecha_vencimiento}}</code>
-                          <p class="text-[10px] text-gray-500 mt-0.5">Fecha de vencimiento</p>
+                          <code class="text-xs font-mono text-texto-secundario font-semibold">{{fecha_vencimiento}}</code>
+                          <p class="text-[10px] text-texto-suave mt-0.5">Fecha de vencimiento</p>
                         </div>
-                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-colors" />
+                        <PlusIcon class="w-4 h-4 text-texto-tenue group-hover:text-red-600 oscuro:group-hover:text-red-300 transition-colors" />
                       </button>
                       <button 
                         @click="insertarVariableCuota('dias_mora', 'mensajeCuotaMora')"
-                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-red-200 hover:border-red-300 hover:shadow-sm transition-all text-left group"
+                        class="flex items-center justify-between p-2.5 bg-superficie-tarjeta rounded-lg border border-red-200 oscuro:border-red-500/30 hover:border-red-300 oscuro:hover:border-red-500/30 hover:shadow-sm transition-all text-left group"
                       >
                         <div>
-                          <code class="text-xs font-mono text-red-600 font-semibold">{{dias_mora}}</code>
-                          <p class="text-[10px] text-gray-500 mt-0.5">Días en mora</p>
+                          <code class="text-xs font-mono text-red-600 oscuro:text-red-300 font-semibold">{{dias_mora}}</code>
+                          <p class="text-[10px] text-texto-suave mt-0.5">Días en mora</p>
                         </div>
-                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-colors" />
+                        <PlusIcon class="w-4 h-4 text-texto-tenue group-hover:text-red-600 oscuro:group-hover:text-red-300 transition-colors" />
                       </button>
                     </div>
                   </div>
@@ -1462,81 +1487,81 @@
                     class="input-field min-h-[140px] font-mono text-sm"
                     placeholder="Escribe el mensaje para cuota en mora..."
                   ></textarea>
-                  <div class="p-3 bg-red-50/50 border border-red-200 rounded-lg">
-                    <p class="text-xs font-semibold text-red-700 mb-1.5">Vista previa</p>
-                    <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ vistaPreviewCuotaMora }}</p>
+                  <div class="p-3 bg-red-50/50 oscuro:bg-red-500/15 border border-red-200 oscuro:border-red-500/30 rounded-lg">
+                    <p class="text-xs font-semibold text-red-700 oscuro:text-red-300 mb-1.5">Vista previa</p>
+                    <p class="text-sm text-texto-medio whitespace-pre-wrap leading-relaxed">{{ vistaPreviewCuotaMora }}</p>
                   </div>
                 </div>
 
                 <!-- Mensaje Cuota Pendiente -->
                 <div v-if="tipoMensajeActivo === 'pendiente'" class="space-y-4">
-                  <p class="text-xs text-gray-500">
+                  <p class="text-xs text-texto-suave">
                     Mensaje que se envía cuando una cuota está pendiente.
                   </p>
                   
                   <!-- Variables disponibles para Cuota Pendiente -->
-                  <div class="p-3 bg-amber-50/50 rounded-lg border border-amber-200">
-                    <h5 class="text-xs font-semibold text-amber-700 mb-2">Variables Disponibles</h5>
+                  <div class="p-3 bg-amber-50/50 oscuro:bg-amber-500/15 rounded-lg border border-amber-200 oscuro:border-amber-500/30">
+                    <h5 class="text-xs font-semibold text-amber-700 oscuro:text-amber-300 mb-2">Variables Disponibles</h5>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <button 
                         @click="insertarVariableCuota('nombre', 'mensajeCuotaPendiente')"
-                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-amber-200 hover:border-amber-300 hover:shadow-sm transition-all text-left group"
+                        class="flex items-center justify-between p-2.5 bg-superficie-tarjeta rounded-lg border border-amber-200 oscuro:border-amber-500/30 hover:border-amber-300 oscuro:hover:border-amber-500/30 hover:shadow-sm transition-all text-left group"
                       >
                         <div>
-                          <code class="text-xs font-mono text-blue-600 font-semibold">{{nombre}}</code>
-                          <p class="text-[10px] text-gray-500 mt-0.5">Nombre del socio</p>
+                          <code class="text-xs font-mono text-blue-600 oscuro:text-blue-300 font-semibold">{{nombre}}</code>
+                          <p class="text-[10px] text-texto-suave mt-0.5">Nombre del socio</p>
                         </div>
-                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-amber-600 transition-colors" />
+                        <PlusIcon class="w-4 h-4 text-texto-tenue group-hover:text-amber-600 oscuro:group-hover:text-amber-300 transition-colors" />
                       </button>
                       <button 
                         @click="insertarVariableCuota('mes', 'mensajeCuotaPendiente')"
-                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-amber-200 hover:border-amber-300 hover:shadow-sm transition-all text-left group"
+                        class="flex items-center justify-between p-2.5 bg-superficie-tarjeta rounded-lg border border-amber-200 oscuro:border-amber-500/30 hover:border-amber-300 oscuro:hover:border-amber-500/30 hover:shadow-sm transition-all text-left group"
                       >
                         <div>
-                          <code class="text-xs font-mono text-green-600 font-semibold">{{mes}}</code>
-                          <p class="text-[10px] text-gray-500 mt-0.5">Mes de la cuota</p>
+                          <code class="text-xs font-mono text-green-600 oscuro:text-green-300 font-semibold">{{mes}}</code>
+                          <p class="text-[10px] text-texto-suave mt-0.5">Mes de la cuota</p>
                         </div>
-                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-amber-600 transition-colors" />
+                        <PlusIcon class="w-4 h-4 text-texto-tenue group-hover:text-amber-600 oscuro:group-hover:text-amber-300 transition-colors" />
                       </button>
                       <button 
                         @click="insertarVariableCuota('anio', 'mensajeCuotaPendiente')"
-                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-amber-200 hover:border-amber-300 hover:shadow-sm transition-all text-left group"
+                        class="flex items-center justify-between p-2.5 bg-superficie-tarjeta rounded-lg border border-amber-200 oscuro:border-amber-500/30 hover:border-amber-300 oscuro:hover:border-amber-500/30 hover:shadow-sm transition-all text-left group"
                       >
                         <div>
-                          <code class="text-xs font-mono text-green-600 font-semibold">{{anio}}</code>
-                          <p class="text-[10px] text-gray-500 mt-0.5">Año de la cuota</p>
+                          <code class="text-xs font-mono text-green-600 oscuro:text-green-300 font-semibold">{{anio}}</code>
+                          <p class="text-[10px] text-texto-suave mt-0.5">Año de la cuota</p>
                         </div>
-                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-amber-600 transition-colors" />
+                        <PlusIcon class="w-4 h-4 text-texto-tenue group-hover:text-amber-600 oscuro:group-hover:text-amber-300 transition-colors" />
                       </button>
                       <button 
                         @click="insertarVariableCuota('valor_cuota', 'mensajeCuotaPendiente')"
-                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-amber-200 hover:border-amber-300 hover:shadow-sm transition-all text-left group"
+                        class="flex items-center justify-between p-2.5 bg-superficie-tarjeta rounded-lg border border-amber-200 oscuro:border-amber-500/30 hover:border-amber-300 oscuro:hover:border-amber-500/30 hover:shadow-sm transition-all text-left group"
                       >
                         <div>
-                          <code class="text-xs font-mono text-green-600 font-semibold">{{valor_cuota}}</code>
-                          <p class="text-[10px] text-gray-500 mt-0.5">Valor de la cuota</p>
+                          <code class="text-xs font-mono text-green-600 oscuro:text-green-300 font-semibold">{{valor_cuota}}</code>
+                          <p class="text-[10px] text-texto-suave mt-0.5">Valor de la cuota</p>
                         </div>
-                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-amber-600 transition-colors" />
+                        <PlusIcon class="w-4 h-4 text-texto-tenue group-hover:text-amber-600 oscuro:group-hover:text-amber-300 transition-colors" />
                       </button>
                       <button 
                         @click="insertarVariableCuota('total', 'mensajeCuotaPendiente')"
-                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-amber-200 hover:border-amber-300 hover:shadow-sm transition-all text-left group"
+                        class="flex items-center justify-between p-2.5 bg-superficie-tarjeta rounded-lg border border-amber-200 oscuro:border-amber-500/30 hover:border-amber-300 oscuro:hover:border-amber-500/30 hover:shadow-sm transition-all text-left group"
                       >
                         <div>
-                          <code class="text-xs font-mono text-purple-600 font-semibold">{{total}}</code>
-                          <p class="text-[10px] text-gray-500 mt-0.5">Total a pagar</p>
+                          <code class="text-xs font-mono text-purple-600 oscuro:text-purple-300 font-semibold">{{total}}</code>
+                          <p class="text-[10px] text-texto-suave mt-0.5">Total a pagar</p>
                         </div>
-                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-amber-600 transition-colors" />
+                        <PlusIcon class="w-4 h-4 text-texto-tenue group-hover:text-amber-600 oscuro:group-hover:text-amber-300 transition-colors" />
                       </button>
                       <button 
                         @click="insertarVariableCuota('fecha_vencimiento', 'mensajeCuotaPendiente')"
-                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-amber-200 hover:border-amber-300 hover:shadow-sm transition-all text-left group"
+                        class="flex items-center justify-between p-2.5 bg-superficie-tarjeta rounded-lg border border-amber-200 oscuro:border-amber-500/30 hover:border-amber-300 oscuro:hover:border-amber-500/30 hover:shadow-sm transition-all text-left group"
                       >
                         <div>
-                          <code class="text-xs font-mono text-gray-600 font-semibold">{{fecha_vencimiento}}</code>
-                          <p class="text-[10px] text-gray-500 mt-0.5">Fecha de vencimiento</p>
+                          <code class="text-xs font-mono text-texto-secundario font-semibold">{{fecha_vencimiento}}</code>
+                          <p class="text-[10px] text-texto-suave mt-0.5">Fecha de vencimiento</p>
                         </div>
-                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-amber-600 transition-colors" />
+                        <PlusIcon class="w-4 h-4 text-texto-tenue group-hover:text-amber-600 oscuro:group-hover:text-amber-300 transition-colors" />
                       </button>
                     </div>
                   </div>
@@ -1548,15 +1573,15 @@
                     class="input-field min-h-[140px] font-mono text-sm"
                     placeholder="Escribe el mensaje para cuota pendiente..."
                   ></textarea>
-                  <div class="p-3 bg-amber-50/50 border border-amber-200 rounded-lg">
-                    <p class="text-xs font-semibold text-amber-700 mb-1.5">Vista previa</p>
-                    <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ vistaPreviewCuotaPendiente }}</p>
+                  <div class="p-3 bg-amber-50/50 oscuro:bg-amber-500/15 border border-amber-200 oscuro:border-amber-500/30 rounded-lg">
+                    <p class="text-xs font-semibold text-amber-700 oscuro:text-amber-300 mb-1.5">Vista previa</p>
+                    <p class="text-sm text-texto-medio whitespace-pre-wrap leading-relaxed">{{ vistaPreviewCuotaPendiente }}</p>
                   </div>
                 </div>
               </div>
 
               <!-- Botones -->
-              <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+              <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-borde">
                 <button @click="restaurarDefectoMensajes" :disabled="esVisor" class="ds-btn ds-btn--secondary">
             <ArrowPathIcon class="w-4 h-4" />
                   Restaurar
@@ -1583,7 +1608,7 @@
             'w-full relative overflow-hidden rounded-2xl border transition-all duration-300 touch-manipulation',
             seccionActiva === 'reasignar'
               ? 'bg-[var(--brand-primary)] border-transparent shadow-lg'
-              : 'bg-white border-gray-200 shadow-sm hover:border-gray-300 hover:shadow-md'
+              : 'bg-superficie-tarjeta border-borde shadow-sm hover:border-borde-fuerte hover:shadow-md'
           ]"
         >
           <div class="relative p-4 sm:p-5 flex items-center gap-4">
@@ -1591,15 +1616,15 @@
               <UserIcon :class="['w-6 h-6', seccionActiva === 'reasignar' ? 'text-white' : 'text-[var(--brand-primary)]']" />
             </div>
             <div class="flex-1 text-left min-w-0">
-              <h3 :class="['text-lg font-display font-bold', seccionActiva === 'reasignar' ? 'text-white' : 'text-gray-800']">
+              <h3 :class="['text-lg font-display font-bold', seccionActiva === 'reasignar' ? 'text-white' : 'text-texto']">
                 Reasignar Administrador
               </h3>
-              <p :class="['text-sm', seccionActiva === 'reasignar' ? 'text-white/80' : 'text-gray-500']">
+              <p :class="['text-sm', seccionActiva === 'reasignar' ? 'text-white/80' : 'text-texto-suave']">
                 Cambiar el administrador de esta natillera
               </p>
             </div>
-            <div :class="['w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0', seccionActiva === 'reasignar' ? 'bg-white/20' : 'bg-gray-100']">
-              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'reasignar' ? 'text-white rotate-180' : 'text-gray-500']" />
+            <div :class="['w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0', seccionActiva === 'reasignar' ? 'bg-white/20' : 'bg-superficie-hundida']">
+              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'reasignar' ? 'text-white rotate-180' : 'text-texto-suave']" />
             </div>
           </div>
         </button>
@@ -1613,24 +1638,24 @@
           leave-from-class="opacity-100 translate-y-0"
           leave-to-class="opacity-0 -translate-y-2"
         >
-          <div v-if="seccionActiva === 'reasignar'" class="relative overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-200 ml-4 sm:ml-6">
+          <div v-if="seccionActiva === 'reasignar'" class="relative overflow-hidden bg-superficie-tarjeta rounded-2xl shadow-sm border border-borde ml-4 sm:ml-6">
             <div class="absolute top-0 left-0 w-1 h-full bg-[var(--brand-primary)]"></div>
             <div class="relative p-5 sm:p-6">
               <div class="mb-6">
-                <h4 class="text-lg font-bold text-gray-800 mb-2">Administrador Actual</h4>
-                <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <p class="text-sm text-gray-600 mb-1">Email:</p>
-                  <p class="font-semibold text-gray-800">{{ adminActual?.email || 'Cargando...' }}</p>
-                  <p v-if="adminActual?.nombre" class="text-sm text-gray-500 mt-1">{{ adminActual.nombre }}</p>
+                <h4 class="text-lg font-bold text-texto mb-2">Administrador Actual</h4>
+                <div class="bg-superficie-suave rounded-xl p-4 border border-borde">
+                  <p class="text-sm text-texto-secundario mb-1">Email:</p>
+                  <p class="font-semibold text-texto">{{ adminActual?.email || 'Cargando...' }}</p>
+                  <p v-if="adminActual?.nombre" class="text-sm text-texto-suave mt-1">{{ adminActual.nombre }}</p>
                 </div>
               </div>
 
               <div class="mb-6">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                <label class="block text-sm font-semibold text-texto-medio mb-2">
                   Seleccionar Nuevo Administrador
                 </label>
                 <!-- Lupa por flex, no por `absolute`: en iOS el campo cambia de alto al enfocar -->
-                <div class="flex items-center rounded-xl border border-gray-300 bg-white focus-within:border-natillera-500 focus-within:ring-2 focus-within:ring-natillera-500">
+                <div class="flex items-center rounded-xl border border-borde-fuerte bg-superficie-tarjeta focus-within:border-natillera-500 focus-within:ring-2 focus-within:ring-natillera-500">
                   <input
                     v-model="busquedaUsuario"
                     type="text"
@@ -1639,15 +1664,15 @@
                     class="min-w-0 flex-1 border-none bg-transparent px-4 py-3 outline-none focus:ring-0"
                     @input="buscarUsuarios"
                   />
-                  <span class="flex-shrink-0 pr-3 text-gray-400"><MagnifyingGlassIcon class="w-5 h-5" aria-hidden="true" /></span>
+                  <span class="flex-shrink-0 pr-3 text-texto-tenue"><MagnifyingGlassIcon class="w-5 h-5" aria-hidden="true" /></span>
                 </div>
 
                 <!-- Lista de usuarios -->
                 <CargaCaja v-if="buscandoUsuarios && !usuariosCargados" texto="Cargando usuarios" />
 
-                <div v-else-if="usuariosEncontrados.length > 0" class="mt-4 max-h-60 overflow-y-auto border border-gray-200 rounded-xl">
-                  <div class="p-2 bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                    <p class="text-xs text-gray-600 font-semibold">
+                <div v-else-if="usuariosEncontrados.length > 0" class="mt-4 max-h-60 overflow-y-auto border border-borde rounded-xl">
+                  <div class="p-2 bg-superficie-suave border-b border-borde sticky top-0 z-10">
+                    <p class="text-xs text-texto-secundario font-semibold">
                       {{ usuariosEncontrados.length }} {{ usuariosEncontrados.length === 1 ? 'usuario encontrado' : 'usuarios encontrados' }}
                     </p>
                   </div>
@@ -1656,8 +1681,8 @@
                     :key="usuario.id"
                     @click="seleccionarUsuario(usuario)"
                     :class="[
-                      'w-full p-4 text-left hover:bg-natillera-50 transition-colors border-b border-gray-100 last:border-b-0',
-                      usuarioSeleccionado?.id === usuario.id ? 'bg-natillera-100 border-natillera-300' : ''
+                      'w-full p-4 text-left hover:bg-natillera-50 oscuro:hover:bg-natillera-500/15 transition-colors border-b border-borde-suave last:border-b-0',
+                      usuarioSeleccionado?.id === usuario.id ? 'bg-natillera-100 oscuro:bg-natillera-500/15 border-natillera-300 oscuro:border-natillera-500/30' : ''
                     ]"
                   >
                     <div class="flex items-center gap-3">
@@ -1665,34 +1690,34 @@
                         {{ (usuario.nombre || usuario.email || 'U').charAt(0).toUpperCase() }}
                       </div>
                       <div class="flex-1">
-                        <p class="font-semibold text-gray-800">{{ usuario.nombre || 'Sin nombre' }}</p>
-                        <p class="text-sm text-gray-500">{{ usuario.email }}</p>
+                        <p class="font-semibold text-texto">{{ usuario.nombre || 'Sin nombre' }}</p>
+                        <p class="text-sm text-texto-suave">{{ usuario.email }}</p>
                       </div>
                       <CheckCircleIcon v-if="usuarioSeleccionado?.id === usuario.id" class="w-6 h-6 text-[var(--brand-primary)]" />
                     </div>
                   </button>
                 </div>
 
-                <div v-else-if="usuariosCargados && usuariosEncontrados.length === 0" class="mt-4 text-center py-8 text-gray-500">
+                <div v-else-if="usuariosCargados && usuariosEncontrados.length === 0" class="mt-4 text-center py-8 text-texto-suave">
                   <p class="text-sm">No se encontraron usuarios con ese criterio de búsqueda</p>
                   <button
                     @click="busquedaUsuario = ''; filtrarUsuarios()"
-                    class="mt-2 text-sm text-natillera-700 hover:text-natillera-800 underline"
+                    class="mt-2 text-sm text-natillera-700 oscuro:text-natillera-300 hover:text-natillera-800 oscuro:hover:text-natillera-300 underline"
                   >
                     Ver todos los usuarios
                   </button>
                 </div>
               </div>
 
-              <div v-if="usuarioSeleccionado" class="mb-6 p-4 bg-natillera-50 border-2 border-natillera-200 rounded-xl">
-                <p class="text-sm font-semibold text-natillera-700 mb-2">Nuevo Administrador Seleccionado:</p>
+              <div v-if="usuarioSeleccionado" class="mb-6 p-4 bg-natillera-50 oscuro:bg-natillera-500/15 border-2 border-natillera-200 oscuro:border-natillera-500/30 rounded-xl">
+                <p class="text-sm font-semibold text-natillera-700 oscuro:text-natillera-300 mb-2">Nuevo Administrador Seleccionado:</p>
                 <div class="flex items-center gap-3">
                   <div class="w-12 h-12 rounded-full bg-[var(--brand-primary)] flex items-center justify-center text-white font-bold text-lg">
                     {{ (usuarioSeleccionado.nombre || usuarioSeleccionado.email || 'U').charAt(0).toUpperCase() }}
                   </div>
                   <div>
-                    <p class="font-bold text-gray-800">{{ usuarioSeleccionado.nombre || 'Sin nombre' }}</p>
-                    <p class="text-sm text-gray-600">{{ usuarioSeleccionado.email }}</p>
+                    <p class="font-bold text-texto">{{ usuarioSeleccionado.nombre || 'Sin nombre' }}</p>
+                    <p class="text-sm text-texto-secundario">{{ usuarioSeleccionado.email }}</p>
                   </div>
                 </div>
               </div>
@@ -1720,18 +1745,18 @@
       <!-- === ADMINISTRADORES: página propia (AdministradoresNatillera.vue) === -->
       <router-link
         :to="{ name: 'AdministradoresNatillera', params: { id } }"
-        class="w-full relative overflow-hidden rounded-2xl border bg-white border-gray-200 shadow-sm hover:border-gray-300 hover:shadow-md transition-all duration-300 touch-manipulation block"
+        class="w-full relative overflow-hidden rounded-2xl border bg-superficie-tarjeta border-borde shadow-sm hover:border-borde-fuerte hover:shadow-md transition-all duration-300 touch-manipulation block"
       >
         <div class="relative p-4 sm:p-5 flex items-center gap-4">
           <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-[var(--brand-primary-soft)]">
             <UserGroupIcon class="w-6 h-6 text-[var(--brand-primary)]" />
           </div>
           <div class="flex-1 text-left min-w-0">
-            <h3 class="text-lg font-display font-bold text-gray-800">Administradores</h3>
-            <p class="text-sm text-gray-500">Quién puede entrar a esta natillera y qué puede hacer</p>
+            <h3 class="text-lg font-display font-bold text-texto">Administradores</h3>
+            <p class="text-sm text-texto-suave">Quién puede entrar a esta natillera y qué puede hacer</p>
           </div>
-          <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-gray-100">
-            <ChevronRightIcon class="w-5 h-5 text-gray-500" />
+          <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-superficie-hundida">
+            <ChevronRightIcon class="w-5 h-5 text-texto-suave" />
           </div>
         </div>
       </router-link>
@@ -1740,7 +1765,7 @@
     <!-- Mensaje de éxito/error -->
     <div v-if="mensaje" :class="[
       'p-3 rounded-xl text-sm flex items-center gap-2',
-      mensaje.tipo === 'exito' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+      mensaje.tipo === 'exito' ? 'bg-green-50 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300 border border-green-200 oscuro:border-green-500/30' : 'bg-red-50 oscuro:bg-red-500/15 text-red-700 oscuro:text-red-300 border border-red-200 oscuro:border-red-500/30'
     ]">
       <component :is="mensaje.tipo === 'exito' ? CheckCircleIcon : ExclamationCircleIcon" class="w-5 h-5" />
       {{ mensaje.texto }}
@@ -1797,7 +1822,8 @@ import {
   ArchiveBoxIcon,
   DevicePhoneMobileIcon,
   SparklesIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  ScaleIcon
 } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
@@ -2073,7 +2099,7 @@ const configCierre = ref({
  * Lo que ve cada socio en su portal (Especificaciones/portal-socio, RF-09 y RF-14). La base de
  * datos aplica esta configuración: lo que se oculta aquí no llega al celular del socio.
  */
-const configPortal = ref({ mostrar_ganancias: true, nivel_transparencia: 0 })
+const configPortal = ref({ mostrar_ganancias: true, nivel_transparencia: 0, mostrar_sanciones: true })
 const NIVELES_TRANSPARENCIA = [
   { value: 0, label: 'Solo lo suyo', ayuda: 'Sus cuotas, préstamos y ganancias. Nada de los demás.' },
   { value: 1, label: 'Totales del grupo', ayuda: 'Además: ahorro total, socios, prestado y utilidades. Sin nombres.' },
@@ -2353,7 +2379,8 @@ async function guardarConfigBasica() {
     anio: configPeriodo.value.anio,
     config_portal_socio: {
       mostrar_ganancias: configPortal.value.mostrar_ganancias !== false,
-      nivel_transparencia: Number(configPortal.value.nivel_transparencia) || 0
+      nivel_transparencia: Number(configPortal.value.nivel_transparencia) || 0,
+      mostrar_sanciones: configPortal.value.mostrar_sanciones !== false
     },
     // Las reglas de préstamos ya no tienen botón propio: se guardan con el resto.
     reglas_interes: {
@@ -2750,7 +2777,9 @@ function actualizarValoresDesdeNatillera() {
     const portal = natillera.value?.config_portal_socio || {}
     configPortal.value = {
       mostrar_ganancias: portal.mostrar_ganancias !== false,
-      nivel_transparencia: [0, 1, 2].includes(Number(portal.nivel_transparencia)) ? Number(portal.nivel_transparencia) : 0
+      nivel_transparencia: [0, 1, 2].includes(Number(portal.nivel_transparencia)) ? Number(portal.nivel_transparencia) : 0,
+      // Sin la clave (natilleras de antes) se ve, igual que en portal_datos_socio
+      mostrar_sanciones: portal.mostrar_sanciones !== false
     }
 
     // Cargar configuración de sanciones
@@ -3610,4 +3639,53 @@ onUnmounted(() => {
 @media (min-width: 640px) {
   .cfg-card__pie { padding: 1rem 1.25rem; }
 }
+
+/* ==========================================================================
+   Modo oscuro: solo lo que cambia (skill natillerapp-modo-oscuro §2.5). Lo que
+   va sobre la cabecera verde o roja (icono en círculo blanco, interruptor de
+   cabecera, textos blancos) vale igual en los dos modos.
+   ========================================================================== */
+:where([data-tema=oscuro]) .cfg-select__trigger,
+:where([data-tema=oscuro]) .cfg-select__opcion { background: var(--superficie-tarjeta); }
+:where([data-tema=oscuro]) .cfg-select__titulo { color: var(--texto-fuerte); }
+:where([data-tema=oscuro]) .cfg-select__ayuda { color: var(--texto-suave); }
+:where([data-tema=oscuro]) .cfg-select__chevron { color: var(--texto-tenue); }
+:where([data-tema=oscuro]) .cfg-select__menu { background: var(--superficie-elevada); }
+:where([data-tema=oscuro]) .cfg-select__opcion:not(.is-selected):hover { background: rgb(255 255 255 / 0.05); }
+:where([data-tema=oscuro]) .cfg-opcion__icono { color: var(--texto-tenue); }
+:where([data-tema=oscuro]) .cfg-opcion.is-selected .cfg-opcion__icono { color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .cfg-select__icono { background: var(--marca-suave); color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .cfg-select__opcion.is-selected { background: var(--marca-suave); }
+
+:where([data-tema=oscuro]) .cfg-tabs__flecha { border-color: var(--marca-tinta-borde); background: var(--superficie-tarjeta); color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .cfg-tabs__flecha:active { background: var(--marca-suave); }
+:where([data-tema=oscuro]) .cfg-tabs__pista { color: var(--texto-tenue); }
+
+:where([data-tema=oscuro]) .cfg-estimado {
+  border-color: var(--marca-tinta-borde);
+  background: linear-gradient(135deg, var(--marca-suave) 0%, var(--superficie-tarjeta) 60%);
+}
+
+:where([data-tema=oscuro]) .cfg-chip { background: var(--superficie-tarjeta); color: var(--texto-secundario); }
+:where([data-tema=oscuro]) .cfg-chip:hover:not(.is-selected) { border-color: var(--marca-tinta-borde); }
+
+:where([data-tema=oscuro]) .cfg-switch__pista { background: var(--borde-fuerte); }
+:where([data-tema=oscuro]) .cfg-switch__titulo { color: var(--texto-fuerte); }
+:where([data-tema=oscuro]) .cfg-switch__ayuda { color: var(--texto-suave); }
+
+:where([data-tema=oscuro]) .cfg-money__signo { color: var(--texto-suave); }
+:where([data-tema=oscuro]) .cfg-icono-btn { color: var(--texto-tenue); }
+:where([data-tema=oscuro]) .cfg-icono-btn--peligro:hover { color: var(--peligro); background: var(--peligro-suave); }
+
+:where([data-tema=oscuro]) .cfg-opcion { background: var(--superficie-tarjeta); }
+:where([data-tema=oscuro]) .cfg-opcion:hover:not(:disabled):not(.is-selected) { border-color: var(--marca-tinta-borde); }
+:where([data-tema=oscuro]) .cfg-opcion.is-selected { border-color: var(--marca-tinta); background: var(--marca-suave); box-shadow: 0 0 0 1px var(--marca-tinta) inset; }
+:where([data-tema=oscuro]) .cfg-opcion__titulo { color: var(--texto-fuerte); }
+:where([data-tema=oscuro]) .cfg-opcion__ayuda { color: var(--texto-suave); }
+:where([data-tema=oscuro]) .cfg-opcion__marca { background: var(--superficie-tarjeta); }
+
+:where([data-tema=oscuro]) .cfg-card__pie { background: linear-gradient(180deg, var(--superficie-tarjeta) 0%, var(--superficie-suave) 100%); }
+/* Focos: el verde de marca apenas se ve sobre superficie oscura */
+:where([data-tema=oscuro]) .cfg-select__opcion:focus-visible,
+:where([data-tema=oscuro]) .cfg-switch__input:focus-visible + .cfg-switch__pista { outline-color: var(--marca-tinta); }
 </style>

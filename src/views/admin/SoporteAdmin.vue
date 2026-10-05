@@ -3,10 +3,10 @@
     <!-- ── Cabecera ── -->
     <div class="mb-3 flex items-center gap-3">
       <div class="min-w-0 flex-1">
-        <h1 class="truncate font-display text-xl font-bold text-gray-900 sm:text-2xl">Soporte</h1>
-        <p class="mt-0.5 text-xs text-gray-500 sm:text-sm">
+        <h1 class="truncate font-display text-xl font-bold text-texto-fuerte sm:text-2xl">Soporte</h1>
+        <p class="mt-0.5 text-xs text-texto-suave sm:text-sm">
           {{ soporte.totalBandeja }} conversación{{ soporte.totalBandeja === 1 ? '' : 'es' }}
-          <span v-if="estadoCanal === 'degradado'" class="text-amber-700">· actualización cada minuto</span>
+          <span v-if="estadoCanal === 'degradado'" class="text-amber-700 oscuro:text-amber-300">· actualización cada minuto</span>
         </p>
       </div>
     </div>

@@ -307,6 +307,15 @@
             <button
               type="button"
               class="nav-link nav-link-option w-full text-left"
+              :class="{ 'nav-link-active': route.path === '/admin/correos' }"
+              @click="abrirRutaDesdeSidebar('/admin/correos')"
+            >
+              <EnvelopeIcon class="w-5 h-5 shrink-0" />
+              <span class="sidebar-option-label">Correos</span>
+            </button>
+            <button
+              type="button"
+              class="nav-link nav-link-option w-full text-left"
               :class="{ 'nav-link-active': route.path === '/admin/data' }"
               @click="abrirRutaDesdeSidebar('/admin/data')"
             >
@@ -456,14 +465,14 @@
       >
         <!-- Header móvil -->
         <header
-          class="cabecera-movil lg:hidden sticky top-0 z-30 shrink-0 border-b border-gray-100 bg-white/95 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] backdrop-blur-xl supports-[backdrop-filter]:bg-white/80"
+          class="cabecera-movil lg:hidden sticky top-0 z-30 shrink-0 border-b border-borde-suave bg-superficie-tarjeta/95 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] backdrop-blur-xl supports-[backdrop-filter]:bg-superficie-tarjeta/80"
         >
           <div class="flex items-center justify-between">
             <button
               id="tour-hamburger-btn"
               type="button"
               @click="sidebarOpen = true"
-              class="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
+              class="p-2 -ml-2 text-texto-secundario hover:bg-superficie-hundida rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label="Abrir menú"
             >
               <Bars3Icon class="w-6 h-6" />
@@ -473,12 +482,12 @@
               centrada. El resto de la app sigue con el logo.
             -->
             <div v-if="esPortal" class="flex min-w-0 flex-1 items-center gap-2.5 px-1">
-              <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#E8F5E9] text-[#1B5E37]">
+              <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-marca-suave text-marca-tinta">
                 <WalletIcon class="h-5 w-5" aria-hidden="true" />
               </span>
               <span class="min-w-0">
-                <span class="block text-[10px] font-bold uppercase tracking-[0.14em] text-[#1B5E37]">Mi natillera</span>
-                <span class="block truncate font-display text-base font-bold leading-tight text-gray-900">{{ nombreNatilleraPortal || 'Portal del socio' }}</span>
+                <span class="block text-[10px] font-bold uppercase tracking-[0.14em] text-marca-tinta">Mi natillera</span>
+                <span class="block truncate font-display text-base font-bold leading-tight text-texto-fuerte">{{ nombreNatilleraPortal || 'Portal del socio' }}</span>
               </span>
             </div>
             <div v-else class="flex flex-1 items-center gap-1.5 min-w-0 justify-center px-1">
@@ -564,8 +573,8 @@
     >
       <div class="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full shadow-lg shadow-orange-500/30 border border-amber-400/50">
         <span class="relative flex h-2 w-2">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-superficie-tarjeta opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-superficie-tarjeta"></span>
         </span>
         DEV MODE
       </div>
@@ -606,6 +615,7 @@ import {
   ChatBubbleLeftRightIcon,
   ReceiptPercentIcon,
   SignalIcon,
+  EnvelopeIcon,
   ScaleIcon,
   MagnifyingGlassIcon,
   DocumentCheckIcon,
@@ -1239,6 +1249,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* tema-fijo-inicio: shell de navegación verde (menú lateral, píldora activa, hoja de iOS): igual en los dos modos */
 @reference "../style.css";
 
 /* Isotipo sin caja: legible sobre el degradado del shell */
@@ -1553,5 +1564,6 @@ onUnmounted(() => {
     background: hsl(152 69% 28% / 0.96);
   }
 }
+/* tema-fijo-fin */
 </style>
 

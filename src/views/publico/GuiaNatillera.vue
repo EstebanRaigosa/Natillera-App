@@ -225,7 +225,7 @@
             </RouterLink>
             <RouterLink
               to="/auth/login"
-              class="inline-flex min-h-[52px] touch-manipulation items-center justify-center rounded-full border border-white/30 px-7 text-base font-bold text-white hover:bg-white/10"
+              class="inline-flex min-h-[52px] touch-manipulation items-center justify-center px-4 text-base font-semibold text-white/80 underline-offset-4 hover:text-white hover:underline"
             >
               Ya tengo cuenta
             </RouterLink>

@@ -77,24 +77,24 @@ export function etiquetaTipo(tipo) {
 /** Chip de color por concepto. Misma paleta que la vista de totales, para no reeducar al usuario. */
 export function claseTipo(tipo, esParcial = false) {
   if (esParcial && (tipo === 'cuota' || tipo === 'cuota_prestamo')) {
-    return 'bg-orange-100 text-orange-800 border border-orange-300/60'
+    return 'bg-orange-100 oscuro:bg-orange-500/15 text-orange-800 oscuro:text-orange-300 border border-orange-300/60 oscuro:border-orange-500/30'
   }
   const mapa = {
-    cuota: 'bg-emerald-100 text-emerald-800',
-    cuota_prestamo: 'bg-teal-100 text-teal-800',
-    sancion: 'bg-red-100 text-red-800',
-    actividad: 'bg-purple-100 text-purple-800',
-    gasto_actividad: 'bg-fuchsia-100 text-fuchsia-800',
-    gmf_4x1000: 'bg-sky-100 text-sky-900 border border-sky-300/60',
-    interes_anticipado: 'bg-amber-100 text-amber-800',
-    prestamo: 'bg-blue-100 text-blue-800',
-    liquidacion_salida: 'bg-amber-100 text-amber-800',
-    premio_rifa: 'bg-amber-100 text-amber-800',
-    movimiento_ingreso: 'bg-lime-100 text-lime-800',
-    movimiento_egreso: 'bg-rose-100 text-rose-800',
-    movimiento_traslado: 'bg-indigo-100 text-indigo-800'
+    cuota: 'bg-emerald-100 oscuro:bg-emerald-500/15 text-emerald-800 oscuro:text-emerald-300',
+    cuota_prestamo: 'bg-teal-100 oscuro:bg-teal-500/15 text-teal-800 oscuro:text-teal-300',
+    sancion: 'bg-red-100 oscuro:bg-red-500/15 text-red-800 oscuro:text-red-300',
+    actividad: 'bg-purple-100 oscuro:bg-purple-500/15 text-purple-800 oscuro:text-purple-300',
+    gasto_actividad: 'bg-fuchsia-100 oscuro:bg-fuchsia-500/15 text-fuchsia-800 oscuro:text-fuchsia-300',
+    gmf_4x1000: 'bg-sky-100 oscuro:bg-sky-500/15 text-sky-900 oscuro:text-sky-300 border border-sky-300/60 oscuro:border-sky-500/30',
+    interes_anticipado: 'bg-amber-100 oscuro:bg-amber-500/15 text-amber-800 oscuro:text-amber-300',
+    prestamo: 'bg-blue-100 oscuro:bg-blue-500/15 text-blue-800 oscuro:text-blue-300',
+    liquidacion_salida: 'bg-amber-100 oscuro:bg-amber-500/15 text-amber-800 oscuro:text-amber-300',
+    premio_rifa: 'bg-amber-100 oscuro:bg-amber-500/15 text-amber-800 oscuro:text-amber-300',
+    movimiento_ingreso: 'bg-lime-100 oscuro:bg-lime-500/15 text-lime-800 oscuro:text-lime-300',
+    movimiento_egreso: 'bg-rose-100 oscuro:bg-rose-500/15 text-rose-800 oscuro:text-rose-300',
+    movimiento_traslado: 'bg-indigo-100 oscuro:bg-indigo-500/15 text-indigo-800 oscuro:text-indigo-300'
   }
-  return mapa[tipo] || 'bg-gray-100 text-gray-700'
+  return mapa[tipo] || 'bg-superficie-hundida text-texto-medio'
 }
 
 /** Punto de color del mismo concepto, para listas donde un chip entero sería ruido. */

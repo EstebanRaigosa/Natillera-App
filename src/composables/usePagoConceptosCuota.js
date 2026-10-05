@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase'
 import { fechaPagoAIso } from '../utils/formatDate'
 import { aplicarRecaudoRifaLiquidada } from './useRecaudoRifaLiquidada'
+import { registrarMoraCobradaEnFondo } from './usePagoPrestamo'
 
 /*
  * Lo que un pago de cuota arrastra además de la cuota: actividades y cuotas de préstamo.
@@ -233,10 +234,13 @@ export async function pagarActividadesDeCuota({ natilleraId, actividades, valorT
  * `plan_pagos_prestamo`. Devuelve las líneas aplicadas, para el comprobante.
  *
  * `cuotasPrestamo`: [{ id, prestamo_id, numero_cuota, valor_cuota, valor_pagado_actual,
- *   valor_pagado_efectivo_actual, valor_pagado_transferencia_actual, valor_pendiente, fecha_proyectada }]
+ *   valor_pagado_efectivo_actual, valor_pagado_transferencia_actual, valor_pendiente, fecha_proyectada,
+ *   mora? }] — `mora`: la de esa cuota a la fecha del pago (va al fondo, no al saldo)
+ * `valorTotal`: lo recibido para préstamos, mora incluida (se cubre primero la mora)
+ * `natilleraId`: necesario para llevar la mora al fondo de utilidades
  * `options`: { fechaPago, valorPagado, valorEfectivo, historialPagoIdPromise }
  */
-export async function pagarCuotasPrestamoDeCuota({ cuotaId, nombreSocio = null, nombreNatillera = null, cuotasPrestamo, valorTotal, tipoPago = null, options = {} }) {
+export async function pagarCuotasPrestamoDeCuota({ cuotaId, natilleraId = null, nombreSocio = null, nombreNatillera = null, cuotasPrestamo, valorTotal, tipoPago = null, options = {} }) {
   const detalleLineasPrestamo = []
   if (!cuotasPrestamo?.length) return detalleLineasPrestamo
   try {
@@ -266,6 +270,13 @@ export async function pagarCuotasPrestamoDeCuota({ cuotaId, nombreSocio = null, 
     // Calcular el total de cuotas de préstamos seleccionadas
     const totalCuotasPrestamos = cuotasPrestamosParaPagar.reduce((sum, cp) => sum + cp.valor_pendiente, 0)
 
+    // Mora de las cuotas (a la fecha del pago), con la regla de Préstamos: lo recibido cubre
+    // PRIMERO la mora y el resto va al préstamo. `valorTotal` trae ambas cosas. La mora queda
+    // en el abono (mora_cobrada) y va al fondo de utilidades; no baja el saldo.
+    const totalMoraCuotas = cuotasPrestamosParaPagar.reduce((sum, cp) => sum + (Number(cp.mora) || 0), 0)
+    const moraACobrar = Math.min(Math.max(0, valorTotal), totalMoraCuotas)
+    const valorAbono = Math.max(0, valorTotal - moraACobrar)
+
     // Agrupar cuotas por préstamo para registrar pagos por préstamo
     const pagosPorPrestamo = {}
     cuotasPrestamosParaPagar.forEach(cp => {
@@ -273,16 +284,18 @@ export async function pagarCuotasPrestamoDeCuota({ cuotaId, nombreSocio = null, 
         pagosPorPrestamo[cp.prestamo_id] = {
           prestamo_id: cp.prestamo_id,
           cuotas: [],
-          valorTotal: 0
+          valorTotal: 0,
+          mora: 0
         }
       }
       pagosPorPrestamo[cp.prestamo_id].cuotas.push(cp)
       pagosPorPrestamo[cp.prestamo_id].valorTotal += cp.valor_pendiente
+      pagosPorPrestamo[cp.prestamo_id].mora += Number(cp.mora) || 0
     })
 
-    // Si el valor total es mayor o igual al total de cuotas, pagar todas completamente
-    // Si es menor, distribuir proporcionalmente
-    let valorRestante = valorTotal
+    // Si el valor (ya sin la mora) cubre el total de cuotas, se pagan todas completamente;
+    // si es menor, se distribuye proporcionalmente
+    let valorRestante = valorAbono
     // Fecha elegida en el modal de pago (o ahora, si no se indicó). Mantiene pagos_prestamo y
     // plan_pagos_prestamo alineados con cuotas.fecha_pago e historial_pagos_cuota.fecha_pago.
     const fechaPago = fechaPagoAIso(options.fechaPago)
@@ -312,10 +325,12 @@ export async function pagarCuotasPrestamoDeCuota({ cuotaId, nombreSocio = null, 
     const promesasPrestamos = prestamoIds.map(async (prestamoId) => {
       const infoPrestamo = pagosPorPrestamo[prestamoId]
       const cuotasDelPrestamo = infoPrestamo.cuotas
-      const proporcionPrestamo = infoPrestamo.valorTotal / totalCuotasPrestamos
-      const valorAPagarPrestamo = Math.min(valorRestante, valorTotal * proporcionPrestamo)
+      const proporcionPrestamo = totalCuotasPrestamos > 0 ? infoPrestamo.valorTotal / totalCuotasPrestamos : 0
+      const valorAPagarPrestamo = Math.min(valorRestante, valorAbono * proporcionPrestamo)
+      // Su parte de la mora cobrada, proporcional a la mora que generaron sus cuotas
+      const moraPrestamo = totalMoraCuotas > 0 ? Math.round(moraACobrar * (infoPrestamo.mora / totalMoraCuotas)) : 0
 
-      if (valorAPagarPrestamo <= 0) return
+      if (valorAPagarPrestamo <= 0 && moraPrestamo <= 0) return
 
       const codigoComprobante = generarCodigoComprobante()
       const splitPrestamo = splitMonto(valorAPagarPrestamo)
@@ -346,6 +361,7 @@ export async function pagarCuotasPrestamoDeCuota({ cuotaId, nombreSocio = null, 
         numeros_cuota: numerosCuotaTocados.length > 0 ? numerosCuotaTocados : null,
         origen: 'cuota_natillera'
       }
+      if (moraPrestamo > 0) datosPago.mora_cobrada = moraPrestamo
       if (historialPagoCuotaId) datosPago.historial_pago_cuota_id = historialPagoCuotaId
 
       // Insertar pago + actualizar préstamo en paralelo
@@ -373,6 +389,10 @@ export async function pagarCuotasPrestamoDeCuota({ cuotaId, nombreSocio = null, 
       if (pagoRes.error) {
         console.error(`Error insertando pago de préstamo ${prestamoId}:`, pagoRes.error)
         return
+      }
+
+      if (moraPrestamo > 0 && natilleraId) {
+        await registrarMoraCobradaEnFondo(natilleraId, moraPrestamo, formaPagoCp)
       }
 
       // Aplicar las cuotas pre-calculadas

@@ -5,8 +5,8 @@
     align="bottom"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="emit('close')"
   >
@@ -57,11 +57,11 @@
       <div
         v-if="grupo"
         ref="scrollRef"
-        class="flex-1 min-h-0 space-y-4 overflow-y-auto overflow-x-hidden bg-white px-5 pb-4 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-6"
+        class="flex-1 min-h-0 space-y-4 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta px-5 pb-4 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-6"
         @scroll.passive="onScroll"
       >
         <!-- El importe primero: es lo que se venía a mirar -->
-        <div class="rounded-2xl border border-gray-200 bg-gray-50/70 px-4 py-3.5 text-center">
+        <div class="rounded-2xl border border-borde bg-superficie-suave/70 px-4 py-3.5 text-center">
           <span class="rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold" :class="claseConcepto(grupo.concepto)">
             {{ etiquetaConcepto(grupo.concepto) }}
           </span>
@@ -70,35 +70,35 @@
           </p>
           <p
             v-if="grupo.esTraslado"
-            class="mt-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-gray-600"
+            class="mt-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-texto-secundario"
           >
             {{ etiquetaForma(grupo.formaOrigen) }}
-            <ArrowRightIcon class="h-3.5 w-3.5 text-gray-400" />
+            <ArrowRightIcon class="h-3.5 w-3.5 text-texto-tenue" />
             {{ etiquetaForma(grupo.formaDestino) }}
           </p>
-          <p v-else class="mt-1 text-xs text-gray-500">{{ etiquetaForma(grupo.formaPago) }}</p>
+          <p v-else class="mt-1 text-xs text-texto-suave">{{ etiquetaForma(grupo.formaPago) }}</p>
         </div>
 
         <div>
-          <p class="mb-1 font-display text-[0.6875rem] font-bold uppercase tracking-wide text-gray-500">
+          <p class="mb-1 font-display text-[0.6875rem] font-bold uppercase tracking-wide text-texto-suave">
             Descripción
           </p>
-          <p v-if="grupo.descripcion" class="whitespace-pre-line break-words text-sm leading-relaxed text-gray-800">
+          <p v-if="grupo.descripcion" class="whitespace-pre-line break-words text-sm leading-relaxed text-texto">
             {{ grupo.descripcion }}
           </p>
-          <p v-else class="text-sm italic text-gray-400">Se registró sin descripción</p>
+          <p v-else class="text-sm italic text-texto-tenue">Se registró sin descripción</p>
         </div>
 
         <div>
-          <p class="mb-1.5 font-display text-[0.6875rem] font-bold uppercase tracking-wide text-gray-500">
+          <p class="mb-1.5 font-display text-[0.6875rem] font-bold uppercase tracking-wide text-texto-suave">
             Ficha
           </p>
-          <dl class="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200">
+          <dl class="divide-y divide-borde-suave overflow-hidden rounded-xl border border-borde">
             <div v-for="dato in ficha" :key="dato.etiqueta" class="flex items-start justify-between gap-3 px-3 py-2">
-              <dt class="flex-shrink-0 text-xs text-gray-500">{{ dato.etiqueta }}</dt>
-              <dd class="min-w-0 text-right text-xs font-semibold text-gray-800">
+              <dt class="flex-shrink-0 text-xs text-texto-suave">{{ dato.etiqueta }}</dt>
+              <dd class="min-w-0 text-right text-xs font-semibold text-texto">
                 <span class="break-words">{{ dato.valor }}</span>
-                <span v-if="dato.nota" class="mt-0.5 block font-normal text-gray-500">{{ dato.nota }}</span>
+                <span v-if="dato.nota" class="mt-0.5 block font-normal text-texto-suave">{{ dato.nota }}</span>
               </dd>
             </div>
           </dl>
@@ -106,23 +106,23 @@
 
         <!-- Qué le hizo este movimiento a cada bolsillo, con su signo -->
         <div>
-          <p class="mb-1.5 font-display text-[0.6875rem] font-bold uppercase tracking-wide text-gray-500">
+          <p class="mb-1.5 font-display text-[0.6875rem] font-bold uppercase tracking-wide text-texto-suave">
             Movimiento en cada bolsillo
           </p>
           <div class="space-y-1.5">
             <div
               v-for="linea in efectoBolsillos"
               :key="linea.clave"
-              class="flex items-center justify-between gap-3 rounded-xl border border-gray-200 px-3 py-2"
+              class="flex items-center justify-between gap-3 rounded-xl border border-borde px-3 py-2"
             >
               <div class="flex min-w-0 items-center gap-2">
                 <component :is="linea.icono" class="h-4 w-4 flex-shrink-0" :class="linea.acento" />
-                <span class="truncate text-xs font-semibold text-gray-700">{{ linea.titulo }}</span>
+                <span class="truncate text-xs font-semibold text-texto-medio">{{ linea.titulo }}</span>
               </div>
               <span class="font-display text-sm font-bold tabular-nums" :class="linea.clase">{{ linea.texto }}</span>
             </div>
           </div>
-          <p v-if="grupo.esTraslado" class="mt-1.5 text-[0.6875rem] leading-snug text-gray-500">
+          <p v-if="grupo.esTraslado" class="mt-1.5 text-[0.6875rem] leading-snug text-texto-suave">
             Al total de la natillera no le pasó nada: el mismo dinero cambió de sitio.
           </p>
         </div>
@@ -130,16 +130,22 @@
         <!-- Avisos: cada uno explica una consecuencia, no solo un estado -->
         <div
           v-if="!grupo.esManual"
-          class="flex items-start gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs leading-relaxed text-gray-600"
+          class="flex items-start gap-2 rounded-xl border border-borde bg-superficie-suave px-3 py-2.5 text-xs leading-relaxed text-texto-secundario"
         >
-          <LockClosedIcon class="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-400" />
+          <LockClosedIcon class="mt-0.5 h-4 w-4 flex-shrink-0 text-texto-tenue" />
           <span>
-            Lo generó {{ moduloOrigen || 'otro módulo' }} al cerrar su propio proceso, así que desde aquí no se
-            puede editar ni borrar: habría que deshacerlo donde nació.
+            <template v-if="puedeEliminarAutomaticos">
+              Lo generó {{ moduloOrigen || 'otro módulo' }} al cerrar su propio proceso. No se edita desde aquí; como
+              superusuario puedes borrar el apunte de la caja, pero el proceso de origen queda como está.
+            </template>
+            <template v-else>
+              Lo generó {{ moduloOrigen || 'otro módulo' }} al cerrar su propio proceso, así que desde aquí no se
+              puede editar ni borrar: habría que deshacerlo donde nació.
+            </template>
             <router-link
               v-if="rutaOrigen"
               :to="rutaOrigen"
-              class="mt-1.5 inline-flex min-h-[44px] touch-manipulation items-center gap-1 font-semibold text-[#1B5E37] hover:underline"
+              class="mt-1.5 inline-flex min-h-[44px] touch-manipulation items-center gap-1 font-semibold text-marca-tinta hover:underline"
               @click="emit('close')"
             >
               Ir a {{ moduloOrigen }}
@@ -150,7 +156,7 @@
 
         <div
           v-if="grupo.parAmbiguo"
-          class="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-900"
+          class="flex items-start gap-2 rounded-xl border border-amber-200 oscuro:border-amber-500/30 bg-amber-50 oscuro:bg-amber-500/15 px-3 py-2.5 text-xs leading-relaxed text-amber-900 oscuro:text-amber-300"
         >
           <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 flex-shrink-0" />
           <span>
@@ -161,7 +167,7 @@
 
         <div
           v-if="dentroDeCorteSellado"
-          class="flex items-start gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2.5 text-xs leading-relaxed text-sky-900"
+          class="flex items-start gap-2 rounded-xl border border-sky-200 oscuro:border-sky-500/30 bg-sky-50 oscuro:bg-sky-500/15 px-3 py-2.5 text-xs leading-relaxed text-sky-900 oscuro:text-sky-300"
         >
           <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 flex-shrink-0" />
           <span>
@@ -172,31 +178,31 @@
 
         <!-- Los apuntes reales de la tabla. Plegado porque solo hace falta al depurar
              un descuadre, pero es justo lo que explica que un traslado sean dos filas. -->
-        <div class="overflow-hidden rounded-xl border border-gray-200">
+        <div class="overflow-hidden rounded-xl border border-borde">
           <button
             type="button"
-            class="flex min-h-[44px] w-full touch-manipulation items-center justify-between gap-2 bg-gray-50 px-3 text-xs font-semibold text-gray-600"
+            class="flex min-h-[44px] w-full touch-manipulation items-center justify-between gap-2 bg-superficie-suave px-3 text-xs font-semibold text-texto-secundario"
             :aria-expanded="apuntesAbiertos"
             aria-controls="apuntes-movimiento"
             @click="apuntesAbiertos = !apuntesAbiertos"
           >
             <span>{{ grupo.filas.length === 1 ? 'Apunte registrado' : `${grupo.filas.length} apuntes registrados` }}</span>
             <ChevronDownIcon
-              class="h-4 w-4 flex-shrink-0 text-gray-400 transition-transform duration-200"
+              class="h-4 w-4 flex-shrink-0 text-texto-tenue transition-transform duration-200"
               :class="{ 'rotate-180': apuntesAbiertos }"
             />
           </button>
-          <div v-if="apuntesAbiertos" id="apuntes-movimiento" class="divide-y divide-gray-100 border-t border-gray-200">
+          <div v-if="apuntesAbiertos" id="apuntes-movimiento" class="divide-y divide-borde-suave border-t border-borde">
             <div v-for="fila in grupo.filas" :key="fila.id" class="px-3 py-2.5">
               <div class="flex items-center justify-between gap-3">
-                <span class="text-xs font-semibold text-gray-700">
+                <span class="text-xs font-semibold text-texto-medio">
                   {{ fila.tipo === 'entrada' ? 'Entrada' : 'Salida' }} · {{ etiquetaForma(fila.forma_pago) }}
                 </span>
-                <span class="font-display text-xs font-bold tabular-nums text-gray-800">
+                <span class="font-display text-xs font-bold tabular-nums text-texto">
                   ${{ formatMoney(Math.abs(Number(fila.monto) || 0)) }}
                 </span>
               </div>
-              <p class="mt-1 break-all font-mono text-[0.625rem] leading-snug text-gray-400">{{ fila.id }}</p>
+              <p class="mt-1 break-all font-mono text-[0.625rem] leading-snug text-texto-tenue">{{ fila.id }}</p>
             </div>
           </div>
         </div>
@@ -206,7 +212,7 @@
     </div>
 
     <div
-      class="flex-shrink-0 space-y-2.5 border-t border-gray-200 bg-white px-5 pt-4 sm:px-6"
+      class="flex-shrink-0 space-y-2.5 border-t border-borde bg-superficie-tarjeta px-5 pt-4 sm:px-6"
       :style="{ paddingBottom: `calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
     >
       <div class="flex gap-3">
@@ -218,9 +224,9 @@
       </div>
       <!-- Destructivo: rojo, no verde marca (skill natillerapp-modals) -->
       <button
-        v-if="sePuedeTocar"
+        v-if="sePuedeEliminar"
         type="button"
-        class="inline-flex min-h-[48px] w-full touch-manipulation items-center justify-center gap-2 rounded-full border border-red-200 bg-white text-sm font-semibold text-red-700 hover:bg-red-50"
+        class="inline-flex min-h-[48px] w-full touch-manipulation items-center justify-center gap-2 rounded-full border border-red-200 oscuro:border-red-500/30 bg-superficie-tarjeta text-sm font-semibold text-red-700 oscuro:text-red-300 hover:bg-red-50 oscuro:hover:bg-red-500/15"
         @click="emit('eliminar')"
       >
         <TrashIcon class="h-4 w-4" />
@@ -267,6 +273,8 @@ const props = defineProps({
   grupo: { type: Object, default: null },
   /** Si el usuario puede editar o borrar movimientos manuales. */
   puedeEscribir: { type: Boolean, default: false },
+  /** Superusuario: puede borrar también los automáticos (no editarlos). */
+  puedeEliminarAutomaticos: { type: Boolean, default: false },
   /** Fecha del último corte sellado, para avisar de que se toca un periodo cerrado. */
   fechaUltimoCorte: { type: String, default: '' },
   /** Ruta del módulo que generó el movimiento, si es automático. */
@@ -288,6 +296,7 @@ watch(visible, abierto => {
 })
 
 const sePuedeTocar = computed(() => props.puedeEscribir && !!props.grupo?.esManual)
+const sePuedeEliminar = computed(() => sePuedeTocar.value || (props.puedeEliminarAutomaticos && !!props.grupo))
 
 const moduloOrigen = computed(() => conceptoDefinicion(props.grupo?.concepto)?.modulo || '')
 
@@ -298,9 +307,9 @@ const iconoCabecera = computed(() => {
 })
 
 const claseImporte = computed(() => {
-  if (!props.grupo) return 'text-gray-900'
-  if (props.grupo.esTraslado) return 'text-indigo-700'
-  return props.grupo.signo > 0 ? 'text-lime-700' : 'text-rose-700'
+  if (!props.grupo) return 'text-texto-fuerte'
+  if (props.grupo.esTraslado) return 'text-indigo-700 oscuro:text-indigo-300'
+  return props.grupo.signo > 0 ? 'text-lime-700 oscuro:text-lime-300' : 'text-rose-700 oscuro:text-rose-300'
 })
 
 // El traslado va sin signo: no cambia el total, solo de sitio.
@@ -409,14 +418,14 @@ const ficha = computed(() => {
 })
 
 const FORMAS = {
-  efectivo: { titulo: 'Efectivo', icono: BanknotesIcon, acento: 'text-green-700' },
-  transferencia: { titulo: 'Cuenta', icono: BuildingLibraryIcon, acento: 'text-blue-700' }
+  efectivo: { titulo: 'Efectivo', icono: BanknotesIcon, acento: 'text-green-700 oscuro:text-green-300' },
+  transferencia: { titulo: 'Cuenta', icono: BuildingLibraryIcon, acento: 'text-blue-700 oscuro:text-blue-300' }
 }
 
 const claseSigno = (valor) => {
-  if (valor > 0) return 'text-lime-700'
-  if (valor < 0) return 'text-rose-700'
-  return 'text-gray-900'
+  if (valor > 0) return 'text-lime-700 oscuro:text-lime-300'
+  if (valor < 0) return 'text-rose-700 oscuro:text-rose-300'
+  return 'text-texto-fuerte'
 }
 
 /** Solo las formas que este movimiento tocó: listar la otra en cero sería ruido. */

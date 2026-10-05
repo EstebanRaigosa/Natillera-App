@@ -1,41 +1,41 @@
 <template>
-  <div class="min-h-screen supports-[height:100dvh]:min-h-[100dvh] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center px-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] pt-[max(1rem,env(safe-area-inset-top,0px))] pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+  <div class="min-h-screen supports-[height:100dvh]:min-h-[100dvh] bg-gradient-to-br from-blue-50 oscuro:from-blue-500/15 via-indigo-50 oscuro:via-indigo-500/10 to-purple-50 oscuro:to-purple-500/10 flex items-center justify-center px-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] pt-[max(1rem,env(safe-area-inset-top,0px))] pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
     <div class="w-full max-w-md">
       <!-- Logo o Header -->
       <div class="text-center mb-8">
         <div class="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/30 mb-4">
           <UserGroupIcon class="w-10 h-10 text-white" />
         </div>
-        <h1 class="text-2xl font-display font-bold text-gray-800">Invitación a Colaborar</h1>
+        <h1 class="text-2xl font-display font-bold text-texto">Invitación a Colaborar</h1>
       </div>
 
       <!-- Loading -->
-      <div v-if="loading" class="bg-white rounded-2xl shadow-xl px-8 text-center">
+      <div v-if="loading" class="bg-superficie-tarjeta rounded-2xl shadow-xl px-8 text-center">
         <CargaCaja texto="Procesando invitación" />
       </div>
 
       <!-- Error -->
-      <div v-else-if="error" class="bg-white rounded-2xl shadow-xl p-8 text-center">
-        <div class="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">
+      <div v-else-if="error" class="bg-superficie-tarjeta rounded-2xl shadow-xl p-8 text-center">
+        <div class="w-16 h-16 mx-auto bg-red-100 oscuro:bg-red-500/15 rounded-full flex items-center justify-center mb-4">
           <XCircleIcon class="w-8 h-8 text-red-500" />
         </div>
-        <h2 class="text-xl font-bold text-gray-800 mb-2">Error</h2>
-        <p class="text-gray-600 mb-6">{{ error }}</p>
+        <h2 class="text-xl font-bold text-texto mb-2">Error</h2>
+        <p class="text-texto-secundario mb-6">{{ error }}</p>
         <router-link to="/natilleras" class="btn-primary bg-gradient-to-r from-blue-500 to-indigo-500">
           Ir a Natilleras
         </router-link>
       </div>
 
       <!-- Éxito -->
-      <div v-else-if="exito" class="bg-white rounded-2xl shadow-xl p-8 text-center">
-        <div class="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+      <div v-else-if="exito" class="bg-superficie-tarjeta rounded-2xl shadow-xl p-8 text-center">
+        <div class="w-16 h-16 mx-auto bg-green-100 oscuro:bg-green-500/15 rounded-full flex items-center justify-center mb-4">
           <CheckCircleIcon class="w-8 h-8 text-green-500" />
         </div>
-        <h2 class="text-xl font-bold text-gray-800 mb-2">¡Invitación Aceptada!</h2>
-        <p class="text-gray-600 mb-2">
-          Ahora eres <span class="font-semibold text-blue-600">{{ formatearRol(resultado?.rol) }}</span> de:
+        <h2 class="text-xl font-bold text-texto mb-2">¡Invitación Aceptada!</h2>
+        <p class="text-texto-secundario mb-2">
+          Ahora eres <span class="font-semibold text-blue-600 oscuro:text-blue-300">{{ formatearRol(resultado?.rol) }}</span> de:
         </p>
-        <p class="text-lg font-bold text-gray-800 mb-6">{{ resultado?.natillera_nombre }}</p>
+        <p class="text-lg font-bold text-texto mb-6">{{ resultado?.natillera_nombre }}</p>
         <router-link 
           :to="`/natilleras/${resultado?.natillera_id}`" 
           class="btn-primary bg-gradient-to-r from-blue-500 to-indigo-500"
@@ -45,7 +45,7 @@
       </div>
 
       <!-- Confirmar invitación -->
-      <div v-else-if="invitacion" class="bg-white rounded-2xl shadow-xl overflow-hidden">
+      <div v-else-if="invitacion" class="bg-superficie-tarjeta rounded-2xl shadow-xl overflow-hidden">
         <div class="bg-gradient-to-r from-blue-500 to-indigo-500 p-6 text-white text-center">
           <h2 class="text-xl font-bold mb-2">Has sido invitado</h2>
           <p class="text-blue-100">{{ invitacion.invitado_por_nombre }} te ha invitado a colaborar</p>
@@ -60,21 +60,21 @@
                 class="w-full h-full object-cover"
               />
             </div>
-            <h3 class="text-xl font-bold text-gray-800">{{ invitacion.natillera_nombre }}</h3>
-            <p class="text-gray-500 mt-1">
+            <h3 class="text-xl font-bold text-texto">{{ invitacion.natillera_nombre }}</h3>
+            <p class="text-texto-suave mt-1">
               Rol: <span :class="['font-semibold', obtenerClaseRol(invitacion.rol)]">{{ formatearRol(invitacion.rol) }}</span>
             </p>
           </div>
 
           <!-- Permisos que tendrás -->
-          <div class="bg-gray-50 rounded-xl p-4 mb-6">
-            <h4 class="text-sm font-semibold text-gray-700 mb-3">Permisos que tendrás:</h4>
+          <div class="bg-superficie-suave rounded-xl p-4 mb-6">
+            <h4 class="text-sm font-semibold text-texto-medio mb-3">Permisos que tendrás:</h4>
             <div class="flex flex-wrap gap-2">
               <span
                 v-for="(activo, permiso) in invitacion.permisos"
                 :key="permiso"
                 v-show="activo"
-                class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-lg font-medium"
+                class="px-2 py-1 bg-blue-100 oscuro:bg-blue-500/15 text-blue-700 oscuro:text-blue-300 text-xs rounded-lg font-medium"
               >
                 {{ formatearPermiso(permiso) }}
               </span>
@@ -87,7 +87,7 @@
               type="button"
               @click="abrirModalRechazar"
               :disabled="procesando"
-              class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors disabled:opacity-50"
+              class="flex-1 px-4 py-3 bg-superficie-hundida hover:bg-borde text-texto-medio font-semibold rounded-xl transition-colors disabled:opacity-50"
             >
               Rechazar
             </button>
@@ -103,12 +103,12 @@
       </div>
 
       <!-- No autenticado -->
-      <div v-else class="bg-white rounded-2xl shadow-xl p-8 text-center">
-        <div class="w-16 h-16 mx-auto bg-amber-100 rounded-full flex items-center justify-center mb-4">
+      <div v-else class="bg-superficie-tarjeta rounded-2xl shadow-xl p-8 text-center">
+        <div class="w-16 h-16 mx-auto bg-amber-100 oscuro:bg-amber-500/15 rounded-full flex items-center justify-center mb-4">
           <ExclamationTriangleIcon class="w-8 h-8 text-amber-500" />
         </div>
-        <h2 class="text-xl font-bold text-gray-800 mb-2">Inicia Sesión</h2>
-        <p class="text-gray-600 mb-6">
+        <h2 class="text-xl font-bold text-texto mb-2">Inicia Sesión</h2>
+        <p class="text-texto-secundario mb-6">
           Para aceptar esta invitación, primero debes iniciar sesión o crear una cuenta.
         </p>
         <router-link 
@@ -169,11 +169,11 @@ function formatearRol(rol) {
 
 function obtenerClaseRol(rol) {
   const clases = {
-    co_administrador: 'text-purple-600',
-    colaborador: 'text-blue-600',
-    visor: 'text-gray-600'
+    co_administrador: 'text-purple-600 oscuro:text-purple-300',
+    colaborador: 'text-blue-600 oscuro:text-blue-300',
+    visor: 'text-texto-secundario'
   }
-  return clases[rol] || 'text-gray-600'
+  return clases[rol] || 'text-texto-secundario'
 }
 
 function formatearPermiso(permiso) {

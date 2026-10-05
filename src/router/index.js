@@ -5,6 +5,7 @@ import { resolvePostLoginLocation, guardarDestinoPendiente } from '../utils/post
 import { setLastNatilleraId, setUltimoLugar } from '../utils/lastNatillera'
 import { aplicarSeoRuta } from '../utils/seoRuta'
 import { esModoStandalone } from '../composables/usePwaInstall'
+import { marcarRutaAdmiteOscuro } from '../composables/useTema'
 import { MODULO_DE_RUTA, MODULOS } from '../permisos/modulos'
 import { SEO_PAGINAS } from '../views/publico/contenidoPublico'
 
@@ -53,6 +54,8 @@ const DesignSystemDemo = () => import('../views/demo/DesignSystemDemo.vue')
 const Soporte = () => import('../views/soporte/Soporte.vue')
 const SoporteAdmin = () => import('../views/admin/SoporteAdmin.vue')
 const TraficoAdmin = () => import('../views/admin/TraficoAdmin.vue')
+const CorreosAdmin = () => import('../views/admin/CorreosAdmin.vue')
+const Opinion = () => import('../views/opinion/Opinion.vue')
 const UnirmeNatillera = () => import('../views/invitaciones/UnirmeNatillera.vue')
 const PortalSocio = () => import('../views/portal/PortalSocio.vue')
 const SociosEnApp = () => import('../views/socios/SociosEnApp.vue')
@@ -184,7 +187,7 @@ const routes = [
         path: 'dashboard',
         name: 'Dashboard',
         component: Dashboard,
-        meta: { title: 'Dashboard' }
+        meta: { title: 'Dashboard', temaOscuro: true }
       },
       {
         // Redirección para compatibilidad con links existentes
@@ -195,14 +198,14 @@ const routes = [
         path: 'natilleras/crear',
         name: 'NatilleraCrear',
         component: NatilleraCrear,
-        meta: { title: 'Crear Natillera' }
+        meta: { title: 'Crear Natillera', temaOscuro: true }
       },
       {
         path: 'natilleras/:id/cierre',
         name: 'NatilleraCierre',
         component: NatilleraCierre,
         props: true,
-        meta: { title: 'Cierre de Natillera' }
+        meta: { title: 'Cierre de Natillera', temaOscuro: true }
       },
       // Rutas con más segmentos antes que `natilleras/:id` para un emparejado inequívoco
       {
@@ -210,7 +213,7 @@ const routes = [
         name: 'Socios',
         component: Socios,
         props: true,
-        meta: { title: 'Socios' }
+        meta: { title: 'Socios', temaOscuro: true }
       },
       {
         // Dueño, co-administradores, colaboradores y visores: invitar, permisos y accesos
@@ -218,7 +221,7 @@ const routes = [
         name: 'AdministradoresNatillera',
         component: AdministradoresNatillera,
         props: true,
-        meta: { title: 'Administradores' }
+        meta: { title: 'Administradores', temaOscuro: true }
       },
       {
         // Invitar, aprobar y administrar las cuentas con que los socios entran a la app
@@ -226,42 +229,42 @@ const routes = [
         name: 'SociosEnApp',
         component: SociosEnApp,
         props: true,
-        meta: { title: 'Invitar socios' }
+        meta: { title: 'Invitar socios', temaOscuro: true }
       },
       {
         path: 'natilleras/:id/cuotas/:mes?',
         name: 'Cuotas',
         component: Cuotas,
         props: true,
-        meta: { title: 'Cuotas' }
+        meta: { title: 'Cuotas', temaOscuro: true }
       },
       {
         path: 'natilleras/:id/prestamos',
         name: 'Prestamos',
         component: Prestamos,
         props: true,
-        meta: { title: 'Préstamos' }
+        meta: { title: 'Préstamos', temaOscuro: true }
       },
       {
         path: 'natilleras/:id/actividades',
         name: 'Actividades',
         component: Actividades,
         props: true,
-        meta: { title: 'Actividades' }
+        meta: { title: 'Actividades', temaOscuro: true }
       },
       {
         path: 'natilleras/:id/cuadre-caja',
         name: 'CuadreCaja',
         component: CuadreCaja,
         props: true,
-        meta: { title: 'Totales generales' }
+        meta: { title: 'Totales generales', temaOscuro: true }
       },
       {
         path: 'natilleras/:id/conciliacion',
         name: 'ConciliacionCaja',
         component: ConciliacionCaja,
         props: true,
-        meta: { title: 'Conciliación de caja' }
+        meta: { title: 'Conciliación de caja', temaOscuro: true }
       },
       {
         // Portal del socio (solo lectura). La base de datos solo responde si esta cuenta
@@ -269,48 +272,49 @@ const routes = [
         path: 'mi-natillera/:socioNatilleraId',
         name: 'PortalSocio',
         component: PortalSocio,
-        meta: { title: 'Mi natillera' }
+        // temaOscuro: vista migrada a colores por función (docs/plan-modo-oscuro.md)
+        meta: { title: 'Mi natillera', temaOscuro: true }
       },
       {
         path: 'natilleras/:id/notificar',
         name: 'NotificarSocios',
         component: NotificarSocios,
         props: true,
-        meta: { title: 'Notificar' }
+        meta: { title: 'Notificar', temaOscuro: true }
       },
       {
         path: 'natilleras/:id/pagos',
         name: 'PagosSocios',
         component: PagosSocios,
         props: true,
-        meta: { title: 'Pagos de los socios' }
+        meta: { title: 'Pagos de los socios', temaOscuro: true }
       },
       {
         path: 'natilleras/:id/movimientos',
         name: 'Movimientos',
         component: Movimientos,
         props: true,
-        meta: { title: 'Movimientos del fondo' }
+        meta: { title: 'Movimientos del fondo', temaOscuro: true }
       },
       {
         path: 'natilleras/:id/configuracion',
         name: 'NatilleraConfiguracion',
         component: NatilleraConfiguracion,
         props: true,
-        meta: { title: 'Configuración Natillera' }
+        meta: { title: 'Configuración Natillera', temaOscuro: true }
       },
       {
         path: 'natilleras/:id',
         name: 'NatilleraDetalle',
         component: NatilleraDetalle,
         props: true,
-        meta: { title: 'Detalle Natillera' }
+        meta: { title: 'Detalle Natillera', temaOscuro: true }
       },
       {
         path: 'configuracion',
         name: 'Configuracion',
         component: Configuracion,
-        meta: { title: 'Configuración' }
+        meta: { title: 'Configuración', temaOscuro: true }
       },
       {
         // Preferencias de la persona, no de la natillera: avisos push y botón
@@ -318,19 +322,19 @@ const routes = [
         path: 'mi-cuenta',
         name: 'MiCuenta',
         component: MiCuenta,
-        meta: { title: 'Mi cuenta' }
+        meta: { title: 'Mi cuenta', temaOscuro: true }
       },
       {
         path: 'auditoria',
         name: 'Auditoria',
         component: Auditoria,
-        meta: { title: 'Auditoría' }
+        meta: { title: 'Auditoría', temaOscuro: true }
       },
       {
         path: 'admin/data',
         name: 'DataAdmin',
         component: DataAdmin,
-        meta: { title: 'Data Admin' }
+        meta: { title: 'Data Admin', temaOscuro: true }
       },
       // ── Soporte ──────────────────────────────────────────────────────────
       {
@@ -339,7 +343,7 @@ const routes = [
         component: Soporte,
         // Sin `props: true`: la vista lee el parámetro con useRoute y así puede
         // reaccionar a que la ruta cambie sin remontarse.
-        meta: { title: 'Soporte' }
+        meta: { title: 'Soporte', temaOscuro: true }
       },
       {
         // Mismo criterio que el panel de soporte: el guard evita el paseo inútil, pero
@@ -347,7 +351,23 @@ const routes = [
         path: 'admin/trafico',
         name: 'TraficoAdmin',
         component: TraficoAdmin,
-        meta: { title: 'Tráfico', requiresSuperAdmin: true }
+        meta: { title: 'Tráfico', requiresSuperAdmin: true, temaOscuro: true }
+      },
+      {
+        // Igual que Tráfico: el guard evita la pantalla, pero quien protege es la Edge
+        // Function (`es_super_admin`) y RLS de correos_masivos / opiniones_plataforma.
+        path: 'admin/correos',
+        name: 'CorreosAdmin',
+        component: CorreosAdmin,
+        meta: { title: 'Correos', requiresSuperAdmin: true, temaOscuro: true }
+      },
+      {
+        // Destino de las caritas del correo de experiencia. Pide sesión (está bajo el
+        // layout con requiresAuth): sin ella, el login la guarda y vuelve aquí después.
+        path: 'opinion',
+        name: 'Opinion',
+        component: Opinion,
+        meta: { title: 'Tu opinión', temaOscuro: true }
       },
       {
         // El guard es comodidad de interfaz: aunque alguien fuerce la ruta,
@@ -355,14 +375,14 @@ const routes = [
         path: 'admin/soporte/:conversacionId?',
         name: 'SoporteAdmin',
         component: SoporteAdmin,
-        meta: { title: 'Panel de soporte', requiresSuperAdmin: true }
+        meta: { title: 'Panel de soporte', requiresSuperAdmin: true, temaOscuro: true }
       },
       {
         path: 'invitacion/:token',
         name: 'AceptarInvitacion',
         component: AceptarInvitacion,
         props: true,
-        meta: { title: 'Aceptar Invitación' }
+        meta: { title: 'Aceptar Invitación', temaOscuro: true }
       },
       {
         // Demo del sistema de diseño (DS) — accesible solo dentro del dashboard
@@ -593,6 +613,12 @@ if (typeof window !== 'undefined') {
 
 router.afterEach(() => {
   try { sessionStorage.removeItem(CLAVE_RECARGA_CHUNK) } catch { /* sin storage */ }
+})
+
+// Modo oscuro solo en vistas ya migradas (meta.temaOscuro): el resto se pinta
+// en claro, marco y modales incluidos. Ver useTema() y docs/plan-modo-oscuro.md.
+router.afterEach((to) => {
+  marcarRutaAdmiteOscuro(to.matched.some((r) => r.meta?.temaOscuro))
 })
 
 export default router

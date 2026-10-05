@@ -24,8 +24,8 @@
 
         <!-- Enlace que no existe o que el admin ya cambió -->
         <div v-else-if="!natilleraNombre" class="text-center">
-          <p class="font-display text-lg font-bold text-gray-900">Este enlace ya no funciona</p>
-          <p class="mt-1 text-sm text-gray-500">
+          <p class="font-display text-lg font-bold text-texto-fuerte">Este enlace ya no funciona</p>
+          <p class="mt-1 text-sm text-texto-suave">
             Puede que el administrador lo haya cambiado. Pídele el enlace nuevo.
           </p>
           <router-link to="/" class="ds-btn ds-btn--secondary mt-5 w-full">Ir al inicio</router-link>
@@ -39,8 +39,8 @@
           <span class="unirme__check unirme__check--pendiente" aria-hidden="true">
             <ClockIcon class="h-8 w-8" />
           </span>
-          <p class="mt-3 font-display text-xl font-bold text-gray-900">¡Solicitud enviada, {{ primerNombre(resultado.socio) }}!</p>
-          <p class="mt-1 text-sm leading-relaxed text-gray-600">
+          <p class="mt-3 font-display text-xl font-bold text-texto-fuerte">¡Solicitud enviada, {{ primerNombre(resultado.socio) }}!</p>
+          <p class="mt-1 text-sm leading-relaxed text-texto-secundario">
             El administrador de <strong>{{ resultado.natillera }}</strong> tiene que aprobarla.
             Cuando lo haga, verás tu estado de cuenta en la pestaña «Como socio» del inicio.
           </p>
@@ -52,15 +52,15 @@
           <span class="unirme__check" aria-hidden="true">
             <CheckIcon class="h-8 w-8" />
           </span>
-          <p class="mt-3 font-display text-xl font-bold text-gray-900">¡Listo, {{ primerNombre(resultado.socio) }}!</p>
-          <p class="mt-1 text-sm text-gray-600">Tu cuenta ya está vinculada como socio de <strong>{{ resultado.natillera }}</strong>.</p>
-          <p class="mt-4 text-xs text-gray-500">Tu estado de cuenta está en la pestaña «Como socio» del inicio.</p>
+          <p class="mt-3 font-display text-xl font-bold text-texto-fuerte">¡Listo, {{ primerNombre(resultado.socio) }}!</p>
+          <p class="mt-1 text-sm text-texto-secundario">Tu cuenta ya está vinculada como socio de <strong>{{ resultado.natillera }}</strong>.</p>
+          <p class="mt-4 text-xs text-texto-suave">Tu estado de cuenta está en la pestaña «Como socio» del inicio.</p>
           <button type="button" class="ds-btn ds-btn--primary mt-5 w-full" @click="irAlInicio">Entrar a la app</button>
         </div>
 
         <!-- Sin sesión: primero entrar (o crear la cuenta) y se vuelve aquí solo -->
         <div v-else-if="!authStore.isAuthenticated">
-          <p class="text-sm leading-relaxed text-gray-600">
+          <p class="text-sm leading-relaxed text-texto-secundario">
             Para vincularte entra con tu cuenta de Natillerapp. Si todavía no tienes, créala:
             es gratis y toma un minuto.
           </p>
@@ -85,7 +85,7 @@
             :disabled="vinculando"
             @input="error = null"
           />
-          <p class="mt-1.5 text-xs text-gray-500">El número con el que usas WhatsApp: 10 dígitos, o con + y el indicativo si es de otro país.</p>
+          <p class="mt-1.5 text-xs text-texto-suave">El número con el que usas WhatsApp: 10 dígitos, o con + y el indicativo si es de otro país.</p>
 
           <!-- El aviso tiene título: «no está registrado» es lo que más pasa y debe verse -->
           <div v-if="error" class="unirme__error" role="alert">
@@ -100,16 +100,16 @@
             {{ vinculando ? 'Vinculando…' : 'Vincularme' }}
           </button>
 
-          <p class="mt-4 text-center text-xs text-gray-500">
-            Entraste como <strong class="text-gray-700">{{ authStore.user?.email }}</strong>.
+          <p class="mt-4 text-center text-xs text-texto-suave">
+            Entraste como <strong class="text-texto-medio">{{ authStore.user?.email }}</strong>.
             <button type="button" class="unirme__enlace" @click="cambiarCuenta">¿No eres tú?</button>
           </p>
         </form>
       </div>
     </div>
 
-    <p class="mt-5 text-center text-xs font-semibold tracking-wide text-[color:var(--brand-primary)]/70">Natillerapp</p>
-    <p class="mt-2 text-center text-xs text-gray-500">
+    <p class="mt-5 text-center text-xs font-semibold tracking-wide text-marca-tinta/70">Natillerapp</p>
+    <p class="mt-2 text-center text-xs text-texto-suave">
       <router-link :to="{ name: 'PoliticaDatos' }" class="unirme__legal">Tratamiento de datos</router-link>
       ·
       <router-link :to="{ name: 'Terminos' }" class="unirme__legal">Términos</router-link>
@@ -255,6 +255,7 @@ async function irAlInicio() {
   background: var(--brand-primary);
   color: #fff;
 }
+/* tema-fijo-inicio: icono en círculo blanco sobre la cabecera verde */
 .unirme__icono {
   display: inline-flex;
   width: 3.5rem;
@@ -267,6 +268,7 @@ async function irAlInicio() {
   color: var(--brand-primary);
   box-shadow: var(--shadow-sm);
 }
+/* tema-fijo-fin */
 .unirme__overline {
   font-family: var(--font-brand-mono);
   font-size: 0.6875rem;
@@ -329,4 +331,14 @@ async function irAlInicio() {
   color: #b45309;
   box-shadow: none;
 }
+
+/* Modo oscuro: solo lo que cambia (skill natillerapp-modo-oscuro §2.5). La cabecera
+   verde, su icono en círculo blanco y el check verde valen igual en los dos modos. */
+:where([data-tema=oscuro]) .unirme {
+  background: linear-gradient(180deg, var(--superficie-hundida) 0%, var(--superficie-lienzo) 100%);
+}
+:where([data-tema=oscuro]) .unirme__tarjeta { border-color: var(--borde); background: var(--superficie-tarjeta); }
+:where([data-tema=oscuro]) .unirme__error { background: var(--peligro-suave); color: var(--peligro); }
+:where([data-tema=oscuro]) .unirme__enlace { color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .unirme__check--pendiente { background: var(--alerta-suave); color: var(--alerta); }
 </style>

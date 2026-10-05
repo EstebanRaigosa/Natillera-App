@@ -6,8 +6,8 @@
     :persistent="true"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="cerrar"
   >
@@ -15,6 +15,7 @@
     <div class="flex-shrink-0 bg-[color:var(--brand-primary)] text-white">
       <!-- Móvil: una sola fila [icono | títulos | X] -->
       <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+        <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
         <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
           <PencilIcon v-if="esEdicion" class="w-5 h-5 text-[color:var(--brand-primary)]" />
           <UserPlusIcon v-else class="w-5 h-5 text-[color:var(--brand-primary)]" />
@@ -42,6 +43,7 @@
       <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
         <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
         <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm">
             <PencilIcon v-if="esEdicion" class="w-6 h-6 text-[color:var(--brand-primary)]" />
             <UserPlusIcon v-else class="w-6 h-6 text-[color:var(--brand-primary)]" />
@@ -68,7 +70,7 @@
     <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
         ref="areaScroll"
-        class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+        class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch]"
         @scroll.passive="programarNatiscroll"
       >
         <form
@@ -108,8 +110,8 @@
                   :class="[
                     'p-1 rounded-[var(--radius-md)] transition-all touch-manipulation',
                     form.avatar_seed === seed
-                      ? 'ring-2 ring-[color:var(--brand-primary)] bg-white'
-                      : 'hover:bg-white/70'
+                      ? 'ring-2 ring-[color:var(--brand-primary)] bg-superficie-tarjeta'
+                      : 'hover:bg-white/70 oscuro:hover:bg-superficie-tarjeta/70'
                   ]"
                   @click="form.avatar_seed = seed; mostrarAvatares = false"
                 >
@@ -128,7 +130,7 @@
           <!-- Nombre -->
           <div>
             <label for="agregar-socio-nombre" class="ds-label">
-              Nombre completo <span class="text-[color:var(--brand-danger)]">*</span>
+              Nombre completo <span class="text-[color:var(--brand-danger)] oscuro:text-peligro">*</span>
             </label>
             <input
               id="agregar-socio-nombre"
@@ -158,7 +160,7 @@
                 <CalendarIcon class="w-5 h-5 flex-shrink-0" />
                 <div class="min-w-0 flex-1 text-left">
                   <p class="font-semibold text-sm leading-tight">Mensual</p>
-                  <p class="text-[0.6875rem] text-slate-500 mt-0.5">1 cuota por mes</p>
+                  <p class="text-[0.6875rem] text-slate-500 oscuro:text-texto-suave mt-0.5">1 cuota por mes</p>
                 </div>
                 <span
                   v-if="periodicidadNatillera === 'mensual'"
@@ -168,7 +170,7 @@
                 </span>
                 <CheckCircleIcon
                   v-else-if="form.periodicidad === 'mensual'"
-                  class="w-4 h-4 text-[color:var(--brand-primary)] flex-shrink-0"
+                  class="w-4 h-4 text-[color:var(--brand-primary)] oscuro:text-marca-tinta flex-shrink-0"
                 />
               </button>
               <button
@@ -183,15 +185,15 @@
                 <CalendarDaysIcon class="w-5 h-5 flex-shrink-0" />
                 <div class="min-w-0 flex-1 text-left">
                   <p class="font-semibold text-sm leading-tight">Quincenal</p>
-                  <p class="text-[0.6875rem] text-slate-500 mt-0.5">2 cuotas por mes</p>
+                  <p class="text-[0.6875rem] text-slate-500 oscuro:text-texto-suave mt-0.5">2 cuotas por mes</p>
                 </div>
                 <CheckCircleIcon
                   v-if="form.periodicidad === 'quincenal'"
-                  class="w-4 h-4 text-[color:var(--brand-primary)] flex-shrink-0"
+                  class="w-4 h-4 text-[color:var(--brand-primary)] oscuro:text-marca-tinta flex-shrink-0"
                 />
               </button>
             </div>
-            <p v-if="periodicidadNatillera === 'mensual'" class="text-xs text-slate-500 mt-2">
+            <p v-if="periodicidadNatillera === 'mensual'" class="text-xs text-slate-500 oscuro:text-texto-suave mt-2">
               Esta natillera está configurada como mensual.
             </p>
           </div>
@@ -199,8 +201,8 @@
           <!-- Cuota (campo destacado) -->
           <div class="cuota-bloque">
             <label for="agregar-socio-cuota" class="ds-label flex items-center gap-1.5">
-              <CurrencyDollarIcon class="w-4 h-4 text-[color:var(--brand-primary)]" />
-              {{ textoLabelCuota }} <span class="text-[color:var(--brand-danger)]">*</span>
+              <CurrencyDollarIcon class="w-4 h-4 text-[color:var(--brand-primary)] oscuro:text-marca-tinta" />
+              {{ textoLabelCuota }} <span class="text-[color:var(--brand-danger)] oscuro:text-peligro">*</span>
             </label>
             <div class="relative">
               <span class="cuota-bloque__prefix">$</span>
@@ -218,21 +220,21 @@
                 @blur="handleValorCuotaBlur"
               />
             </div>
-            <p class="text-xs text-[color:var(--brand-primary)] mt-2">
+            <p class="text-xs text-[color:var(--brand-primary)] oscuro:text-marca-tinta mt-2">
               Valor que el socio aportará en cada período.
             </p>
 
             <!-- Aviso al editar (callout warning consistente con DS) -->
             <div v-if="esEdicion" class="cuota-aviso">
-              <ExclamationTriangleIcon class="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
-              <p class="text-xs text-amber-800 flex-1 leading-snug">
+              <ExclamationTriangleIcon class="w-4 h-4 text-amber-700 oscuro:text-amber-300 flex-shrink-0 mt-0.5" />
+              <p class="text-xs text-amber-800 oscuro:text-amber-300 flex-1 leading-snug">
                 Este cambio afectará todas las cuotas generadas para este socio.
               </p>
               <div class="relative flex-shrink-0">
                 <button
                   type="button"
                   data-advertencia-button
-                  class="inline-flex items-center justify-center w-11 h-11 -m-2 text-amber-700 hover:text-amber-900 hover:bg-amber-100 rounded-full transition-colors touch-manipulation"
+                  class="inline-flex items-center justify-center w-11 h-11 -m-2 text-amber-700 oscuro:text-amber-300 hover:text-amber-900 oscuro:hover:text-amber-300 hover:bg-amber-100 oscuro:hover:bg-amber-500/15 rounded-full transition-colors touch-manipulation"
                   title="Ver más detalles"
                   aria-label="Ver detalles del impacto"
                   @click.stop="mostrarAdvertenciaCuota = !mostrarAdvertenciaCuota"
@@ -250,25 +252,25 @@
                   <div
                     v-show="mostrarAdvertenciaCuota"
                     data-advertencia-tooltip
-                    class="absolute bottom-full right-0 mb-2 w-72 max-w-[calc(100vw-2rem)] p-3 bg-amber-50 border border-amber-200 rounded-[var(--radius-md)] shadow-xl z-50"
+                    class="absolute bottom-full right-0 mb-2 w-72 max-w-[calc(100vw-2rem)] p-3 bg-amber-50 oscuro:bg-amber-500/15 border border-amber-200 oscuro:border-amber-500/30 rounded-[var(--radius-md)] shadow-xl z-50"
                     @click.stop
                   >
-                    <div class="absolute bottom-0 right-3 translate-y-1/2 rotate-45 w-2.5 h-2.5 bg-amber-50 border-r border-b border-amber-200"></div>
-                    <p class="text-xs font-semibold text-amber-900 mb-1.5 flex items-center gap-1.5">
+                    <div class="absolute bottom-0 right-3 translate-y-1/2 rotate-45 w-2.5 h-2.5 bg-amber-50 oscuro:bg-amber-500/15 border-r border-b border-amber-200 oscuro:border-amber-500/30"></div>
+                    <p class="text-xs font-semibold text-amber-900 oscuro:text-amber-300 mb-1.5 flex items-center gap-1.5">
                       <ExclamationTriangleIcon class="w-3.5 h-3.5" />
                       Al modificar este valor:
                     </p>
-                    <ul class="text-[11px] text-amber-800 space-y-1.5 leading-relaxed">
+                    <ul class="text-[11px] text-amber-800 oscuro:text-amber-300 space-y-1.5 leading-relaxed">
                       <li class="flex items-start gap-1.5">
-                        <span class="text-amber-600 mt-0.5 flex-shrink-0">•</span>
+                        <span class="text-amber-600 oscuro:text-amber-300 mt-0.5 flex-shrink-0">•</span>
                         <span>Se actualizarán <strong>todas las cuotas</strong> generadas para este socio.</span>
                       </li>
                       <li class="flex items-start gap-1.5">
-                        <span class="text-amber-600 mt-0.5 flex-shrink-0">•</span>
+                        <span class="text-amber-600 oscuro:text-amber-300 mt-0.5 flex-shrink-0">•</span>
                         <span><strong>Valor mayor:</strong> las cuotas pagadas pasan a pagos parciales.</span>
                       </li>
                       <li class="flex items-start gap-1.5">
-                        <span class="text-amber-600 mt-0.5 flex-shrink-0">•</span>
+                        <span class="text-amber-600 oscuro:text-amber-300 mt-0.5 flex-shrink-0">•</span>
                         <span><strong>Valor menor:</strong> se mantienen pagadas con nota.</span>
                       </li>
                     </ul>
@@ -292,11 +294,11 @@
               </span>
             </label>
             <div v-if="form.al_dia" class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 pl-8">
-              <span class="text-xs font-semibold text-slate-600">Cómo pagó</span>
+              <span class="text-xs font-semibold text-slate-600 oscuro:text-texto-secundario">Cómo pagó</span>
               <SwitchSegmentado v-model="form.al_dia_forma_pago" :opciones="OPCIONES_FORMA_PAGO" />
               <!-- Opcional, como en el pago normal: el 4×1000 solo aplica a transferencias -->
-              <label v-if="form.al_dia_forma_pago === 'transferencia'" class="flex min-h-[44px] cursor-pointer touch-manipulation items-center gap-2 text-sm font-semibold text-slate-700">
-                <input v-model="form.al_dia_4x1000" type="checkbox" class="h-5 w-5 rounded border-gray-300 accent-[#1B5E37]" />
+              <label v-if="form.al_dia_forma_pago === 'transferencia'" class="flex min-h-[44px] cursor-pointer touch-manipulation items-center gap-2 text-sm font-semibold text-slate-700 oscuro:text-texto-medio">
+                <input v-model="form.al_dia_4x1000" type="checkbox" class="h-5 w-5 rounded border-borde-fuerte accent-[#1B5E37]" />
                 Cobrar 4×1000
               </label>
             </div>
@@ -306,10 +308,10 @@
           <div>
             <label for="agregar-socio-telefono" class="ds-label flex items-center justify-between gap-2">
               <span class="inline-flex items-center gap-1.5">
-                <PhoneIcon class="w-4 h-4 text-[color:var(--brand-primary)]" />
-                Teléfono / WhatsApp <span class="text-[color:var(--brand-danger)]">*</span>
+                <PhoneIcon class="w-4 h-4 text-[color:var(--brand-primary)] oscuro:text-marca-tinta" />
+                Teléfono / WhatsApp <span class="text-[color:var(--brand-danger)] oscuro:text-peligro">*</span>
               </span>
-              <span class="text-[0.6875rem] font-normal text-slate-500">único por socio</span>
+              <span class="text-[0.6875rem] font-normal text-slate-500 oscuro:text-texto-suave">único por socio</span>
             </label>
             <div class="flex gap-2">
               <input
@@ -338,13 +340,13 @@
                 <span class="hidden sm:inline">Contactos</span>
               </button>
             </div>
-            <p v-if="errorTelefonoDuplicado" id="agregar-socio-telefono-ayuda" class="text-xs text-[color:var(--brand-danger)] font-medium mt-1.5">
+            <p v-if="errorTelefonoDuplicado" id="agregar-socio-telefono-ayuda" class="text-xs text-[color:var(--brand-danger)] oscuro:text-peligro font-medium mt-1.5">
               Este número de teléfono ya está registrado para otro socio.
             </p>
-            <p v-else-if="errorFormatoTelefono" id="agregar-socio-telefono-ayuda" class="text-xs text-[color:var(--brand-danger)] font-medium mt-1.5">
+            <p v-else-if="errorFormatoTelefono" id="agregar-socio-telefono-ayuda" class="text-xs text-[color:var(--brand-danger)] oscuro:text-peligro font-medium mt-1.5">
               {{ errorFormatoTelefono }}
             </p>
-            <p v-else id="agregar-socio-telefono-ayuda" class="text-xs text-slate-500 mt-1.5 leading-snug">
+            <p v-else id="agregar-socio-telefono-ayuda" class="text-xs text-slate-500 oscuro:text-texto-suave mt-1.5 leading-snug">
               Celular de 10 dígitos, único por socio. Si es de otro país, escríbelo con + y el indicativo (+52…). Se usa para WhatsApp y para que entre a la app.
               <span v-if="contactPickerDisponible" class="block">
                 Usa el botón “Contactos” para elegir desde tu agenda.
@@ -360,13 +362,13 @@
               :aria-expanded="mostrarContacto"
               @click="mostrarContacto = !mostrarContacto"
             >
-              <span class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
-                <EnvelopeIcon class="w-4 h-4 text-[color:var(--brand-primary)]" />
+              <span class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 oscuro:text-texto-medio">
+                <EnvelopeIcon class="w-4 h-4 text-[color:var(--brand-primary)] oscuro:text-marca-tinta" />
                 Información de contacto adicional
-                <span class="text-slate-400 font-normal">(opcional)</span>
+                <span class="text-slate-400 oscuro:text-texto-tenue font-normal">(opcional)</span>
               </span>
               <ChevronDownIcon
-                :class="['w-5 h-5 text-slate-400 transition-transform flex-shrink-0', mostrarContacto ? 'rotate-180' : '']"
+                :class="['w-5 h-5 text-slate-400 oscuro:text-texto-tenue transition-transform flex-shrink-0', mostrarContacto ? 'rotate-180' : '']"
               />
             </button>
             <div v-show="mostrarContacto" class="p-4 space-y-4 border-t border-[color:var(--surface-divider)]">
@@ -394,15 +396,15 @@
           </div>
 
           <!-- Error global -->
-          <div v-if="error" class="ds-callout" role="alert" style="background: #fee2e2; color: #991b1b;">
-            <ExclamationCircleIcon class="w-5 h-5 ds-callout__icon" style="color: #b91c1c;" />
+          <div v-if="error" class="ds-callout bg-[#fee2e2] oscuro:bg-red-500/15 text-[#991b1b] oscuro:text-red-300" role="alert">
+            <ExclamationCircleIcon class="w-5 h-5 ds-callout__icon text-[#b91c1c] oscuro:text-red-300" />
             <div>{{ error }}</div>
           </div>
 
           <!-- Acciones (mismo scroll, safe-area) -->
           <div class="pt-4 border-t border-[color:var(--surface-divider)] space-y-2.5">
             <!-- El admin es el responsable de los datos de sus socios (Ley 1581): lo declara al registrarlos -->
-            <p v-if="!esEdicion" class="text-xs text-slate-500">
+            <p v-if="!esEdicion" class="text-xs text-slate-500 oscuro:text-texto-suave">
               Al agregarlo confirmas que tienes su autorización para registrar sus datos.
             </p>
             <button
@@ -440,7 +442,7 @@
         aria-hidden="true"
       >
         <div
-          class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+          class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent"
           aria-hidden="true"
         />
         <div
@@ -1006,5 +1008,48 @@ onUnmounted(() => {
 @supports (-webkit-touch-callout: none) {
   .periodicidad-opcion,
   .cuota-bloque__input { -webkit-transform: translate3d(0, 0, 0); }
+}
+
+/* ==========================================================================
+   Modo oscuro (skill natillerapp-modo-oscuro). Propuesto con
+   scripts/tema/proponer-oscuro.mjs y revisado a mano. Solo lo que cambia: las
+   reglas de claro de arriba quedan intactas.
+   ========================================================================== */
+:where([data-tema=oscuro]) .al-dia:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-tarjeta);
+}
+:where([data-tema=oscuro]) .al-dia.is-activo:not(:where([data-tema=claro] *)) {
+  border-color: var(--marca-tinta-borde);
+  background: var(--marca-suave);
+}
+:where([data-tema=oscuro]) .al-dia__titulo:not(:where([data-tema=claro] *)) {
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .al-dia__texto:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .periodicidad-opcion:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-tarjeta);
+  color: var(--texto-medio);
+}
+:where([data-tema=oscuro]) .periodicidad-opcion:hover:not(:disabled):not(:where([data-tema=claro] *)) {
+  border-color: var(--marca-tinta-borde);
+}
+:where([data-tema=oscuro]) .periodicidad-opcion--activa:not(:where([data-tema=claro] *)) {
+  border-color: var(--marca-tinta-borde);
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .periodicidad-opcion--activa > svg:first-child:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .cuota-bloque:not(:where([data-tema=claro] *)) {
+  border: 1px solid var(--marca-tinta-borde);
+}
+:where([data-tema=oscuro]) .cuota-bloque__prefix:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .cuota-aviso:not(:where([data-tema=claro] *)) {
+  background: var(--alerta-suave);
+  border: 1px solid var(--alerta-borde);
 }
 </style>

@@ -43,7 +43,7 @@
 
     <template v-if="cargando" />
 
-    <div v-else-if="error" class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
+    <div v-else-if="error" class="rounded-2xl border border-red-200 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 px-4 py-3 text-sm font-medium text-red-800 oscuro:text-red-300 oscuro:border-peligro-borde oscuro:bg-peligro-suave oscuro:text-peligro">
       {{ error }}
       <!-- min-h-11 con margen negativo: 44 px táctiles sin engordar la línea del aviso -->
       <button type="button" class="ml-2 -my-3 inline-flex min-h-11 items-center font-semibold underline touch-manipulation" @click="cargar">Reintentar</button>
@@ -176,17 +176,17 @@
                 <div class="deuda__aldia">
                   <span class="deuda__aldia-icono"><CheckCircleIcon class="h-6 w-6" aria-hidden="true" /></span>
                   <span class="min-w-0">
-                    <span class="block font-display text-lg font-extrabold text-[#1B5E37]">Estás al día</span>
-                    <span class="block text-xs text-slate-500">{{ proximoPago ? 'No tienes nada vencido' : 'No debes nada a la fecha' }}</span>
+                    <span class="block font-display text-lg font-extrabold text-marca-tinta">Estás al día</span>
+                    <span class="block text-xs text-slate-500 oscuro:text-texto-suave">{{ proximoPago ? 'No tienes nada vencido' : 'No debes nada a la fecha' }}</span>
                   </span>
                 </div>
                 <!-- Al día, lo útil es saber qué sigue -->
                 <div v-if="proximoPago" class="deuda__proxima">
                   <span class="min-w-0">
-                    <span class="block text-[0.6875rem] font-bold uppercase tracking-wide text-slate-500">Próxima cuota</span>
-                    <span class="block text-sm font-semibold text-slate-800">{{ proximoPago.fecha }} · {{ proximoPago.cuando }}</span>
+                    <span class="block text-[0.6875rem] font-bold uppercase tracking-wide text-slate-500 oscuro:text-texto-suave">Próxima cuota</span>
+                    <span class="block text-sm font-semibold text-slate-800 oscuro:text-texto">{{ proximoPago.fecha }} · {{ proximoPago.cuando }}</span>
                   </span>
-                  <strong class="flex-shrink-0 font-display text-lg font-extrabold tabular-nums text-[#1B5E37]">${{ formatMoney(proximoPago.valor) }}</strong>
+                  <strong class="flex-shrink-0 font-display text-lg font-extrabold tabular-nums text-marca-tinta">${{ formatMoney(proximoPago.valor) }}</strong>
                 </div>
               </template>
             </div>
@@ -211,8 +211,8 @@
                 <span class="tablero-atajo__titulo">Ganancias</span>
                 <span class="tablero-atajo__sub">{{ natilleraCerrada ? 'Definitivo' : 'Estimado, se define al cierre' }}</span>
               </span>
-              <span class="tablero-atajo__valor tabular-nums text-[#C2185B]">${{ formatMoney(ganancias.utilidadesTotal) }}</span>
-              <ChevronRightIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+              <span class="tablero-atajo__valor tabular-nums text-[#C2185B] oscuro:text-pink-300">${{ formatMoney(ganancias.utilidadesTotal) }}</span>
+              <ChevronRightIcon class="h-4 w-4 shrink-0 text-slate-400 oscuro:text-texto-tenue" aria-hidden="true" />
             </button>
             <button v-if="prestamoResumen" type="button" class="tablero-atajo" @click="irASeccion('prestamos')">
               <span class="tablero-atajo__icono tablero-atajo__icono--azul"><BanknotesIcon class="h-5 w-5" aria-hidden="true" /></span>
@@ -220,8 +220,8 @@
                 <span class="tablero-atajo__titulo">{{ prestamoResumen.titulo }}</span>
                 <span class="tablero-atajo__sub">{{ prestamoResumen.detalle }}</span>
               </span>
-              <span class="tablero-atajo__valor tabular-nums text-[#1d4ed8]">${{ formatMoney(prestamoResumen.saldo) }}</span>
-              <ChevronRightIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+              <span class="tablero-atajo__valor tabular-nums text-info">${{ formatMoney(prestamoResumen.saldo) }}</span>
+              <ChevronRightIcon class="h-4 w-4 shrink-0 text-slate-400 oscuro:text-texto-tenue" aria-hidden="true" />
             </button>
           </section>
 
@@ -233,14 +233,14 @@
                 Ver los {{ pagos.length }}<ChevronRightIcon class="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
-            <p v-if="pagos.length === 0" class="py-6 text-center text-sm text-slate-500">Aún no hay pagos registrados.</p>
+            <p v-if="pagos.length === 0" class="py-6 text-center text-sm text-slate-500 oscuro:text-texto-suave">Aún no hay pagos registrados.</p>
             <ol v-else class="tablero-linea">
               <li v-for="p in pagos.slice(0, pagosVisibles)" :key="p.clave" class="tablero-linea__item">
                 <span class="tablero-linea__punto" aria-hidden="true" />
                 <button type="button" class="tablero-linea__pago" @click="abrirPago(p)">
                   <span class="min-w-0 flex-1 text-left">
-                    <span class="block text-[0.9375rem] font-extrabold tabular-nums text-slate-900">${{ formatMoney(p.total) }}</span>
-                    <span class="block truncate text-xs text-slate-500">{{ p.periodo }} · {{ p.fecha }}<template v-if="p.formaPago"> · {{ p.formaPago }}</template></span>
+                    <span class="block text-[0.9375rem] font-extrabold tabular-nums text-slate-900 oscuro:text-texto-fuerte">${{ formatMoney(p.total) }}</span>
+                    <span class="block truncate text-xs text-slate-500 oscuro:text-texto-suave">{{ p.periodo }} · {{ p.fecha }}<template v-if="p.formaPago"> · {{ p.formaPago }}</template></span>
                     <span v-if="num(p.sancion) > 0" class="tablero-linea__sancion">Incluye sanción ${{ formatMoney(p.sancion) }}</span>
                   </span>
                   <span class="tablero-linea__ver"><ReceiptPercentIcon class="h-4 w-4" aria-hidden="true" /> Comprobante</span>
@@ -273,15 +273,33 @@
           </div>
           <!-- Aportes (RF-08) -->
           <section v-if="pestana === 'aportes'" class="space-y-3">
-            <p class="px-1 text-xs text-slate-500">
-              Aportado <strong class="tabular-nums text-slate-900">${{ formatMoney(totalAportado) }}</strong>
+            <p class="px-1 text-xs text-slate-500 oscuro:text-texto-suave">
+              Aportado <strong class="tabular-nums text-slate-900 oscuro:text-texto-fuerte">${{ formatMoney(totalAportado) }}</strong>
               de <span class="tabular-nums">${{ formatMoney(totalProgramado) }}</span>
               <!-- Las sanciones ya pagadas no merecen tarjeta propia, pero sí constar -->
               <template v-if="totalSancionesPagadas > 0">
-                · has pagado <strong class="tabular-nums text-slate-700">${{ formatMoney(totalSancionesPagadas) }}</strong>
+                · has pagado <strong class="tabular-nums text-slate-700 oscuro:text-texto-medio">${{ formatMoney(totalSancionesPagadas) }}</strong>
                 en sanciones, en {{ cuotasConSancion }} {{ cuotasConSancion === 1 ? 'cuota' : 'cuotas' }}
               </template>
             </p>
+            <!-- Detalle de sanciones: solo si el admin lo deja ver (config_portal_socio.mostrar_sanciones) -->
+            <button
+              v-if="puedeVerSanciones"
+              type="button"
+              class="portal-sanciones"
+              @click="verSanciones = true"
+            >
+              <span class="portal-sanciones__icono"><ScaleIcon class="h-5 w-5" aria-hidden="true" /></span>
+              <span class="min-w-0 flex-1 text-left">
+                <span class="portal-sanciones__titulo">
+                  {{ hayHistorialSanciones ? 'Ver el detalle de tus sanciones' : '¿Cómo funcionan las sanciones?' }}
+                </span>
+                <span class="portal-sanciones__sub">
+                  {{ hayHistorialSanciones ? 'Días de retraso, base, intereses y lo pagado' : 'Plazos y valores de tu natillera' }}
+                </span>
+              </span>
+              <ChevronRightIcon class="h-4 w-4 flex-shrink-0 text-texto-tenue" aria-hidden="true" />
+            </button>
             <div class="flex flex-wrap gap-2" role="group" aria-label="Filtrar aportes">
               <button
                 v-for="f in FILTROS_APORTES"
@@ -296,7 +314,7 @@
               </button>
             </div>
 
-            <p v-if="cuotasFiltradas.length === 0" class="portal-panel py-6 text-center text-sm text-gray-500">
+            <p v-if="cuotasFiltradas.length === 0" class="portal-panel py-6 text-center text-sm text-texto-suave">
               {{ datos.cuotas.length === 0 ? 'Tu administrador aún no ha generado tus cuotas.' : 'No hay cuotas con este filtro.' }}
             </p>
             <div v-else class="portal-panel portal-panel--lista">
@@ -319,7 +337,7 @@
                       <!-- Con pagos, lo que pagó en total en esta cuota (todos los conceptos); sin pagos, lo que vale -->
                       <span class="shrink-0 text-right">
                         <template v-if="pagadoEnCuota(c).total > 0">
-                          <span class="block text-[10px] font-bold uppercase tracking-wide text-gray-400">Pagaste</span>
+                          <span class="block text-[10px] font-bold uppercase tracking-wide text-texto-tenue">Pagaste</span>
                           <span class="portal-fila__valor tabular-nums">${{ formatMoney(pagadoEnCuota(c).total) }}</span>
                         </template>
                         <span v-else class="portal-fila__valor tabular-nums">${{ formatMoney(c.valor_cuota) }}</span>
@@ -327,7 +345,7 @@
                       </span>
                       <ChevronDownIcon
                         v-if="tieneDesglose(c)"
-                        class="h-4 w-4 shrink-0 text-gray-400 transition-transform motion-reduce:transition-none"
+                        class="h-4 w-4 shrink-0 text-texto-tenue transition-transform motion-reduce:transition-none"
                         :class="{ 'rotate-180': cuotaAbierta === c.id }"
                         aria-hidden="true"
                       />
@@ -371,22 +389,22 @@
               <div class="flex flex-wrap items-end justify-between gap-2">
                 <div>
                   <p class="ds-overline">Tus ganancias</p>
-                  <p class="mt-1 font-display text-2xl font-extrabold tabular-nums text-[#C2185B]">${{ formatMoney(ganancias.utilidadesTotal) }}</p>
+                  <p class="mt-1 font-display text-2xl font-extrabold tabular-nums text-[#C2185B] oscuro:text-pink-300">${{ formatMoney(ganancias.utilidadesTotal) }}</p>
                 </div>
                 <span v-if="!natilleraCerrada" class="portal-estimado portal-estimado--grande">Estimado, sujeto al cierre</span>
               </div>
               <ul v-if="conceptosGanancia.length > 0" class="mt-4 space-y-3">
                 <li v-for="c in conceptosGanancia" :key="c.tipo">
                   <div class="flex items-baseline justify-between gap-3 text-sm">
-                    <span class="font-semibold text-gray-800">{{ c.etiqueta }}</span>
-                    <span class="font-bold tabular-nums" :class="c.monto < 0 ? 'text-red-700' : 'text-gray-900'">{{ c.monto < 0 ? '−' : '' }}${{ formatMoney(Math.abs(c.monto)) }}</span>
+                    <span class="font-semibold text-texto">{{ c.etiqueta }}</span>
+                    <span class="font-bold tabular-nums" :class="c.monto < 0 ? 'text-red-700 oscuro:text-red-300 oscuro:text-peligro' : 'text-texto-fuerte'">{{ c.monto < 0 ? '−' : '' }}${{ formatMoney(Math.abs(c.monto)) }}</span>
                   </div>
                   <!-- Negativo: los gastos pagados con utilidades superaron lo que entró; resta -->
                   <div class="portal-barra mt-1.5" :class="{ 'portal-barra--resta': c.monto < 0 }"><span :style="{ width: c.porcentaje + '%' }" /></div>
-                  <p class="mt-1 text-xs text-gray-500">{{ c.modo === 'proporcional' ? 'Se reparte según lo que has ahorrado' : 'Se reparte en partes iguales entre los socios' }}</p>
+                  <p class="mt-1 text-xs text-texto-suave">{{ c.modo === 'proporcional' ? 'Se reparte según lo que has ahorrado' : 'Se reparte en partes iguales entre los socios' }}</p>
                 </li>
               </ul>
-              <p v-else class="mt-3 text-sm text-gray-500">Todavía no hay utilidades para repartir.</p>
+              <p v-else class="mt-3 text-sm text-texto-suave">Todavía no hay utilidades para repartir.</p>
             </div>
             <div class="portal-panel text-sm">
               <p class="ds-overline">Al cierre</p>
@@ -396,7 +414,7 @@
                 <div v-if="num(ganancias.descuentos) > 0" class="portal-dl"><dt>− Lo que debes</dt><dd class="tabular-nums">${{ formatMoney(ganancias.descuentos) }}</dd></div>
                 <div class="portal-dl portal-dl--total"><dt>Recibirías</dt><dd class="tabular-nums">${{ formatMoney(ganancias.totalFinal) }}</dd></div>
               </dl>
-              <p v-if="calculadoEnTexto" class="mt-3 text-xs text-gray-400">Calculado {{ calculadoEnTexto }}.</p>
+              <p v-if="calculadoEnTexto" class="mt-3 text-xs text-texto-tenue">Calculado {{ calculadoEnTexto }}.</p>
             </div>
           </section>
 
@@ -406,8 +424,8 @@
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                   <p class="ds-overline">Préstamo del {{ formatDate(p.fecha_inicio || p.created_at) }}</p>
-                  <p class="mt-0.5 font-display text-xl font-bold tabular-nums text-gray-900">${{ formatMoney(p.monto) }}</p>
-                  <p v-if="num(p.interes) > 0" class="text-xs text-gray-500">
+                  <p class="mt-0.5 font-display text-xl font-bold tabular-nums text-texto-fuerte">${{ formatMoney(p.monto) }}</p>
+                  <p v-if="num(p.interes) > 0" class="text-xs text-texto-suave">
                     Interés {{ p.interes }} % mensual{{ p.interes_anticipado ? ' · cobrado por adelantado' : '' }}
                   </p>
                 </div>
@@ -419,9 +437,9 @@
                 </span>
               </div>
               <div class="mt-3">
-                <div class="flex items-baseline justify-between text-xs text-gray-500">
+                <div class="flex items-baseline justify-between text-xs text-texto-suave">
                   <span>{{ p.pagadas }} de {{ p.plan.length }} cuotas pagadas</span>
-                  <span>Te falta <strong class="tabular-nums text-gray-900">${{ formatMoney(p.saldo_actual) }}</strong></span>
+                  <span>Te falta <strong class="tabular-nums text-texto-fuerte">${{ formatMoney(p.saldo_actual) }}</strong></span>
                 </div>
                 <div class="portal-barra mt-1.5"><span :style="{ width: p.porcentaje + '%' }" /></div>
               </div>
@@ -466,8 +484,8 @@
                       <span v-else-if="c.esSiguiente" class="portal-estado portal-estado--pendiente ml-1">Siguiente</span>
                     </span>
                     <!-- Cuándo se pagó (o cuánto se ha abonado) y el comprobante de cada abono -->
-                    <span v-if="c.pagada && c.fecha_pago" class="block text-xs font-semibold text-[#1B5E37]">Pagada el {{ formatDate(c.fecha_pago) }}</span>
-                    <span v-else-if="num(c.valor_pagado) > 0" class="block text-xs font-semibold text-amber-800">
+                    <span v-if="c.pagada && c.fecha_pago" class="block text-xs font-semibold text-marca-tinta">Pagada el {{ formatDate(c.fecha_pago) }}</span>
+                    <span v-else-if="num(c.valor_pagado) > 0" class="block text-xs font-semibold text-amber-800 oscuro:text-amber-300 oscuro:text-alerta">
                       Abonado ${{ formatMoney(c.valor_pagado) }} · faltan ${{ formatMoney(c.pendiente) }}
                     </span>
                     <span v-if="c.abonos.length > 0" class="mt-1 flex flex-wrap gap-1.5">
@@ -510,7 +528,7 @@
                     <p class="act-item__titulo">{{ a.descripcion }}</p>
                   </div>
                   <span class="text-right">
-                    <span v-if="!a.esRifa" class="block text-sm font-extrabold tabular-nums text-gray-900">${{ formatMoney(a.asignado) }}</span>
+                    <span v-if="!a.esRifa" class="block text-sm font-extrabold tabular-nums text-texto-fuerte">${{ formatMoney(a.asignado) }}</span>
                     <span
                       class="portal-estado"
                       :class="a.pendiente > 0 ? 'portal-estado--pendiente' : 'portal-estado--pagada'"
@@ -577,7 +595,7 @@
               <article class="portal-kpi"><p class="portal-kpi__etiqueta"><ArrowTrendingUpIcon class="h-4 w-4" aria-hidden="true" /> Prestado hoy</p><p class="portal-kpi__valor tabular-nums">${{ formatMoney(datos.grupo.prestado_vigente) }}</p></article>
               <article v-if="datos.config?.mostrar_ganancias !== false && datos.grupo.utilidades_estimadas != null" class="portal-kpi">
                 <p class="portal-kpi__etiqueta"><SparklesIcon class="h-4 w-4" aria-hidden="true" /> Utilidades</p>
-                <p class="portal-kpi__valor tabular-nums text-[#C2185B]">${{ formatMoney(datos.grupo.utilidades_estimadas) }}</p>
+                <p class="portal-kpi__valor tabular-nums text-[#C2185B] oscuro:text-pink-300">${{ formatMoney(datos.grupo.utilidades_estimadas) }}</p>
                 <span v-if="!natilleraCerrada" class="portal-estimado">Estimado</span>
               </article>
             </div>
@@ -586,7 +604,7 @@
               <ul class="portal-lista">
                 <li v-for="(s, i) in datos.grupo.estados" :key="i" class="portal-fila portal-fila--estatica">
                   <span class="portal-fila__punto" :class="`portal-fila__punto--${s.estado === 'al_dia' ? 'pagada' : s.estado}`" aria-hidden="true" />
-                  <span class="min-w-0 flex-1 truncate font-semibold text-gray-800">{{ s.nombre }}</span>
+                  <span class="min-w-0 flex-1 truncate font-semibold text-texto">{{ s.nombre }}</span>
                   <span class="portal-estado" :class="`portal-estado--${s.estado === 'al_dia' ? 'pagada' : s.estado}`">
                     {{ s.estado === 'al_dia' ? 'Al día' : s.estado === 'mora' ? 'En mora' : 'Por pagar' }}
                   </span>
@@ -595,7 +613,7 @@
             </div>
           </section>
 
-          <p class="text-center text-xs text-gray-400">
+          <p class="text-center text-xs text-texto-tenue">
             Información de solo lectura. Si ves algo que no cuadra, habla con el administrador.
           </p>
         </div>
@@ -613,14 +631,15 @@
       align="bottom"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 oscuro:border-borde bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="cerrarComprobante"
     >
       <div class="flex-shrink-0 bg-[color:var(--brand-primary)] text-white">
         <!-- Móvil: [icono | títulos | X] -->
         <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
             <component :is="comprobante?.tipo === 'pago' ? ReceiptPercentIcon : DocumentTextIcon" class="w-5 h-5 text-[color:var(--brand-primary)]" />
           </div>
@@ -636,6 +655,7 @@
         <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
           <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
           <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm">
               <component :is="comprobante?.tipo === 'pago' ? ReceiptPercentIcon : DocumentTextIcon" class="w-6 h-6 text-[color:var(--brand-primary)]" />
             </div>
@@ -651,10 +671,11 @@
       <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="areaScrollComprobante"
-          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#eef2ee] overscroll-contain [-webkit-overflow-scrolling:touch] px-4 pt-5 pb-6"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#eef2ee] oscuro:bg-superficie-hundida overscroll-contain [-webkit-overflow-scrolling:touch] px-4 pt-5 pb-6"
           @scroll.passive="programarNatiscroll"
         >
-          <div ref="ticketRef" class="portal-modal__ticket">
+          <!-- Lo que se captura como imagen: siempre en claro, se comparte por WhatsApp -->
+          <div ref="ticketRef" class="portal-modal__ticket" data-tema="claro">
             <ComprobanteEstadoSocio v-if="comprobante?.tipo === 'estado'" :estado="estado" :incluir4x1000="false" :fluido="true" />
             <ComprobantePagoSocio v-else-if="comprobante?.tipo === 'pago'" :pago="comprobante.pago" :fluido="true" />
           </div>
@@ -664,7 +685,7 @@
 
       <!-- Pie fijo. `align="bottom"`: la barra de Safari lo tapa, se suma lo que mide (§4.1) -->
       <div
-        class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 flex flex-row gap-3"
+        class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-superficie-tarjeta px-5 sm:px-6 pt-4 flex flex-row gap-3"
         :style="{ paddingBottom: `calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
       >
         <button type="button" class="btn-descargar flex-1" :disabled="!imagen" @click="descargarImagen">
@@ -678,6 +699,14 @@
         </button>
       </div>
     </ModalWrapper>
+
+    <SancionesSocioModal
+      :show="verSanciones"
+      :cuotas="cuotas"
+      :reglas-multas="datos?.natillera?.reglas_multas || null"
+      :natillera-nombre="datos?.natillera?.nombre || ''"
+      @cerrar="verSanciones = false"
+    />
 
     <!-- Barra inferior del socio (móvil): volver a las natilleras y moverse por el portal -->
     <PortalBottomNav
@@ -695,6 +724,8 @@ import { gananciasSinAdministracion } from '../../utils/gananciasPortal'
 import { ref, computed, watch, watchEffect, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PortalBottomNav from '../../components/portal/PortalBottomNav.vue'
+import SancionesSocioModal from '../../components/portal/SancionesSocioModal.vue'
+import { normalizarReglas } from '../../utils/desgloseSanciones'
 import {
   ArchiveBoxIcon,
   ArrowDownTrayIcon,
@@ -711,6 +742,7 @@ import {
   InformationCircleIcon,
   LockClosedIcon,
   ReceiptPercentIcon,
+  ScaleIcon,
   ShareIcon,
   SparklesIcon,
   TrophyIcon,
@@ -1119,6 +1151,15 @@ const renglonesDeuda = computed(() => {
 
 const totalProgramado = computed(() => cuotas.value.reduce((s, c) => s + num(c.valor_cuota), 0))
 const cuotasConSancion = computed(() => cuotas.value.filter(c => num(c.valor_pagado_sancion) > 0).length)
+
+// Detalle de sanciones: lo decide el admin (por defecto visible). Se ofrece si la natillera
+// cobra sanciones o si el socio tuvo alguna, aunque luego se hayan desactivado.
+const verSanciones = ref(false)
+const hayHistorialSanciones = computed(() =>
+  cuotas.value.some(c => num(c.valor_multa) > 0 || num(c.valor_pagado_sancion) > 0 || c.no_calcular_multa))
+const puedeVerSanciones = computed(() =>
+  datos.value?.config?.mostrar_sanciones === true &&
+  (hayHistorialSanciones.value || normalizarReglas(datos.value?.natillera?.reglas_multas).activa))
 
 // Pagos a la vista: 3 en móvil (la pantalla es corta), 6 en escritorio.
 const esEscritorio = ref(false)
@@ -2241,4 +2282,139 @@ onUnmounted(darseDeBaja)
 @media (prefers-reduced-motion: reduce) {
   .portal-barra > span { transition: none; }
 }
+
+/* Acceso al detalle de sanciones (con tokens: vale igual en claro y en oscuro) */
+.portal-sanciones {
+  display: flex;
+  width: 100%;
+  min-height: 3.5rem;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 1rem;
+  border: 1px solid var(--borde);
+  background: var(--superficie-tarjeta);
+  padding: 0.75rem 1rem;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.15s ease;
+}
+@media (hover: hover) {
+  .portal-sanciones:hover { background: var(--superficie-suave); }
+}
+.portal-sanciones__icono {
+  display: inline-flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  background: var(--alerta-suave);
+  color: var(--alerta);
+}
+.portal-sanciones__titulo { display: block; font-size: 0.875rem; font-weight: 700; color: var(--texto-fuerte); }
+.portal-sanciones__sub { display: block; font-size: 0.75rem; color: var(--texto-suave); }
+
+/* ==========================================================================
+   Modo oscuro (docs/plan-modo-oscuro.md)
+   Solo lo que cambia: el claro de arriba queda intacto. `:where()` no suma
+   especificidad, así que cada regla pesa lo mismo que la original y gana por
+   ir después. Lo que va sobre el verde del tablero (texto blanco) no cambia.
+   El ticket que se captura como imagen lleva data-tema="claro" y no entra aquí.
+   ========================================================================== */
+:where([data-tema=oscuro]) .portal { --est-programada: #3a4a42; }
+:where([data-tema=oscuro]) .tablero-etiqueta { color: var(--texto-suave); }
+:where([data-tema=oscuro]) .tablero-talon {
+  background: var(--superficie-tarjeta);
+  box-shadow: 0 18px 40px -24px rgb(0 0 0 / 0.8), 0 0 0 1px var(--borde-suave);
+}
+:where([data-tema=oscuro]) .tablero-talon__corte { border-color: var(--borde-fuerte); }
+:where([data-tema=oscuro]) .tablero-talon__debe--ok { color: var(--marca-texto); }
+:where([data-tema=oscuro]) .tablero-talon__deuda--mora .tablero-talon__debe { color: var(--peligro); }
+:where([data-tema=oscuro]) .tablero-talon__deuda--pendiente .tablero-talon__debe { color: var(--alerta); }
+:where([data-tema=oscuro]) .deuda__titulo { color: var(--texto-secundario); }
+:where([data-tema=oscuro]) .deuda__estado { background: var(--alerta-suave); color: var(--alerta); }
+:where([data-tema=oscuro]) .tablero-talon__deuda--mora .deuda__estado { background: var(--peligro-suave); color: var(--peligro); }
+:where([data-tema=oscuro]) .deuda__lista,
+:where([data-tema=oscuro]) .deuda__proxima { border-color: var(--borde); }
+:where([data-tema=oscuro]) .deuda__fila { border-color: var(--borde-suave); color: var(--texto-secundario); }
+:where([data-tema=oscuro]) .deuda__fila strong { color: var(--texto-fuerte); }
+:where([data-tema=oscuro]) .tablero-talon__deuda--mora .deuda__fila strong { color: var(--peligro); }
+:where([data-tema=oscuro]) .deuda__4x1000 { background: var(--info-suave); border-color: var(--info-borde); color: var(--info); }
+:where([data-tema=oscuro]) .deuda__4x1000 strong { color: var(--texto-fuerte); }
+:where([data-tema=oscuro]) .deuda__4x1000-nota { color: var(--info); }
+:where([data-tema=oscuro]) .deuda__aldia-icono { background: var(--marca-suave); color: var(--marca-texto); }
+@media (max-width: 767px) {
+  /* La onda toma el color de la sección de deuda que se monta sobre el verde */
+  :where([data-tema=oscuro]) .tablero-talon__deuda { background: var(--superficie-tarjeta); }
+  :where([data-tema=oscuro]) .tablero-talon__onda { color: var(--superficie-tarjeta); }
+  :where([data-tema=oscuro]) .tablero-talon__deuda--mora { background: #241718; }
+  :where([data-tema=oscuro]) .tablero-talon__deuda--mora .tablero-talon__onda { color: #241718; }
+  :where([data-tema=oscuro]) .tablero-talon__deuda--pendiente { background: #242015; }
+  :where([data-tema=oscuro]) .tablero-talon__deuda--pendiente .tablero-talon__onda { color: #242015; }
+}
+
+:where([data-tema=oscuro]) .tablero-seccion__ver,
+:where([data-tema=oscuro]) .portal-ver-plan { color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .tablero-card__titulo,
+:where([data-tema=oscuro]) .tablero-atajo__titulo,
+:where([data-tema=oscuro]) .tablero-proximo__valor { color: var(--texto-fuerte); }
+:where([data-tema=oscuro]) .tablero-proximo { border-color: var(--marca-tinta-borde); background: var(--marca-suave); }
+:where([data-tema=oscuro]) .tablero-proximo__icono { background: var(--superficie-tarjeta); color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .tablero-proximo__titulo { color: var(--marca-texto); }
+:where([data-tema=oscuro]) .tablero-proximo__sub { color: var(--texto-secundario); }
+:where([data-tema=oscuro]) .tablero-atajo__sub { color: var(--texto-suave); }
+@media (hover: hover) {
+  :where([data-tema=oscuro]) .tablero-atajo:hover,
+  :where([data-tema=oscuro]) .tablero-linea__pago:hover { background: var(--superficie-suave); }
+}
+:where([data-tema=oscuro]) .tablero-atajo__icono--rosa { background: rgb(236 72 153 / 0.15); color: #f9a8d4; }
+:where([data-tema=oscuro]) .tablero-atajo__icono--azul { background: var(--info-suave); color: var(--info); }
+:where([data-tema=oscuro]) .tablero-linea::before { background: var(--borde-fuerte); }
+:where([data-tema=oscuro]) .tablero-linea__punto { box-shadow: 0 0 0 3px var(--marca-suave); }
+:where([data-tema=oscuro]) .tablero-linea__sancion { background: var(--peligro-suave); color: var(--peligro); }
+:where([data-tema=oscuro]) .tablero-linea__ver { background: var(--marca-suave); color: var(--marca-texto); }
+
+:where([data-tema=oscuro]) .act-item { background: var(--superficie-tarjeta); }
+:where([data-tema=oscuro]) .act-item--mia { border-color: var(--marca-tinta-borde); background: var(--marca-suave); }
+:where([data-tema=oscuro]) .act-item__fecha { color: var(--texto-suave); }
+:where([data-tema=oscuro]) .act-item__titulo,
+:where([data-tema=oscuro]) .act-rifa__ganador { color: var(--texto-fuerte); }
+:where([data-tema=oscuro]) .act-rifa__etiqueta { color: var(--texto-tenue); }
+:where([data-tema=oscuro]) .act-rifa__ganador--mio,
+:where([data-tema=oscuro]) .act-rifa__trofeo { color: var(--marca-texto); }
+:where([data-tema=oscuro]) .act-rifa__ganador--pendiente { color: var(--texto-secundario); }
+:where([data-tema=oscuro]) .rifa__balota--pendiente { background: var(--superficie-hundida); box-shadow: inset 0 0 0 2px var(--borde-fuerte); color: var(--texto-tenue); }
+:where([data-tema=oscuro]) .rifa__numeros { color: var(--texto-suave); }
+:where([data-tema=oscuro]) .rifa__numero { background: var(--superficie-hundida); color: var(--texto-secundario); }
+
+:where([data-tema=oscuro]) .portal-barra { background: rgb(255 255 255 / 0.1); }
+:where([data-tema=oscuro]) .portal-kpi__etiqueta { color: var(--texto-suave); }
+:where([data-tema=oscuro]) .portal-kpi__etiqueta svg { color: var(--marca-texto); }
+:where([data-tema=oscuro]) .portal-kpi__valor,
+:where([data-tema=oscuro]) .portal-fila__titulo,
+:where([data-tema=oscuro]) .portal-fila__valor,
+:where([data-tema=oscuro]) .portal-dl dd,
+:where([data-tema=oscuro]) .portal-plan__fila.is-siguiente { color: var(--texto-fuerte); }
+:where([data-tema=oscuro]) .portal-estimado { background: rgb(249 115 22 / 0.15); color: #fdba74; }
+:where([data-tema=oscuro]) .portal-lista__anio,
+:where([data-tema=oscuro]) .portal-dl--total dt,
+:where([data-tema=oscuro]) .portal-dl--total dd { color: var(--marca-texto); }
+:where([data-tema=oscuro]) .portal-fila__sub,
+:where([data-tema=oscuro]) .portal-dl dt { color: var(--texto-suave); }
+:where([data-tema=oscuro]) .portal-estado--pagada { background: var(--exito-suave); color: var(--exito); }
+:where([data-tema=oscuro]) .portal-estado--pendiente { background: var(--alerta-suave); color: var(--alerta); }
+:where([data-tema=oscuro]) .portal-estado--mora { background: var(--peligro-suave); color: var(--peligro); }
+:where([data-tema=oscuro]) .portal-estado--programada { background: var(--superficie-hundida); color: var(--texto-secundario); }
+:where([data-tema=oscuro]) .portal-desglose { background: var(--superficie-suave); }
+:where([data-tema=oscuro]) .portal-filtro { background: var(--superficie-tarjeta); color: var(--texto-secundario); }
+:where([data-tema=oscuro]) .portal-filtro.is-activo { background: #1B5E37; border-color: #1B5E37; color: #fff; }
+:where([data-tema=oscuro]) .portal-filtro__n { background: rgb(255 255 255 / 0.1); }
+:where([data-tema=oscuro]) .portal-plan__comprobante,
+:where([data-tema=oscuro]) .portal-desglose__comprobante { border-color: var(--marca-tinta-borde); background: var(--superficie-tarjeta); color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .portal-plan__comprobante:hover { background: var(--marca-suave); }
+:where([data-tema=oscuro]) .portal-plan__fila { color: var(--texto-medio); }
+:where([data-tema=oscuro]) .portal-plan__fila.is-mora { background: var(--peligro-suave); }
+:where([data-tema=oscuro]) .portal-aviso--mora { background: var(--peligro-suave); color: var(--peligro); }
+:where([data-tema=oscuro]) .portal-aviso--proxima { background: var(--marca-suave); color: var(--marca-texto); }
 </style>

@@ -1,8 +1,8 @@
 <template>
   <div class="mx-auto max-w-4xl space-y-6">
     <div>
-      <h1 class="font-display text-2xl font-bold text-gray-800 sm:text-3xl">Mi cuenta</h1>
-      <p class="mt-1 text-gray-500">Tus datos y tus preferencias personales</p>
+      <h1 class="font-display text-2xl font-bold text-texto sm:text-3xl">Mi cuenta</h1>
+      <p class="mt-1 text-texto-suave">Tus datos y tus preferencias personales</p>
     </div>
 
     <!-- ── Identidad ── -->
@@ -21,8 +21,8 @@
           draggable="false"
         />
         <div class="min-w-0 flex-1">
-          <p class="truncate font-display text-lg font-bold text-gray-900">{{ auth.userName }}</p>
-          <p class="truncate text-sm text-gray-500">{{ auth.userEmail }}</p>
+          <p class="truncate font-display text-lg font-bold text-texto-fuerte">{{ auth.userName }}</p>
+          <p class="truncate text-sm text-texto-suave">{{ auth.userEmail }}</p>
         </div>
         <button
           type="button"
@@ -41,18 +41,19 @@
       gracia, que son ajustes de la natillera y valen para todo el mundo. Los
       avisos push y el botón flotante son de esta persona y de este dispositivo.
     -->
+    <AjustesTema />
     <AjustesNotificaciones />
     <AjustesBotonSoporte />
 
     <!-- ── Tus datos (Ley 1581): qué aceptaste y cómo ejercer tus derechos ── -->
     <section class="card">
       <div class="flex items-start gap-3">
-        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E8F5E9] text-[#1B5E37]">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-marca-suave text-marca-tinta">
           <ShieldCheckIcon class="h-5 w-5" aria-hidden="true" />
         </span>
         <div class="min-w-0 flex-1">
-          <h2 class="font-display text-lg font-bold text-gray-900">Tus datos</h2>
-          <p class="text-sm text-gray-500">
+          <h2 class="font-display text-lg font-bold text-texto-fuerte">Tus datos</h2>
+          <p class="text-sm text-texto-suave">
             <template v-if="aceptadoEn">Aceptaste la política el {{ aceptadoEn }}.</template>
             <template v-else>Puedes consultar, corregir o pedir que borremos tus datos.</template>
           </p>
@@ -74,6 +75,7 @@ import { computed, ref, watch } from 'vue'
 import { PencilSquareIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline'
 import AjustesNotificaciones from '../../components/soporte/AjustesNotificaciones.vue'
 import AjustesBotonSoporte from '../../components/soporte/AjustesBotonSoporte.vue'
+import AjustesTema from '../../components/AjustesTema.vue'
 import UsernameModal from '../../components/UsernameModal.vue'
 import { useAuthStore } from '../../stores/auth'
 import { getAvatarUrl } from '../../utils/avatars'

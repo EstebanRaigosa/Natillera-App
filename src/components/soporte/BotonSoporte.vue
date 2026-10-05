@@ -38,7 +38,7 @@
               class="boton-soporte__accion"
               @click.stop="elegir('abrir')"
             >
-              <ChatBubbleOvalLeftEllipsisIcon class="h-4 w-4 text-[#1B5E37]" />
+              <ChatBubbleOvalLeftEllipsisIcon class="h-4 w-4 text-marca-tinta" />
               Mis mensajes
             </button>
             <button
@@ -47,7 +47,7 @@
               class="boton-soporte__accion"
               @click.stop="elegir('abrir-panel')"
             >
-              <InboxIcon class="h-4 w-4 text-[#1B5E37]" />
+              <InboxIcon class="h-4 w-4 text-marca-tinta" />
               Panel de soporte
               <span v-if="noLeidos > 0" class="boton-soporte__cuenta">{{ noLeidos }}</span>
             </button>
@@ -525,4 +525,13 @@ onBeforeUnmount(() => {
     animation: none;
   }
 }
+
+/* Modo oscuro: el menú de acciones flota sobre la página. El botón verde, los
+   contadores rojos y el texto blanco encima valen igual en los dos modos. */
+:where([data-tema=oscuro]) .boton-soporte__accion {
+  background: var(--superficie-elevada);
+  border-color: var(--borde);
+  color: var(--texto-medio);
+}
+:where([data-tema=oscuro]) .boton-soporte__accion:hover { background: var(--superficie-suave); }
 </style>

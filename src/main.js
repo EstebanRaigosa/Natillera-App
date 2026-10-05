@@ -7,12 +7,17 @@ import './style.css'
 import 'driver.js/dist/driver.css'
 import { setupPwaInstall } from './composables/usePwaInstall'
 import { aplicarModoLigero } from './composables/useModoLigero'
+import { iniciarTema } from './composables/useTema'
 import { detectIosPlatform } from './composables/useIsIos'
 
 // Antes de montar: si el equipo o la red son modestos, se marca el documento y
 // el CSS cambia los efectos caros por otros baratos. Va aquí, y no dentro de un
 // componente, para que el primer pintado ya salga con el coste correcto.
 aplicarModoLigero()
+
+// Tema claro/oscuro: se fija antes de montar para que el primer pintado ya salga
+// con el tema correcto (el script de index.html cubre el instante anterior).
+iniciarTema()
 
 // Capturar el evento beforeinstallprompt lo antes posible (se dispara una sola
 // vez y muy temprano). Debe registrarse antes de montar la app.

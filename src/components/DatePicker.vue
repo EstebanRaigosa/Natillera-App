@@ -6,15 +6,15 @@
       :class="[
         'w-full px-4 py-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between gap-2',
         isOpen 
-          ? 'border-natillera-500 ring-2 ring-natillera-200 bg-white' 
-          : 'border-gray-200 bg-white hover:border-gray-300',
+          ? 'border-natillera-500 ring-2 ring-natillera-200 oscuro:ring-natillera-500/30 bg-superficie-tarjeta' 
+          : 'border-borde bg-superficie-tarjeta hover:border-borde-fuerte',
         inputClass
       ]"
     >
-      <span :class="modelValue ? 'text-gray-800 font-medium' : 'text-gray-400'">
+      <span :class="modelValue ? 'text-texto font-medium' : 'text-texto-tenue'">
         {{ displayValue || placeholder }}
       </span>
-      <CalendarDaysIcon class="w-5 h-5 text-gray-400" />
+      <CalendarDaysIcon class="w-5 h-5 text-texto-tenue" />
     </div>
 
     <!-- Calendario desplegable -->
@@ -28,7 +28,7 @@
     >
       <div 
         v-if="isOpen"
-        class="absolute z-50 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 p-3 w-[min(21rem,calc(100vw-2rem))]"
+        class="absolute z-50 mt-2 bg-superficie-tarjeta rounded-2xl shadow-2xl border border-borde-suave p-3 w-[min(21rem,calc(100vw-2rem))]"
         :class="dropdownPosition"
         :style="dropdownStyle"
       >
@@ -38,21 +38,21 @@
             type="button"
             aria-label="Mes anterior"
             @click="previousMonth"
-            class="flex h-11 w-11 touch-manipulation items-center justify-center hover:bg-gray-100 rounded-lg transition-colors"
+            class="flex h-11 w-11 touch-manipulation items-center justify-center hover:bg-superficie-hundida rounded-lg transition-colors"
           >
-            <ChevronLeftIcon class="w-5 h-5 text-gray-600" aria-hidden="true" />
+            <ChevronLeftIcon class="w-5 h-5 text-texto-secundario" aria-hidden="true" />
           </button>
           <div class="text-center">
-            <span class="font-bold text-gray-800">{{ monthNames[currentMonth] }}</span>
-            <span class="text-gray-500 ml-1">{{ currentYear }}</span>
+            <span class="font-bold text-texto">{{ monthNames[currentMonth] }}</span>
+            <span class="text-texto-suave ml-1">{{ currentYear }}</span>
           </div>
           <button 
             type="button"
             aria-label="Mes siguiente"
             @click="nextMonth"
-            class="flex h-11 w-11 touch-manipulation items-center justify-center hover:bg-gray-100 rounded-lg transition-colors"
+            class="flex h-11 w-11 touch-manipulation items-center justify-center hover:bg-superficie-hundida rounded-lg transition-colors"
           >
-            <ChevronRightIcon class="w-5 h-5 text-gray-600" aria-hidden="true" />
+            <ChevronRightIcon class="w-5 h-5 text-texto-secundario" aria-hidden="true" />
           </button>
         </div>
 
@@ -61,7 +61,7 @@
           <div 
             v-for="day in weekDays" 
             :key="day" 
-            class="text-center text-xs font-semibold text-gray-400 py-1"
+            class="text-center text-xs font-semibold text-texto-tenue py-1"
           >
             {{ day }}
           </div>
@@ -88,10 +88,10 @@
                 day.isSelected 
                   ? 'bg-gradient-to-br from-natillera-500 to-natillera-600 text-white font-bold shadow-lg shadow-natillera-500/30' 
                   : day.isToday 
-                    ? 'bg-natillera-100 text-natillera-700 font-semibold' 
+                    ? 'bg-natillera-100 oscuro:bg-natillera-500/15 text-natillera-700 oscuro:text-natillera-300 font-semibold' 
                     : day.isCurrentMonth 
-                      ? 'text-gray-700 hover:bg-gray-100' 
-                      : 'text-gray-300',
+                      ? 'text-texto-medio hover:bg-superficie-hundida' 
+                      : 'text-gray-300 oscuro:text-texto-tenue',
                 day.isDisabled ? 'opacity-50' : ''
               ]"
             >
@@ -101,18 +101,18 @@
         </div>
 
         <!-- Acciones rápidas -->
-        <div class="flex gap-2 mt-4 pt-3 border-t border-gray-100">
+        <div class="flex gap-2 mt-4 pt-3 border-t border-borde-suave">
           <button 
             type="button"
             @click="selectToday"
-            class="flex-1 min-h-11 touch-manipulation px-3 py-2 text-xs font-semibold text-natillera-600 bg-natillera-50 hover:bg-natillera-100 rounded-lg transition-colors"
+            class="flex-1 min-h-11 touch-manipulation px-3 py-2 text-xs font-semibold text-natillera-600 oscuro:text-natillera-300 bg-natillera-50 oscuro:bg-natillera-500/15 hover:bg-natillera-100 oscuro:hover:bg-natillera-500/15 rounded-lg transition-colors"
           >
             Hoy
           </button>
           <button 
             type="button"
             @click="clearDate"
-            class="flex-1 min-h-11 touch-manipulation px-3 py-2 text-xs font-semibold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+            class="flex-1 min-h-11 touch-manipulation px-3 py-2 text-xs font-semibold text-texto-secundario bg-superficie-suave hover:bg-superficie-hundida rounded-lg transition-colors"
           >
             Limpiar
           </button>

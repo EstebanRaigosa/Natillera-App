@@ -6,8 +6,8 @@
     :persistent="true"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="ahoraNo"
   >
@@ -59,34 +59,34 @@
     <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
         ref="scrollRef"
-        class="flex-1 min-h-0 space-y-4 overflow-y-auto overflow-x-hidden bg-white px-5 pb-4 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-6"
+        class="flex-1 min-h-0 space-y-4 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta px-5 pb-4 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-6"
         @scroll.passive="onScroll"
       >
-        <p class="text-sm leading-relaxed text-gray-700">
+        <p class="text-sm leading-relaxed text-texto-medio">
           Ya tienes Natillerapp instalada. Si nos das permiso, te avisamos
           <span class="font-semibold">cuando el soporte responda</span> a tus mensajes, sin que
           tengas que entrar a mirar.
         </p>
 
-        <div class="flex items-start gap-3 rounded-xl bg-[#E8F5E9] p-3.5 ring-1 ring-[#1B5E37]/15">
-          <DevicePhoneMobileIcon class="mt-0.5 h-5 w-5 flex-shrink-0 text-[#1B5E37]" />
-          <p class="min-w-0 text-xs leading-relaxed text-gray-700">
+        <div class="flex items-start gap-3 rounded-xl bg-marca-suave p-3.5 ring-1 ring-[#1B5E37]/15">
+          <DevicePhoneMobileIcon class="mt-0.5 h-5 w-5 flex-shrink-0 text-marca-tinta" />
+          <p class="min-w-0 text-xs leading-relaxed text-texto-medio">
             El permiso vale solo para <span class="font-semibold">este dispositivo</span>. Puedes
             activarlo o quitarlo cuando quieras desde <span class="font-semibold">Mi cuenta</span>.
           </p>
         </div>
 
-        <p class="text-xs leading-relaxed text-gray-500">
+        <p class="text-xs leading-relaxed text-texto-suave">
           Al aceptar, el navegador te preguntará a su vez: hay que responderle que sí para que
           los avisos queden activos.
         </p>
 
         <!-- Qué se está esperando. Sin esto, el botón dice «Activando…» sin explicar a qué. -->
-        <p v-if="pista" class="flex items-start gap-1.5 text-xs leading-relaxed text-gray-500">
+        <p v-if="pista" class="flex items-start gap-1.5 text-xs leading-relaxed text-texto-suave">
           <span class="mt-1 inline-block size-1.5 shrink-0 animate-pulse rounded-full bg-[#1B5E37]" />
           <span>{{ pista }}</span>
         </p>
-        <p v-if="error" class="text-xs leading-relaxed text-red-600">{{ error }}</p>
+        <p v-if="error" class="text-xs leading-relaxed text-red-600 oscuro:text-red-300">{{ error }}</p>
       </div>
 
       <NatiscrollHint :show="hayMas" />
@@ -95,7 +95,7 @@
     <!-- Footer de acciones fijo. Safe-area para el home indicator, más lo que la barra de
          Safari tape por debajo (`env()` no la describe; se mide con el visual viewport). -->
     <div
-      class="flex-shrink-0 space-y-3 border-t border-gray-200 bg-white px-5 pt-4 sm:px-6"
+      class="flex-shrink-0 space-y-3 border-t border-borde bg-superficie-tarjeta px-5 pt-4 sm:px-6"
       :style="{ paddingBottom: `calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
     >
       <!--

@@ -18,7 +18,7 @@
     align="bottom"
     :ios-soft-backdrop="true"
     :overlay-class="clasesOverlay"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px] sm:bg-black/20 sm:backdrop-blur-0"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px] sm:bg-black/20 sm:backdrop-blur-0"
     :card-class="clasesCard"
     :card-max-width="maximizado ? '' : '24rem'"
     @close="$emit('cerrar')"
@@ -26,7 +26,7 @@
     <!-- ── Cabecera marca (móvil = fila) ── -->
     <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
       <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
-        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm"><!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <LifebuoyIcon class="h-5 w-5 text-[#1B5E37]" />
         </div>
         <div class="min-w-0 flex-1 text-left">
@@ -66,7 +66,7 @@
           <ArrowsPointingOutIcon v-else class="h-5 w-5" />
         </button>
         <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
-          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm"><!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <LifebuoyIcon class="h-6 w-6 text-[#1B5E37]" />
           </div>
           <h3 class="mt-2 font-display text-lg font-bold leading-tight text-white">Soporte</h3>
@@ -147,7 +147,7 @@ const clasesOverlay = computed(() => {
  * En `sm+` mandan las clases `sm:h-*`.
  */
 const clasesCard = computed(() => {
-  const base = 'relative flex w-full min-h-0 flex-col overflow-hidden border border-gray-200/60 bg-white shadow-2xl'
+  const base = 'relative flex w-full min-h-0 flex-col overflow-hidden border border-borde/60 bg-superficie-tarjeta shadow-2xl'
   return maximizado.value
     ? `${base} h-[calc(var(--alto-visible,100dvh)+var(--tapado-inferior,0px))] rounded-none sm:h-full sm:max-w-none sm:rounded-2xl`
     : `${base} h-[min(88dvh,calc(var(--alto-visible,100dvh)+var(--tapado-inferior,0px)))] rounded-t-2xl sm:h-[min(38rem,80vh)] sm:w-[24rem] sm:rounded-2xl`

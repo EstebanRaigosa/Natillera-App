@@ -3,10 +3,10 @@
   <div
     v-if="variant === 'grid'"
     :class="[
-      'group relative flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm',
+      'group relative flex h-full flex-col overflow-hidden rounded-2xl border border-borde bg-superficie-tarjeta shadow-sm',
       esCerrada
         ? 'opacity-[0.58] saturate-[0.5]'
-        : 'transition-all duration-300 ease-out lg:hover:-translate-y-0.5 lg:hover:border-emerald-200/90 lg:hover:shadow-lg motion-reduce:transition-none motion-reduce:lg:hover:translate-y-0 motion-reduce:lg:hover:shadow-sm',
+        : 'transition-all duration-300 ease-out lg:hover:-translate-y-0.5 lg:hover:border-emerald-200/90 oscuro:lg:hover:border-emerald-500/30 lg:hover:shadow-lg motion-reduce:transition-none motion-reduce:lg:hover:translate-y-0 motion-reduce:lg:hover:shadow-sm',
     ]"
   >
 
@@ -79,21 +79,21 @@
           <!-- Recolectado y utilidad, uno al lado del otro: los mismos dos indicadores
                que la natillera muestra en su detalle. -->
           <div class="mb-2 grid grid-cols-2 gap-2">
-            <div class="min-w-0 rounded-md border border-gray-100/90 bg-gray-50/70 px-2.5 py-1.5 text-left sm:px-3 sm:py-2">
-              <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-gray-400">
-                <BanknotesIcon class="h-3.5 w-3.5 shrink-0 text-[#166534]" stroke-width="1.75" aria-hidden="true" />
+            <div class="min-w-0 rounded-md border border-borde-suave/90 bg-superficie-suave/70 px-2.5 py-1.5 text-left sm:px-3 sm:py-2">
+              <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-texto-tenue">
+                <BanknotesIcon class="h-3.5 w-3.5 shrink-0 text-[#166534] oscuro:text-marca-tinta" stroke-width="1.75" aria-hidden="true" />
                 Recolectado
               </span>
-              <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-gray-900 sm:text-lg">
+              <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-texto-fuerte sm:text-lg">
                 {{ formatoMoneda(totalRecolectado) }}
               </span>
             </div>
-            <div class="min-w-0 rounded-md border border-gray-100/90 bg-gray-50/70 px-2.5 py-1.5 text-left sm:px-3 sm:py-2">
-              <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-gray-400">
-                <SparklesIcon class="h-3.5 w-3.5 shrink-0 text-[#3d6b28]" stroke-width="1.75" aria-hidden="true" />
+            <div class="min-w-0 rounded-md border border-borde-suave/90 bg-superficie-suave/70 px-2.5 py-1.5 text-left sm:px-3 sm:py-2">
+              <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-texto-tenue">
+                <SparklesIcon class="h-3.5 w-3.5 shrink-0 text-[#3d6b28] oscuro:text-marca-tinta" stroke-width="1.75" aria-hidden="true" />
                 Utilidad
               </span>
-              <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-[#C2185B] sm:text-lg">
+              <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-[#C2185B] oscuro:text-pink-300 sm:text-lg">
                 {{ formatoMoneda(utilidadGenerada) }}
               </span>
             </div>
@@ -104,8 +104,8 @@
               :class="[
                 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ring-1',
                 estadoNatillera === 'activa'
-                  ? 'bg-emerald-50 text-emerald-800 ring-emerald-200'
-                  : 'bg-slate-200/95 text-slate-900 ring-2 ring-slate-400/90 shadow-sm',
+                  ? 'bg-emerald-50 oscuro:bg-emerald-500/15 text-emerald-800 oscuro:text-emerald-300 ring-emerald-200 oscuro:ring-emerald-500/30'
+                  : 'bg-slate-200/95 oscuro:bg-borde/95 text-slate-900 oscuro:text-texto-fuerte ring-2 ring-slate-400/90 oscuro:ring-borde-fuerte/90 shadow-sm',
               ]"
             >
               <span
@@ -115,50 +115,50 @@
               />
               <span
                 v-else
-                class="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-600"
+                class="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-600 oscuro:bg-texto-tenue"
                 aria-hidden="true"
               />
               {{ estadoNatillera === 'activa' ? 'Activa' : 'Cerrada' }}
             </span>
           </div>
 
-          <div class="mt-3 space-y-1.5 text-sm text-gray-700">
+          <div class="mt-3 space-y-1.5 text-sm text-texto-medio">
             <p class="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
               <CalendarIcon
-                class="h-3.5 w-3.5 shrink-0 text-[#166534]"
+                class="h-3.5 w-3.5 shrink-0 text-[#166534] oscuro:text-marca-tinta"
                 stroke-width="1.75"
                 aria-hidden="true"
               />
-              <span class="font-semibold text-gray-500">Inicio</span>
-              <span class="font-semibold text-gray-900">{{ etiquetaInicio }}</span>
+              <span class="font-semibold text-texto-suave">Inicio</span>
+              <span class="font-semibold text-texto-fuerte">{{ etiquetaInicio }}</span>
             </p>
             <p class="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
               <CalendarIcon
-                class="h-3.5 w-3.5 shrink-0 text-[#166534]"
+                class="h-3.5 w-3.5 shrink-0 text-[#166534] oscuro:text-marca-tinta"
                 stroke-width="1.75"
                 aria-hidden="true"
               />
-              <span class="font-semibold text-gray-500">Fin</span>
-              <span class="font-semibold text-gray-900">{{ etiquetaFin }}</span>
+              <span class="font-semibold text-texto-suave">Fin</span>
+              <span class="font-semibold text-texto-fuerte">{{ etiquetaFin }}</span>
             </p>
           </div>
         </router-link>
 
         <div
-          class="mt-4 flex min-h-[2.5rem] items-center justify-between gap-3 text-gray-800"
+          class="mt-4 flex min-h-[2.5rem] items-center justify-between gap-3 text-texto"
         >
           <router-link
             :to="detalleUrl"
             class="flex min-w-0 flex-1 items-center gap-2 py-1 text-left"
           >
             <UserGroupIcon
-              class="h-5 w-5 shrink-0 text-[#166534]"
+              class="h-5 w-5 shrink-0 text-[#166534] oscuro:text-marca-tinta"
               stroke-width="1.75"
               aria-hidden="true"
             />
             <span class="font-body text-sm font-semibold tabular-nums leading-snug">
               {{ natillera.socios_count ?? 0 }}
-              <span class="font-medium text-gray-600"> socios</span>
+              <span class="font-medium text-texto-secundario"> socios</span>
             </span>
           </router-link>
           <div
@@ -168,7 +168,7 @@
             <button
               v-if="showPin"
               type="button"
-              class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border border-indigo-200/90 bg-indigo-50 text-indigo-800 shadow-sm ring-1 ring-indigo-100/70 transition hover:bg-indigo-100 hover:ring-indigo-200/80 touch-manipulation"
+              class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border border-indigo-200/90 oscuro:border-indigo-500/30 bg-indigo-50 oscuro:bg-indigo-500/15 text-indigo-800 oscuro:text-indigo-300 shadow-sm ring-1 ring-indigo-100/70 oscuro:ring-indigo-500/30 transition hover:bg-indigo-100 oscuro:hover:bg-indigo-500/15 hover:ring-indigo-200/80 oscuro:hover:ring-indigo-500/30 touch-manipulation"
               :title="pinned ? 'Quitar de fijadas' : 'Fijar arriba'"
               @click="$emit('toggle-pin')"
             >
@@ -177,7 +177,7 @@
             <button
               v-if="showDelete"
               type="button"
-              class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border border-red-200/95 bg-red-50 text-red-600 shadow-sm ring-1 ring-red-100/80 transition hover:bg-red-100 hover:ring-red-200/90 hover:text-red-700 touch-manipulation"
+              class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border border-red-200/95 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 text-red-600 oscuro:text-red-300 shadow-sm ring-1 ring-red-100/80 oscuro:ring-red-500/30 transition hover:bg-red-100 oscuro:hover:bg-red-500/15 hover:ring-red-200/90 oscuro:hover:ring-red-500/30 hover:text-red-700 oscuro:hover:text-red-300 touch-manipulation"
               title="Eliminar natillera"
               aria-label="Eliminar natillera"
               @click="$emit('delete')"
@@ -194,10 +194,10 @@
   <div
     v-else
     :class="[
-      'group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:gap-4',
+      'group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-borde bg-superficie-tarjeta p-4 shadow-sm sm:flex-row sm:items-center sm:gap-4',
       esCerrada
         ? 'opacity-[0.58] saturate-[0.5]'
-        : 'transition-all duration-300 ease-out lg:hover:-translate-y-0.5 lg:hover:border-emerald-200/90 lg:hover:shadow-lg motion-reduce:transition-none motion-reduce:lg:hover:translate-y-0 motion-reduce:lg:hover:shadow-sm',
+        : 'transition-all duration-300 ease-out lg:hover:-translate-y-0.5 lg:hover:border-emerald-200/90 oscuro:lg:hover:border-emerald-500/30 lg:hover:shadow-lg motion-reduce:transition-none motion-reduce:lg:hover:translate-y-0 motion-reduce:lg:hover:shadow-sm',
     ]"
   >
 
@@ -214,10 +214,10 @@
     >
       <div class="flex min-w-0 items-start gap-2">
         <div class="min-w-0 flex-1">
-          <h3 class="font-body text-base font-bold leading-snug text-gray-900">
+          <h3 class="font-body text-base font-bold leading-snug text-texto-fuerte">
             {{ natillera.nombre }}
           </h3>
-          <p class="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+          <p class="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-texto-suave">
             {{ lineaPeriodicidad }}
           </p>
         </div>
@@ -227,63 +227,63 @@
         </span>
       </div>
       <div class="grid w-full min-w-0 grid-cols-2 gap-2">
-        <div class="min-w-0 rounded-md border border-gray-100/90 bg-gray-50/70 px-2.5 py-1.5 text-left sm:py-2">
-          <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-gray-400">
-            <BanknotesIcon class="h-3.5 w-3.5 shrink-0 text-[#166534]" stroke-width="1.75" aria-hidden="true" />
+        <div class="min-w-0 rounded-md border border-borde-suave/90 bg-superficie-suave/70 px-2.5 py-1.5 text-left sm:py-2">
+          <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-texto-tenue">
+            <BanknotesIcon class="h-3.5 w-3.5 shrink-0 text-[#166534] oscuro:text-marca-tinta" stroke-width="1.75" aria-hidden="true" />
             Recolectado
           </span>
-          <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-gray-900 sm:text-lg">
+          <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-texto-fuerte sm:text-lg">
             {{ formatoMoneda(totalRecolectado) }}
           </span>
         </div>
-        <div class="min-w-0 rounded-md border border-gray-100/90 bg-gray-50/70 px-2.5 py-1.5 text-left sm:py-2">
-          <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-gray-400">
-            <SparklesIcon class="h-3.5 w-3.5 shrink-0 text-[#3d6b28]" stroke-width="1.75" aria-hidden="true" />
+        <div class="min-w-0 rounded-md border border-borde-suave/90 bg-superficie-suave/70 px-2.5 py-1.5 text-left sm:py-2">
+          <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-texto-tenue">
+            <SparklesIcon class="h-3.5 w-3.5 shrink-0 text-[#3d6b28] oscuro:text-marca-tinta" stroke-width="1.75" aria-hidden="true" />
             Utilidad
           </span>
-          <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-[#C2185B] sm:text-lg">
+          <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-[#C2185B] oscuro:text-pink-300 sm:text-lg">
             {{ formatoMoneda(utilidadGenerada) }}
           </span>
         </div>
       </div>
-      <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600">
+      <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-texto-secundario">
         <span class="inline-flex items-center gap-1">
           <CalendarIcon
-            class="h-3.5 w-3.5 shrink-0 text-[#166534]"
+            class="h-3.5 w-3.5 shrink-0 text-[#166534] oscuro:text-marca-tinta"
             stroke-width="1.75"
             aria-hidden="true"
           />
-          <span class="font-medium text-gray-400">Inicio</span>
+          <span class="font-medium text-texto-tenue">Inicio</span>
           {{ etiquetaInicio }}
         </span>
         <span class="inline-flex items-center gap-1">
           <CalendarIcon
-            class="h-3.5 w-3.5 shrink-0 text-[#166534]"
+            class="h-3.5 w-3.5 shrink-0 text-[#166534] oscuro:text-marca-tinta"
             stroke-width="1.75"
             aria-hidden="true"
           />
-          <span class="font-medium text-gray-400">Fin</span>
+          <span class="font-medium text-texto-tenue">Fin</span>
           {{ etiquetaFin }}
         </span>
       </div>
     </router-link>
 
     <div
-      class="relative z-[1] flex flex-1 flex-wrap items-center gap-4 border-t border-gray-100 pt-3 sm:border-t-0 sm:border-l sm:pl-4 sm:pt-0"
+      class="relative z-[1] flex flex-1 flex-wrap items-center gap-4 border-t border-borde-suave pt-3 sm:border-t-0 sm:border-l sm:pl-4 sm:pt-0"
     >
-      <div class="flex items-center gap-2 text-gray-800">
-        <UserGroupIcon class="h-5 w-5 shrink-0 text-[#166534]" stroke-width="1.75" />
+      <div class="flex items-center gap-2 text-texto">
+        <UserGroupIcon class="h-5 w-5 shrink-0 text-[#166534] oscuro:text-marca-tinta" stroke-width="1.75" />
         <span class="text-sm font-semibold tabular-nums">
           {{ natillera.socios_count ?? 0 }}
-          <span class="font-medium text-gray-600"> socios</span>
+          <span class="font-medium text-texto-secundario"> socios</span>
         </span>
       </div>
       <span
         :class="[
           'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ring-1',
           estadoNatillera === 'activa'
-            ? 'bg-emerald-50 text-emerald-800 ring-emerald-200'
-            : 'bg-slate-200/95 text-slate-900 ring-2 ring-slate-400/90 shadow-sm',
+            ? 'bg-emerald-50 oscuro:bg-emerald-500/15 text-emerald-800 oscuro:text-emerald-300 ring-emerald-200 oscuro:ring-emerald-500/30'
+            : 'bg-slate-200/95 oscuro:bg-borde/95 text-slate-900 oscuro:text-texto-fuerte ring-2 ring-slate-400/90 oscuro:ring-borde-fuerte/90 shadow-sm',
         ]"
       >
         <span
@@ -293,7 +293,7 @@
         />
         <span
           v-else
-          class="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-600"
+          class="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-600 oscuro:bg-texto-tenue"
           aria-hidden="true"
         />
         {{ estadoNatillera === 'activa' ? 'Activa' : 'Cerrada' }}
@@ -304,7 +304,7 @@
       <button
         v-if="showPin"
         type="button"
-        class="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-indigo-200/95 bg-indigo-50 text-indigo-800 shadow-sm ring-1 ring-indigo-100/80 transition hover:border-indigo-300 hover:bg-indigo-100 hover:text-indigo-950 hover:ring-indigo-200/90 touch-manipulation"
+        class="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-indigo-200/95 oscuro:border-indigo-500/30 bg-indigo-50 oscuro:bg-indigo-500/15 text-indigo-800 oscuro:text-indigo-300 shadow-sm ring-1 ring-indigo-100/80 oscuro:ring-indigo-500/30 transition hover:border-indigo-300 oscuro:hover:border-indigo-500/30 hover:bg-indigo-100 oscuro:hover:bg-indigo-500/15 hover:text-indigo-950 oscuro:hover:text-indigo-300 hover:ring-indigo-200/90 oscuro:hover:ring-indigo-500/30 touch-manipulation"
         :title="pinned ? 'Quitar de fijadas' : 'Fijar arriba'"
         @click.stop="$emit('toggle-pin')"
       >
@@ -313,7 +313,7 @@
       <button
         v-if="showDelete"
         type="button"
-        class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-md border-2 border-red-300 bg-red-50 text-red-600 shadow-sm transition hover:border-red-400 hover:bg-red-100 hover:text-red-700 touch-manipulation"
+        class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-md border-2 border-red-300 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 text-red-600 oscuro:text-red-300 shadow-sm transition hover:border-red-400 hover:bg-red-100 oscuro:hover:bg-red-500/15 hover:text-red-700 oscuro:hover:text-red-300 touch-manipulation"
         title="Eliminar natillera"
         aria-label="Eliminar natillera"
         @click.stop="$emit('delete')"
@@ -435,10 +435,19 @@ function formatoMoneda(valor) {
   line-height: 1;
   white-space: nowrap;
 }
+/* tema-fijo: etiquetas sobre la cabecera verde de la tarjeta; se leen igual en los dos modos */
 .etiqueta-natillera--propia { background: #ffffff; color: #1B5E37; box-shadow: inset 0 0 0 1px rgba(27, 94, 55, 0.22); }
-.etiqueta-natillera--compartida { background: #0369a1; color: #ffffff; box-shadow: inset 0 0 0 1px rgba(3, 105, 161, 0.4); }
-.etiqueta-natillera--otro { background: #475569; color: #ffffff; box-shadow: inset 0 0 0 1px rgba(71, 85, 105, 0.4); }
+.etiqueta-natillera--compartida { background: #0369a1; color: #ffffff; box-shadow: inset 0 0 0 1px rgba(3, 105, 161, 0.4); } /* tema-fijo */
+.etiqueta-natillera--otro { background: #475569; color: #ffffff; box-shadow: inset 0 0 0 1px rgba(71, 85, 105, 0.4); } /* tema-fijo */
 /* Sobre la cabecera verde, una sombra leve la despega del fondo y un filo claro separa
    el azul y la pizarra del verde oscuro. */
 .etiqueta-natillera--cabecera { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.35); }
+
+/* Modo oscuro: en la vista de lista la etiqueta «propia» va sobre la tarjeta, no
+   sobre la cabecera verde; ahí la píldora blanca desentona y pasa a verde suave. */
+:where([data-tema=oscuro]) .etiqueta-natillera--propia:not(.etiqueta-natillera--cabecera) {
+  background: var(--marca-suave);
+  color: var(--marca-tinta);
+  box-shadow: inset 0 0 0 1px var(--marca-tinta-borde);
+}
 </style>

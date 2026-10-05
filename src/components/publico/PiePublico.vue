@@ -21,7 +21,7 @@
       <nav aria-label="Cuenta">
         <p class="text-xs font-bold tracking-[0.16em] text-[#9fd9b1]">TU CUENTA</p>
         <ul class="mt-2 text-sm">
-          <li><RouterLink to="/auth/register" class="inline-flex min-h-[44px] items-center text-white/75 hover:text-white">Crear cuenta</RouterLink></li>
+          <li><RouterLink to="/auth/register" class="inline-flex min-h-[44px] items-center text-white/75 hover:text-white">Crear mi natillera</RouterLink></li>
           <li><RouterLink to="/auth/login" class="inline-flex min-h-[44px] items-center text-white/75 hover:text-white">Iniciar sesión</RouterLink></li>
           <li><RouterLink to="/que-es-una-natillera" class="inline-flex min-h-[44px] items-center text-white/75 hover:text-white">Qué es una natillera</RouterLink></li>
           <li><RouterLink to="/privacidad" class="inline-flex min-h-[44px] items-center text-white/75 hover:text-white">Tratamiento de datos</RouterLink></li>

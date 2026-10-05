@@ -16,6 +16,7 @@
 import { onMounted, onUnmounted, watch, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
+import { sincronizarTemaConCuenta } from './composables/useTema'
 import NatiNotificacion from './components/NatiNotificacion.vue'
 import AvisoNuevaVersion from './components/AvisoNuevaVersion.vue'
 import AvisoNotificacionesPwa from './components/AvisoNotificacionesPwa.vue'
@@ -154,6 +155,11 @@ watch(() => authStore.needsUsername, (needs) => {
 }, { immediate: true })
 
 // También verificar cuando cambia el usuario
+// La preferencia de tema guardada en la cuenta sigue al usuario entre dispositivos
+watch(() => authStore.user?.id, (userId) => {
+  if (userId) sincronizarTemaConCuenta(userId)
+}, { immediate: true })
+
 watch(() => authStore.user, (newUser) => {
   if (shouldShowUsernameModal()) {
     setTimeout(() => {

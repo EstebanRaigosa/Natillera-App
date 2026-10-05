@@ -11,6 +11,7 @@ Este repositorio guarda sus reglas en varios sitios porque lo usan varias herram
 | `docs/compatibilidad-ios-safari.md` | **La** referencia de iOS/Safari: 17 secciones con patrones, bugs conocidos y cómo probar | Siempre que se toque UI, CSS, overlays o PWA |
 | `.claude/skills/natillerapp-modals/SKILL.md` | Patrón obligatorio de modales (`ModalWrapper`) | Al crear o modificar cualquier modal, diálogo u overlay |
 | `.claude/skills/natillerapp-recorrido-guiado/SKILL.md` | Patrón base de recorridos guiados (`RecorridoInteractivo`) | Al crear, modificar o migrar cualquier recorrido, tour u onboarding de pantalla |
+| `.claude/skills/natillerapp-modo-oscuro/SKILL.md` | Modo claro/oscuro: tokens por función, `oscuro:`, CSS scoped, comprobantes en claro, migración de vistas (`scripts/tema/`) | Siempre que se toque UI o CSS, y al migrar una pantalla al modo oscuro (`docs/plan-modo-oscuro.md`) |
 | `.cursor/rules/*.mdc` | Las mismas reglas en formato Cursor, más las convenciones de front-end | Referencia; su contenido está resumido aquí abajo |
 
 **No existe ninguna skill `ios-safari-compat`**, ni en `~/.claude/skills/` ni en `~/.cursor/skills/`, aunque versiones anteriores de este archivo y de `.cursor/rules/ios-safari-compat.mdc` la citaban. La fuente real es `docs/compatibilidad-ios-safari.md`. Si una regla apunta a un archivo que no existe, corregir la regla en vez de improvisar.
@@ -97,6 +98,7 @@ Son cuatro, en `src/components/carga/`, todas con la misma figura (la alcancía 
 - **Nombres en español** para funciones, variables y handlers propios (`activarAvisos`, `alTeclado`, `cerrarModal`). Conviven con `handle*` de código antiguo; el código nuevo va en español, como los comentarios.
 - **Early returns** antes que anidar condiciones.
 - **Tailwind primero**; CSS custom solo cuando Tailwind no llega (animaciones, prefijos `-webkit-`, `@supports`).
+- **Colores por función, no fijos**: superficies, textos y bordes neutros con tokens (`bg-superficie-tarjeta`, `text-texto-suave`, `border-borde`…), nunca `bg-white` ni `text-gray-*`. Variante `oscuro:`, nunca `dark:`. Detalle y equivalencias en la skill `natillerapp-modo-oscuro`.
 - **Accesibilidad**: elementos interactivos con `aria-label` cuando el texto no basta, foco visible y navegación por teclado.
 - **Iconos**: `@heroicons/vue/24/outline` por defecto (solid solo cuando aporte contraste).
 - **Color marca**: verde `#1B5E37` (cabeceras de modal); velo salvia `#C8D9C8` para backdrops.

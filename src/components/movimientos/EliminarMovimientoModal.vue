@@ -6,8 +6,8 @@
     :persistent="eliminando"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="cerrar"
   >
@@ -57,31 +57,31 @@
     <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
         ref="scrollRef"
-        class="flex-1 min-h-0 space-y-4 overflow-y-auto overflow-x-hidden bg-white px-5 pb-4 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-6"
+        class="flex-1 min-h-0 space-y-4 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta px-5 pb-4 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-6"
         @scroll.passive="onScroll"
       >
-        <div v-if="grupo" class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-          <p class="font-display text-sm font-bold text-gray-800">
+        <div v-if="grupo" class="rounded-xl border border-borde bg-superficie-suave px-4 py-3">
+          <p class="font-display text-sm font-bold text-texto">
             {{ etiquetaConcepto(grupo.concepto) }}
-            <span v-if="grupo.descripcion" class="font-normal text-gray-600">· {{ grupo.descripcion }}</span>
+            <span v-if="grupo.descripcion" class="font-normal text-texto-secundario">· {{ grupo.descripcion }}</span>
           </p>
-          <p class="mt-1 text-sm text-gray-600">
+          <p class="mt-1 text-sm text-texto-secundario">
             {{ formatDate(grupo.fecha) }} ·
             <span v-if="grupo.esTraslado">
               {{ etiquetaForma(grupo.formaOrigen) }} → {{ etiquetaForma(grupo.formaDestino) }}
             </span>
             <span v-else>{{ etiquetaForma(grupo.formaPago) }}</span>
           </p>
-          <p class="mt-1 font-display text-lg font-extrabold tabular-nums text-gray-900">
+          <p class="mt-1 font-display text-lg font-extrabold tabular-nums text-texto-fuerte">
             ${{ formatMoney(grupo.monto) }}
           </p>
         </div>
 
-        <p class="text-sm leading-relaxed text-gray-600">{{ textoEfecto }}</p>
+        <p class="text-sm leading-relaxed text-texto-secundario">{{ textoEfecto }}</p>
 
         <p
           v-if="grupo?.esTraslado"
-          class="flex items-start gap-2 rounded-xl bg-indigo-50 px-4 py-3 text-xs leading-relaxed text-indigo-900"
+          class="flex items-start gap-2 rounded-xl bg-indigo-50 oscuro:bg-indigo-500/15 px-4 py-3 text-xs leading-relaxed text-indigo-900 oscuro:text-indigo-300"
         >
           <InformationCircleIcon class="mt-0.5 h-4 w-4 flex-shrink-0" />
           <span>
@@ -91,8 +91,18 @@
         </p>
 
         <p
+          v-if="grupo && !grupo.esManual"
+          class="flex items-start gap-2 rounded-xl bg-amber-50 oscuro:bg-amber-500/15 px-4 py-3 text-xs leading-relaxed text-amber-900 oscuro:text-amber-300"
+        >
+          <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 flex-shrink-0" />
+          <span>
+            Este movimiento lo generó {{ moduloOrigen || 'otro módulo' }}. Se borra solo el apunte de la caja:
+            el proceso que lo creó (liquidación, rifa o actividad) queda como está.
+          </span>
+        </p>
+        <p
           v-if="avisoCorte"
-          class="flex items-start gap-2 rounded-xl bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900"
+          class="flex items-start gap-2 rounded-xl bg-amber-50 oscuro:bg-amber-500/15 px-4 py-3 text-xs leading-relaxed text-amber-900 oscuro:text-amber-300"
         >
           <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 flex-shrink-0" />
           <span>{{ avisoCorte }}</span>
@@ -103,7 +113,7 @@
     </div>
 
     <div
-      class="flex flex-shrink-0 gap-3 border-t border-gray-200 bg-white px-5 pt-4 sm:px-6"
+      class="flex flex-shrink-0 gap-3 border-t border-borde bg-superficie-tarjeta px-5 pt-4 sm:px-6"
       :style="{ paddingBottom: `calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
     >
       <button type="button" class="btn-modal-secondary flex-1" :disabled="eliminando" @click="cerrar">
@@ -135,7 +145,7 @@ import NatiscrollHint from '../NatiscrollHint.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useNatiscroll } from '../../composables/useNatiscroll'
 import { useTapadoInferior } from '../../composables/useTapadoInferior'
-import { etiquetaConcepto, etiquetaForma } from '../../composables/useMovimientosFondo'
+import { etiquetaConcepto, etiquetaForma, conceptoDefinicion } from '../../composables/useMovimientosFondo'
 import { formatDate } from '../../utils/formatDate'
 import { formatMoney } from '../../utils/formatMoney'
 
@@ -164,6 +174,8 @@ const textoEfecto = computed(() => {
     ? `Al eliminarlo, el saldo esperado de ${nombre} baja $${formatMoney(grupo.monto)}.`
     : `Al eliminarlo, el saldo esperado de ${nombre} sube $${formatMoney(grupo.monto)}.`
 })
+
+const moduloOrigen = computed(() => conceptoDefinicion(props.grupo?.concepto)?.modulo || '')
 
 const avisoCorte = computed(() => {
   if (!props.fechaUltimoCorte || !props.grupo?.fecha) return ''

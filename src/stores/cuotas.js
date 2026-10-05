@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useNatillerasStore } from './natilleras'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../composables/useAuditoria'
 import { fechaPagoAIso } from '../utils/formatDate'
+import { registrarMoraCobradaEnFondoNegativa } from '../composables/usePagoPrestamo'
 
 /**
  * Misma lógica que calcularEstadoRealCuota en Cuotas.vue.
@@ -4587,7 +4588,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
       .lte('fecha', `${dia}T23:59:59.999`)
 
     // La columna de enlace puede no existir (migración 019 sin aplicar): degradar sin romper.
-    let res = await consultar('id, prestamo_id, valor, numeros_cuota, historial_pago_cuota_id')
+    let res = await consultar('id, prestamo_id, valor, numeros_cuota, historial_pago_cuota_id, mora_cobrada')
     if (res.error) res = await consultar('id, prestamo_id, valor, numeros_cuota')
     if (res.error) return []
     // Nunca tocar un abono que ya pertenece a OTRA transacción.
@@ -4768,6 +4769,25 @@ export const useCuotasStore = defineStore('cuotas', () => {
    * @param {string} historialId - id en historial_pagos_cuota
    * @param {object} options - { _natilleraId, _socioNombre, _natilleraNombre }
    */
+  /**
+   * La mora que cobraron los abonos borrados (pagos_prestamo.mora_cobrada) se había sumado al
+   * fondo de utilidades al pagar: se descuenta, igual que al eliminar un abono en Préstamos.
+   * Si no se puede, queda como problema visible (no se calla).
+   */
+  async function devolverMoraDeAbonos(abonos, borrados, cuotaActual, options, formaPago, problemas) {
+    const idsBorrados = new Set((borrados || []).map(b => b.id))
+    const mora = Math.round((abonos || [])
+      .filter(a => idsBorrados.has(a.id))
+      .reduce((s, a) => s + (Number(a.mora_cobrada) || 0), 0))
+    if (mora <= 0) return
+    try {
+      const natilleraId = await obtenerNatilleraDeCuota(cuotaActual, options._natilleraId)
+      await registrarMoraCobradaEnFondoNegativa(natilleraId, mora, formaPago)
+    } catch (e) {
+      problemas.push(`No se pudo descontar del fondo la mora de préstamo de este pago ($${mora.toLocaleString('es-CO')}): ${e.message}`)
+    }
+  }
+
   async function eliminarPagoHistorial(historialId, options = {}) {
     const revertido = {
       actividades: 0, abonosPrestamo: 0, cuota: false,
@@ -4920,7 +4940,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
           let abonos = []
           const { data: enlazados } = await supabase
             .from('pagos_prestamo')
-            .select('id, prestamo_id, valor, numeros_cuota')
+            .select('id, prestamo_id, valor, numeros_cuota, mora_cobrada')
             .eq('historial_pago_cuota_id', historialId)
           abonos = enlazados || []
 
@@ -5056,6 +5076,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
               problemas.push('No se pudo borrar el abono a préstamo de este pago: seguirá apareciendo en el historial del préstamo')
             } else {
               revertido.abonosPrestamo = (borrados || []).length
+              await devolverMoraDeAbonos(abonos, borrados, cuotaActual, options, formaPago, problemas)
             }
           } else if (Object.keys(porPrestamo).length === 0) {
             problemas.push(`No se encontró el abono a préstamo de $${vPrestamos.toLocaleString('es-CO')} de este pago. Revísalo en el préstamo del socio.`)
@@ -5557,6 +5578,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
             problemas.push('No se pudo borrar el abono a préstamo de este pago: seguirá apareciendo en el historial del préstamo')
           } else {
             revertido.abonosPrestamo = (borrados || []).length
+            await devolverMoraDeAbonos(abonos, borrados, cuotaActual, options, formaPago, problemas)
           }
         }
       } catch (e) {

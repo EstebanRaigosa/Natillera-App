@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { calcularMoraCuota, reglasMoraNatillera } from './usePagoPrestamo'
 import { useSociosStore } from '../stores/socios'
 import { useCuotasStore } from '../stores/cuotas'
 import { formatMoney } from '../utils/formatMoney'
@@ -105,7 +106,7 @@ export async function calcularEstadoSocio(sn, natillera) {
     if (prestamos?.length) {
       const { data } = await supabase
         .from('plan_pagos_prestamo')
-        .select('valor_cuota, valor_pagado, pagada, fecha_proyectada, numero_cuota')
+        .select('valor_cuota, valor_pagado, capital, pagada, fecha_proyectada, numero_cuota')
         .in('prestamo_id', prestamos.map(p => p.id))
       planPagos = data || []
     }
@@ -120,6 +121,15 @@ export async function calcularEstadoSocio(sn, natillera) {
  * Estado de cuenta a partir de los datos, sin consultar nada. `sancionesMap` es la sanción
  * recalculada por cuota (id → valor); si falta, se usa la guardada en la cuota.
  */
+/*
+ * Lo que falta de la sanción: la multa (recalculada o guardada) menos lo ya abonado a ella.
+ * Un pago parcial puede saldar la sanción sin completar la cuota; sin restarlo, el estado
+ * la seguía cobrando entera.
+ */
+function saldoSancion(cuota, multa) {
+  return Math.max(0, Math.round((Number(multa) || 0) - (parseFloat(cuota.valor_pagado_sancion) || 0)))
+}
+
 export function construirEstadoSocio({ socio, natillera, cuotas = [], sancionesMap = {}, sociosActividad = [], planPagos = [] }) {
   const diasGracia = natillera?.reglas_multas?.dias_gracia || 3
 
@@ -148,7 +158,7 @@ export function construirEstadoSocio({ socio, natillera, cuotas = [], sancionesM
       cuotasMora++
       totalMora += deuda
       cuotasMoraList.push({ periodo, valor: deuda })
-      const sancion = sancionesMap[cuota.id] ?? parseFloat(cuota.valor_multa || 0)
+      const sancion = saldoSancion(cuota, sancionesMap[cuota.id] ?? parseFloat(cuota.valor_multa || 0))
       if (sancion > 0) {
         totalSancionesPendientes += sancion
         sancionesDesglose.push({ periodo, valor: sancion })
@@ -157,7 +167,7 @@ export function construirEstadoSocio({ socio, natillera, cuotas = [], sancionesM
       cuotasPendientes++
       totalPendiente += deuda
       cuotasPendientesList.push({ periodo, valor: deuda })
-      const sancion = parseFloat(cuota.valor_multa || 0)
+      const sancion = saldoSancion(cuota, parseFloat(cuota.valor_multa || 0))
       if (sancion > 0) {
         totalSancionesPendientes += sancion
         sancionesDesglose.push({ periodo, valor: sancion })
@@ -241,8 +251,12 @@ export function construirEstadoSocio({ socio, natillera, cuotas = [], sancionesM
 
   // Solo cuotas de préstamos pendientes a la fecha (fecha_proyectada <= hoy), no el valor total del préstamo
   let totalPrestamosPendiente = 0
+  let totalMoraPrestamos = 0
   let cuotasPrestamosPendientes = 0
   const prestamosPendientesDesglose = []
+  // Mora de préstamos: mismas reglas y fórmula que Préstamos (capital pendiente × tasa/30 ×
+  // días tras la gracia), medida a hoy. Necesita natillera.reglas_interes y el capital de cada cuota.
+  const { tasaMora, diasGracia: graciaPrestamo } = reglasMoraNatillera(natillera || {})
   try {
     const hoy = new Date()
     hoy.setHours(23, 59, 59, 999)
@@ -261,6 +275,12 @@ export function construirEstadoSocio({ socio, natillera, cuotas = [], sancionesM
           ? fechaProyectada.toLocaleDateString('es-CO', { month: 'short', year: 'numeric' }).replace(/\./g, '') + (pp.numero_cuota != null ? ` (cuota ${pp.numero_cuota})` : '')
           : (pp.numero_cuota != null ? `Cuota ${pp.numero_cuota}` : 'Préstamo')
         prestamosPendientesDesglose.push({ periodo, valor: pendiente })
+        const mora = tasaMora > 0 ? Math.round(calcularMoraCuota(pp, tasaMora, hoy, graciaPrestamo)) : 0
+        if (mora > 0) {
+          totalMoraPrestamos += mora
+          totalPrestamosPendiente += mora
+          prestamosPendientesDesglose.push({ periodo: `Mora ${periodo}`, valor: mora })
+        }
       })
     }
   } catch (e) {
@@ -287,6 +307,7 @@ export function construirEstadoSocio({ socio, natillera, cuotas = [], sancionesM
     actividadesPendientesTotal,
     actividadesPendientesDesglose,
     totalPrestamosPendiente,
+    totalMoraPrestamos,
     cuotasPrestamosPendientes,
     prestamosPendientesDesglose,
     totalAPagar,

@@ -80,10 +80,10 @@
         <div v-else-if="modo === 'texto'" class="visor-adjunto__documento">
           <div
             ref="scrollRef"
-            class="h-full overflow-y-auto overscroll-contain bg-white px-4 py-4 [-webkit-overflow-scrolling:touch]"
+            class="h-full overflow-y-auto overscroll-contain bg-superficie-tarjeta px-4 py-4 [-webkit-overflow-scrolling:touch]"
             @scroll.passive="onScroll"
           >
-            <pre class="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-gray-800">{{ textoPlano }}</pre>
+            <pre class="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-texto">{{ textoPlano }}</pre>
           </div>
           <NatiscrollHint :show="hayMas" />
         </div>
@@ -91,7 +91,7 @@
         <!-- PDF embebido (fuera de iOS, donde el visor integrado solo pinta la
              primera página dentro de un iframe). -->
         <div v-else-if="modo === 'pdf'" class="visor-adjunto__documento">
-          <iframe :src="url" :title="adjunto?.nombre" class="h-full w-full border-0 bg-white" />
+          <iframe :src="url" :title="adjunto?.nombre" class="h-full w-full border-0 bg-superficie-tarjeta" />
         </div>
 
         <div v-else class="visor-adjunto__centro" @click.self="$emit('cerrar')">
@@ -324,7 +324,7 @@ onBeforeUnmount(() => {
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  background: #fff;
+  background: #fff; /* tema-fijo: fondo de las páginas PDF, blanco en los dos modos */
 }
 
 /* Entrada y salida: se desvanece y crece un pelo, en GPU. */

@@ -101,12 +101,12 @@ const props = defineProps({
   align: { type: String, default: 'center' },
   /** No cerrar al tocar fuera (onboarding / flujos que exigen CTA explícita) */
   persistent: { type: Boolean, default: false },
-  /** iOS: velo salvia al 70 % (skill modales Natillerapp) */
+  /** iOS: velo salvia al 70 % (skill modales Natillerapp); en oscuro, negro translúcido (token --velo-modal) */
   iosSoftBackdrop: { type: Boolean, default: false },
   /** Android: clases del overlay (fixed inset-0 flex ...) */
   overlayClass: { type: String, default: 'fixed inset-0 z-50 flex items-center justify-center p-4' },
   /** Android: clases de la card (relative max-w-md ...) */
-  cardClass: { type: String, default: 'relative max-w-lg w-full bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-[90vh] overflow-y-auto' },
+  cardClass: { type: String, default: 'relative max-w-lg w-full bg-superficie-tarjeta rounded-2xl shadow-2xl border border-borde max-h-[90vh] overflow-y-auto' },
   /** Android: capa detrás de la card (overlay oscuro por defecto) */
   backdropClass: { type: String, default: 'absolute inset-0 bg-black/50 backdrop-blur-sm' },
   /** iOS: ancho máximo de la card (ej. '28rem' para max-w-md, '42rem' para max-w-2xl) */
@@ -216,7 +216,7 @@ const { tapado } = useTapadoInferior()
 }
 
 .modal-wrapper-ios__backdrop--sage {
-  background: rgba(200, 217, 200, 0.7) !important;
+  background: var(--velo-modal) !important;
   -webkit-backdrop-filter: blur(2px);
   backdrop-filter: blur(2px);
 }
@@ -226,10 +226,10 @@ const { tapado } = useTapadoInferior()
   z-index: 10 !important;
   width: 100% !important;
   max-width: var(--ancho-card, 28rem) !important;
-  background: #fff !important;
+  background: var(--superficie-tarjeta) !important;
   border-radius: 1rem 1rem 0 0 !important;
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15) !important;
-  border: 1px solid #e5e7eb !important;
+  border: 1px solid var(--borde) !important;
   border-bottom: none !important;
   max-height: min(90dvh, calc(100dvh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0) - 2rem)) !important;
   display: flex !important;
@@ -242,6 +242,6 @@ const { tapado } = useTapadoInferior()
 
 .modal-wrapper-ios:not(.modal-wrapper-ios--bottom) .modal-wrapper-ios__card {
   border-radius: 1rem !important;
-  border-bottom: 1px solid #e5e7eb !important;
+  border-bottom: 1px solid var(--borde) !important;
 }
 </style>

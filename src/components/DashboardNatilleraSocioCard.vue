@@ -9,10 +9,10 @@
   <div
     v-if="variant === 'grid'"
     :class="[
-      'group relative flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm',
+      'group relative flex h-full flex-col overflow-hidden rounded-2xl border border-borde bg-superficie-tarjeta shadow-sm',
       esCerrada
         ? 'opacity-[0.58] saturate-[0.5]'
-        : 'transition-all duration-300 ease-out lg:hover:-translate-y-0.5 lg:hover:border-emerald-200/90 lg:hover:shadow-lg motion-reduce:transition-none motion-reduce:lg:hover:translate-y-0 motion-reduce:lg:hover:shadow-sm',
+        : 'transition-all duration-300 ease-out lg:hover:-translate-y-0.5 lg:hover:border-emerald-200/90 oscuro:lg:hover:border-emerald-500/30 lg:hover:shadow-lg motion-reduce:transition-none motion-reduce:lg:hover:translate-y-0 motion-reduce:lg:hover:shadow-sm',
     ]"
   >
     <div
@@ -49,21 +49,21 @@
       <router-link :to="portalUrl" class="relative z-[1] flex min-h-0 flex-1 flex-col text-left">
         <!-- Lo del socio, en el mismo formato que Recolectado / Utilidad -->
         <div class="mb-2 grid grid-cols-2 gap-2">
-          <div class="min-w-0 rounded-md border border-gray-100/90 bg-gray-50/70 px-2.5 py-1.5 text-left sm:px-3 sm:py-2">
-            <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-gray-400">
-              <BanknotesIcon class="h-3.5 w-3.5 shrink-0 text-[#166534]" stroke-width="1.75" aria-hidden="true" />
+          <div class="min-w-0 rounded-md border border-borde-suave/90 bg-superficie-suave/70 px-2.5 py-1.5 text-left sm:px-3 sm:py-2">
+            <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-texto-tenue">
+              <BanknotesIcon class="h-3.5 w-3.5 shrink-0 text-[#166534] oscuro:text-marca-tinta" stroke-width="1.75" aria-hidden="true" />
               Ahorrado
             </span>
-            <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-gray-900 sm:text-lg">
+            <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-texto-fuerte sm:text-lg">
               {{ formatoMoneda(item.total_ahorrado) }}
             </span>
           </div>
-          <div class="min-w-0 rounded-md border border-gray-100/90 bg-gray-50/70 px-2.5 py-1.5 text-left sm:px-3 sm:py-2">
-            <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-gray-400">
-              <CalendarDaysIcon class="h-3.5 w-3.5 shrink-0 text-[#3d6b28]" stroke-width="1.75" aria-hidden="true" />
+          <div class="min-w-0 rounded-md border border-borde-suave/90 bg-superficie-suave/70 px-2.5 py-1.5 text-left sm:px-3 sm:py-2">
+            <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-texto-tenue">
+              <CalendarDaysIcon class="h-3.5 w-3.5 shrink-0 text-[#3d6b28] oscuro:text-marca-tinta" stroke-width="1.75" aria-hidden="true" />
               Tu cuota
             </span>
-            <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-gray-900 sm:text-lg">
+            <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-texto-fuerte sm:text-lg">
               {{ formatoMoneda(item.valor_cuota) }}
             </span>
           </div>
@@ -76,24 +76,24 @@
           </span>
           <span
             v-if="esCerrada"
-            class="inline-flex items-center gap-1.5 rounded-full bg-slate-200/95 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-slate-900 ring-2 ring-slate-400/90"
+            class="inline-flex items-center gap-1.5 rounded-full bg-slate-200/95 oscuro:bg-borde/95 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-slate-900 oscuro:text-texto-fuerte ring-2 ring-slate-400/90 oscuro:ring-borde-fuerte/90"
           >Cerrada</span>
         </div>
 
-        <div class="mt-3 space-y-1.5 text-sm text-gray-700">
+        <div class="mt-3 space-y-1.5 text-sm text-texto-medio">
           <p class="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-            <CalendarIcon class="h-3.5 w-3.5 shrink-0 text-[#166534]" stroke-width="1.75" aria-hidden="true" />
-            <span class="font-semibold text-gray-500">Inicio</span>
-            <span class="font-semibold text-gray-900">{{ etiquetaInicio }}</span>
+            <CalendarIcon class="h-3.5 w-3.5 shrink-0 text-[#166534] oscuro:text-marca-tinta" stroke-width="1.75" aria-hidden="true" />
+            <span class="font-semibold text-texto-suave">Inicio</span>
+            <span class="font-semibold text-texto-fuerte">{{ etiquetaInicio }}</span>
           </p>
           <p class="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-            <CalendarIcon class="h-3.5 w-3.5 shrink-0 text-[#166534]" stroke-width="1.75" aria-hidden="true" />
-            <span class="font-semibold text-gray-500">Fin</span>
-            <span class="font-semibold text-gray-900">{{ etiquetaFin }}</span>
+            <CalendarIcon class="h-3.5 w-3.5 shrink-0 text-[#166534] oscuro:text-marca-tinta" stroke-width="1.75" aria-hidden="true" />
+            <span class="font-semibold text-texto-suave">Fin</span>
+            <span class="font-semibold text-texto-fuerte">{{ etiquetaFin }}</span>
           </p>
         </div>
 
-        <span class="mt-4 flex min-h-[2.5rem] items-center gap-2 text-sm font-semibold text-[#166534]">
+        <span class="mt-4 flex min-h-[2.5rem] items-center gap-2 text-sm font-semibold text-[#166534] oscuro:text-marca-tinta">
           <WalletIcon class="h-5 w-5 shrink-0" stroke-width="1.75" aria-hidden="true" />
           Ver mi estado de cuenta
           <ChevronRightIcon class="ml-auto h-4 w-4" aria-hidden="true" />
@@ -107,10 +107,10 @@
     v-else
     :to="portalUrl"
     :class="[
-      'group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:gap-4',
+      'group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-borde bg-superficie-tarjeta p-4 shadow-sm sm:flex-row sm:items-center sm:gap-4',
       esCerrada
         ? 'opacity-[0.58] saturate-[0.5]'
-        : 'transition-all duration-300 ease-out lg:hover:-translate-y-0.5 lg:hover:border-emerald-200/90 lg:hover:shadow-lg motion-reduce:transition-none motion-reduce:lg:hover:translate-y-0 motion-reduce:lg:hover:shadow-sm',
+        : 'transition-all duration-300 ease-out lg:hover:-translate-y-0.5 lg:hover:border-emerald-200/90 oscuro:lg:hover:border-emerald-500/30 lg:hover:shadow-lg motion-reduce:transition-none motion-reduce:lg:hover:translate-y-0 motion-reduce:lg:hover:shadow-sm',
     ]"
   >
     <div class="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-2xl" aria-hidden="true">
@@ -120,8 +120,8 @@
     <div class="relative z-[1] flex min-w-0 flex-1 flex-col gap-3">
       <div class="flex min-w-0 items-start gap-2">
         <div class="min-w-0 flex-1">
-          <h3 class="font-body text-base font-bold leading-snug text-gray-900">{{ item.natillera_nombre }}</h3>
-          <p class="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500">{{ lineaPeriodicidad }}</p>
+          <h3 class="font-body text-base font-bold leading-snug text-texto-fuerte">{{ item.natillera_nombre }}</h3>
+          <p class="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-texto-suave">{{ lineaPeriodicidad }}</p>
         </div>
         <span class="etiqueta-socio">
           <UserIcon class="h-3.5 w-3.5" stroke-width="2" aria-hidden="true" />
@@ -129,33 +129,33 @@
         </span>
       </div>
       <div class="grid w-full min-w-0 grid-cols-2 gap-2">
-        <div class="min-w-0 rounded-md border border-gray-100/90 bg-gray-50/70 px-2.5 py-1.5 text-left sm:py-2">
-          <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-gray-400">
-            <BanknotesIcon class="h-3.5 w-3.5 shrink-0 text-[#166534]" stroke-width="1.75" aria-hidden="true" />
+        <div class="min-w-0 rounded-md border border-borde-suave/90 bg-superficie-suave/70 px-2.5 py-1.5 text-left sm:py-2">
+          <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-texto-tenue">
+            <BanknotesIcon class="h-3.5 w-3.5 shrink-0 text-[#166534] oscuro:text-marca-tinta" stroke-width="1.75" aria-hidden="true" />
             Ahorrado
           </span>
-          <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-gray-900 sm:text-lg">
+          <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-texto-fuerte sm:text-lg">
             {{ formatoMoneda(item.total_ahorrado) }}
           </span>
         </div>
-        <div class="min-w-0 rounded-md border border-gray-100/90 bg-gray-50/70 px-2.5 py-1.5 text-left sm:py-2">
-          <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-gray-400">
-            <CalendarDaysIcon class="h-3.5 w-3.5 shrink-0 text-[#3d6b28]" stroke-width="1.75" aria-hidden="true" />
+        <div class="min-w-0 rounded-md border border-borde-suave/90 bg-superficie-suave/70 px-2.5 py-1.5 text-left sm:py-2">
+          <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-texto-tenue">
+            <CalendarDaysIcon class="h-3.5 w-3.5 shrink-0 text-[#3d6b28] oscuro:text-marca-tinta" stroke-width="1.75" aria-hidden="true" />
             Tu cuota
           </span>
-          <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-gray-900 sm:text-lg">
+          <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-texto-fuerte sm:text-lg">
             {{ formatoMoneda(item.valor_cuota) }}
           </span>
         </div>
       </div>
     </div>
 
-    <div class="relative z-[1] flex flex-1 flex-wrap items-center gap-3 border-t border-gray-100 pt-3 sm:border-t-0 sm:border-l sm:pl-4 sm:pt-0">
+    <div class="relative z-[1] flex flex-1 flex-wrap items-center gap-3 border-t border-borde-suave pt-3 sm:border-t-0 sm:border-l sm:pl-4 sm:pt-0">
       <span :class="['inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ring-1', estadoSocio.clase]">
         <span class="h-1.5 w-1.5 shrink-0 rounded-full" :class="estadoSocio.punto" aria-hidden="true" />
         {{ estadoSocio.texto }}
       </span>
-      <span class="inline-flex items-center gap-1 text-sm font-semibold text-[#166534]">
+      <span class="inline-flex items-center gap-1 text-sm font-semibold text-[#166534] oscuro:text-marca-tinta">
         Ver mi estado de cuenta
         <ChevronRightIcon class="h-4 w-4" aria-hidden="true" />
       </span>
@@ -193,18 +193,18 @@ const estadoSocio = computed(() => {
   if (i.cuotas_mora > 0) {
     return {
       texto: i.cuotas_mora === 1 ? '1 cuota en mora' : `${i.cuotas_mora} cuotas en mora`,
-      clase: 'bg-red-50 text-red-800 ring-red-200',
+      clase: 'bg-red-50 oscuro:bg-red-500/15 text-red-800 oscuro:text-red-300 ring-red-200 oscuro:ring-red-500/30',
       punto: 'bg-red-500'
     }
   }
   if (i.cuotas_pendientes > 0) {
     return {
       texto: i.cuotas_pendientes === 1 ? '1 por pagar' : `${i.cuotas_pendientes} por pagar`,
-      clase: 'bg-amber-50 text-amber-800 ring-amber-200',
+      clase: 'bg-amber-50 oscuro:bg-amber-500/15 text-amber-800 oscuro:text-amber-300 ring-amber-200 oscuro:ring-amber-500/30',
       punto: 'bg-amber-500'
     }
   }
-  return { texto: 'Al día', clase: 'bg-emerald-50 text-emerald-800 ring-emerald-200', punto: 'bg-emerald-600/45' }
+  return { texto: 'Al día', clase: 'bg-emerald-50 oscuro:bg-emerald-500/15 text-emerald-800 oscuro:text-emerald-300 ring-emerald-200 oscuro:ring-emerald-500/30', punto: 'bg-emerald-600/45' }
 })
 
 const etiquetaInicio = computed(() => {
@@ -250,9 +250,17 @@ function formatoMoneda(valor) {
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1;
+  /* tema-fijo: chip naranja de rol sobre la cabecera verde; se lee igual en los dos modos */
   background: var(--color-accent-200, #fed7aa);
-  color: var(--color-accent-900, #7c2d12);
+  color: var(--color-accent-900, #7c2d12); /* tema-fijo */
   box-shadow: inset 0 0 0 1px rgba(194, 65, 12, 0.22);
 }
 .etiqueta-socio--cabecera { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22); }
+
+/* Modo oscuro: fuera de la cabecera verde (vista de lista) el chip va sobre la tarjeta */
+:where([data-tema=oscuro]) .etiqueta-socio:not(.etiqueta-socio--cabecera) {
+  background: rgb(249 115 22 / 0.15);
+  color: #fdba74;
+  box-shadow: inset 0 0 0 1px rgb(249 115 22 / 0.3);
+}
 </style>

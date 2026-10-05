@@ -20,7 +20,7 @@ export function calcular4x1000(neto) {
  * @param {object} p
  * @param {object} p.pago - { cuota, fecha, multa, valorPagado, actividades, prestamo }
  *   · actividades: filas de `socios_actividad` con `actividad` y `valor_pendiente`
- *   · prestamo: filas de `plan_pagos_prestamo` con `valor_pendiente`
+ *   · prestamo: filas de `plan_pagos_prestamo` con `valor_pendiente` y `mora` (a la fecha del pago)
  * @param {object} p.socio - { nombre, periodicidad }
  * @param {string} p.natilleraId
  * @param {string} [p.natilleraNombre]
@@ -32,6 +32,9 @@ export async function registrarPagoCompletoDeCuota({ pago, socio, natilleraId, n
   const cuotasStore = useCuotasStore()
   const totalActs = pago.actividades.reduce((s, a) => s + a.valor_pendiente, 0)
   const totalPrest = pago.prestamo.reduce((s, cp) => s + cp.valor_pendiente, 0)
+  // Mora de las cuotas de préstamo (ya calculada a la fecha del pago). Es dinero que entra
+  // con este pago y va a préstamos, pero no baja el saldo: va al fondo, como en Préstamos.
+  const totalMora = pago.prestamo.reduce((s, cp) => s + (Number(cp.mora) || 0), 0)
   const efectivo = formaPago === 'efectivo'
   const impuesto4x1000 = !efectivo && cobrar4x1000 ? calcular4x1000(pago.valorPagado) : 0
 
@@ -41,7 +44,9 @@ export async function registrarPagoCompletoDeCuota({ pago, socio, natilleraId, n
     impuesto4x1000,
     fechaPago: pago.fecha,
     sancionAFecha: pago.multa,
-    valorCuotasPrestamos: totalPrest,
+    // El store reparte el pago: sanción, actividades, préstamos (hasta este tope) y cuota.
+    // La mora suma al tope para que no se tome como pago de la cuota natillera.
+    valorCuotasPrestamos: totalPrest + totalMora,
     totalAPagar: pago.valorPagado,
     detalleActividades: pago.actividades.map(a => ({
       socio_actividad_id: a.id,
@@ -51,7 +56,9 @@ export async function registrarPagoCompletoDeCuota({ pago, socio, natilleraId, n
     })),
     detalleCuotasPrestamos: pago.prestamo.map(cp => ({
       nombre: `Cuota préstamo #${cp.numero_cuota}`,
+      // `valor` es solo lo abonado a la cuota (la reversión lo resta del plan); la mora va aparte
       valor: cp.valor_pendiente,
+      mora: Number(cp.mora) || 0,
       numero_cuota: cp.numero_cuota,
       prestamo_id: cp.prestamo_id,
       pagado: true
@@ -87,8 +94,9 @@ export async function registrarPagoCompletoDeCuota({ pago, socio, natilleraId, n
       tipoPago: formaPago,
       options: opciones
     }),
-    totalPrest > 0 && pagarCuotasPrestamoDeCuota({
+    (totalPrest + totalMora) > 0 && pagarCuotasPrestamoDeCuota({
       cuotaId: pago.cuota.id,
+      natilleraId,
       nombreSocio: socio?.nombre || null,
       nombreNatillera: natilleraNombre,
       cuotasPrestamo: pago.prestamo.map(cp => ({
@@ -100,9 +108,10 @@ export async function registrarPagoCompletoDeCuota({ pago, socio, natilleraId, n
         valor_pagado_efectivo_actual: parseFloat(cp.valor_pagado_efectivo) || 0,
         valor_pagado_transferencia_actual: parseFloat(cp.valor_pagado_transferencia) || 0,
         valor_pendiente: cp.valor_pendiente,
+        mora: Number(cp.mora) || 0,
         fecha_proyectada: cp.fecha_proyectada
       })),
-      valorTotal: totalPrest,
+      valorTotal: totalPrest + totalMora,
       tipoPago: formaPago,
       options: opciones
     })

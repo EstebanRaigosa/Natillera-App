@@ -2007,4 +2007,30 @@ onBeforeUnmount(() => {
     transition: none !important;
   }
 }
+
+/* Modo oscuro: tarjeta, textos, controles y piezas blancas de las escenas. El verde de
+   marca, los degradados verdes y la burbuja oscura del gesto valen igual en los dos modos.
+   Los halos radiales terminan en el color de la tarjeta para fundirse con ella. */
+:where([data-tema=oscuro]) .rec__tarjeta { background: var(--superficie-tarjeta); color: var(--texto-fuerte); }
+:where([data-tema=oscuro]) .rec__flecha { background: var(--superficie-tarjeta); }
+:where([data-tema=oscuro]) .rec__seg { background: var(--borde); }
+:where([data-tema=oscuro]) .rec__logo,
+:where([data-tema=oscuro]) .rec__ficha i,
+:where([data-tema=oscuro]) .rec__sello { background: var(--superficie-tarjeta); border-color: var(--borde-suave); }
+:where([data-tema=oscuro]) .rec__hero { background: radial-gradient(circle at 50% 45%, #dcfce7 0%, #f0fdf4 45%, var(--superficie-tarjeta) 78%); }
+:where([data-tema=oscuro]) .rec__hero--fichas { background: radial-gradient(circle at 50% 45%, #fef3c7 0%, #fff7ed 45%, var(--superficie-tarjeta) 78%); }
+:where([data-tema=oscuro]) .rec__hero--monedas { background: radial-gradient(circle at 50% 45%, #ccfbf1 0%, #f0fdfa 45%, var(--superficie-tarjeta) 78%); }
+:where([data-tema=oscuro]) .rec__hero--sellos { background: radial-gradient(circle at 50% 45%, #ede9fe 0%, #f5f3ff 45%, var(--superficie-tarjeta) 78%); }
+:where([data-tema=oscuro]) .rec__hero--balanza { background: radial-gradient(circle at 50% 45%, #cffafe 0%, #ecfeff 45%, var(--superficie-tarjeta) 78%); }
+:where([data-tema=oscuro]) .rec__hero--lupa { background: radial-gradient(circle at 50% 45%, #ffe4e6 0%, #fff1f2 45%, var(--superficie-tarjeta) 78%); }
+:where([data-tema=oscuro]) .rec__contador { color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .rec__titulo { color: var(--texto-fuerte); }
+:where([data-tema=oscuro]) .rec__texto { color: var(--texto-secundario); }
+:where([data-tema=oscuro]) .rec__chip { background: var(--exito-suave); color: var(--exito); }
+:where([data-tema=oscuro]) .rec__chip em { color: var(--texto-suave); }
+:where([data-tema=oscuro]) .rec__saltar { background: var(--superficie-tarjeta); border-color: var(--borde-fuerte); color: var(--texto-medio); }
+:where([data-tema=oscuro]) .rec__saltar:hover { background: var(--superficie-suave); border-color: var(--texto-tenue); }
+:where([data-tema=oscuro]) .rec__saltar:active { background: var(--superficie-hundida); }
+:where([data-tema=oscuro]) .rec__atras { border-color: var(--borde); color: var(--texto-medio); }
+:where([data-tema=oscuro]) .rec__atras:hover { background: var(--superficie-suave); }
 </style>

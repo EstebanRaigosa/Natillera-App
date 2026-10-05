@@ -15,8 +15,8 @@
     :persistent="true"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-xl max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-xl max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="36rem"
     @close="cerrar"
   >
@@ -78,7 +78,7 @@
         </label>
       </div>
       <div class="flex flex-wrap items-center gap-2">
-        <div class="ds-search min-w-0 flex-1 bg-white">
+        <div class="ds-search min-w-0 flex-1 bg-superficie-tarjeta">
           <MagnifyingGlassIcon class="h-4 w-4" aria-hidden="true" />
           <input
             v-model="busqueda"
@@ -101,7 +101,7 @@
       <span class="pad-exito" aria-hidden="true">
         <CheckBadgeIcon class="h-8 w-8" />
       </span>
-      <p class="mt-4 font-display text-xl font-extrabold text-gray-900">
+      <p class="mt-4 font-display text-xl font-extrabold text-texto-fuerte">
         {{ resultado.socios }} {{ resultado.socios === 1 ? 'socio quedó al día' : 'socios quedaron al día' }}
       </p>
       <div class="mt-5 grid w-full max-w-sm grid-cols-2 gap-2.5 text-left">
@@ -124,15 +124,15 @@
     <div v-else class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
         ref="scrollRef"
-        class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+        class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch]"
         @scroll.passive="onScroll"
       >
         <CargaCaja v-if="preparando" texto="Buscando cuotas vencidas" detalle="Revisando a cada socio" />
 
         <div v-else-if="filas.length === 0" class="flex flex-col items-center px-6 py-12 text-center">
           <span class="pad-exito" aria-hidden="true"><CheckBadgeIcon class="h-8 w-8" /></span>
-          <p class="mt-4 font-display text-lg font-extrabold text-gray-900">Todos están al día</p>
-          <p class="mt-1 max-w-xs text-sm text-gray-500">Ningún socio tiene cuotas vencidas sin pagar.</p>
+          <p class="mt-4 font-display text-lg font-extrabold text-texto-fuerte">Todos están al día</p>
+          <p class="mt-1 max-w-xs text-sm text-texto-suave">Ningún socio tiene cuotas vencidas sin pagar.</p>
         </div>
 
         <template v-else>
@@ -154,7 +154,7 @@
             </p>
           </div>
 
-          <p v-if="filasVisibles.length === 0" class="px-6 py-10 text-center text-sm text-gray-500">
+          <p v-if="filasVisibles.length === 0" class="px-6 py-10 text-center text-sm text-texto-suave">
             Ningún socio con ese nombre.
           </p>
 
@@ -173,15 +173,15 @@
                 <img
                   :src="getAvatarUrl(fila.nombre, fila.socioNatillera.socio?.avatar_seed, fila.socioNatillera.socio?.avatar_style)"
                   alt=""
-                  class="h-10 w-10 flex-shrink-0 rounded-full bg-slate-100 object-cover"
+                  class="h-10 w-10 flex-shrink-0 rounded-full bg-slate-100 oscuro:bg-superficie-hundida object-cover"
                 />
                 <span class="min-w-0 flex-1">
-                  <span class="block truncate text-sm font-bold text-slate-800">{{ fila.nombre }}</span>
+                  <span class="block truncate text-sm font-bold text-slate-800 oscuro:text-texto">{{ fila.nombre }}</span>
                   <span class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span class="ds-badge ds-badge--warning">
                       {{ fila.cuotas.length }} {{ fila.cuotas.length === 1 ? 'cuota' : 'cuotas' }}
                     </span>
-                    <span class="text-[11px] text-slate-500">{{ rangoFechas(fila.cuotas) }}</span>
+                    <span class="text-[11px] text-slate-500 oscuro:text-texto-suave">{{ rangoFechas(fila.cuotas) }}</span>
                   </span>
                 </span>
                 <span class="pad-socio__valor">${{ formatMoney(fila.valor) }}</span>
@@ -195,7 +195,7 @@
     </div>
 
     <div
-      class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-3 sm:px-6"
+      class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-4 pt-3 sm:px-6"
       :style="{ paddingBottom: `calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
     >
       <template v-if="resultado || (!preparando && filas.length === 0)">
@@ -221,15 +221,15 @@
         <div class="mb-3 flex items-end justify-between gap-3">
           <div class="min-w-0">
             <p class="ds-overline">{{ seleccion.socios > 0 ? 'Seleccionados' : 'Sin seleccionar' }}</p>
-            <p class="mt-0.5 truncate text-sm font-semibold text-slate-700">
+            <p class="mt-0.5 truncate text-sm font-semibold text-slate-700 oscuro:text-texto-medio">
               {{ seleccion.socios > 0
                 ? `${seleccion.socios} ${seleccion.socios === 1 ? 'socio' : 'socios'} · ${seleccion.cuotas} cuotas`
                 : 'Marca los socios que ya pagaron' }}
             </p>
           </div>
           <div v-if="seleccion.socios > 0" class="flex-shrink-0 text-right">
-            <p class="font-display text-xl font-extrabold tabular-nums leading-none text-[#1B5E37]">${{ formatMoney(seleccion.valor + seleccion.valor4x1000) }}</p>
-            <p v-if="seleccion.valor4x1000 > 0" class="mt-1 text-[11px] text-slate-500">incluye 4×1000 ${{ formatMoney(seleccion.valor4x1000) }}</p>
+            <p class="font-display text-xl font-extrabold tabular-nums leading-none text-marca-tinta">${{ formatMoney(seleccion.valor + seleccion.valor4x1000) }}</p>
+            <p v-if="seleccion.valor4x1000 > 0" class="mt-1 text-[11px] text-slate-500 oscuro:text-texto-suave">incluye 4×1000 ${{ formatMoney(seleccion.valor4x1000) }}</p>
           </div>
         </div>
         <div class="flex gap-3">
@@ -601,5 +601,85 @@ const { tapado } = useTapadoInferior()
   background: var(--brand-primary-soft, #e8f5ec);
   color: #1B5E37;
   box-shadow: 0 0 0 6px rgba(27, 94, 55, 0.08);
+}
+
+/* ==========================================================================
+   Modo oscuro (skill natillerapp-modo-oscuro). Propuesto con
+   scripts/tema/proponer-oscuro.mjs y revisado a mano. Solo lo que cambia: las
+   reglas de claro de arriba quedan intactas.
+   ========================================================================== */
+:where([data-tema=oscuro]) .pad-controles:not(:where([data-tema=claro] *)) {
+  background: linear-gradient(180deg, var(--superficie-suave) 0%, var(--superficie-tarjeta) 100%);
+}
+:where([data-tema=oscuro]) .pad-opcion:not(:where([data-tema=claro] *)),
+:where([data-tema=oscuro]) .pad-todos:not(:where([data-tema=claro] *)) {
+  border: 1px solid var(--marca-tinta-borde);
+  background: var(--superficie-tarjeta);
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .pad-opcion.is-activa:not(:where([data-tema=claro] *)),
+:where([data-tema=oscuro]) .pad-todos.is-activo:not(:where([data-tema=claro] *)) {
+  border-color: var(--marca-tinta-borde);
+}
+:where([data-tema=oscuro]) .pad-opcion__caja:not(:where([data-tema=claro] *)) {
+  border: 1.5px solid var(--marca-tinta-borde);
+  background: var(--superficie-tarjeta);
+}
+:where([data-tema=oscuro]) .pad-metric__label:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .pad-metric__valor:not(:where([data-tema=claro] *)) {
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .pad-metric__nota:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .pad-metric--marca:not(:where([data-tema=claro] *)) {
+  border-color: var(--marca-tinta-borde);
+}
+:where([data-tema=oscuro]) .pad-metric--marca .pad-metric__label:not(:where([data-tema=claro] *)),
+:where([data-tema=oscuro]) .pad-metric--marca .pad-metric__valor:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .pad-metric--debe:not(:where([data-tema=claro] *)) {
+  background: var(--alerta-suave);
+}
+:where([data-tema=oscuro]) .pad-metric--debe .pad-metric__label:not(:where([data-tema=claro] *)),
+:where([data-tema=oscuro]) .pad-metric--debe .pad-metric__valor:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .pad-nota:not(:where([data-tema=claro] *)) {
+  background: var(--marca-suave);
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .pad-aviso:not(:where([data-tema=claro] *)) {
+  background: var(--alerta-suave);
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .pad-aviso > svg:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .pad-socio:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-tarjeta);
+}
+:where([data-tema=oscuro]) .pad-socio:hover:not(:where([data-tema=claro] *)) {
+  border-color: var(--marca-tinta-borde);
+}
+:where([data-tema=oscuro]) .pad-socio.is-marcado:not(:where([data-tema=claro] *)) {
+  border-color: var(--marca-tinta-borde);
+  background: linear-gradient(180deg, var(--superficie-suave) 0%, var(--marca-suave) 100%);
+}
+:where([data-tema=oscuro]) .pad-socio__check:not(:where([data-tema=claro] *)) {
+  border: 2px solid var(--borde-fuerte);
+  background: var(--superficie-tarjeta);
+}
+:where([data-tema=oscuro]) .pad-socio__valor:not(:where([data-tema=claro] *)) {
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .pad-socio.is-marcado .pad-socio__valor:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .pad-exito:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
 }
 </style>

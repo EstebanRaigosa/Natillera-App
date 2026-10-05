@@ -41,8 +41,8 @@
 
       <!-- Resumen -->
       <section class="adm-resumen" aria-label="Resumen">
-        <p class="font-display text-2xl font-extrabold tabular-nums text-slate-900">
-          {{ activos.length + 1 }} <span class="text-base font-semibold text-slate-400">{{ activos.length + 1 === 1 ? 'persona administra' : 'personas administran' }}</span>
+        <p class="font-display text-2xl font-extrabold tabular-nums text-slate-900 oscuro:text-texto-fuerte">
+          {{ activos.length + 1 }} <span class="text-base font-semibold text-slate-400 oscuro:text-texto-tenue">{{ activos.length + 1 === 1 ? 'persona administra' : 'personas administran' }}</span>
         </p>
         <ul class="adm-resumen__cifras">
           <li><span class="adm-punto adm-punto--dueno" aria-hidden="true" />1 dueño</li>
@@ -113,7 +113,7 @@
 
                 <!-- Quitar acceso -->
                 <div v-else-if="accion?.id === c.id && accion.modo === 'revocar'" class="adm-panel adm-panel--peligro">
-                  <p class="text-sm text-red-800">¿Quitarle el acceso? Podrás invitarlo de nuevo.</p>
+                  <p class="text-sm text-red-800 oscuro:text-red-300">¿Quitarle el acceso? Podrás invitarlo de nuevo.</p>
                   <div class="mt-2 flex gap-2">
                     <button type="button" class="btn-modal-secondary flex-1" :disabled="ocupado" @click="accion = null">Cancelar</button>
                     <button type="button" class="adm-boton-peligro flex-1" :disabled="ocupado" @click="revocar(c)">{{ ocupado ? 'Quitando…' : 'Quitar acceso' }}</button>
@@ -122,7 +122,7 @@
 
                 <!-- Salirme (colaborador sobre su propia fila) -->
                 <div v-else-if="accion?.id === c.id && accion.modo === 'salir'" class="adm-panel adm-panel--peligro">
-                  <p class="text-sm text-red-800">¿Salir de esta natillera? Dejarás de verla.</p>
+                  <p class="text-sm text-red-800 oscuro:text-red-300">¿Salir de esta natillera? Dejarás de verla.</p>
                   <div class="mt-2 flex gap-2">
                     <button type="button" class="btn-modal-secondary flex-1" :disabled="ocupado" @click="accion = null">Cancelar</button>
                     <button type="button" class="adm-boton-peligro flex-1" :disabled="ocupado" @click="salirme(c)">{{ ocupado ? 'Saliendo…' : 'Salir' }}</button>
@@ -160,12 +160,12 @@
                 </div>
                 <!-- Reserva si falla el menú de compartir: desde el `.catch` Safari bloquea el
                      `window.open` (ya no hay toque), así que se ofrece un enlace para tocar. -->
-                <p v-if="reservaWhatsApp?.id === c.id" class="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
+                <p v-if="reservaWhatsApp?.id === c.id" class="mt-2 rounded-xl border border-amber-200 oscuro:border-amber-500/30 bg-amber-50 oscuro:bg-amber-500/15 px-3 py-2 text-sm text-amber-900 oscuro:text-amber-300" role="status">
                   No se pudo abrir el menú de compartir.
-                  <a :href="reservaWhatsApp.url" target="_blank" rel="noopener" class="inline-flex min-h-11 touch-manipulation items-center font-semibold text-[#1B5E37] underline" @click="reservaWhatsApp = null">Abrir WhatsApp</a>
+                  <a :href="reservaWhatsApp.url" target="_blank" rel="noopener" class="inline-flex min-h-11 touch-manipulation items-center font-semibold text-marca-tinta underline" @click="reservaWhatsApp = null">Abrir WhatsApp</a>
                 </p>
                 <div v-if="accion?.id === c.id && accion.modo === 'cancelar'" class="adm-panel adm-panel--peligro">
-                  <p class="text-sm text-red-800">¿Cancelar esta invitación? El enlace dejará de servir.</p>
+                  <p class="text-sm text-red-800 oscuro:text-red-300">¿Cancelar esta invitación? El enlace dejará de servir.</p>
                   <div class="mt-2 flex gap-2">
                     <button type="button" class="btn-modal-secondary flex-1" :disabled="ocupado" @click="accion = null">No</button>
                     <button type="button" class="adm-boton-peligro flex-1" :disabled="ocupado" @click="eliminar(c, 'Invitación cancelada')">{{ ocupado ? 'Cancelando…' : 'Sí, cancelar' }}</button>
@@ -179,7 +179,7 @@
           <section v-if="sinAcceso.length > 0" class="adm-seccion adm-seccion--sin">
             <button type="button" class="adm-plegable" :aria-expanded="verSinAcceso" @click="verSinAcceso = !verSinAcceso">
               <span class="adm-seccion__titulo">Sin acceso <span class="adm-conteo">{{ sinAcceso.length }}</span></span>
-              <ChevronDownIcon class="h-5 w-5 text-slate-400 transition-transform" :class="{ 'rotate-180': verSinAcceso }" aria-hidden="true" />
+              <ChevronDownIcon class="h-5 w-5 text-slate-400 oscuro:text-texto-tenue transition-transform" :class="{ 'rotate-180': verSinAcceso }" aria-hidden="true" />
             </button>
             <ul v-if="verSinAcceso" class="adm-lista">
               <li v-for="c in sinAcceso" :key="c.id" class="adm-fila">
@@ -207,7 +207,7 @@
                   </div>
                 </div>
                 <div v-if="accion?.id === c.id && accion.modo === 'borrar'" class="adm-panel adm-panel--peligro">
-                  <p class="text-sm text-red-800">¿Borrarlo de la lista? No se puede deshacer.</p>
+                  <p class="text-sm text-red-800 oscuro:text-red-300">¿Borrarlo de la lista? No se puede deshacer.</p>
                   <div class="mt-2 flex gap-2">
                     <button type="button" class="btn-modal-secondary flex-1" :disabled="ocupado" @click="accion = null">No</button>
                     <button type="button" class="adm-boton-peligro flex-1" :disabled="ocupado" @click="eliminar(c, 'Borrado de la lista')">{{ ocupado ? 'Borrando…' : 'Sí, borrar' }}</button>
@@ -235,9 +235,9 @@
             </button>
             <!-- Reserva si falla el menú de compartir: desde el `.catch` Safari bloquea el
                  `window.open` (ya no hay toque), así que se ofrece un enlace para tocar. -->
-            <p v-if="reservaWhatsApp?.id === recienInvitado.id" class="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
+            <p v-if="reservaWhatsApp?.id === recienInvitado.id" class="mt-2 rounded-xl border border-amber-200 oscuro:border-amber-500/30 bg-amber-50 oscuro:bg-amber-500/15 px-3 py-2 text-sm text-amber-900 oscuro:text-amber-300" role="status">
               No se pudo abrir el menú de compartir.
-              <a :href="reservaWhatsApp.url" target="_blank" rel="noopener" class="inline-flex min-h-11 touch-manipulation items-center font-semibold text-[#1B5E37] underline" @click="reservaWhatsApp = null">Abrir WhatsApp</a>
+              <a :href="reservaWhatsApp.url" target="_blank" rel="noopener" class="inline-flex min-h-11 touch-manipulation items-center font-semibold text-marca-tinta underline" @click="reservaWhatsApp = null">Abrir WhatsApp</a>
             </p>
             <button type="button" class="ds-btn ds-btn--secondary ds-btn--block" @click="copiarEnlace(recienInvitado)">
               <CheckIcon v-if="copiado === recienInvitado.id" class="h-4 w-4" aria-hidden="true" />
@@ -250,8 +250,8 @@
           <!-- Móvil: plegado tras un botón para no empujar el equipo hacia abajo -->
           <template v-else>
             <button type="button" class="adm-plegable adm-plegable--invitar" :aria-expanded="formularioAbierto" @click="formularioAbierto = !formularioAbierto">
-              <span class="adm-seccion__titulo"><UserPlusIcon class="h-5 w-5 text-[color:var(--brand-primary)]" aria-hidden="true" /> Invitar a alguien</span>
-              <ChevronDownIcon class="h-5 w-5 text-slate-400 transition-transform lg:hidden" :class="{ 'rotate-180': formularioAbierto }" aria-hidden="true" />
+              <span class="adm-seccion__titulo"><UserPlusIcon class="h-5 w-5 text-[color:var(--brand-primary)] oscuro:text-marca-tinta" aria-hidden="true" /> Invitar a alguien</span>
+              <ChevronDownIcon class="h-5 w-5 text-slate-400 oscuro:text-texto-tenue transition-transform lg:hidden" :class="{ 'rotate-180': formularioAbierto }" aria-hidden="true" />
             </button>
             <form v-show="formularioAbierto || esEscritorio" class="space-y-4" @submit.prevent="invitar">
               <div>
@@ -268,7 +268,7 @@
                   :class="{ 'ds-input--error': errorCorreo }"
                   @input="errorCorreo = ''"
                 />
-                <p v-if="errorCorreo" class="mt-1.5 text-sm text-red-700" role="alert">{{ errorCorreo }}</p>
+                <p v-if="errorCorreo" class="mt-1.5 text-sm text-red-700 oscuro:text-red-300" role="alert">{{ errorCorreo }}</p>
               </div>
               <EditorRol v-model:rol="invitacion.rol" v-model:niveles="invitacion.niveles" nombre-grupo="rol-nuevo" :permitir-co-admin="soyDueno" />
               <button type="submit" class="btn-modal-primary w-full" :disabled="ocupado || !invitacion.email.trim()">
@@ -769,4 +769,33 @@ onUnmounted(() => {
   color: var(--brand-primary);
   touch-action: manipulation;
 }
+
+/* Modo oscuro: solo lo que cambia (skill natillerapp-modo-oscuro §2.5). Los puntos de
+   rol (colores sólidos), el avatar del dueño y el botón rojo relleno valen igual. */
+:where([data-tema=oscuro]) .adm-resumen__cifras { color: var(--texto-secundario); }
+:where([data-tema=oscuro]) .adm-resumen__cifras strong { color: var(--texto-fuerte); }
+:where([data-tema=oscuro]) .adm-seccion--pendientes { border-color: var(--alerta-borde); background: var(--alerta-suave); }
+:where([data-tema=oscuro]) .adm-seccion__titulo { color: var(--texto-fuerte); }
+:where([data-tema=oscuro]) .adm-conteo { background: var(--superficie-hundida); color: var(--texto-secundario); }
+:where([data-tema=oscuro]) .adm-conteo--pendiente { background: var(--alerta-suave); color: var(--alerta); }
+:where([data-tema=oscuro]) .adm-avatar { background: var(--superficie-hundida); color: var(--texto-secundario); }
+:where([data-tema=oscuro]) .adm-avatar--dueno { background: var(--brand-primary); color: #fff; }
+:where([data-tema=oscuro]) .adm-avatar--co_administrador,
+:where([data-tema=oscuro]) .adm-avatar--listo { background: var(--exito-suave); color: var(--exito); }
+:where([data-tema=oscuro]) .adm-avatar--colaborador { background: var(--info-suave); color: var(--info); }
+:where([data-tema=oscuro]) .adm-avatar--pendiente { background: var(--alerta-suave); color: var(--alerta); }
+:where([data-tema=oscuro]) .adm-fila__nombre { color: var(--texto-fuerte); }
+:where([data-tema=oscuro]) .adm-fila__dato { color: var(--texto-suave); }
+:where([data-tema=oscuro]) .adm-fila__permisos { color: var(--texto-secundario); }
+:where([data-tema=oscuro]) .adm-salir { color: var(--peligro); }
+:where([data-tema=oscuro]) .adm-panel { background: var(--superficie-suave); }
+:where([data-tema=oscuro]) .adm-panel--peligro { background: var(--peligro-suave); }
+:where([data-tema=oscuro]) .adm-yo { background: var(--marca-suave); color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .adm-icono,
+:where([data-tema=oscuro]) .adm-texto-boton { color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .adm-icono:hover { background: var(--marca-suave); }
+/* Después de .adm-icono: misma especificidad, gana el que va último */
+:where([data-tema=oscuro]) .adm-icono--peligro { color: var(--peligro); }
+:where([data-tema=oscuro]) .adm-icono--peligro:hover,
+:where([data-tema=oscuro]) .adm-salir { background: var(--peligro-suave); }
 </style>

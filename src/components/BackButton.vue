@@ -5,8 +5,8 @@
     :class="[
       'group inline-flex items-center justify-center rounded-xl flex-shrink-0 transition-all duration-200 touch-manipulation',
       inline
-        ? 'h-11 w-11 bg-white/80 backdrop-blur-sm border border-gray-200/80 text-gray-600 hover:text-[#166534] hover:bg-[#166534]/5 hover:border-[#166534]/30 shadow-sm hover:shadow-md'
-        : 'absolute top-3 left-3 z-20 h-11 w-11 bg-white/90 backdrop-blur-sm border border-gray-200/60 text-gray-600 hover:text-[#166534] hover:bg-[#166534]/5 hover:border-[#166534]/30 shadow-md hover:shadow-lg'
+        ? 'h-11 w-11 bg-white/80 backdrop-blur-sm border border-borde/80 text-texto-secundario hover:text-[#166534] oscuro:hover:text-marca-tinta hover:bg-[#166534]/5 hover:border-[#166534]/30 oscuro:hover:border-marca-tinta/30 shadow-sm hover:shadow-md oscuro:bg-superficie-tarjeta/90 oscuro:border-borde oscuro:text-texto-secundario oscuro:hover:bg-marca-suave'
+        : 'absolute top-3 left-3 z-20 h-11 w-11 bg-white/90 backdrop-blur-sm border border-borde/60 text-texto-secundario hover:text-[#166534] oscuro:hover:text-marca-tinta hover:bg-[#166534]/5 hover:border-[#166534]/30 oscuro:hover:border-marca-tinta/30 shadow-md hover:shadow-lg oscuro:bg-superficie-tarjeta/90 oscuro:border-borde oscuro:text-texto-secundario oscuro:hover:bg-marca-suave'
     ]"
     aria-label="Volver atrás"
   >

@@ -25,7 +25,7 @@
           to="/auth/register"
           class="hidden min-h-[44px] touch-manipulation items-center rounded-full border border-white/25 bg-white/10 px-4 text-sm font-bold text-white hover:bg-white/20 sm:inline-flex"
         >
-          Crear cuenta
+          Crear mi natillera
         </RouterLink>
       </nav>
     </div>

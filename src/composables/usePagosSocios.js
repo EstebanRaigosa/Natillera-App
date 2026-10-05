@@ -78,13 +78,13 @@ export function iniciales(nombre) {
 /** Color estable por nombre: el mismo socio se pinta igual en toda la lista. */
 export function colorSocio(nombre) {
   const paleta = [
-    'bg-emerald-100 text-emerald-800',
-    'bg-sky-100 text-sky-800',
-    'bg-amber-100 text-amber-800',
-    'bg-violet-100 text-violet-800',
-    'bg-rose-100 text-rose-800',
-    'bg-teal-100 text-teal-800',
-    'bg-indigo-100 text-indigo-800'
+    'bg-emerald-100 oscuro:bg-emerald-500/15 text-emerald-800 oscuro:text-emerald-300',
+    'bg-sky-100 oscuro:bg-sky-500/15 text-sky-800 oscuro:text-sky-300',
+    'bg-amber-100 oscuro:bg-amber-500/15 text-amber-800 oscuro:text-amber-300',
+    'bg-violet-100 oscuro:bg-violet-500/15 text-violet-800 oscuro:text-violet-300',
+    'bg-rose-100 oscuro:bg-rose-500/15 text-rose-800 oscuro:text-rose-300',
+    'bg-teal-100 oscuro:bg-teal-500/15 text-teal-800 oscuro:text-teal-300',
+    'bg-indigo-100 oscuro:bg-indigo-500/15 text-indigo-800 oscuro:text-indigo-300'
   ]
   const texto = String(nombre || '')
   let suma = 0

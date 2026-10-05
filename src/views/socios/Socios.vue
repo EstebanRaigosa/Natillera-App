@@ -154,7 +154,7 @@
     <!-- Tabla de socios (toolbar + tabla/lista + paginación) -->
     <section
       v-else-if="!cargandoPrimeraVez"
-      class="bg-white rounded-2xl border border-[color:var(--surface-divider)] shadow-[var(--shadow-xs)] overflow-hidden"
+      class="bg-superficie-tarjeta rounded-2xl border border-[color:var(--surface-divider)] shadow-[var(--shadow-xs)] overflow-hidden"
     >
       <!-- Toolbar: búsqueda + filtros -->
       <div class="socios-toolbar">
@@ -200,11 +200,11 @@
 
       <!-- Sin resultados con filtros aplicados -->
       <div v-if="sociosFiltrados.length === 0" class="px-6 py-14 text-center">
-        <div class="w-14 h-14 mx-auto mb-4 bg-slate-100 rounded-2xl flex items-center justify-center">
-          <MagnifyingGlassIcon class="w-7 h-7 text-slate-400" />
+        <div class="w-14 h-14 mx-auto mb-4 bg-slate-100 oscuro:bg-superficie-hundida rounded-2xl flex items-center justify-center">
+          <MagnifyingGlassIcon class="w-7 h-7 text-slate-400 oscuro:text-texto-tenue" />
         </div>
-        <p class="font-display font-bold text-slate-800 text-base sm:text-lg mb-1">Sin resultados</p>
-        <p class="text-sm text-slate-500 mb-5">
+        <p class="font-display font-bold text-slate-800 oscuro:text-texto text-base sm:text-lg mb-1">Sin resultados</p>
+        <p class="text-sm text-slate-500 oscuro:text-texto-suave mb-5">
           No hay socios que coincidan con los filtros aplicados
         </p>
         <button type="button" class="ds-btn ds-btn--secondary" @click="limpiarFiltros">
@@ -243,23 +243,23 @@
                     <img
                       :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed, sn.socio?.avatar_style)"
                       :alt="sn.socio?.nombre"
-                      class="w-10 h-10 rounded-full object-cover bg-slate-100 flex-shrink-0"
+                      class="w-10 h-10 rounded-full object-cover bg-slate-100 oscuro:bg-superficie-hundida flex-shrink-0"
                     />
                     <div class="min-w-0">
-                      <p class="font-bold text-slate-800 truncate leading-tight">
+                      <p class="font-bold text-slate-800 oscuro:text-texto truncate leading-tight">
                         {{ sn.socio?.nombre || 'Socio sin nombre' }}
                       </p>
-                      <p class="text-[11px] text-slate-400 truncate font-mono mt-0.5">
+                      <p class="text-[11px] text-slate-400 oscuro:text-texto-tenue truncate font-mono mt-0.5">
                         {{ sn.socio?.documento ? `ID: ${sn.socio.documento}` : '—' }}
                       </p>
                     </div>
                   </div>
                 </td>
                 <td>
-                  <p class="text-sm text-slate-700 truncate">
+                  <p class="text-sm text-slate-700 oscuro:text-texto-medio truncate">
                     {{ sn.socio?.email || '—' }}
                   </p>
-                  <p class="text-xs text-slate-400 truncate mt-0.5">
+                  <p class="text-xs text-slate-400 oscuro:text-texto-tenue truncate mt-0.5">
                     {{ sn.socio?.telefono || 'Sin teléfono' }}
                   </p>
                   <p v-if="sn.socio?.usuario_id" class="socio-vinculado mt-1">
@@ -274,7 +274,7 @@
                   </span>
                 </td>
                 <td>
-                  <p class="font-bold text-slate-800 tabular-nums leading-tight">
+                  <p class="font-bold text-slate-800 oscuro:text-texto tabular-nums leading-tight">
                     $ {{ formatMoney(sn.valor_cuota_individual) }}
                   </p>
                   <span
@@ -286,7 +286,7 @@
                   </span>
                 </td>
                 <td>
-                  <span class="text-sm text-slate-600 capitalize">
+                  <span class="text-sm text-slate-600 oscuro:text-texto-secundario capitalize">
                     {{ sn.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}
                   </span>
                 </td>
@@ -373,11 +373,11 @@
                 <img
                   :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed, sn.socio?.avatar_style)"
                   :alt="sn.socio?.nombre"
-                  class="w-10 h-10 rounded-full object-cover bg-slate-100 flex-shrink-0"
+                  class="w-10 h-10 rounded-full object-cover bg-slate-100 oscuro:bg-superficie-hundida flex-shrink-0"
                 />
                 <div class="min-w-0 flex-1">
                   <div class="flex items-start justify-between gap-2">
-                    <p class="font-bold text-slate-800 truncate text-sm leading-snug">
+                    <p class="font-bold text-slate-800 oscuro:text-texto truncate text-sm leading-snug">
                       {{ sn.socio?.nombre || 'Socio sin nombre' }}
                     </p>
                     <span class="ds-badge flex-shrink-0" :class="badgeEstadoClase(sn.estado)">
@@ -385,12 +385,12 @@
                       {{ labelEstado(sn.estado) }}
                     </span>
                   </div>
-                  <p class="flex items-center gap-1 mt-1 text-[11px] text-slate-500 truncate leading-tight">
-                    <EnvelopeIcon class="w-3 h-3 flex-shrink-0 text-slate-400" aria-hidden="true" />
+                  <p class="flex items-center gap-1 mt-1 text-[11px] text-slate-500 oscuro:text-texto-suave truncate leading-tight">
+                    <EnvelopeIcon class="w-3 h-3 flex-shrink-0 text-slate-400 oscuro:text-texto-tenue" aria-hidden="true" />
                     <span class="truncate">{{ sn.socio?.email || 'Sin correo' }}</span>
                   </p>
-                  <p class="flex items-center gap-1 mt-0.5 text-[11px] text-slate-500 truncate leading-tight">
-                    <PhoneIcon class="w-3 h-3 flex-shrink-0 text-slate-400" aria-hidden="true" />
+                  <p class="flex items-center gap-1 mt-0.5 text-[11px] text-slate-500 oscuro:text-texto-suave truncate leading-tight">
+                    <PhoneIcon class="w-3 h-3 flex-shrink-0 text-slate-400 oscuro:text-texto-tenue" aria-hidden="true" />
                     <span class="truncate">{{ sn.socio?.telefono || 'Sin teléfono' }}</span>
                   </p>
                   <p v-if="sn.socio?.usuario_id" class="socio-vinculado mt-1">
@@ -404,7 +404,7 @@
               <div class="socios-mobile-card__metrics">
                 <div class="min-w-0">
                   <p class="socios-mobile-metric-label">Cuota</p>
-                  <p class="font-bold text-slate-800 tabular-nums text-sm leading-none">
+                  <p class="font-bold text-slate-800 oscuro:text-texto tabular-nums text-sm leading-none">
                     $ {{ formatMoney(sn.valor_cuota_individual) }}
                   </p>
                   <span
@@ -417,7 +417,7 @@
                 </div>
                 <div class="text-right min-w-0">
                   <p class="socios-mobile-metric-label">Periodicidad</p>
-                  <p class="text-xs text-slate-700 capitalize leading-none">
+                  <p class="text-xs text-slate-700 oscuro:text-texto-medio capitalize leading-none">
                     {{ sn.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}
                   </p>
                 </div>
@@ -501,11 +501,11 @@
             <ChevronDownIcon class="w-4 h-4" />
             Ver más socios
           </button>
-          <p class="text-xs text-slate-500">
+          <p class="text-xs text-slate-500 oscuro:text-texto-suave">
             Mostrando
-            <strong class="text-slate-700 font-semibold">{{ sociosMostrados.length }}</strong>
+            <strong class="text-slate-700 oscuro:text-texto-medio font-semibold">{{ sociosMostrados.length }}</strong>
             de
-            <strong class="text-slate-700 font-semibold">{{ sociosFiltrados.length }}</strong>
+            <strong class="text-slate-700 oscuro:text-texto-medio font-semibold">{{ sociosFiltrados.length }}</strong>
             {{ sociosFiltrados.length === 1 ? 'socio' : 'socios' }}
           </p>
         </div>
@@ -542,8 +542,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="32rem"
       @close="modalDetalle = false"
     >
@@ -551,11 +551,11 @@
       <div ref="cabeceraDetalleSocio" class="flex-shrink-0 bg-[color:var(--brand-primary)] text-white">
         <!-- Móvil: una sola fila [avatar | nombre+estado | X] -->
         <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
-          <img
+          <!-- tema-fijo: avatar con fondo blanco sobre la cabecera de marca -->
+          <img class="w-10 h-10 shrink-0 rounded-full object-cover bg-white shadow-sm"
             v-if="socioSeleccionado"
             :src="getAvatarUrl(socioSeleccionado.socio?.nombre || socioSeleccionado.id, socioSeleccionado.socio?.avatar_seed, socioSeleccionado.socio?.avatar_style)"
             :alt="socioSeleccionado.socio?.nombre"
-            class="w-10 h-10 shrink-0 rounded-full object-cover bg-white shadow-sm"
           />
           <div class="min-w-0 flex-1 text-left">
             <h3 class="font-display font-bold text-white text-base leading-tight truncate">
@@ -605,11 +605,11 @@
             </button>
           </div>
           <div class="flex-1 min-w-0 flex flex-col items-center text-center">
-            <img
+            <!-- tema-fijo: avatar con fondo blanco sobre la cabecera de marca -->
+            <img class="w-14 h-14 mb-2 rounded-full object-cover bg-white shadow-sm"
               v-if="socioSeleccionado"
               :src="getAvatarUrl(socioSeleccionado.socio?.nombre || socioSeleccionado.id, socioSeleccionado.socio?.avatar_seed, socioSeleccionado.socio?.avatar_style)"
               :alt="socioSeleccionado.socio?.nombre"
-              class="w-14 h-14 mb-2 rounded-full object-cover bg-white shadow-sm"
             />
             <h3 class="font-display font-bold text-white text-lg leading-tight truncate max-w-full">
               {{ socioSeleccionado?.socio?.nombre || 'Socio' }}
@@ -634,7 +634,7 @@
         <div
           ref="scrollAreaModalDetalleSocio"
           data-captura-expandir
-          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-4"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-4"
           @scroll.passive="programarNatiscrollModalDetalleSocio"
         >
           <!--
@@ -643,8 +643,8 @@
             tarda. No sale en la imagen.
           -->
           <div v-if="capturaDetalle.archivo" class="captura-lista no-captura">
-            <CameraIcon class="h-5 w-5 flex-shrink-0 text-[color:var(--brand-primary)]" aria-hidden="true" />
-            <p class="min-w-0 flex-1 text-sm font-semibold text-slate-700">Captura lista</p>
+            <CameraIcon class="h-5 w-5 flex-shrink-0 text-[color:var(--brand-primary)] oscuro:text-marca-tinta" aria-hidden="true" />
+            <p class="min-w-0 flex-1 text-sm font-semibold text-slate-700 oscuro:text-texto-medio">Captura lista</p>
             <button type="button" class="btn-descargar btn-descargar--sm" @click="descargarCapturaDetalle">
               <ArrowDownTrayIcon class="h-4 w-4 flex-shrink-0" aria-hidden="true" />
               Descargar
@@ -657,19 +657,19 @@
           <!-- Estado de pagos: callout verde (al día) o ámbar (pendientes) -->
           <div
             class="ds-callout"
-            :style="resumenSocio.alDia
+            :class="resumenSocio.alDia
               ? null
-              : 'background: rgba(254, 243, 199, 0.6); color: #78350f;'"
+              : 'bg-amber-100/60 oscuro:bg-amber-500/15 text-amber-900 oscuro:text-amber-300'"
           >
             <component
               :is="resumenSocio.alDia ? CheckCircleIcon : ExclamationCircleIcon"
               class="w-5 h-5 ds-callout__icon flex-shrink-0"
-              :style="resumenSocio.alDia ? null : 'color: #b45309;'"
+              :class="resumenSocio.alDia ? null : 'text-alerta'"
             />
             <div>
               <span
                 class="ds-callout__title"
-                :style="resumenSocio.alDia ? null : 'color: #78350f;'"
+                :class="resumenSocio.alDia ? null : 'text-[#78350f] oscuro:text-amber-300'"
               >
                 {{ resumenSocio.alDia ? '¡Al día con los pagos!' : 'Tiene pagos pendientes' }}
               </span>
@@ -782,8 +782,8 @@
           <!-- Resumen Financiero — fijo, siempre visible (no desplegable) -->
           <section class="detalle-resumen" aria-labelledby="detalle-resumen-titulo">
             <div class="flex items-center gap-2 px-0.5">
-              <BanknotesIcon class="w-4 h-4 text-[color:var(--brand-primary)]" />
-              <h3 id="detalle-resumen-titulo" class="font-display font-bold text-slate-800 text-sm">
+              <BanknotesIcon class="w-4 h-4 text-[color:var(--brand-primary)] oscuro:text-marca-tinta" />
+              <h3 id="detalle-resumen-titulo" class="font-display font-bold text-slate-800 oscuro:text-texto text-sm">
                 Resumen financiero
               </h3>
             </div>
@@ -834,15 +834,15 @@
               <p class="ds-overline mb-1.5">Cuotas</p>
               <div class="grid grid-cols-3 gap-2">
                 <div class="detalle-mini-stat">
-                  <p class="detalle-mini-stat__value text-[color:var(--brand-success)]">{{ resumenSocio.cuotasPagadas }}</p>
+                  <p class="detalle-mini-stat__value text-[color:var(--brand-success)] oscuro:text-exito">{{ resumenSocio.cuotasPagadas }}</p>
                   <p class="detalle-mini-stat__label">Pagadas</p>
                 </div>
                 <div class="detalle-mini-stat">
-                  <p class="detalle-mini-stat__value text-[color:var(--brand-warning)]">{{ resumenSocio.cuotasPendientes }}</p>
+                  <p class="detalle-mini-stat__value text-[color:var(--brand-warning)] oscuro:text-alerta">{{ resumenSocio.cuotasPendientes }}</p>
                   <p class="detalle-mini-stat__label">Pendientes</p>
                 </div>
                 <div class="detalle-mini-stat">
-                  <p class="detalle-mini-stat__value text-[color:var(--brand-danger)]">{{ resumenSocio.cuotasMora }}</p>
+                  <p class="detalle-mini-stat__value text-[color:var(--brand-danger)] oscuro:text-peligro">{{ resumenSocio.cuotasMora }}</p>
                   <p class="detalle-mini-stat__label">En mora</p>
                 </div>
               </div>
@@ -867,7 +867,7 @@
               <span class="detalle-ir-cuotas__titulo">Ver las cuotas del socio</span>
               <span class="detalle-ir-cuotas__sub">Pagadas, pendientes y en mora, con su fecha de pago</span>
             </span>
-            <ChevronRightIcon class="w-4 h-4 flex-shrink-0 text-slate-400" aria-hidden="true" />
+            <ChevronRightIcon class="w-4 h-4 flex-shrink-0 text-slate-400 oscuro:text-texto-tenue" aria-hidden="true" />
           </button>
 
           <!-- Información de Contacto -->
@@ -879,20 +879,20 @@
               @click="toggleSeccion('contacto')"
             >
               <span class="detalle-seccion__title">
-                <UserIcon class="w-4 h-4 text-[color:var(--brand-primary)]" />
+                <UserIcon class="w-4 h-4 text-[color:var(--brand-primary)] oscuro:text-marca-tinta" />
                 Información de contacto
               </span>
               <ChevronDownIcon
-                class="w-4 h-4 text-slate-400 transition-transform duration-200"
+                class="w-4 h-4 text-slate-400 oscuro:text-texto-tenue transition-transform duration-200"
                 :class="seccionActiva === 'contacto' ? 'rotate-180' : ''"
               />
             </button>
             <div v-show="seccionActiva === 'contacto'" class="detalle-seccion__body space-y-2">
               <div class="detalle-info-row">
-                <PhoneIcon class="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <PhoneIcon class="w-4 h-4 text-slate-400 oscuro:text-texto-tenue flex-shrink-0" />
                 <div class="flex-1 min-w-0">
                   <p class="ds-overline mb-0.5">Teléfono / WhatsApp</p>
-                  <p class="font-semibold text-slate-800 text-sm truncate">
+                  <p class="font-semibold text-slate-800 oscuro:text-texto text-sm truncate">
                     {{ socioSeleccionado?.socio?.telefono || 'No registrado' }}
                   </p>
                 </div>
@@ -908,19 +908,19 @@
                 </a>
               </div>
               <div class="detalle-info-row">
-                <EnvelopeIcon class="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <EnvelopeIcon class="w-4 h-4 text-slate-400 oscuro:text-texto-tenue flex-shrink-0" />
                 <div class="flex-1 min-w-0">
                   <p class="ds-overline mb-0.5">Correo electrónico</p>
-                  <p class="font-semibold text-slate-800 text-sm truncate">
+                  <p class="font-semibold text-slate-800 oscuro:text-texto text-sm truncate">
                     {{ socioSeleccionado?.socio?.email || 'No registrado' }}
                   </p>
                 </div>
               </div>
               <div class="detalle-info-row">
-                <IdentificationIcon class="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <IdentificationIcon class="w-4 h-4 text-slate-400 oscuro:text-texto-tenue flex-shrink-0" />
                 <div class="flex-1 min-w-0">
                   <p class="ds-overline mb-0.5">Documento</p>
-                  <p class="font-semibold text-slate-800 text-sm truncate">
+                  <p class="font-semibold text-slate-800 oscuro:text-texto text-sm truncate">
                     {{ socioSeleccionado?.socio?.documento || 'No registrado' }}
                   </p>
                 </div>
@@ -937,7 +937,7 @@
           aria-hidden="true"
         >
           <div
-            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent"
             aria-hidden="true"
           />
           <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
@@ -954,7 +954,7 @@
       </div>
 
       <!-- Footer fijo: 2 filas con jerarquía clara. Siempre visible. Hereda safe-area-bottom. -->
-      <div class="no-captura flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-3 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-2">
+      <div class="no-captura flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-superficie-tarjeta px-5 sm:px-6 pt-3 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-2">
         <!-- Fila 1: acciones principales (peso fuerte) -->
         <div class="flex flex-col-reverse sm:flex-row gap-2">
           <button
@@ -1010,13 +1010,14 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="32rem"
       @close="cerrarModalImportar"
     >
       <div class="flex-shrink-0 bg-[color:var(--brand-primary)] text-white">
         <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
             <ArrowUpTrayIcon class="w-5 h-5 text-[color:var(--brand-primary)]" />
           </div>
@@ -1037,6 +1038,7 @@
         <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
           <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
           <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm">
               <ArrowUpTrayIcon class="w-6 h-6 text-[color:var(--brand-primary)]" />
             </div>
@@ -1060,7 +1062,7 @@
       <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="scrollAreaModalImportar"
-          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-5"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-5"
           @scroll.passive="programarNatiscrollModalImportar"
         >
           <span class="ds-overline">Descargar plantilla</span>
@@ -1086,10 +1088,10 @@
             <span class="ds-overline">Cargar e importar</span>
             <div class="rounded-[var(--radius-lg)] border border-[color:var(--surface-divider)] bg-[color:var(--surface-muted)] p-4">
               <div class="flex items-start gap-3">
-                <ArrowUpTrayIcon class="w-5 h-5 text-[color:var(--brand-primary)] flex-shrink-0 mt-0.5" />
+                <ArrowUpTrayIcon class="w-5 h-5 text-[color:var(--brand-primary)] oscuro:text-marca-tinta flex-shrink-0 mt-0.5" />
                 <div class="flex-1 min-w-0">
-                  <p class="font-semibold text-slate-800 text-sm">Importar desde tu equipo</p>
-                  <p class="text-sm text-slate-600 mt-1 leading-snug">
+                  <p class="font-semibold text-slate-800 oscuro:text-texto text-sm">Importar desde tu equipo</p>
+                  <p class="text-sm text-slate-600 oscuro:text-texto-secundario mt-1 leading-snug">
                     Elige el archivo CSV con los socios que quieres dar de alta. Es un proceso aparte de descargar la plantilla.
                   </p>
                   <input
@@ -1123,18 +1125,18 @@
                 <!-- sticky en cada th y no en thead: Safari no respeta position:sticky en thead/tr -->
                 <thead>
                   <tr>
-                    <th class="sticky top-0 z-[1] bg-[color:var(--surface-muted)] text-left p-3 font-semibold text-slate-600 text-xs uppercase tracking-wide">Nombre</th>
-                    <th class="sticky top-0 z-[1] bg-[color:var(--surface-muted)] text-left p-3 font-semibold text-slate-600 text-xs uppercase tracking-wide">Cuota</th>
-                    <th class="sticky top-0 z-[1] bg-[color:var(--surface-muted)] text-left p-3 font-semibold text-slate-600 text-xs uppercase tracking-wide">
-                      Teléfono <span class="text-[color:var(--brand-danger)]">*</span>
+                    <th class="sticky top-0 z-[1] bg-[color:var(--surface-muted)] text-left p-3 font-semibold text-slate-600 oscuro:text-texto-secundario text-xs uppercase tracking-wide">Nombre</th>
+                    <th class="sticky top-0 z-[1] bg-[color:var(--surface-muted)] text-left p-3 font-semibold text-slate-600 oscuro:text-texto-secundario text-xs uppercase tracking-wide">Cuota</th>
+                    <th class="sticky top-0 z-[1] bg-[color:var(--surface-muted)] text-left p-3 font-semibold text-slate-600 oscuro:text-texto-secundario text-xs uppercase tracking-wide">
+                      Teléfono <span class="text-[color:var(--brand-danger)] oscuro:text-peligro">*</span>
                     </th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 bg-white">
+                <tbody class="divide-y divide-slate-100 oscuro:divide-borde-suave bg-superficie-tarjeta">
                   <tr v-for="(socio, index) in sociosPreview" :key="index">
-                    <td class="p-3 text-slate-800">{{ socio.nombre }}</td>
-                    <td class="p-3 font-semibold text-[color:var(--brand-primary)] tabular-nums">${{ formatMoney(socio.valor_cuota) }}</td>
-                    <td class="p-3" :class="socio.telefono ? 'text-slate-700' : 'text-[color:var(--brand-danger)] font-medium'">
+                    <td class="p-3 text-slate-800 oscuro:text-texto">{{ socio.nombre }}</td>
+                    <td class="p-3 font-semibold text-[color:var(--brand-primary)] oscuro:text-marca-tinta tabular-nums">${{ formatMoney(socio.valor_cuota) }}</td>
+                    <td class="p-3" :class="socio.telefono ? 'text-slate-700 oscuro:text-texto-medio' : 'text-[color:var(--brand-danger)] oscuro:text-peligro font-medium'">
                       {{ socio.telefono || 'Requerido' }}
                     </td>
                   </tr>
@@ -1143,13 +1145,13 @@
             </div>
           </div>
 
-          <div v-if="errorImportar" class="ds-callout" role="alert" style="background: #fee2e2; color: #991b1b;">
-            <ExclamationCircleIcon class="w-5 h-5 ds-callout__icon" style="color: #b91c1c;" />
+          <div v-if="errorImportar" class="ds-callout bg-[#fee2e2] oscuro:bg-red-500/15 text-[#991b1b] oscuro:text-red-300" role="alert">
+            <ExclamationCircleIcon class="w-5 h-5 ds-callout__icon text-[#b91c1c] oscuro:text-red-300" />
             <div>{{ errorImportar }}</div>
           </div>
 
-          <div v-if="exitoImportar" class="ds-callout" style="background: #dcfce7; color: #166534;">
-            <CheckCircleIcon class="w-5 h-5 flex-shrink-0" style="color: var(--brand-success);" />
+          <div v-if="exitoImportar" class="ds-callout bg-[#dcfce7] oscuro:bg-green-500/15 text-[#166534] oscuro:text-marca-tinta">
+            <CheckCircleIcon class="w-5 h-5 flex-shrink-0 text-[color:var(--brand-success)] oscuro:text-exito" />
             <div>{{ exitoImportar }}</div>
           </div>
         </div>
@@ -1161,7 +1163,7 @@
           aria-hidden="true"
         >
           <div
-            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent"
             aria-hidden="true"
           />
           <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
@@ -1178,7 +1180,7 @@
       </div>
 
       <!-- Footer fijo: siempre visible -->
-      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex flex-col-reverse sm:flex-row gap-2.5">
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-superficie-tarjeta px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex flex-col-reverse sm:flex-row gap-2.5">
         <button
           type="button"
           class="btn-modal-secondary flex-1"
@@ -1224,21 +1226,18 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-2xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-2xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="42rem"
       @close="cerrarModalCuotasSocio"
     >
       <!-- Cabecera marca — móvil: fila -->
       <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
         <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <!-- tema-fijo: avatar con fondo blanco sobre la cabecera de marca -->
           <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
-            <img
-              v-if="socioParaCuotas"
-              :src="getAvatarUrl(socioParaCuotas.socio?.nombre || socioParaCuotas.id, socioParaCuotas.socio?.avatar_seed, socioParaCuotas.socio?.avatar_style)"
-              :alt="socioParaCuotas.socio?.nombre"
-              class="h-full w-full object-cover"
-            />
+            <!-- tema-fijo: avatar e icono verde sobre el círculo blanco -->
+            <img v-if="socioParaCuotas" :src="getAvatarUrl(socioParaCuotas.socio?.nombre || socioParaCuotas.id, socioParaCuotas.socio?.avatar_seed, socioParaCuotas.socio?.avatar_style)" :alt="socioParaCuotas.socio?.nombre" class="h-full w-full object-cover" />
             <CalendarDaysIcon v-else class="w-5 h-5 text-[#1B5E37]" />
           </div>
           <div class="flex-1 min-w-0 text-left">
@@ -1264,13 +1263,10 @@
         <div class="flex items-start pt-[max(1rem,env(safe-area-inset-top))] pb-5 px-4">
           <div class="w-11 flex-shrink-0" aria-hidden="true" />
           <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+            <!-- tema-fijo: avatar con fondo blanco sobre la cabecera de marca -->
             <div class="w-[3.2rem] h-[3.2rem] rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
-              <img
-                v-if="socioParaCuotas"
-                :src="getAvatarUrl(socioParaCuotas.socio?.nombre || socioParaCuotas.id, socioParaCuotas.socio?.avatar_seed, socioParaCuotas.socio?.avatar_style)"
-                :alt="socioParaCuotas.socio?.nombre"
-                class="h-full w-full object-cover"
-              />
+              <!-- tema-fijo: avatar e icono verde sobre el círculo blanco -->
+              <img v-if="socioParaCuotas" :src="getAvatarUrl(socioParaCuotas.socio?.nombre || socioParaCuotas.id, socioParaCuotas.socio?.avatar_seed, socioParaCuotas.socio?.avatar_style)" :alt="socioParaCuotas.socio?.nombre" class="h-full w-full object-cover" />
               <CalendarDaysIcon v-else class="w-6 h-6 text-[#1B5E37]" />
             </div>
             <h3 class="text-lg font-display font-bold text-white mt-2.5 leading-tight">
@@ -1294,13 +1290,13 @@
       <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="scrollAreaModalCuotasSocio"
-          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pt-4 pb-5 space-y-4 bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pt-4 pb-5 space-y-4 bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch]"
           @scroll.passive="programarNatiscrollModalCuotasSocio"
         >
           <CargaCaja v-if="loadingCuotasSocio" texto="Cargando cuotas" />
 
           <div v-else-if="cuotasSocioPorMes.length === 0" class="text-center py-10 px-2">
-            <p class="text-gray-500 text-sm">No hay cuotas registradas</p>
+            <p class="text-texto-suave text-sm">No hay cuotas registradas</p>
           </div>
 
           <template v-else>
@@ -1421,9 +1417,9 @@
             </div>
 
           <!-- Desktop (md+): rejilla compacta de 5 columnas -->
-          <div class="hidden md:block rounded-xl border border-gray-200/90 bg-white overflow-hidden shadow-sm pb-2">
+          <div class="hidden md:block rounded-xl border border-borde/90 bg-superficie-tarjeta overflow-hidden shadow-sm pb-2">
             <div
-              class="sticky top-0 z-[1] grid grid-cols-[minmax(0,4.5rem)_minmax(0,3.25rem)_1fr_minmax(0,4.25rem)_2.75rem] gap-x-1.5 px-2 py-2 bg-gray-50 border-b border-gray-200 text-[10px] font-semibold uppercase tracking-wide text-gray-500"
+              class="sticky top-0 z-[1] grid grid-cols-[minmax(0,4.5rem)_minmax(0,3.25rem)_1fr_minmax(0,4.25rem)_2.75rem] gap-x-1.5 px-2 py-2 bg-superficie-suave border-b border-borde text-[10px] font-semibold uppercase tracking-wide text-texto-suave"
               role="row"
             >
               <span>Mes</span>
@@ -1432,39 +1428,39 @@
               <span class="text-right">Estado</span>
               <span class="text-center" aria-hidden="true" />
             </div>
-            <div class="divide-y divide-gray-100">
+            <div class="divide-y divide-borde-suave">
               <div
                 v-for="(cuotaData, idx) in cuotasSocioPorMes"
                 :key="`d-${cuotaData.id}-${idx}`"
                 role="row"
                 class="grid grid-cols-[minmax(0,4.5rem)_minmax(0,3.25rem)_1fr_minmax(0,4.25rem)_2.75rem] gap-x-1.5 items-center px-2 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-natillera-500/40 focus-visible:ring-inset"
                 :class="[
-                  !esVisor ? 'cursor-pointer hover:bg-emerald-50/40 active:bg-emerald-50/60' : '',
-                  cuotaData.estado === 'mora' && animacionesCuotasMora ? 'bg-red-50/50' : '',
-                  cuotaData.estado === 'pagada' || (cuotaData.valorPagado || 0) >= totalObligacionCuotaSocioModal(cuotaData) ? 'bg-green-50/25' : ''
+                  !esVisor ? 'cursor-pointer hover:bg-emerald-50/40 oscuro:hover:bg-emerald-500/15 active:bg-emerald-50/60 oscuro:active:bg-emerald-500/15' : '',
+                  cuotaData.estado === 'mora' && animacionesCuotasMora ? 'bg-red-50/50 oscuro:bg-red-500/15' : '',
+                  cuotaData.estado === 'pagada' || (cuotaData.valorPagado || 0) >= totalObligacionCuotaSocioModal(cuotaData) ? 'bg-green-50/25 oscuro:bg-green-500/15' : ''
                 ]"
                 :tabindex="!esVisor ? 0 : -1"
                 @click="handleClickFilaCuotaSocioModal(cuotaData)"
                 @keydown.enter.prevent="handleClickFilaCuotaSocioModal(cuotaData)"
               >
-                <div class="text-gray-800 font-semibold leading-tight min-w-0">
+                <div class="text-texto font-semibold leading-tight min-w-0">
                   <span class="block truncate" :title="etiquetaMesAnioCuotaSocioModal(cuotaData)">
                     {{ etiquetaMesAnioCuotaSocioModal(cuotaData) }}
                   </span>
                 </div>
-                <div class="text-gray-800 font-semibold tabular-nums leading-tight">
+                <div class="text-texto font-semibold tabular-nums leading-tight">
                   {{ etiquetaPeriodoCuotaSocioModal(cuotaData) }}
                 </div>
                 <div class="text-right min-w-0">
-                  <p class="font-bold tabular-nums text-gray-900 leading-tight">
+                  <p class="font-bold tabular-nums text-texto-fuerte leading-tight">
                     ${{ formatMoney(getMontoValorCuotaSocioModal(cuotaData)) }}
                   </p>
-                  <p class="text-[10px] text-gray-500 leading-tight mt-0.5 truncate">
+                  <p class="text-[10px] text-texto-suave leading-tight mt-0.5 truncate">
                     {{ subetiquetaValorCuotaSocioModal(cuotaData) }}
                   </p>
                   <p
                     v-if="etiquetaFechaPagoCuotaSocioModal(cuotaData)"
-                    class="text-[10px] text-gray-500 leading-tight truncate tabular-nums"
+                    class="text-[10px] text-texto-suave leading-tight truncate tabular-nums"
                   >
                     {{ etiquetaFechaPagoCuotaSocioModal(cuotaData) }}
                   </p>
@@ -1481,7 +1477,7 @@
                   <button
                     v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
                     type="button"
-                    class="h-11 w-11 rounded-lg text-[#1B5E37] hover:bg-[#E8F5E9] flex items-center justify-center touch-manipulation"
+                    class="h-11 w-11 rounded-lg text-marca-tinta hover:bg-marca-suave flex items-center justify-center touch-manipulation"
                     title="WhatsApp"
                     aria-label="Enviar recordatorio por WhatsApp"
                     @click="enviarWhatsAppCuota(cuotaData)"
@@ -1502,7 +1498,7 @@
           aria-hidden="true"
         >
           <div
-            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent"
             aria-hidden="true"
           />
           <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
@@ -1519,7 +1515,7 @@
       </div>
 
       <!-- Footer fijo: siempre visible. Hereda safe-area-bottom. -->
-      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-4 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-superficie-tarjeta px-4 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
         <button
           type="button"
           class="btn-modal-secondary w-full"
@@ -1538,8 +1534,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="!eliminando && (socioAEliminar = null)"
     >
@@ -1547,6 +1543,7 @@
       <div class="flex-shrink-0 bg-[color:var(--brand-danger)] text-white">
         <!-- Móvil: una sola fila -->
         <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
             <ExclamationTriangleIcon class="w-5 h-5 text-[color:var(--brand-danger)]" />
           </div>
@@ -1572,6 +1569,7 @@
         <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
           <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
           <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm">
               <ExclamationTriangleIcon class="w-6 h-6 text-[color:var(--brand-danger)]" />
             </div>
@@ -1598,17 +1596,17 @@
       <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="scrollAreaModalEliminarSocio"
-          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-4"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-4"
           @scroll.passive="programarNatiscrollModalEliminarSocio"
         >
           <!-- Pregunta principal -->
           <div class="text-center">
-            <p class="font-display font-bold text-slate-800 text-base sm:text-lg leading-tight">
+            <p class="font-display font-bold text-slate-800 oscuro:text-texto text-base sm:text-lg leading-tight">
               ¿Estás completamente seguro?
             </p>
-            <p class="text-sm text-slate-600 mt-1.5 leading-snug">
+            <p class="text-sm text-slate-600 oscuro:text-texto-secundario mt-1.5 leading-snug">
               Estás a punto de eliminar al socio
-              <strong class="text-[color:var(--brand-danger)]">«{{ socioAEliminar.socio?.nombre }}»</strong>
+              <strong class="text-[color:var(--brand-danger)] oscuro:text-peligro">«{{ socioAEliminar.socio?.nombre }}»</strong>
               de esta natillera.
             </p>
           </div>
@@ -1616,15 +1614,15 @@
           <!-- Advertencia: callout danger -->
           <div class="modal-callout-danger">
             <div class="flex items-start gap-2.5">
-              <ExclamationTriangleIcon class="w-5 h-5 flex-shrink-0 text-[color:var(--brand-danger)] mt-0.5" />
+              <ExclamationTriangleIcon class="w-5 h-5 flex-shrink-0 text-[color:var(--brand-danger)] oscuro:text-peligro mt-0.5" />
               <div class="flex-1 min-w-0">
-                <p class="font-bold text-[color:var(--brand-danger)] text-sm">
+                <p class="font-bold text-[color:var(--brand-danger)] oscuro:text-peligro text-sm">
                   Se perderá toda la información
                 </p>
-                <p class="text-xs text-red-700 mt-0.5">
+                <p class="text-xs text-red-700 oscuro:text-red-300 mt-0.5">
                   Esta acción eliminará permanentemente:
                 </p>
-                <ul class="mt-2 space-y-1.5 text-xs text-red-700">
+                <ul class="mt-2 space-y-1.5 text-xs text-red-700 oscuro:text-red-300">
                   <li class="flex items-start gap-1.5">
                     <CheckIcon class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
                     <span><strong>Todas las cuotas</strong> (pagadas y pendientes)</span>
@@ -1666,7 +1664,7 @@
           aria-hidden="true"
         >
           <div
-            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent"
             aria-hidden="true"
           />
           <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
@@ -1683,7 +1681,7 @@
       </div>
 
       <!-- Footer fijo: siempre visible -->
-      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex flex-col-reverse sm:flex-row gap-2.5">
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-superficie-tarjeta px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex flex-col-reverse sm:flex-row gap-2.5">
         <button
           type="button"
           class="btn-modal-secondary flex-1"
@@ -1715,8 +1713,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="!desactivando && cerrarModalDesactivar()"
     >
@@ -1724,6 +1722,7 @@
       <div class="flex-shrink-0 bg-[color:var(--brand-warning)] text-white">
         <!-- Móvil: una sola fila -->
         <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
             <XCircleIcon class="w-5 h-5 text-[color:var(--brand-warning)]" />
           </div>
@@ -1749,6 +1748,7 @@
         <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
           <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
           <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm">
               <XCircleIcon class="w-6 h-6 text-[color:var(--brand-warning)]" />
             </div>
@@ -1775,7 +1775,7 @@
       <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="scrollAreaModalDesactivarSocio"
-          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-4"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-4"
           @scroll.passive="programarNatiscrollModalDesactivarSocio"
         >
 
@@ -1822,7 +1822,7 @@
                 >{{ pct }} %</button>
               </div>
               <div class="mt-2 flex items-center gap-2">
-                <label for="desactivar-porcentaje" class="whitespace-nowrap text-xs text-rose-700/80">Otro</label>
+                <label for="desactivar-porcentaje" class="whitespace-nowrap text-xs text-rose-700/80 oscuro:text-rose-300/80">Otro</label>
                 <div class="relative flex-1">
                   <input
                     id="desactivar-porcentaje"
@@ -1835,7 +1835,7 @@
                     class="ds-input pr-8"
                     placeholder="0"
                   />
-                  <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">%</span>
+                  <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 oscuro:text-texto-tenue">%</span>
                 </div>
               </div>
             </div>
@@ -1851,7 +1851,7 @@
             class="retiro-prestamo"
             :class="{ 'is-active': cruzarPrestamoRetiro && deudaPrestamosRetiro > 0 }"
           >
-            <p v-if="loadingPrestamosRetiro" class="px-4 py-3.5 text-sm text-slate-500">Revisando préstamos…</p>
+            <p v-if="loadingPrestamosRetiro" class="px-4 py-3.5 text-sm text-slate-500 oscuro:text-texto-suave">Revisando préstamos…</p>
             <template v-else>
               <button
                 type="button"
@@ -2002,7 +2002,7 @@
                 Transferencia
               </button>
             </div>
-            <p class="mt-2 text-[11px] leading-snug text-slate-500">
+            <p class="mt-2 text-[11px] leading-snug text-slate-500 oscuro:text-texto-suave">
               Saldrá del cuadre de caja por esta forma de pago.
             </p>
           </section>
@@ -2016,7 +2016,7 @@
           aria-hidden="true"
         >
           <div
-            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent"
             aria-hidden="true"
           />
           <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
@@ -2033,7 +2033,7 @@
       </div>
 
       <!-- Footer fijo -->
-      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex flex-col-reverse sm:flex-row gap-2.5">
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-superficie-tarjeta px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex flex-col-reverse sm:flex-row gap-2.5">
         <button
           type="button"
           class="btn-modal-secondary flex-1"
@@ -2063,14 +2063,15 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="!activando && cerrarModalActivar()"
     >
       <!-- Cabecera success (verde) — reactivación positiva -->
       <div class="flex-shrink-0 bg-[color:var(--brand-success)] text-white">
         <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
             <CheckCircleIcon class="w-5 h-5 text-[color:var(--brand-success)]" />
           </div>
@@ -2095,6 +2096,7 @@
         <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
           <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
           <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm">
               <CheckCircleIcon class="w-6 h-6 text-[color:var(--brand-success)]" />
             </div>
@@ -2121,26 +2123,26 @@
       <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="scrollAreaModalActivarSocio"
-          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-4"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-4"
           @scroll.passive="programarNatiscrollModalActivarSocio"
         >
           <div class="text-center">
-            <p class="font-display font-bold text-slate-800 text-base sm:text-lg leading-tight">
+            <p class="font-display font-bold text-slate-800 oscuro:text-texto text-base sm:text-lg leading-tight">
               ¿Reactivar a este socio?
             </p>
-            <p class="text-sm text-slate-600 mt-1.5 leading-snug">
-              <strong class="text-[color:var(--brand-success)]">«{{ socioAActivar?.socio?.nombre }}»</strong>
+            <p class="text-sm text-slate-600 oscuro:text-texto-secundario mt-1.5 leading-snug">
+              <strong class="text-[color:var(--brand-success)] oscuro:text-exito">«{{ socioAActivar?.socio?.nombre }}»</strong>
               volverá a estar activo en esta natillera.
             </p>
           </div>
 
           <div class="modal-callout-success">
-            <CheckCircleIcon class="w-5 h-5 flex-shrink-0 text-[color:var(--brand-success)] mt-0.5" />
+            <CheckCircleIcon class="w-5 h-5 flex-shrink-0 text-[color:var(--brand-success)] oscuro:text-exito mt-0.5" />
             <div class="flex-1 min-w-0">
-              <p class="font-bold text-[color:var(--brand-success)] text-sm">
+              <p class="font-bold text-[color:var(--brand-success)] oscuro:text-exito text-sm">
                 Movimientos automáticos
               </p>
-              <p class="text-xs text-emerald-800/85 mt-0.5 leading-snug">
+              <p class="text-xs text-emerald-800/85 oscuro:text-emerald-300/85 mt-0.5 leading-snug">
                 Se deshace la liquidación del retiro: vuelve a la caja la plata que salió, se quita la sanción de las utilidades y, si su ahorro pagó un préstamo, el préstamo vuelve a quedar con ese saldo (y se descuenta la mora que se había cobrado).
               </p>
             </div>
@@ -2161,7 +2163,7 @@
           aria-hidden="true"
         >
           <div
-            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent"
             aria-hidden="true"
           />
           <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
@@ -2178,7 +2180,7 @@
       </div>
 
       <!-- Footer fijo: siempre visible -->
-      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex flex-col-reverse sm:flex-row gap-2.5">
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-superficie-tarjeta px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex flex-col-reverse sm:flex-row gap-2.5">
         <button
           type="button"
           class="btn-modal-secondary flex-1"
@@ -2208,14 +2210,15 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-[55] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="28rem"
       @close="!generandoImagenDesactivacion && cerrarComprobanteDesactivacion()"
     >
       <!-- Cabecera verde de marca: la misma del ticket que va dentro -->
       <div class="flex-shrink-0 bg-[color:var(--brand-primary)] text-white">
         <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
             <DocumentTextIcon class="w-5 h-5 text-[color:var(--brand-primary)]" />
           </div>
@@ -2240,6 +2243,7 @@
         <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
           <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
           <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm">
               <DocumentTextIcon class="w-6 h-6 text-[color:var(--brand-primary)]" />
             </div>
@@ -2266,7 +2270,7 @@
       <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="scrollAreaModalComprobanteDesactivacion"
-          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#eef2ee] overscroll-contain [-webkit-overflow-scrolling:touch] px-4 sm:px-5 py-4"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#eef2ee] oscuro:bg-superficie-hundida overscroll-contain [-webkit-overflow-scrolling:touch] px-4 sm:px-5 py-4"
           @scroll.passive="programarNatiscrollModalComprobanteDesactivacion"
         >
         <ComprobanteRetiroSocio
@@ -2283,7 +2287,7 @@
           aria-hidden="true"
         >
           <div
-            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-[#eef2ee]/95 via-[#eef2ee]/55 to-transparent"
+            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-[#eef2ee]/95 oscuro:from-superficie-hundida/95 via-[#eef2ee]/55 oscuro:via-superficie-hundida/55 to-transparent"
             aria-hidden="true"
           />
           <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
@@ -2300,7 +2304,7 @@
       </div>
 
       <!-- Footer fijo: siempre visible -->
-      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex gap-3">
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-superficie-tarjeta px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex gap-3">
         <button
           type="button"
           class="btn-descargar flex-1"
@@ -2337,7 +2341,7 @@
       class="pointer-events-none fixed left-[-10000px] top-0"
       aria-hidden="true"
     >
-      <div ref="comprobanteDesactivacionRef" style="padding: 16px; background: #eef2ee;">
+      <div ref="comprobanteDesactivacionRef" data-tema="claro" style="padding: 16px; background: #eef2ee;">
         <ComprobanteRetiroSocio :datos="comprobanteDesactivacion" />
       </div>
     </div>
@@ -2360,7 +2364,7 @@
     >
           <div class="relative w-full">
             <!-- Tarjeta principal con efecto 3D -->
-            <div class="relative bg-white/95 rounded-[2rem] shadow-2xl shadow-natillera-700/20 overflow-hidden border border-white/50">
+            <div class="relative bg-superficie-tarjeta/95 rounded-[2rem] shadow-2xl shadow-natillera-700/20 overflow-hidden border border-white/50 oscuro:border-borde">
               <!-- Gradiente superior decorativo -->
               <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-br from-natillera-600 via-natillera-700 to-natillera-800 opacity-10"></div>
 
@@ -2409,6 +2413,7 @@
                     <template v-if="progresoCreacion.paso === 1">
                       <div class="relative">
                         <UserIcon class="w-12 h-12 text-white drop-shadow-lg animate-bounce-gentle" />
+                        <!-- tema-fijo: insignia blanca dentro del círculo verde -->
                         <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-lg">
                           <PlusIcon class="w-3 h-3 text-natillera-700" />
                         </div>
@@ -2419,7 +2424,7 @@
                     <template v-else-if="progresoCreacion.paso === 2">
                       <div class="relative">
                         <SparklesIcon class="w-12 h-12 text-white drop-shadow-lg animate-sparkle" />
-                        <!-- Mini estrellas que salen -->
+                        <!-- Mini estrellas que salen (tema-fijo: brillos amarillos dentro del círculo verde) -->
                         <div class="absolute -top-2 -right-2 w-2 h-2 bg-yellow-300 rounded-full animate-ping"></div>
                         <div class="absolute -bottom-1 -left-2 w-1.5 h-1.5 bg-yellow-200 rounded-full animate-ping" style="animation-delay: 0.3s"></div>
                       </div>
@@ -2447,7 +2452,7 @@
                 </div>
 
                 <!-- Nombre del socio con tipografía elegante -->
-                <h3 class="text-2xl font-display font-bold bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-clip-text text-transparent text-center mb-1">
+                <h3 class="text-2xl font-display font-bold bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 oscuro:from-texto-fuerte oscuro:via-texto oscuro:to-texto-fuerte bg-clip-text text-transparent text-center mb-1">
                   {{ progresoCreacion.nombreSocio }}
                 </h3>
 
@@ -2455,8 +2460,8 @@
                 <p
                   :class="[
                     'text-center text-base font-medium mb-6 transition-all duration-500',
-                    progresoCreacion.exito ? 'text-natillera-700' :
-                    progresoCreacion.error && progresoCreacion.paso === 0 ? 'text-red-500' : 'text-gray-500'
+                    progresoCreacion.exito ? 'text-natillera-700 oscuro:text-natillera-300' :
+                    progresoCreacion.error && progresoCreacion.paso === 0 ? 'text-red-500' : 'text-texto-suave'
                   ]"
                 >
                   {{ progresoCreacion.mensaje }}
@@ -2465,7 +2470,7 @@
                 <!-- Timeline de pasos - Diseño minimalista y elegante -->
                 <div class="relative mb-8">
                   <!-- Línea de conexión -->
-                  <div class="absolute top-4 left-8 right-8 h-0.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div class="absolute top-4 left-8 right-8 h-0.5 bg-superficie-hundida rounded-full overflow-hidden">
                     <div
                       class="h-full bg-gradient-to-r from-natillera-600 to-natillera-700 transition-all duration-700 ease-out rounded-full"
                       :style="{ width: `${((progresoCreacion.paso - 1) / 2) * 100}%` }"
@@ -2480,7 +2485,7 @@
                           'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 transform',
                           progresoCreacion.paso >= 1
                             ? 'bg-gradient-to-br from-natillera-600 to-natillera-800 text-white shadow-lg shadow-natillera-700/30 scale-110'
-                            : 'bg-gray-100 text-gray-400'
+                            : 'bg-superficie-hundida text-texto-tenue'
                         ]"
                       >
                         <template v-if="progresoCreacion.paso > 1">
@@ -2491,7 +2496,7 @@
                         <UserIcon v-else-if="progresoCreacion.paso === 1" class="w-4 h-4" />
                         <span v-else class="text-xs font-bold">1</span>
                       </div>
-                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 1 ? 'text-natillera-700' : 'text-gray-400']">Socio</span>
+                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 1 ? 'text-natillera-700 oscuro:text-natillera-300' : 'text-texto-tenue']">Socio</span>
                     </div>
 
                     <!-- Paso 2: Cuotas -->
@@ -2501,7 +2506,7 @@
                           'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 transform',
                           progresoCreacion.paso >= 2
                             ? 'bg-gradient-to-br from-natillera-600 to-natillera-800 text-white shadow-lg shadow-natillera-700/30 scale-110'
-                            : 'bg-gray-100 text-gray-400'
+                            : 'bg-superficie-hundida text-texto-tenue'
                         ]"
                       >
                         <template v-if="progresoCreacion.paso > 2">
@@ -2512,7 +2517,7 @@
                         <SparklesIcon v-else-if="progresoCreacion.paso === 2" class="w-4 h-4 animate-pulse" />
                         <span v-else class="text-xs font-bold">2</span>
                       </div>
-                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 2 ? 'text-natillera-700' : 'text-gray-400']">Cuotas</span>
+                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 2 ? 'text-natillera-700 oscuro:text-natillera-300' : 'text-texto-tenue']">Cuotas</span>
                     </div>
 
                     <!-- Paso 3: Listo -->
@@ -2522,7 +2527,7 @@
                           'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 transform',
                           progresoCreacion.paso >= 3
                             ? 'bg-gradient-to-br from-natillera-600 to-natillera-800 text-white shadow-lg shadow-natillera-700/30 scale-110'
-                            : 'bg-gray-100 text-gray-400'
+                            : 'bg-superficie-hundida text-texto-tenue'
                         ]"
                       >
                         <template v-if="progresoCreacion.paso >= 3">
@@ -2532,7 +2537,7 @@
                         </template>
                         <span v-else class="text-xs font-bold">3</span>
                       </div>
-                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 3 ? 'text-natillera-700' : 'text-gray-400']">¡Listo!</span>
+                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 3 ? 'text-natillera-700 oscuro:text-natillera-300' : 'text-texto-tenue']">¡Listo!</span>
                     </div>
                   </div>
                 </div>
@@ -2551,15 +2556,15 @@
                       <!-- Glow effect -->
                       <div class="absolute -inset-1 bg-gradient-to-r from-natillera-600 via-natillera-700 to-natillera-800 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
 
-                      <div class="relative flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-natillera-50 to-natillera-100 border border-natillera-200/60 rounded-2xl">
+                      <div class="relative flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-natillera-50 oscuro:from-natillera-500/15 to-natillera-100 oscuro:to-natillera-500/10 border border-natillera-200/60 oscuro:border-natillera-500/30 rounded-2xl">
                         <div class="w-10 h-10 bg-gradient-to-br from-natillera-600 to-natillera-800 rounded-xl flex items-center justify-center shadow-lg shadow-natillera-700/30">
                           <SparklesIcon class="w-5 h-5 text-white" />
                         </div>
                         <div class="text-left">
-                          <p class="text-2xl font-bold bg-gradient-to-r from-natillera-700 to-natillera-800 bg-clip-text text-transparent">
+                          <p class="text-2xl font-bold bg-gradient-to-r from-natillera-700 to-natillera-800 oscuro:from-natillera-300 oscuro:to-natillera-400 bg-clip-text text-transparent">
                             {{ progresoCreacion.cuotasGeneradas }}
                           </p>
-                          <p class="text-xs text-gray-500 font-medium">cuotas generadas</p>
+                          <p class="text-xs text-texto-suave font-medium">cuotas generadas</p>
                         </div>
                       </div>
                     </div>
@@ -2573,14 +2578,14 @@
                   enter-to-class="opacity-100 translate-y-0"
                 >
                   <div v-if="progresoCreacion.exito" class="mt-6 text-center">
-                    <p class="text-sm text-gray-400">El modal se cerrará automáticamente...</p>
+                    <p class="text-sm text-texto-tenue">El modal se cerrará automáticamente...</p>
                   </div>
                 </Transition>
 
                 <!-- Mensaje de error con botón de cerrar -->
                 <div v-if="progresoCreacion.error && progresoCreacion.paso === 0" class="mt-6 text-center">
-                  <div class="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl">
-                    <p class="text-sm text-red-600">{{ progresoCreacion.error }}</p>
+                  <div class="mb-4 p-3 bg-red-50 oscuro:bg-red-500/15 border border-red-100 oscuro:border-red-500/30 rounded-xl">
+                    <p class="text-sm text-red-600 oscuro:text-red-300">{{ progresoCreacion.error }}</p>
                   </div>
                   <button
                     type="button"
@@ -2594,7 +2599,7 @@
               </div>
 
               <!-- Barra de progreso inferior decorativa -->
-              <div class="h-1.5 bg-gray-100">
+              <div class="h-1.5 bg-superficie-hundida">
                 <div
                   class="h-full bg-gradient-to-r from-natillera-600 via-natillera-700 to-natillera-800 transition-all duration-700 ease-out"
                   :style="{ width: `${(progresoCreacion.paso / 3) * 100}%` }"
@@ -4809,21 +4814,21 @@ function clasesEstadoCuotaSocioModal(c) {
   const total = totalObligacionCuotaSocioModal(c)
   const pagado = c.valorPagado || 0
   if (pagado > 0 && pagado < total) {
-    return { badge: 'bg-orange-100 text-orange-900 border-orange-200' }
+    return { badge: 'bg-orange-100 oscuro:bg-orange-500/15 text-orange-900 oscuro:text-orange-300 border-orange-200 oscuro:border-orange-500/30' }
   }
   if (c.estado === 'pagada' || pagado >= total) {
-    return { badge: 'bg-green-100 text-green-900 border-green-200' }
+    return { badge: 'bg-green-100 oscuro:bg-green-500/15 text-green-900 oscuro:text-green-300 border-green-200 oscuro:border-green-500/30' }
   }
   if (c.estado === 'mora') {
-    return { badge: 'bg-red-100 text-red-900 border-red-200' }
+    return { badge: 'bg-red-100 oscuro:bg-red-500/15 text-red-900 oscuro:text-red-300 border-red-200 oscuro:border-red-500/30' }
   }
   if (c.estado === 'pendiente') {
-    return { badge: 'bg-amber-100 text-amber-900 border-amber-200' }
+    return { badge: 'bg-amber-100 oscuro:bg-amber-500/15 text-amber-900 oscuro:text-amber-300 border-amber-200 oscuro:border-amber-500/30' }
   }
   if (c.estado === 'programada') {
-    return { badge: 'bg-slate-100 text-slate-700 border-slate-200' }
+    return { badge: 'bg-slate-100 oscuro:bg-superficie-hundida text-slate-700 oscuro:text-texto-medio border-slate-200 oscuro:border-borde' }
   }
-  return { badge: 'bg-gray-100 text-gray-800 border-gray-200' }
+  return { badge: 'bg-superficie-hundida text-texto border-borde' }
 }
 
 // Función para abrir el modal de cuotas del socio
@@ -7647,9 +7652,11 @@ onUnmounted(() => {
   flex-shrink: 0;
   align-items: center;
   border-radius: 9999px;
-  background: #e2e8f0;
+  background: #e2e8f0; /* tema-fijo: la pista se ajusta a mano justo debajo */
   transition: background-color 200ms ease;
 }
+/* Modo oscuro (a mano): pista visible sobre la tarjeta oscura */
+:where([data-tema=oscuro]) .retiro-sancion__switch:not(:where([data-tema=claro] *)) { background: var(--borde-fuerte); }
 
 .retiro-sancion.is-active .retiro-sancion__switch { background: #ec4899; }
 
@@ -7659,7 +7666,7 @@ onUnmounted(() => {
   height: 1.25rem;
   width: 1.25rem;
   border-radius: 9999px;
-  background: #fff;
+  background: #fff; /* tema-fijo: la bolita del interruptor es blanca en los dos modos */
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
   transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -7859,9 +7866,11 @@ onUnmounted(() => {
   flex-shrink: 0;
   align-items: center;
   border-radius: 9999px;
-  background: #e2e8f0;
+  background: #e2e8f0; /* tema-fijo: la pista se ajusta a mano justo debajo */
   transition: background-color 200ms ease;
 }
+/* Modo oscuro (a mano): pista visible sobre la tarjeta oscura */
+:where([data-tema=oscuro]) .retiro-prestamo__switch:not(:where([data-tema=claro] *)) { background: var(--borde-fuerte); }
 .retiro-prestamo.is-active .retiro-prestamo__switch { background: #ea580c; }
 .retiro-prestamo__bolita {
   position: absolute;
@@ -7869,7 +7878,7 @@ onUnmounted(() => {
   height: 1.25rem;
   width: 1.25rem;
   border-radius: 9999px;
-  background: #fff;
+  background: #fff; /* tema-fijo: la bolita del interruptor es blanca en los dos modos */
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
   transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -7992,6 +8001,481 @@ onUnmounted(() => {
   opacity: 0.55;
   cursor: not-allowed;
   box-shadow: none;
+}
+
+/* ==========================================================================
+   Modo oscuro (skill natillerapp-modo-oscuro). Propuesto con
+   scripts/tema/proponer-oscuro.mjs y revisado a mano. Solo lo que cambia: las
+   reglas de claro de arriba quedan intactas.
+   ========================================================================== */
+:where([data-tema=oscuro]) .captura-lista:not(:where([data-tema=claro] *)) {
+  border: 1px solid var(--marca-tinta-borde);
+  background: var(--marca-suave);
+}
+:where([data-tema=oscuro]) .poner-al-dia__abrir:not(:where([data-tema=claro] *)) {
+  border: 1px solid var(--alerta-borde);
+  background: var(--superficie-tarjeta);
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .poner-al-dia__abrir:hover:not(:where([data-tema=claro] *)) {
+  background: var(--alerta-suave);
+}
+:where([data-tema=oscuro]) .poner-al-dia:not(:where([data-tema=claro] *)) {
+  border: 1px solid var(--marca-tinta-borde);
+  background: linear-gradient(180deg, var(--superficie-suave) 0%, var(--superficie-tarjeta) 100%);
+}
+:where([data-tema=oscuro]) .poner-al-dia__sello:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .poner-al-dia__titulo:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .poner-al-dia__sub:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .poner-al-dia__nota:not(:where([data-tema=claro] *)) {
+  background: var(--marca-suave);
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .poner-al-dia__opcion:not(:where([data-tema=claro] *)) {
+  border: 1px solid var(--marca-tinta-borde);
+  background: var(--superficie-tarjeta);
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .poner-al-dia__opcion.is-activa:not(:where([data-tema=claro] *)) {
+  border-color: var(--marca-tinta-borde);
+}
+:where([data-tema=oscuro]) .poner-al-dia__caja:not(:where([data-tema=claro] *)) {
+  border: 1.5px solid var(--marca-tinta-borde);
+  background: var(--superficie-tarjeta);
+}
+:where([data-tema=oscuro]) .al-dia-aviso:not(:where([data-tema=claro] *)) {
+  border: 1px solid var(--marca-tinta-borde);
+  background: linear-gradient(135deg, var(--superficie-suave) 0%, var(--superficie-tarjeta) 65%);
+}
+:where([data-tema=oscuro]) .al-dia-aviso:hover:not(:where([data-tema=claro] *)) {
+  border-color: var(--marca-tinta-borde);
+}
+:where([data-tema=oscuro]) .al-dia-aviso__titulo:not(:where([data-tema=claro] *)) {
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .al-dia-aviso__sub:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .socios-toolbar__search:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-tarjeta);
+}
+:where([data-tema=oscuro]) .socios-toolbar__search:focus-within:not(:where([data-tema=claro] *)) {
+  border-color: var(--marca-tinta-borde);
+}
+:where([data-tema=oscuro]) .socios-toolbar__search > svg:not(:where([data-tema=claro] *)) {
+  color: var(--texto-tenue);
+}
+:where([data-tema=oscuro]) .socios-search__input:not(:where([data-tema=claro] *)) {
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .socios-search__input:not(:where([data-tema=claro] *))::placeholder {
+  color: var(--texto-tenue);
+}
+:where([data-tema=oscuro]) .socios-search__clear:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .socios-search__clear:hover:not(:where([data-tema=claro] *)) {
+  background: rgb(255 255 255 / 0.04);
+}
+:where([data-tema=oscuro]) .socios-filter:not(:where([data-tema=claro] *)) {
+  background-color: var(--superficie-tarjeta);
+  color: var(--texto);
+}
+:where([data-tema=oscuro]) .socios-filter:focus:not(:where([data-tema=claro] *)) {
+  border-color: var(--marca-tinta-borde);
+}
+:where([data-tema=oscuro]) .socios-table thead th:not(:where([data-tema=claro] *)) {
+  color: var(--texto-tenue);
+}
+:where([data-tema=oscuro]) .socios-table tbody td:not(:where([data-tema=claro] *)) {
+  border-bottom: 1px solid rgb(255 255 255 / 0.04);
+  color: var(--texto);
+}
+:where([data-tema=oscuro]) .socios-table__row--inactivo:hover:not(:where([data-tema=claro] *)) {
+  background: rgb(255 255 255 / 0.04);
+}
+:where([data-tema=oscuro]) .socios-mobile-metric-label:not(:where([data-tema=claro] *)) {
+  color: var(--texto-tenue);
+}
+:where([data-tema=oscuro]) .card-pill--brand:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .card-pill--info:not(:where([data-tema=claro] *)) {
+  background: var(--info-suave);
+  color: var(--info);
+}
+:where([data-tema=oscuro]) .card-pill--warning:not(:where([data-tema=claro] *)) {
+  background: var(--alerta-suave);
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .card-pill--danger:not(:where([data-tema=claro] *)) {
+  background: var(--peligro-suave);
+  color: var(--peligro);
+}
+:where([data-tema=oscuro]) .cuota-status--ok:not(:where([data-tema=claro] *)) {
+  color: var(--exito);
+}
+:where([data-tema=oscuro]) .cuota-status--mora:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .socios-mas--fin:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .detalle-seccion:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-tarjeta);
+}
+:where([data-tema=oscuro]) .detalle-seccion__title:not(:where([data-tema=claro] *)) {
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .detalle-seccion__body:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-tarjeta);
+}
+:where([data-tema=oscuro]) .detalle-ir-cuotas:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-tarjeta);
+}
+:where([data-tema=oscuro]) .detalle-ir-cuotas:hover:not(:where([data-tema=claro] *)) {
+  border-color: var(--marca-tinta-borde);
+}
+:where([data-tema=oscuro]) .detalle-ir-cuotas__icono:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .detalle-ir-cuotas__titulo:not(:where([data-tema=claro] *)) {
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .detalle-ir-cuotas__sub:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .detalle-mini-stat__label:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .detalle-metric__label:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .detalle-metric__value:not(:where([data-tema=claro] *)) {
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .detalle-metric--positivo:not(:where([data-tema=claro] *)) {
+  border-color: var(--marca-tinta-borde);
+}
+:where([data-tema=oscuro]) .detalle-metric--positivo .detalle-metric__label:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .detalle-metric--positivo .detalle-metric__value:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .detalle-metric--debe:not(:where([data-tema=claro] *)) {
+  background: var(--alerta-suave);
+}
+:where([data-tema=oscuro]) .detalle-metric--debe .detalle-metric__label:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .detalle-metric--debe .detalle-metric__value:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .detalle-config-chip:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-tarjeta);
+}
+:where([data-tema=oscuro]) .detalle-config-chip__label:not(:where([data-tema=claro] *)) {
+  color: var(--texto-tenue);
+}
+:where([data-tema=oscuro]) .detalle-config-chip__value:not(:where([data-tema=claro] *)) {
+  color: var(--texto);
+}
+:where([data-tema=oscuro]) .detalle-config-chip__value--money:not(:where([data-tema=claro] *)) {
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .detalle-config-chip__hint:not(:where([data-tema=claro] *)) {
+  color: var(--texto-tenue);
+}
+:where([data-tema=oscuro]) .detalle-ghost-btn--warning:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .detalle-ghost-btn--warning:hover:not(:where([data-tema=claro] *)) {
+  background: var(--alerta-suave);
+}
+:where([data-tema=oscuro]) .detalle-ghost-btn--warning:active:not(:where([data-tema=claro] *)) {
+  background: var(--alerta-suave);
+}
+:where([data-tema=oscuro]) .detalle-ghost-btn--danger:not(:where([data-tema=claro] *)) {
+  color: var(--peligro);
+}
+:where([data-tema=oscuro]) .detalle-ghost-btn--danger:hover:not(:where([data-tema=claro] *)) {
+  background: var(--peligro-suave);
+  border-color: var(--peligro-borde);
+}
+:where([data-tema=oscuro]) .detalle-ghost-btn--danger:active:not(:where([data-tema=claro] *)) {
+  background: var(--peligro-suave);
+}
+:where([data-tema=oscuro]) .cuotas-mobile-card:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-tarjeta);
+}
+:where([data-tema=oscuro]) .cuotas-mobile-card:focus-visible:not(:where([data-tema=claro] *)) {
+  border-color: var(--marca-tinta-borde);
+}
+:where([data-tema=oscuro]) .cuotas-mobile-card--pagada:not(:where([data-tema=claro] *)) {
+  background: var(--marca-suave);
+  border-color: var(--marca-tinta-borde);
+}
+:where([data-tema=oscuro]) .cuotas-mobile-card--mora:not(:where([data-tema=claro] *)) {
+  background: var(--peligro-suave);
+  border-color: var(--peligro-borde);
+}
+:where([data-tema=oscuro]) .cuotas-mobile-card__qbadge.is-q1:not(:where([data-tema=claro] *)) {
+  background: var(--info-suave);
+  color: var(--info);
+  border-color: var(--info-borde);
+}
+:where([data-tema=oscuro]) .cuotas-mobile-card__qbadge.is-q2:not(:where([data-tema=claro] *)) {
+  background: color-mix(in oklab, #ede9fe 14%, var(--superficie-tarjeta));
+  color: color-mix(in oklab, #6d28d9 55%, #fff);
+  border-color: var(--borde);
+}
+:where([data-tema=oscuro]) .cuotas-mobile-card__qbadge.is-mes:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-suave);
+  color: var(--texto-medio);
+  border-color: var(--borde);
+}
+:where([data-tema=oscuro]) .cuotas-mobile-card__mes:not(:where([data-tema=claro] *)) {
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .cuotas-mobile-card__valor:not(:where([data-tema=claro] *)) {
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .cuotas-mobile-card__sub:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .cuotas-mobile-card__fecha:not(:where([data-tema=claro] *)) {
+  color: var(--texto-medio);
+}
+:where([data-tema=oscuro]) .cuotas-resumen__total-label:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .cuotas-resumen__total-valor.is-debe:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .cuotas-resumen__total-valor.is-aldia:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .cuotas-resumen__total-sub:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .cuotas-resumen__progress:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-hundida);
+}
+:where([data-tema=oscuro]) .cuotas-resumen__chip:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-tarjeta);
+}
+:where([data-tema=oscuro]) .cuotas-resumen__chip-label:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .cuotas-resumen__chip--pagadas    .cuotas-resumen__chip-valor:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .cuotas-resumen__chip--parciales  .cuotas-resumen__chip-valor:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .cuotas-resumen__chip--pendientes .cuotas-resumen__chip-valor:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .cuotas-resumen__chip--mora       .cuotas-resumen__chip-valor:not(:where([data-tema=claro] *)) {
+  color: var(--peligro);
+}
+:where([data-tema=oscuro]) .modal-callout-danger:not(:where([data-tema=claro] *)) {
+  background: var(--peligro-suave);
+  border: 1px solid var(--peligro-borde);
+}
+:where([data-tema=oscuro]) .modal-callout-success:not(:where([data-tema=claro] *)) {
+  background: var(--marca-suave);
+  border: 1px solid var(--marca-tinta-borde);
+}
+:where([data-tema=oscuro]) .modal-data-list:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-tarjeta);
+}
+:where([data-tema=oscuro]) .modal-data-list__label:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .modal-data-list__value:not(:where([data-tema=claro] *)) {
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .modal-data-list__value--positive:not(:where([data-tema=claro] *)) {
+  color: var(--exito);
+}
+:where([data-tema=oscuro]) .modal-data-list__value--danger:not(:where([data-tema=claro] *)) {
+  color: var(--peligro);
+}
+:where([data-tema=oscuro]) .modal-data-list__value--muted:not(:where([data-tema=claro] *)) {
+  color: var(--texto-tenue);
+}
+:where([data-tema=oscuro]) .retiro-hero:not(:where([data-tema=claro] *)) {
+  border: 1px solid var(--marca-tinta-borde);
+  background: linear-gradient(180deg, var(--marca-suave) 0%, var(--superficie-tarjeta) 100%);
+}
+:where([data-tema=oscuro]) .retiro-hero__label:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .retiro-hero__valor:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .retiro-hero__valor--cargando:not(:where([data-tema=claro] *)) {
+  color: var(--texto-tenue);
+}
+:where([data-tema=oscuro]) .retiro-hero__nota:not(:where([data-tema=claro] *)) {
+  color: color-mix(in oklab, #be185d 55%, #fff);
+}
+:where([data-tema=oscuro]) .retiro-reparto__sep:not(:where([data-tema=claro] *)) {
+  background: linear-gradient(180deg, transparent, rgb(255 255 255 / 0.07), transparent);
+}
+:where([data-tema=oscuro]) .retiro-reparto__label:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .retiro-reparto__valor--socio:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .retiro-reparto__valor--fondo:not(:where([data-tema=claro] *)) {
+  color: color-mix(in oklab, #be185d 55%, #fff);
+}
+:where([data-tema=oscuro]) .retiro-reparto__pie:not(:where([data-tema=claro] *)) {
+  color: color-mix(in oklab, #be185d 55%, #fff);
+}
+:where([data-tema=oscuro]) .retiro-sancion:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-tarjeta);
+}
+:where([data-tema=oscuro]) .retiro-sancion.is-active:not(:where([data-tema=claro] *)) {
+  background: linear-gradient(180deg, var(--peligro-suave) 0%, var(--superficie-tarjeta) 62%);
+}
+:where([data-tema=oscuro]) .retiro-sancion__icono:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-suave);
+  color: var(--texto-tenue);
+}
+:where([data-tema=oscuro]) .retiro-sancion.is-active .retiro-sancion__icono:not(:where([data-tema=claro] *)) {
+  background: color-mix(in oklab, #fce7f3 14%, var(--superficie-tarjeta));
+  color: color-mix(in oklab, #be185d 55%, #fff);
+}
+:where([data-tema=oscuro]) .retiro-sancion__titulo:not(:where([data-tema=claro] *)) {
+  color: var(--texto);
+}
+:where([data-tema=oscuro]) .retiro-sancion.is-active .retiro-sancion__titulo:not(:where([data-tema=claro] *)) {
+  color: color-mix(in oklab, #9d174d 55%, #fff);
+}
+:where([data-tema=oscuro]) .retiro-sancion__sub:not(:where([data-tema=claro] *)) {
+  color: var(--texto-tenue);
+}
+:where([data-tema=oscuro]) .retiro-sancion.is-active .retiro-sancion__sub:not(:where([data-tema=claro] *)) {
+  color: color-mix(in oklab, #be185d 55%, #fff);
+}
+:where([data-tema=oscuro]) .retiro-pct:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-tarjeta);
+  color: var(--peligro);
+}
+:where([data-tema=oscuro]) .retiro-pct.is-active:not(:where([data-tema=claro] *)) {
+  background: color-mix(in oklab, #fce7f3 14%, var(--superficie-tarjeta));
+  color: color-mix(in oklab, #9d174d 55%, #fff);
+}
+:where([data-tema=oscuro]) .socio-vinculado:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .socio-cuenta:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-suave);
+}
+:where([data-tema=oscuro]) .socio-cuenta.is-vinculado:not(:where([data-tema=claro] *)) {
+  border-color: var(--marca-tinta-borde);
+  background: linear-gradient(135deg, var(--marca-suave) 0%, var(--superficie-tarjeta) 70%);
+}
+:where([data-tema=oscuro]) .socio-cuenta__icono:not(:where([data-tema=claro] *)) {
+  color: var(--texto-tenue);
+}
+:where([data-tema=oscuro]) .socio-cuenta.is-vinculado .socio-cuenta__icono:not(:where([data-tema=claro] *)) {
+  color: var(--marca-tinta);
+}
+:where([data-tema=oscuro]) .socio-cuenta__titulo:not(:where([data-tema=claro] *)) {
+  color: var(--texto-fuerte);
+}
+:where([data-tema=oscuro]) .socio-cuenta__detalle:not(:where([data-tema=claro] *)) {
+  color: var(--texto-secundario);
+}
+:where([data-tema=oscuro]) .socio-cuenta__accion:not(:where([data-tema=claro] *)) {
+  color: var(--peligro);
+}
+:where([data-tema=oscuro]) .socio-cuenta__accion:hover:not(:disabled):not(:where([data-tema=claro] *)) {
+  background: var(--peligro-suave);
+}
+:where([data-tema=oscuro]) .solicitudes-aviso:not(:where([data-tema=claro] *)) {
+  border: 1px solid var(--alerta-borde);
+  background: linear-gradient(135deg, var(--alerta-suave) 0%, var(--superficie-tarjeta) 70%);
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .solicitudes-aviso__icono:not(:where([data-tema=claro] *)) {
+  background: var(--alerta-suave);
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .solicitudes-aviso__titulo:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .solicitudes-aviso__sub:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .retiro-prestamo:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-tarjeta);
+}
+:where([data-tema=oscuro]) .retiro-prestamo.is-active:not(:where([data-tema=claro] *)) {
+  border-color: var(--alerta-borde);
+  background: linear-gradient(180deg, var(--alerta-suave) 0%, var(--superficie-tarjeta) 62%);
+}
+:where([data-tema=oscuro]) .retiro-prestamo__icono:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-suave);
+  color: var(--texto-tenue);
+}
+:where([data-tema=oscuro]) .retiro-prestamo.is-active .retiro-prestamo__icono:not(:where([data-tema=claro] *)) {
+  background: var(--alerta-suave);
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .retiro-prestamo__titulo:not(:where([data-tema=claro] *)) {
+  color: var(--texto);
+}
+:where([data-tema=oscuro]) .retiro-prestamo.is-active .retiro-prestamo__titulo:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .retiro-prestamo__sub:not(:where([data-tema=claro] *)) {
+  color: var(--texto-tenue);
+}
+:where([data-tema=oscuro]) .retiro-prestamo.is-active .retiro-prestamo__sub:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .retiro-prestamo__nota:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .retiro-reparto__valor--prestamo:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .modal-liquidacion:not(:where([data-tema=claro] *)) {
+  background: var(--alerta-suave);
+}
+:where([data-tema=oscuro]) .modal-liquidacion__label:not(:where([data-tema=claro] *)) {
+  color: var(--texto-medio);
+}
+:where([data-tema=oscuro]) .modal-liquidacion__value--main:not(:where([data-tema=claro] *)) {
+  color: var(--exito);
+}
+:where([data-tema=oscuro]) .modal-liquidacion__value--warning:not(:where([data-tema=claro] *)) {
+  color: var(--alerta);
+}
+:where([data-tema=oscuro]) .modal-segmented:not(:where([data-tema=claro] *)) {
+  background: var(--superficie-tarjeta);
+  color: var(--texto-medio);
+}
+:where([data-tema=oscuro]) .modal-segmented:hover:not(:where([data-tema=claro] *)) {
+  border-color: var(--borde-fuerte);
+}
+:where([data-tema=oscuro]) .modal-segmented.is-active:not(:where([data-tema=claro] *)) {
+  background: var(--alerta-suave);
+  border-color: var(--alerta);
+  color: var(--alerta);
 }
 </style>
 

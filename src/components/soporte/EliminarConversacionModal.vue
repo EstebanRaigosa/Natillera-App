@@ -12,15 +12,15 @@
     :persistent="borrando"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="cerrar"
   >
     <!-- Cabecera móvil = fila -->
     <div class="flex-shrink-0 bg-red-700 text-white sm:hidden">
       <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
-        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm"><!-- tema-fijo: círculo blanco con icono rojo sobre la cabecera roja -->
           <TrashIcon class="h-5 w-5 text-red-700" />
         </div>
         <div class="min-w-0 flex-1 text-left">
@@ -43,7 +43,7 @@
       <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
         <div class="w-11 shrink-0" aria-hidden="true" />
         <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
-          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm"><!-- tema-fijo: círculo blanco con icono rojo sobre la cabecera roja -->
             <TrashIcon class="h-6 w-6 text-red-700" />
           </div>
           <h3 class="mt-2 font-display text-lg font-bold leading-tight text-white">Eliminar conversación</h3>
@@ -60,15 +60,15 @@
       </div>
     </div>
 
-    <div class="flex-1 min-h-0 space-y-4 overflow-y-auto bg-white px-5 pb-5 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch]">
-      <p class="text-sm leading-relaxed text-gray-700">
-        Se borrarán el hilo de <span class="font-semibold text-gray-900">{{ conversacion?.user_email }}</span>,
+    <div class="flex-1 min-h-0 space-y-4 overflow-y-auto bg-superficie-tarjeta px-5 pb-5 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch]">
+      <p class="text-sm leading-relaxed text-texto-medio">
+        Se borrarán el hilo de <span class="font-semibold text-texto-fuerte">{{ conversacion?.user_email }}</span>,
         todos sus mensajes y sus archivos adjuntos.
       </p>
 
       <div>
-        <label for="soporte-confirmar-numero" class="mb-1.5 block text-sm font-semibold text-gray-800">
-          Escribe <span class="font-mono text-red-700">{{ codigo }}</span> para confirmar
+        <label for="soporte-confirmar-numero" class="mb-1.5 block text-sm font-semibold text-texto">
+          Escribe <span class="font-mono text-red-700 oscuro:text-red-300">{{ codigo }}</span> para confirmar
         </label>
         <input
           id="soporte-confirmar-numero"
@@ -76,13 +76,13 @@
           type="text"
           autocapitalize="characters"
           autocomplete="off"
-          class="w-full rounded-xl border-2 border-gray-200 bg-white px-3.5 py-3 text-base text-gray-900 outline-none transition focus:border-red-600 focus:ring-2 focus:ring-red-600/30"
+          class="w-full rounded-xl border-2 border-borde bg-superficie-tarjeta px-3.5 py-3 text-base text-texto-fuerte outline-none transition focus:border-red-600 focus:ring-2 focus:ring-red-600/30"
           :disabled="borrando"
         />
       </div>
     </div>
 
-    <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+    <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
       <div class="flex gap-3">
         <button type="button" class="btn-modal-secondary flex-1" :disabled="borrando" @click="cerrar">
           Cancelar

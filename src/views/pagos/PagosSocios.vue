@@ -40,7 +40,7 @@
     <template v-if="!cargando">
       <div
         v-if="error"
-        class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
+        class="rounded-2xl border border-red-200 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 px-4 py-3 text-sm font-medium text-red-800 oscuro:text-red-300"
       >
         {{ error }}
         <button type="button" class="ml-2 font-semibold underline" @click="cargar">Reintentar</button>
@@ -67,8 +67,8 @@
           trimestre, estas cifras son las de ese socio en ese trimestre.
         -->
         <section
-          class="overflow-hidden rounded-2xl border bg-gray-50/70"
-          :class="unSoloSocio ? 'border-[#1B5E37]/25' : 'border-gray-200'"
+          class="overflow-hidden rounded-2xl border bg-superficie-suave/70"
+          :class="unSoloSocio ? 'border-[#1B5E37]/25 oscuro:border-marca-tinta/25' : 'border-borde'"
         >
           <!--
             Con una sola persona a la vista, su nombre encabeza sus propias cifras en vez de
@@ -76,7 +76,7 @@
           -->
           <div
             v-if="unSoloSocio"
-            class="flex items-center gap-2.5 border-b border-[#1B5E37]/20 bg-[#1B5E37]/[0.07] px-3 py-2.5 sm:px-4"
+            class="flex items-center gap-2.5 border-b border-[#1B5E37]/20 oscuro:border-marca-tinta/20 bg-[#1B5E37]/[0.07] px-3 py-2.5 sm:px-4"
           >
             <span
               class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full font-display text-sm font-bold"
@@ -84,13 +84,13 @@
               aria-hidden="true"
             >{{ iniciales(nombreSocioUnico) }}</span>
             <span class="min-w-0 flex-1">
-              <span class="block text-[0.625rem] font-semibold uppercase tracking-wide text-[#1B5E37]/70">Pagos de</span>
-              <span class="block truncate font-display text-sm font-bold text-gray-900 sm:text-base">{{ nombreSocioUnico }}</span>
+              <span class="block text-[0.625rem] font-semibold uppercase tracking-wide text-marca-tinta/70">Pagos de</span>
+              <span class="block truncate font-display text-sm font-bold text-texto-fuerte sm:text-base">{{ nombreSocioUnico }}</span>
             </span>
             <button
               v-if="filtroSocio"
               type="button"
-              class="flex min-h-[44px] flex-shrink-0 touch-manipulation items-center gap-1 rounded-full border border-[#1B5E37]/25 bg-white px-3 text-xs font-semibold text-[#1B5E37] transition-colors hover:bg-[#1B5E37]/8"
+              class="flex min-h-[44px] flex-shrink-0 touch-manipulation items-center gap-1 rounded-full border border-[#1B5E37]/25 oscuro:border-marca-tinta/25 bg-superficie-tarjeta px-3 text-xs font-semibold text-marca-tinta transition-colors hover:bg-[#1B5E37]/8"
               @click="filtroSocio = ''"
             >
               <XMarkIcon class="h-3.5 w-3.5 flex-shrink-0" />
@@ -98,24 +98,24 @@
             </button>
           </div>
 
-          <div class="grid grid-cols-3 divide-x divide-gray-200 border-b border-gray-200 bg-white">
+          <div class="grid grid-cols-3 divide-x divide-borde border-b border-borde bg-superficie-tarjeta">
             <div class="px-3 py-3 text-center">
-              <p class="font-display text-base font-extrabold tabular-nums text-[#1B5E37] sm:text-xl">
+              <p class="font-display text-base font-extrabold tabular-nums text-marca-tinta sm:text-xl">
                 {{ formatMoney(totalVisible) }}
               </p>
-              <p class="mt-0.5 text-[0.6875rem] uppercase tracking-wide text-gray-500">Recaudado</p>
+              <p class="mt-0.5 text-[0.6875rem] uppercase tracking-wide text-texto-suave">Recaudado</p>
             </div>
             <div class="px-3 py-3 text-center">
-              <p class="font-display text-base font-extrabold tabular-nums text-gray-800 sm:text-xl">
+              <p class="font-display text-base font-extrabold tabular-nums text-texto sm:text-xl">
                 {{ visibles.length }}
               </p>
-              <p class="mt-0.5 text-[0.6875rem] uppercase tracking-wide text-gray-500">Pagos</p>
+              <p class="mt-0.5 text-[0.6875rem] uppercase tracking-wide text-texto-suave">Pagos</p>
             </div>
             <div class="px-3 py-3 text-center">
-              <p class="font-display text-base font-extrabold tabular-nums text-gray-800 sm:text-xl">
+              <p class="font-display text-base font-extrabold tabular-nums text-texto sm:text-xl">
                 {{ unSoloSocio ? mesesVisibles : sociosVisibles }}
               </p>
-              <p class="mt-0.5 text-[0.6875rem] uppercase tracking-wide text-gray-500">
+              <p class="mt-0.5 text-[0.6875rem] uppercase tracking-wide text-texto-suave">
                 <template v-if="unSoloSocio">{{ mesesVisibles === 1 ? 'Mes' : 'Meses' }}</template>
                 <template v-else>{{ sociosVisibles === 1 ? 'Socio' : 'Socios' }}</template>
               </p>
@@ -125,11 +125,11 @@
           <div v-if="desgloseVisible.length > 0" class="space-y-1.5 px-4 py-3">
             <div v-for="linea in desgloseVisible" :key="linea.tipo" class="flex items-center gap-2">
               <span class="h-2 w-2 flex-shrink-0 rounded-full" :class="colorTipo(linea.tipo)" aria-hidden="true" />
-              <span class="w-24 flex-shrink-0 truncate text-xs text-gray-600 sm:w-40">{{ linea.etiqueta }}</span>
-              <span class="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-gray-200">
+              <span class="w-24 flex-shrink-0 truncate text-xs text-texto-secundario sm:w-40">{{ linea.etiqueta }}</span>
+              <span class="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-borde">
                 <span class="block h-full rounded-full" :class="colorTipo(linea.tipo)" :style="{ width: linea.porcentaje + '%' }" />
               </span>
-              <span class="w-24 flex-shrink-0 text-right font-semibold tabular-nums text-xs text-gray-800 sm:w-28">
+              <span class="w-24 flex-shrink-0 text-right font-semibold tabular-nums text-xs text-texto sm:w-28">
                 {{ formatMoney(linea.total) }}
               </span>
             </div>
@@ -145,9 +145,9 @@
         <section class="ds-card space-y-2.5">
           <div class="flex items-center gap-2">
             <div
-              class="flex min-w-0 flex-1 items-center rounded-xl border border-[color:var(--surface-divider-strong)] bg-white focus-within:border-[#1B5E37] focus-within:shadow-[0_0_0_3px_rgba(27,94,55,0.18)]"
+              class="flex min-w-0 flex-1 items-center rounded-xl border border-[color:var(--surface-divider-strong)] bg-superficie-tarjeta focus-within:border-[#1B5E37] oscuro:focus-within:border-marca-tinta focus-within:shadow-[0_0_0_3px_rgba(27,94,55,0.18)]"
             >
-              <span class="flex-shrink-0 pl-3 text-gray-400" aria-hidden="true">
+              <span class="flex-shrink-0 pl-3 text-texto-tenue" aria-hidden="true">
                 <MagnifyingGlassIcon class="h-5 w-5" />
               </span>
               <input
@@ -160,7 +160,7 @@
               <button
                 v-if="busqueda.trim()"
                 type="button"
-                class="flex h-11 w-11 flex-shrink-0 items-center justify-center text-gray-400 touch-manipulation hover:text-gray-600"
+                class="flex h-11 w-11 flex-shrink-0 items-center justify-center text-texto-tenue touch-manipulation hover:text-texto-secundario"
                 aria-label="Limpiar búsqueda"
                 @click="busqueda = ''"
               >
@@ -171,19 +171,19 @@
             <button
               type="button"
               class="relative flex min-h-[44px] flex-shrink-0 touch-manipulation items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold transition-colors"
-              :class="panelFiltros
+              :class="/* tema-fijo: activo es el botón verde de marca, igual en los dos modos */ panelFiltros
                 ? 'border-[#1B5E37] bg-[#1B5E37] text-white'
-                : 'border-[color:var(--surface-divider-strong)] bg-white text-gray-600 hover:bg-gray-50'"
+                : 'border-[color:var(--surface-divider-strong)] bg-superficie-tarjeta text-texto-secundario hover:bg-superficie-suave'"
               :aria-expanded="panelFiltros"
               aria-label="Mostrar filtros"
               @click="panelFiltros = !panelFiltros"
             >
               <FunnelIcon class="h-4 w-4 flex-shrink-0" />
               <span class="hidden sm:inline">Filtros</span>
-              <span
+              <!-- tema-fijo: con el panel abierto el botón es verde y el contador, una píldora blanca encima -->
+              <span :class="panelFiltros ? 'bg-white text-[#1B5E37]' : 'bg-[#1B5E37] text-white'"
                 v-if="chipsFiltros.length > 0"
                 class="flex h-4 min-w-[1rem] items-center justify-center rounded-full px-1 text-[0.625rem] font-bold"
-                :class="panelFiltros ? 'bg-white text-[#1B5E37]' : 'bg-[#1B5E37] text-white'"
               >{{ chipsFiltros.length }}</span>
             </button>
           </div>
@@ -194,7 +194,7 @@
               v-for="chip in chipsFiltros"
               :key="chip.clave"
               type="button"
-              class="flex min-h-[44px] touch-manipulation items-center gap-1.5 rounded-full border border-[#1B5E37]/25 bg-[#1B5E37]/8 px-3 text-xs font-semibold text-[#14532d] transition-colors hover:bg-[#1B5E37]/12"
+              class="flex min-h-[44px] touch-manipulation items-center gap-1.5 rounded-full border border-[#1B5E37]/25 oscuro:border-marca-tinta/25 bg-[#1B5E37]/8 px-3 text-xs font-semibold text-[#14532d] oscuro:text-marca-tinta transition-colors hover:bg-[#1B5E37]/12"
               :aria-label="`Quitar filtro ${chip.etiqueta}`"
               @click="chip.quitar()"
             >
@@ -203,7 +203,7 @@
             </button>
           </div>
 
-          <div v-if="panelFiltros" class="space-y-2 border-t border-gray-100 pt-2.5">
+          <div v-if="panelFiltros" class="space-y-2 border-t border-borde-suave pt-2.5">
             <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               <select
                 v-model="filtroSocio"
@@ -241,7 +241,7 @@
                 <label class="ds-label text-xs" for="pagos-desde">Desde</label>
                 <input id="pagos-desde" v-model="desde" type="date" class="ds-input" />
               </div>
-              <span class="hidden pt-5 text-xs text-gray-400 sm:block" aria-hidden="true">→</span>
+              <span class="hidden pt-5 text-xs text-texto-tenue sm:block" aria-hidden="true">→</span>
               <div>
                 <label class="ds-label text-xs" for="pagos-hasta">Hasta</label>
                 <input id="pagos-hasta" v-model="hasta" type="date" class="ds-input" />
@@ -251,7 +251,7 @@
             <button
               v-if="hayFiltros"
               type="button"
-              class="min-h-[44px] w-full touch-manipulation rounded-full px-3 text-xs font-semibold text-[#1B5E37] hover:bg-[#1B5E37]/8 sm:w-auto"
+              class="min-h-[44px] w-full touch-manipulation rounded-full px-3 text-xs font-semibold text-marca-tinta hover:bg-[#1B5E37]/8 sm:w-auto"
               @click="limpiarFiltros"
             >
               Limpiar filtros
@@ -261,13 +261,13 @@
 
         <div class="flex items-center gap-2">
           <!-- Misma lista, dos maneras de leerla: el mes como eje, o la persona como eje. -->
-          <div v-if="!unSoloSocio" class="inline-flex flex-1 rounded-full border border-gray-200 bg-white p-1 sm:flex-none">
+          <div v-if="!unSoloSocio" class="inline-flex flex-1 rounded-full border border-borde bg-superficie-tarjeta p-1 sm:flex-none">
             <button
               v-for="modo in MODOS"
               :key="modo.value"
               type="button"
               class="min-h-[44px] flex-1 touch-manipulation rounded-full px-4 text-xs font-semibold transition-colors sm:flex-none"
-              :class="agrupacion === modo.value ? 'bg-[#1B5E37] text-white' : 'text-gray-600 hover:bg-gray-50'"
+              :class="agrupacion === modo.value ? 'bg-[#1B5E37] text-white' : 'text-texto-secundario hover:bg-superficie-suave'"
               :aria-pressed="agrupacion === modo.value"
               @click="agrupacion = modo.value"
             >
@@ -277,7 +277,7 @@
 
           <button
             type="button"
-            class="ml-auto flex min-h-[44px] flex-shrink-0 touch-manipulation items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50 active:bg-gray-100"
+            class="ml-auto flex min-h-[44px] flex-shrink-0 touch-manipulation items-center gap-1.5 rounded-full border border-borde bg-superficie-tarjeta px-3 text-xs font-semibold text-texto-secundario transition-colors hover:bg-superficie-suave active:bg-superficie-hundida"
             @click="alternarTodo"
           >
             <component :is="todoPlegado ? ChevronDoubleDownIcon : ChevronDoubleUpIcon" class="h-4 w-4 flex-shrink-0" />
@@ -288,11 +288,11 @@
         <!-- Hay pagos, pero los filtros no dejan ver ninguno -->
         <section
           v-if="visibles.length === 0"
-          class="rounded-2xl border border-gray-200 bg-white px-6 py-10 text-center"
+          class="rounded-2xl border border-borde bg-superficie-tarjeta px-6 py-10 text-center"
         >
-          <FunnelIcon class="mx-auto h-8 w-8 text-gray-300" />
-          <p class="mt-3 font-display text-base font-bold text-gray-800">Ningún pago con estos filtros</p>
-          <p class="mt-1 text-sm text-gray-500">
+          <FunnelIcon class="mx-auto h-8 w-8 text-gray-300 oscuro:text-texto-tenue" />
+          <p class="mt-3 font-display text-base font-bold text-texto">Ningún pago con estos filtros</p>
+          <p class="mt-1 text-sm text-texto-suave">
             Hay {{ pagos.length }} pagos registrados, pero ninguno encaja.
           </p>
           <button type="button" class="ds-btn ds-btn--secondary mt-4" @click="limpiarFiltros">Limpiar filtros</button>
@@ -302,8 +302,8 @@
           <article
             v-for="grupo in grupos"
             :key="grupo.clave"
-            class="overflow-hidden rounded-2xl border bg-white"
-            :class="grupo.esSocio ? 'border-gray-200' : 'border-[#1B5E37]/25'"
+            class="overflow-hidden rounded-2xl border bg-superficie-tarjeta"
+            :class="grupo.esSocio ? 'border-borde' : 'border-[#1B5E37]/25 oscuro:border-marca-tinta/25'"
           >
             <!--
               Cabecera del grupo. El mes va en banda verde de marca y el socio en blanco con
@@ -313,7 +313,7 @@
             <button
               v-if="grupo.esSocio"
               type="button"
-              class="flex w-full touch-manipulation items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100 sm:px-4"
+              class="flex w-full touch-manipulation items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-superficie-suave active:bg-superficie-hundida sm:px-4"
               :aria-expanded="abierto1(grupo.clave)"
               @click="alternar1(grupo.clave)"
             >
@@ -324,25 +324,25 @@
               >{{ iniciales(grupo.titulo) }}</span>
 
               <span class="min-w-0 flex-1">
-                <span class="block truncate font-display text-base font-bold text-gray-900">{{ grupo.titulo }}</span>
-                <span class="mt-0.5 block truncate text-xs text-gray-500">{{ grupo.subtitulo }}</span>
+                <span class="block truncate font-display text-base font-bold text-texto-fuerte">{{ grupo.titulo }}</span>
+                <span class="mt-0.5 block truncate text-xs text-texto-suave">{{ grupo.subtitulo }}</span>
               </span>
 
-              <span class="flex-shrink-0 font-display text-base font-extrabold tabular-nums text-[#1B5E37] sm:text-lg">
+              <span class="flex-shrink-0 font-display text-base font-extrabold tabular-nums text-marca-tinta sm:text-lg">
                 {{ formatMoney(grupo.total) }}
               </span>
 
               <ChevronDownIcon
-                class="h-5 w-5 flex-shrink-0 text-gray-400 transition-transform duration-200"
+                class="h-5 w-5 flex-shrink-0 text-texto-tenue transition-transform duration-200"
                 :class="{ 'rotate-180': abierto1(grupo.clave) }"
                 aria-hidden="true"
               />
             </button>
 
-            <button
+            <!-- tema-fijo: cabecera verde de marca del grupo, sus estados valen igual en los dos modos -->
+            <button class="flex w-full touch-manipulation items-center gap-3 bg-[#1B5E37] px-3 py-3.5 text-left text-white transition-colors hover:bg-[#174d2d] active:bg-[#123f25] sm:px-4"
               v-else
               type="button"
-              class="flex w-full touch-manipulation items-center gap-3 bg-[#1B5E37] px-3 py-3.5 text-left text-white transition-colors hover:bg-[#174d2d] active:bg-[#123f25] sm:px-4"
               :aria-expanded="abierto1(grupo.clave)"
               @click="alternar1(grupo.clave)"
             >
@@ -368,25 +368,25 @@
 
             <template v-if="abierto1(grupo.clave)">
               <!-- Un solo socio a la vista: sus pagos cuelgan directos del mes. -->
-              <ul v-if="grupo.pagosDirectos" class="space-y-1 bg-gray-50/70 px-3 py-2 sm:px-4">
+              <ul v-if="grupo.pagosDirectos" class="space-y-1 bg-superficie-suave/70 px-3 py-2 sm:px-4">
                 <PagoFila v-for="pago in grupo.pagosDirectos" :key="pago.clave" :pago="pago" />
               </ul>
 
-              <ul v-else class="divide-y divide-gray-100 border-t border-gray-100">
+              <ul v-else class="divide-y divide-borde-suave border-t border-borde-suave">
                 <li v-for="hijo in grupo.hijos" :key="hijo.clave">
                   <!-- Segundo nivel: el socio dentro del mes, o el mes dentro del socio. -->
                   <button
                     type="button"
                     class="flex w-full touch-manipulation items-center gap-2.5 px-3 py-2.5 text-left transition-colors sm:px-4"
                     :class="grupo.esSocio
-                      ? 'border-l-4 border-[#1B5E37] bg-[#1B5E37]/[0.07] hover:bg-[#1B5E37]/12 active:bg-[#1B5E37]/15'
-                      : 'hover:bg-gray-50 active:bg-gray-100'"
+                      ? 'border-l-4 border-[#1B5E37] oscuro:border-marca-tinta bg-[#1B5E37]/[0.07] hover:bg-[#1B5E37]/12 active:bg-[#1B5E37]/15'
+                      : 'hover:bg-superficie-suave active:bg-superficie-hundida'"
                     :aria-expanded="abierto2(hijo.clave)"
                     @click="alternar2(hijo.clave)"
                   >
                     <span
                       v-if="grupo.esSocio"
-                      class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#1B5E37]/12 text-[#1B5E37]"
+                      class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#1B5E37]/12 text-marca-tinta"
                       aria-hidden="true"
                     >
                       <CalendarDaysIcon class="h-4 w-4" />
@@ -401,7 +401,7 @@
                     <span class="min-w-0 flex-1">
                       <span
                         class="block truncate text-sm font-semibold"
-                        :class="grupo.esSocio ? 'font-display font-bold text-[#14532d]' : 'text-gray-800'"
+                        :class="grupo.esSocio ? 'font-display font-bold text-[#14532d] oscuro:text-marca-tinta' : 'text-texto'"
                       >{{ hijo.titulo }}</span>
                       <!-- Los conceptos como puntos de color: se ve de un vistazo si ese mes
                            pagó solo la cuota o también sanción y actividad. -->
@@ -409,7 +409,7 @@
                         <span
                           v-for="t in hijo.tipos"
                           :key="t"
-                          class="inline-flex items-center gap-1 rounded-full bg-white/80 px-1.5 py-0.5 text-[0.625rem] font-medium text-gray-600"
+                          class="inline-flex items-center gap-1 rounded-full bg-superficie-tarjeta/80 px-1.5 py-0.5 text-[0.625rem] font-medium text-texto-secundario"
                         >
                           <span class="h-1.5 w-1.5 rounded-full" :class="colorTipo(t)" aria-hidden="true" />
                           {{ etiquetaTipo(t) }}
@@ -417,19 +417,19 @@
                       </span>
                     </span>
 
-                    <span class="flex-shrink-0 font-display text-sm font-bold tabular-nums text-gray-900">
+                    <span class="flex-shrink-0 font-display text-sm font-bold tabular-nums text-texto-fuerte">
                       {{ formatMoney(hijo.total) }}
                     </span>
 
                     <ChevronDownIcon
-                      class="h-4 w-4 flex-shrink-0 text-gray-400 transition-transform duration-200"
+                      class="h-4 w-4 flex-shrink-0 text-texto-tenue transition-transform duration-200"
                       :class="{ 'rotate-180': abierto2(hijo.clave) }"
                       aria-hidden="true"
                     />
                   </button>
 
                   <!-- Tercer nivel: los apuntes uno a uno, con su fecha real y su forma de pago. -->
-                  <ul v-if="abierto2(hijo.clave)" class="space-y-1 bg-gray-50/70 px-3 py-2 sm:px-4">
+                  <ul v-if="abierto2(hijo.clave)" class="space-y-1 bg-superficie-suave/70 px-3 py-2 sm:px-4">
                     <PagoFila v-for="pago in hijo.pagos" :key="pago.clave" :pago="pago" />
                   </ul>
                 </li>

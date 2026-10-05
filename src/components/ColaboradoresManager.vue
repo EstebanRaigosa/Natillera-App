@@ -7,7 +7,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <div class="min-w-0">
         <p class="ds-overline">Acceso</p>
-        <p class="text-sm text-gray-500 mt-0.5">
+        <p class="text-sm text-texto-suave mt-0.5">
           {{ colaboradores.length }}
           {{ colaboradores.length === 1 ? 'colaborador invitado' : 'colaboradores invitados' }}
           además del administrador
@@ -60,15 +60,15 @@
           </div>
           <div class="flex-1 min-w-0">
             <p class="ds-overline">Administrador</p>
-            <p class="font-display font-bold text-gray-900 truncate leading-tight mt-0.5">{{ adminNombre }}</p>
-            <p class="text-sm text-gray-500 truncate">{{ adminEmail }}</p>
+            <p class="font-display font-bold text-texto-fuerte truncate leading-tight mt-0.5">{{ adminNombre }}</p>
+            <p class="text-sm text-texto-suave truncate">{{ adminEmail }}</p>
           </div>
-          <div class="hidden sm:flex items-center gap-1.5 shrink-0 rounded-full bg-white/80 border border-[rgba(27,94,55,0.18)] px-3 py-1.5 text-xs font-semibold text-[color:var(--brand-primary)]">
+          <div class="hidden sm:flex items-center gap-1.5 shrink-0 rounded-full bg-superficie-tarjeta/80 border border-[rgba(27,94,55,0.18)] oscuro:border-marca-tinta-borde px-3 py-1.5 text-xs font-semibold text-[color:var(--brand-primary)] oscuro:text-marca-tinta">
             <ShieldCheckIcon class="w-4 h-4" />
             <span>Todos los permisos</span>
           </div>
         </div>
-        <p class="sm:hidden mt-3 flex items-center gap-1.5 text-xs font-semibold text-[color:var(--brand-primary)]">
+        <p class="sm:hidden mt-3 flex items-center gap-1.5 text-xs font-semibold text-[color:var(--brand-primary)] oscuro:text-marca-tinta">
           <ShieldCheckIcon class="w-4 h-4 shrink-0" />
           Todos los permisos
         </p>
@@ -101,8 +101,8 @@
             colaborador.estado === 'aceptada'
               ? 'ds-card--hover'
               : colaborador.estado === 'pendiente'
-              ? 'border-amber-200 bg-amber-50/40'
-              : 'bg-gray-50 opacity-70'
+              ? 'border-amber-200 oscuro:border-amber-500/30 bg-amber-50/40 oscuro:bg-amber-500/15'
+              : 'bg-superficie-suave opacity-70'
           ]"
         >
           <div class="flex flex-wrap items-start gap-3 sm:gap-4">
@@ -120,7 +120,7 @@
             <!-- Info -->
             <div class="flex-1 basis-0 min-w-[10rem]">
               <div class="flex flex-wrap items-center gap-1.5">
-                <span class="font-semibold text-gray-900 truncate">
+                <span class="font-semibold text-texto-fuerte truncate">
                   {{ colaborador.nombre_usuario || colaborador.email_usuario }}
                 </span>
                 <span :class="['ds-badge', obtenerClaseRol(colaborador.rol)]">
@@ -130,7 +130,7 @@
                   {{ formatearEstado(colaborador.estado) }}
                 </span>
               </div>
-              <p class="text-sm text-gray-500 truncate mt-0.5">{{ colaborador.email_usuario }}</p>
+              <p class="text-sm text-texto-suave truncate mt-0.5">{{ colaborador.email_usuario }}</p>
 
               <!-- Permisos en modo compacto -->
               <div class="flex flex-wrap gap-1 mt-2">
@@ -230,7 +230,7 @@
             </div>
           </div>
           <!-- Info de invitación -->
-          <div v-if="colaborador.invitado_por_nombre" class="mt-3 pt-3 border-t border-[color:var(--surface-divider)] flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-400">
+          <div v-if="colaborador.invitado_por_nombre" class="mt-3 pt-3 border-t border-[color:var(--surface-divider)] flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-texto-tenue">
             <ClockIcon class="w-3.5 h-3.5 shrink-0" />
             <span>Invitado por {{ colaborador.invitado_por_nombre }}</span>
             <span aria-hidden="true">•</span>
@@ -253,8 +253,8 @@
       :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
       card-max-width="32rem"
       @close="cerrarModalInvitar"
     >
@@ -262,7 +262,7 @@
       <div class="flex-shrink-0 bg-[color:var(--brand-primary)] text-white">
         <!-- Móvil: una sola fila [icono | títulos | X] -->
         <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
-          <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
+          <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm"><!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <UserPlusIcon class="w-5 h-5 text-[color:var(--brand-primary)]" />
           </div>
           <div class="min-w-0 flex-1 text-left">
@@ -286,7 +286,7 @@
         <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
           <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
           <div class="flex-1 min-w-0 flex flex-col items-center text-center">
-            <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm">
+            <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm"><!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
               <UserPlusIcon class="w-6 h-6 text-[color:var(--brand-primary)]" />
             </div>
             <h3 class="font-display font-bold text-white text-lg leading-tight">Invitar colaborador</h3>
@@ -310,13 +310,13 @@
       <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="scrollAreaModalInvitar"
-          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch]"
           @scroll.passive="programarNatiscrollModalInvitar"
         >
           <div class="px-5 sm:px-6 pt-5 pb-5 space-y-5">
             <!-- Email -->
             <div>
-              <label class="label font-semibold text-gray-700">Email del usuario *</label>
+              <label class="label font-semibold text-texto-medio">Email del usuario *</label>
               <input
                 v-model="formulario.email"
                 type="email"
@@ -327,17 +327,17 @@
                 placeholder="usuario@ejemplo.com"
                 required
               />
-              <p v-if="errorEmail" class="text-xs text-red-600 mt-1 flex items-center gap-1">
+              <p v-if="errorEmail" class="text-xs text-red-600 oscuro:text-red-300 mt-1 flex items-center gap-1">
                 <ExclamationCircleIcon class="w-4 h-4" />
                 {{ errorEmail }}
               </p>
-              <p v-else class="text-xs text-gray-500 mt-1">
+              <p v-else class="text-xs text-texto-suave mt-1">
                 El usuario recibirá una notificación para aceptar la invitación
               </p>
             </div>
             <!-- Rol -->
             <div>
-              <label class="label font-semibold text-gray-700">Rol *</label>
+              <label class="label font-semibold text-texto-medio">Rol *</label>
               <div class="grid grid-cols-1 gap-3 mt-2">
                 <div
                   v-for="rol in rolesDisponibles"
@@ -345,8 +345,8 @@
                   :class="[
                     'rounded-xl border-2 transition-all',
                     formulario.rol === rol.value
-                      ? 'border-natillera-400 bg-natillera-50'
-                      : 'border-gray-200'
+                      ? 'border-natillera-400 bg-natillera-50 oscuro:bg-natillera-500/15'
+                      : 'border-borde'
                   ]"
                 >
                   <label
@@ -354,7 +354,7 @@
                       'relative flex items-start p-4 cursor-pointer transition-all touch-manipulation',
                       formulario.rol === rol.value
                         ? ''
-                        : 'hover:bg-gray-50'
+                        : 'hover:bg-superficie-suave'
                     ]"
                   >
                     <input
@@ -365,18 +365,18 @@
                     />
                     <div class="flex-1">
                       <div class="flex items-center gap-2">
-                        <span class="font-semibold text-gray-800">{{ rol.nombre }}</span>
+                        <span class="font-semibold text-texto">{{ rol.nombre }}</span>
                         <span :class="['ds-badge', obtenerClaseRol(rol.value)]">
                           {{ rol.value }}
                         </span>
                       </div>
-                      <p class="text-sm text-gray-500 mt-1">{{ rol.descripcion }}</p>
+                      <p class="text-sm text-texto-suave mt-1">{{ rol.descripcion }}</p>
                     </div>
                     <div :class="[
                       'w-5 h-5 rounded-full border-2 flex items-center justify-center ml-3',
                       formulario.rol === rol.value
                         ? 'border-natillera-500 bg-natillera-500'
-                        : 'border-gray-300'
+                        : 'border-borde-fuerte'
                     ]">
                       <CheckIcon v-if="formulario.rol === rol.value" class="w-3 h-3 text-white" />
                     </div>
@@ -384,37 +384,37 @@
                   
                   <!-- Permisos personalizados (desplegados dentro de cada opción de rol) -->
                   <Transition name="fade">
-                    <div v-if="(formulario.rol === 'colaborador' || formulario.rol === 'visor') && formulario.rol === rol.value" class="px-4 pb-4 border-t border-natillera-200 mt-2 pt-4">
-                      <label class="text-sm font-semibold text-gray-700 mb-3 block">Permisos específicos</label>
+                    <div v-if="(formulario.rol === 'colaborador' || formulario.rol === 'visor') && formulario.rol === rol.value" class="px-4 pb-4 border-t border-natillera-200 oscuro:border-natillera-500/30 mt-2 pt-4">
+                      <label class="text-sm font-semibold text-texto-medio mb-3 block">Permisos específicos</label>
                       
                       <!-- Para colaborador: switches con Gestionar/Consultar -->
                       <div v-if="formulario.rol === 'colaborador'" class="space-y-4">
                         <div
                           v-for="(info, permiso) in permisosEditables"
                           :key="permiso"
-                          class="p-4 bg-white rounded-lg border border-gray-200"
+                          class="p-4 bg-superficie-tarjeta rounded-lg border border-borde"
                         >
-                          <h4 class="text-sm font-semibold text-gray-800 mb-3">{{ nombresPermisos[permiso] || info.nombre }}</h4>
+                          <h4 class="text-sm font-semibold text-texto mb-3">{{ nombresPermisos[permiso] || info.nombre }}</h4>
                           <div class="flex items-center justify-between gap-4">
-                            <span class="text-sm text-gray-600 flex-1">Consultar</span>
+                            <span class="text-sm text-texto-secundario flex-1">Consultar</span>
                             <label class="relative inline-flex items-center cursor-pointer">
                               <input
                                 type="checkbox"
                                 v-model="formulario.permisos[permiso].consultar"
                                 class="sr-only peer"
                               />
-                              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-natillera-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-natillera-500"></div>
+                              <div class="w-11 h-6 bg-borde peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-natillera-300 oscuro:peer-focus:ring-natillera-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-superficie-tarjeta after:border-borde-fuerte after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-natillera-500"></div>
                             </label>
                           </div>
                           <div class="flex items-center justify-between gap-4 mt-3">
-                            <span class="text-sm text-gray-600 flex-1">Gestionar</span>
+                            <span class="text-sm text-texto-secundario flex-1">Gestionar</span>
                             <label class="relative inline-flex items-center cursor-pointer">
                               <input
                                 type="checkbox"
                                 v-model="formulario.permisos[permiso].gestionar"
                                 class="sr-only peer"
                               />
-                              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-natillera-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-natillera-500"></div>
+                              <div class="w-11 h-6 bg-borde peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-natillera-300 oscuro:peer-focus:ring-natillera-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-superficie-tarjeta after:border-borde-fuerte after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-natillera-500"></div>
                             </label>
                           </div>
                         </div>
@@ -425,16 +425,16 @@
                         <label
                           v-for="(info, permiso) in permisosEditables"
                           :key="permiso"
-                          class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/60 cursor-pointer transition-colors"
+                          class="flex items-center gap-3 p-3 rounded-lg hover:bg-superficie-tarjeta/60 cursor-pointer transition-colors"
                         >
                           <input
                             type="checkbox"
                             v-model="formulario.permisos[permiso]"
-                            class="w-4 h-4 rounded border-gray-300 text-natillera-500 focus:ring-natillera-500"
+                            class="w-4 h-4 rounded border-borde-fuerte text-natillera-500 focus:ring-natillera-500"
                           />
                           <div class="flex-1 min-w-0">
-                            <span class="text-sm font-medium text-gray-700">Ver {{ nombresPermisos[permiso] || info.nombre }}</span>
-                            <p class="text-xs text-gray-500 truncate">{{ info.descripcion }}</p>
+                            <span class="text-sm font-medium text-texto-medio">Ver {{ nombresPermisos[permiso] || info.nombre }}</span>
+                            <p class="text-xs text-texto-suave truncate">{{ info.descripcion }}</p>
                           </div>
                         </label>
                       </div>
@@ -445,7 +445,7 @@
             </div>
             <!-- Notas -->
             <div>
-              <label class="label font-semibold text-gray-700">Notas (opcional)</label>
+              <label class="label font-semibold text-texto-medio">Notas (opcional)</label>
               <textarea
                 v-model="formulario.notas"
                 class="ds-input min-h-[80px]"
@@ -461,7 +461,7 @@
           class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
           aria-hidden="true"
         >
-          <div class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent" aria-hidden="true" />
+          <div class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent" aria-hidden="true" />
           <div class="relative z-[2] flex justify-center px-5 pb-3 pt-12">
             <div
               class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
@@ -476,7 +476,7 @@
       </div>
 
       <!-- Pie de acciones fijo: siempre visible, con safe-area -->
-      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex flex-col-reverse sm:flex-row gap-2.5">
+      <div class="flex-shrink-0 border-t border-borde bg-superficie-tarjeta px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex flex-col-reverse sm:flex-row gap-2.5">
         <button
           type="button"
           class="btn-modal-secondary flex-1"
@@ -501,7 +501,7 @@
       :show="!!(modalEditar && !esColaborador && miRol !== 'colaborador')"
       :z-index="50"
       overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      card-class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+      card-class="relative bg-superficie-tarjeta rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
       card-max-width="32rem"
       @close="cerrarModalEditar"
     >
@@ -520,7 +520,7 @@
             <div class="p-6 space-y-5">
               <!-- Rol -->
               <div>
-                <label class="label font-semibold text-gray-700">Rol</label>
+                <label class="label font-semibold text-texto-medio">Rol</label>
                 <div class="grid grid-cols-1 gap-3 mt-2">
                   <div
                     v-for="rol in rolesDisponibles"
@@ -528,8 +528,8 @@
                     :class="[
                       'rounded-xl border-2 transition-all',
                       formularioEditar.rol === rol.value
-                        ? 'border-blue-400 bg-blue-50'
-                        : 'border-gray-200'
+                        ? 'border-blue-400 bg-blue-50 oscuro:bg-blue-500/15'
+                        : 'border-borde'
                     ]"
                   >
                     <label
@@ -537,7 +537,7 @@
                         'relative flex items-start p-4 cursor-pointer transition-all',
                         formularioEditar.rol === rol.value
                           ? ''
-                          : 'hover:bg-gray-50'
+                          : 'hover:bg-superficie-suave'
                       ]"
                     >
                       <input
@@ -547,44 +547,44 @@
                         class="sr-only"
                       />
                       <div class="flex-1">
-                        <span class="font-semibold text-gray-800">{{ rol.nombre }}</span>
-                        <p class="text-sm text-gray-500 mt-1">{{ rol.descripcion }}</p>
+                        <span class="font-semibold text-texto">{{ rol.nombre }}</span>
+                        <p class="text-sm text-texto-suave mt-1">{{ rol.descripcion }}</p>
                       </div>
                     </label>
                     
                     <!-- Permisos (desplegados dentro de cada opción de rol) -->
                     <Transition name="fade">
-                      <div v-if="(formularioEditar.rol === 'colaborador' || formularioEditar.rol === 'visor') && formularioEditar.rol === rol.value" class="px-4 pb-4 border-t border-blue-200 mt-2 pt-4">
-                        <label class="text-sm font-semibold text-gray-700 mb-3 block">Permisos</label>
+                      <div v-if="(formularioEditar.rol === 'colaborador' || formularioEditar.rol === 'visor') && formularioEditar.rol === rol.value" class="px-4 pb-4 border-t border-blue-200 oscuro:border-blue-500/30 mt-2 pt-4">
+                        <label class="text-sm font-semibold text-texto-medio mb-3 block">Permisos</label>
                         
                         <!-- Para colaborador: switches con Gestionar/Consultar -->
                         <div v-if="formularioEditar.rol === 'colaborador'" class="space-y-4">
                           <div
                             v-for="(info, permiso) in permisosEditables"
                             :key="permiso"
-                            class="p-4 bg-white rounded-lg border border-gray-200"
+                            class="p-4 bg-superficie-tarjeta rounded-lg border border-borde"
                           >
-                            <h4 class="text-sm font-semibold text-gray-800 mb-3">{{ nombresPermisos[permiso] || info.nombre }}</h4>
+                            <h4 class="text-sm font-semibold text-texto mb-3">{{ nombresPermisos[permiso] || info.nombre }}</h4>
                             <div class="flex items-center justify-between gap-4">
-                              <span class="text-sm text-gray-600 flex-1">Consultar</span>
+                              <span class="text-sm text-texto-secundario flex-1">Consultar</span>
                               <label class="relative inline-flex items-center cursor-pointer">
                                 <input
                                   type="checkbox"
                                   v-model="formularioEditar.permisos[permiso].consultar"
                                   class="sr-only peer"
                                 />
-                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                                <div class="w-11 h-6 bg-borde peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 oscuro:peer-focus:ring-blue-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-superficie-tarjeta after:border-borde-fuerte after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                               </label>
                             </div>
                             <div class="flex items-center justify-between gap-4 mt-3">
-                              <span class="text-sm text-gray-600 flex-1">Gestionar</span>
+                              <span class="text-sm text-texto-secundario flex-1">Gestionar</span>
                               <label class="relative inline-flex items-center cursor-pointer">
                                 <input
                                   type="checkbox"
                                   v-model="formularioEditar.permisos[permiso].gestionar"
                                   class="sr-only peer"
                                 />
-                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                                <div class="w-11 h-6 bg-borde peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 oscuro:peer-focus:ring-blue-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-superficie-tarjeta after:border-borde-fuerte after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                               </label>
                             </div>
                           </div>
@@ -595,14 +595,14 @@
                           <label
                             v-for="(info, permiso) in permisosEditables"
                             :key="permiso"
-                            class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/60 cursor-pointer transition-colors"
+                            class="flex items-center gap-3 p-3 rounded-lg hover:bg-superficie-tarjeta/60 cursor-pointer transition-colors"
                           >
                             <input
                               type="checkbox"
                               v-model="formularioEditar.permisos[permiso]"
-                              class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+                              class="w-4 h-4 rounded border-borde-fuerte text-blue-500 focus:ring-blue-500"
                             />
-                            <span class="text-sm font-medium text-gray-700">Ver {{ nombresPermisos[permiso] || info.nombre }}</span>
+                            <span class="text-sm font-medium text-texto-medio">Ver {{ nombresPermisos[permiso] || info.nombre }}</span>
                           </label>
                         </div>
                       </div>
@@ -612,10 +612,10 @@
               </div>
             </div>
             <!-- Footer -->
-            <div class="sticky bottom-0 bg-gray-50 px-6 py-4 border-t flex justify-end gap-3">
+            <div class="sticky bottom-0 bg-superficie-suave px-6 py-4 border-t flex justify-end gap-3">
               <button
                 @click="cerrarModalEditar"
-                class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium rounded-lg hover:bg-gray-100 transition-colors"
+                class="px-4 py-2 text-texto-secundario hover:text-texto font-medium rounded-lg hover:bg-superficie-hundida transition-colors"
               >
                 Cancelar
               </button>
@@ -633,18 +633,18 @@
       :show="!!modalRevocar"
       :z-index="50"
       overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      card-class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md"
+      card-class="relative bg-superficie-tarjeta rounded-2xl shadow-2xl w-full max-w-md"
       card-max-width="28rem"
       @close="cerrarModalRevocar"
     >
             <div class="p-6 text-center">
-              <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+              <div class="w-16 h-16 rounded-full bg-red-100 oscuro:bg-red-500/15 flex items-center justify-center mx-auto mb-4">
                 <ExclamationTriangleIcon class="w-8 h-8 text-red-500" />
               </div>
-              <h3 class="text-lg font-display font-bold text-gray-800 mb-2">
+              <h3 class="text-lg font-display font-bold text-texto mb-2">
                 {{ colaboradorRevocando?.estado === 'pendiente' ? '¿Cancelar invitación?' : '¿Revocar acceso?' }}
               </h3>
-              <p class="text-gray-500 mb-6">
+              <p class="text-texto-suave mb-6">
                 {{ colaboradorRevocando?.estado === 'pendiente'
                   ? `La invitación a ${colaboradorRevocando?.email_usuario} será cancelada.`
                   : `${colaboradorRevocando?.nombre_usuario || colaboradorRevocando?.email_usuario} ya no tendrá acceso a esta natillera.`
@@ -653,7 +653,7 @@
               <div class="flex justify-center gap-3">
                 <button
                   @click="cerrarModalRevocar"
-                  class="px-6 py-2 text-gray-600 hover:text-gray-800 font-medium rounded-lg hover:bg-gray-100 transition-colors"
+                  class="px-6 py-2 text-texto-secundario hover:text-texto font-medium rounded-lg hover:bg-superficie-hundida transition-colors"
                 >
                   Cancelar
                 </button>
@@ -672,18 +672,18 @@
       :show="!!modalEliminar"
       :z-index="50"
       overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      card-class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md"
+      card-class="relative bg-superficie-tarjeta rounded-2xl shadow-2xl w-full max-w-md"
       card-max-width="28rem"
       @close="cerrarModalEliminar"
     >
             <div class="p-6 text-center">
-              <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+              <div class="w-16 h-16 rounded-full bg-red-100 oscuro:bg-red-500/15 flex items-center justify-center mx-auto mb-4">
                 <TrashIcon class="w-8 h-8 text-red-500" />
               </div>
-              <h3 class="text-lg font-display font-bold text-gray-800 mb-2">
+              <h3 class="text-lg font-display font-bold text-texto mb-2">
                 {{ esColaborador && esMiColaborador(colaboradorEliminando) ? '¿Salir de esta natillera?' : '¿Eliminar completamente?' }}
               </h3>
-              <p class="text-gray-500 mb-2">
+              <p class="text-texto-suave mb-2">
                 <template v-if="esColaborador && esMiColaborador(colaboradorEliminando)">
                   Se eliminará tu acceso a esta natillera. Ya no podrás ver ni gestionar información de esta natillera.
                 </template>
@@ -691,13 +691,13 @@
                   Se eliminará completamente a <strong>{{ colaboradorEliminando?.nombre_usuario || colaboradorEliminando?.email_usuario }}</strong> de la lista de colaboradores.
                 </template>
               </p>
-              <p class="text-sm text-red-600 font-medium mb-6">
+              <p class="text-sm text-red-600 oscuro:text-red-300 font-medium mb-6">
                 Esta acción no se puede deshacer.
               </p>
               <div class="flex justify-center gap-3">
                 <button
                   @click="cerrarModalEliminar"
-                  class="px-6 py-2 text-gray-600 hover:text-gray-800 font-medium rounded-lg hover:bg-gray-100 transition-colors"
+                  class="px-6 py-2 text-texto-secundario hover:text-texto font-medium rounded-lg hover:bg-superficie-hundida transition-colors"
                 >
                   Cancelar
                 </button>
@@ -1544,4 +1544,17 @@ defineExpose({
   opacity: 0;
   transform: translateX(100px);
 }
+
+/* Modo oscuro: solo lo que cambia (skill natillerapp-modo-oscuro §2.5). Los hover
+   rellenos (verde, azul, ámbar, rojo con texto blanco) valen igual en los dos modos. */
+:where([data-tema=oscuro]) .colab-admin {
+  border-color: var(--marca-tinta-borde);
+  background: linear-gradient(135deg, var(--marca-suave) 0%, var(--superficie-tarjeta) 55%);
+}
+:where([data-tema=oscuro]) .colab-admin__sello { background: var(--superficie-elevada); color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .colab-accion--marca { color: var(--marca-tinta); background: var(--marca-suave); border-color: var(--marca-tinta-borde); }
+:where([data-tema=oscuro]) .colab-accion--info { color: var(--info); background: var(--info-suave); border-color: var(--info-borde); }
+:where([data-tema=oscuro]) .colab-accion--aviso { color: var(--alerta); background: var(--alerta-suave); border-color: var(--alerta-borde); }
+:where([data-tema=oscuro]) .colab-accion--peligro { color: var(--peligro); background: var(--peligro-suave); border-color: var(--peligro-borde); }
+:where([data-tema=oscuro]) .colab-admin__avatar { box-shadow: 0 0 0 3px var(--superficie-tarjeta), 0 0 0 4px var(--marca-tinta-borde); }
 </style>

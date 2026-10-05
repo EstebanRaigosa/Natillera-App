@@ -10,9 +10,9 @@
     class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
     aria-hidden="true"
   >
-    <!-- Velo inferior: detrás de la pastilla (z-0) -->
+    <!-- Velo inferior: detrás de la pastilla (z-0). Del color de la tarjeta, para fundirse también en oscuro -->
     <div
-      class="absolute inset-x-0 bottom-0 z-0 h-28 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+      class="absolute inset-x-0 bottom-0 z-0 h-28 bg-gradient-to-t from-superficie-tarjeta/88 via-superficie-tarjeta/40 to-transparent"
     />
     <!-- Pastilla siempre por encima del velo -->
     <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">

@@ -5,20 +5,20 @@
         <router-link
           v-if="index < breadcrumbs.length - 1 && crumb.to"
           :to="crumb.to"
-          class="group relative inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 touch-manipulation before:absolute before:inset-x-0 before:-inset-y-1.5 before:content-[''] bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-700 hover:text-gray-900 font-medium rounded-lg hover:bg-white hover:border-natillera-200 hover:shadow-sm transition-all duration-200"
+          class="group relative inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 touch-manipulation before:absolute before:inset-x-0 before:-inset-y-1.5 before:content-[''] bg-superficie-tarjeta/80 backdrop-blur-sm border border-borde text-texto-medio hover:text-texto-fuerte font-medium rounded-lg hover:bg-superficie-tarjeta hover:border-natillera-200 oscuro:hover:border-natillera-500/30 hover:shadow-sm transition-all duration-200"
         >
-          <HomeIcon v-if="index === 0" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-natillera-600" />
+          <HomeIcon v-if="index === 0" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-natillera-600 oscuro:text-natillera-300" />
           <span class="whitespace-nowrap">{{ crumb.label }}</span>
         </router-link>
         <span
           v-else
-          class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 bg-natillera-50 border border-natillera-200 text-natillera-700 font-semibold rounded-lg"
+          class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 bg-natillera-50 oscuro:bg-natillera-500/15 border border-natillera-200 oscuro:border-natillera-500/30 text-natillera-700 oscuro:text-natillera-300 font-semibold rounded-lg"
         >
           <span class="whitespace-nowrap">{{ crumb.label }}</span>
         </span>
         <ChevronRightIcon
           v-if="index < breadcrumbs.length - 1"
-          class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 mx-1 sm:mx-1.5 flex-shrink-0"
+          class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-texto-tenue mx-1 sm:mx-1.5 flex-shrink-0"
         />
       </li>
     </ol>

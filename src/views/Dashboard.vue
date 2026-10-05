@@ -5,9 +5,9 @@
       class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0 sm:gap-x-4 sm:gap-y-2"
     >
       <h1
-        class="col-start-1 row-start-1 min-w-0 font-body text-[clamp(1.75rem,4vw,2.5rem)] font-bold leading-tight tracking-tight text-gray-900"
+        class="col-start-1 row-start-1 min-w-0 font-body text-[clamp(1.75rem,4vw,2.5rem)] font-bold leading-tight tracking-tight text-texto-fuerte"
       >
-        ¡Hola, <span class="text-[#166534]">{{ authStore.userName }}</span>!
+        ¡Hola, <span class="text-[#166534] oscuro:text-marca-tinta">{{ authStore.userName }}</span>!
       </h1>
       <router-link
         id="boton-crear-natillera-movil"
@@ -21,7 +21,7 @@
         <span class="hidden sm:inline">Nueva Natillera</span>
       </router-link>
       <p
-        class="col-span-2 col-start-1 row-start-2 text-[15px] font-medium leading-snug text-gray-600 sm:col-span-1 sm:row-start-2 sm:mt-0 sm:leading-relaxed"
+        class="col-span-2 col-start-1 row-start-2 text-[15px] font-medium leading-snug text-texto-secundario sm:col-span-1 sm:row-start-2 sm:mt-0 sm:leading-relaxed"
       >
         Bienvenido a tu panel de natilleras
       </p>
@@ -30,7 +30,7 @@
     <!-- Invitaciones (estilo panel verde / tarjeta info + acciones) -->
     <section
       v-if="colaboradoresStore.misInvitaciones.length > 0"
-      class="relative mt-3 animate-fade-in-up sm:mt-4 rounded-2xl border border-emerald-200/70 bg-gradient-to-b from-emerald-50/90 via-emerald-50/40 to-white p-5 sm:p-6 shadow-sm"
+      class="relative mt-3 animate-fade-in-up sm:mt-4 rounded-2xl border border-emerald-200/70 oscuro:border-emerald-500/30 bg-gradient-to-b from-emerald-50/90 oscuro:from-emerald-500/15 via-emerald-50/40 oscuro:via-emerald-500/10 to-superficie-tarjeta p-5 sm:p-6 shadow-sm"
       aria-labelledby="dashboard-invitaciones-titulo"
     >
       <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
@@ -38,7 +38,7 @@
           <div class="flex flex-wrap items-center gap-2.5">
             <h2
               id="dashboard-invitaciones-titulo"
-              class="font-display text-xl font-bold tracking-tight text-[#166534] sm:text-2xl"
+              class="font-display text-xl font-bold tracking-tight text-[#166534] oscuro:text-marca-tinta sm:text-2xl"
             >
               Invitaciones
             </h2>
@@ -49,7 +49,7 @@
               {{ colaboradoresStore.misInvitaciones.length }}
             </span>
           </div>
-          <p class="mt-1 max-w-xl text-sm font-medium text-[#3f6212]/90">
+          <p class="mt-1 max-w-xl text-sm font-medium text-[#3f6212]/90 oscuro:text-marca-tinta/90">
             Gestiona tus uniones a nuevos grupos de ahorro.
           </p>
         </div>
@@ -59,12 +59,12 @@
         <article
           v-for="invitacion in colaboradoresStore.misInvitaciones"
           :key="invitacion.id"
-          class="overflow-hidden rounded-2xl border border-emerald-200/60 bg-white shadow-sm ring-1 ring-emerald-100/40"
+          class="overflow-hidden rounded-2xl border border-emerald-200/60 oscuro:border-emerald-500/30 bg-superficie-tarjeta shadow-sm ring-1 ring-emerald-100/40 oscuro:ring-emerald-500/30"
         >
           <div class="flex flex-col sm:flex-row sm:items-stretch">
             <!-- Columna info: fondo menta -->
             <div
-              class="flex min-w-0 flex-1 gap-3 border-b border-emerald-100/80 bg-[#ecfdf5] p-4 sm:gap-4 sm:border-b-0 sm:border-r sm:p-5"
+              class="flex min-w-0 flex-1 gap-3 border-b border-emerald-100/80 oscuro:border-emerald-500/30 bg-[#ecfdf5] oscuro:bg-exito-suave p-4 sm:gap-4 sm:border-b-0 sm:border-r sm:p-5"
             >
               <div
                 class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#166534] text-white shadow-sm"
@@ -73,31 +73,31 @@
                 <BuildingLibraryIcon class="h-6 w-6" />
               </div>
               <div class="min-w-0 flex-1">
-                <h3 class="truncate font-display text-base font-bold text-gray-900 sm:text-lg">
+                <h3 class="truncate font-display text-base font-bold text-texto-fuerte sm:text-lg">
                   {{ invitacion.natillera_nombre }}
                 </h3>
                 <p class="mt-1.5">
                   <span
-                    class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100/90 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-[#14532d]"
+                    class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100/90 oscuro:bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-[#14532d] oscuro:text-marca-tinta"
                   >
                     <component
                       :is="iconoRolInvitacion(invitacion.rol)"
-                      class="h-3.5 w-3.5 text-[#166534]"
+                      class="h-3.5 w-3.5 text-[#166534] oscuro:text-marca-tinta"
                       aria-hidden="true"
                     />
                     {{ formatearRol(invitacion.rol).toUpperCase() }}
                   </span>
                 </p>
-                <p class="mt-3 text-sm leading-relaxed text-gray-600">
+                <p class="mt-3 text-sm leading-relaxed text-texto-secundario">
                   Has sido invitado por
-                  <span class="font-bold text-[#166534]">{{ emailInvitadorDestacado(invitacion) }}</span>
+                  <span class="font-bold text-[#166534] oscuro:text-marca-tinta">{{ emailInvitadorDestacado(invitacion) }}</span>
                   a participar en este círculo de confianza.
                 </p>
                 <div
                   v-if="invitacion.notas"
-                  class="mt-3 rounded-lg border border-amber-200/60 bg-amber-50/90 px-3 py-2 text-xs text-gray-700"
+                  class="mt-3 rounded-lg border border-amber-200/60 oscuro:border-amber-500/30 bg-amber-50/90 oscuro:bg-amber-500/15 px-3 py-2 text-xs text-texto-medio"
                 >
-                  <span class="font-semibold text-amber-900">Mensaje: </span>
+                  <span class="font-semibold text-amber-900 oscuro:text-amber-300">Mensaje: </span>
                   <span class="whitespace-pre-wrap break-words">{{ invitacion.notas }}</span>
                 </div>
               </div>
@@ -105,7 +105,7 @@
 
             <!-- Columna acciones: blanco -->
             <div
-              class="flex w-full shrink-0 flex-col justify-center gap-2.5 bg-white px-4 py-4 sm:w-[min(100%,13.5rem)] sm:px-5"
+              class="flex w-full shrink-0 flex-col justify-center gap-2.5 bg-superficie-tarjeta px-4 py-4 sm:w-[min(100%,13.5rem)] sm:px-5"
             >
               <button
                 type="button"
@@ -119,12 +119,12 @@
                 type="button"
                 @click="abrirModalRechazarInvitacion(invitacion)"
                 :disabled="procesandoInvitacion === invitacion.id"
-                class="w-full rounded-full border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-emerald-200 hover:bg-emerald-50/50 disabled:cursor-not-allowed disabled:opacity-50"
+                class="w-full rounded-full border border-borde bg-superficie-tarjeta px-4 py-2.5 text-sm font-semibold text-texto-medio transition hover:border-emerald-200 oscuro:hover:border-emerald-500/30 hover:bg-emerald-50/50 oscuro:hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Rechazar
               </button>
               <p
-                class="pt-1 text-center text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-400"
+                class="pt-1 text-center text-[10px] font-semibold uppercase tracking-[0.12em] text-texto-tenue"
               >
                 {{ textoExpiracionInvitacion(invitacion) }}
               </p>
@@ -137,7 +137,7 @@
     <div
       role="separator"
       aria-orientation="horizontal"
-      class="box-border w-full min-w-0 shrink-0 border-0 border-t border-solid border-[#166534]/30"
+      class="box-border w-full min-w-0 shrink-0 border-0 border-t border-solid border-[#166534]/30 oscuro:border-marca-tinta/30"
       :class="colaboradoresStore.misInvitaciones.length > 0 ? 'mt-3' : 'mt-2'"
     />
 
@@ -145,10 +145,10 @@
     <div class="relative animate-fade-in-up stagger-5 pt-2 sm:pt-4">
       <div class="mb-5 flex flex-col gap-3 sm:mb-6">
         <div>
-          <h2 class="font-body text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">
+          <h2 class="font-body text-xl font-bold tracking-tight text-texto-fuerte sm:text-2xl">
             Tus Natilleras
           </h2>
-          <p class="mt-1 hidden text-sm font-medium leading-relaxed text-gray-600 sm:block">
+          <p class="mt-1 hidden text-sm font-medium leading-relaxed text-texto-secundario sm:block">
             Gestiona tus grupos de ahorro según tu rol
           </p>
         </div>
@@ -156,27 +156,27 @@
         <!-- Filtros: móvil — panel con jerarquía; desktop — fila sin panel. -->
         <div
           v-if="mostrarBarraFiltrosNatilleras"
-          class="flex flex-col gap-3 rounded-2xl border border-gray-200/90 bg-gradient-to-b from-white to-emerald-50/35 p-3.5 shadow-sm ring-1 ring-gray-100/90 sm:rounded-none sm:border-0 sm:bg-none sm:p-0 sm:shadow-none sm:ring-0 sm:flex-row sm:items-end sm:justify-between sm:gap-8 lg:gap-10"
+          class="flex flex-col gap-3 rounded-2xl border border-borde/90 bg-gradient-to-b from-superficie-tarjeta to-emerald-50/35 oscuro:to-emerald-500/10 p-3.5 shadow-sm ring-1 ring-borde-suave/90 sm:rounded-none sm:border-0 sm:bg-none sm:p-0 sm:shadow-none sm:ring-0 sm:flex-row sm:items-end sm:justify-between sm:gap-8 lg:gap-10"
           role="region"
           aria-label="Filtros de natilleras"
         >
           <div
             class="flex items-center gap-2 border-b border-emerald-900/10 pb-2.5 sm:hidden"
           >
-            <FunnelIcon class="h-4 w-4 shrink-0 text-[#166534]" aria-hidden="true" />
-            <span class="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-800">Filtros</span>
+            <FunnelIcon class="h-4 w-4 shrink-0 text-[#166534] oscuro:text-marca-tinta" aria-hidden="true" />
+            <span class="text-[11px] font-bold uppercase tracking-[0.14em] text-texto">Filtros</span>
           </div>
           <!-- Móvil: Propiedad primero; fila Estado + Vista. Desktop: Propiedad + Estado (sin caja). -->
           <div class="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-end sm:gap-8 lg:gap-12">
             <div class="min-w-0 w-full sm:w-auto">
-              <span class="block text-[9px] font-semibold uppercase tracking-wide text-gray-600 sm:text-[10px]">Propiedad</span>
+              <span class="block text-[9px] font-semibold uppercase tracking-wide text-texto-secundario sm:text-[10px]">Propiedad</span>
               <div
-                class="mt-1.5 inline-flex w-full max-w-full flex-wrap rounded-full bg-white p-0.5 shadow-sm ring-1 ring-gray-100/90 sm:p-1"
+                class="mt-1.5 inline-flex w-full max-w-full flex-wrap rounded-full bg-superficie-tarjeta p-0.5 shadow-sm ring-1 ring-borde-suave/90 sm:p-1"
               >
                 <button
                   type="button"
                   class="min-h-[44px] flex-1 rounded-full px-1.5 py-1.5 text-center text-[11px] font-semibold leading-tight transition-colors sm:min-h-[44px] sm:px-3 sm:py-2 sm:text-sm sm:flex-none sm:px-3.5"
-                  :class="vistaActiva === 'todas' ? 'bg-[#166534] text-white' : 'text-gray-600 hover:text-gray-900'"
+                  :class="vistaActiva === 'todas' ? 'bg-[#166534] text-white' : 'text-texto-secundario hover:text-texto-fuerte'"
                   @click="vistaActiva = 'todas'"
                 >
                   Todas
@@ -184,7 +184,7 @@
                 <button
                   type="button"
                   class="min-h-[44px] flex-1 rounded-full px-1.5 py-1.5 text-center text-[11px] font-semibold leading-tight transition-colors sm:min-h-[44px] sm:px-3 sm:py-2 sm:text-sm sm:flex-none sm:px-3.5"
-                  :class="vistaActiva === 'propias' ? 'bg-[#166534] text-white' : 'text-gray-600 hover:text-gray-900'"
+                  :class="vistaActiva === 'propias' ? 'bg-[#166534] text-white' : 'text-texto-secundario hover:text-texto-fuerte'"
                   @click="vistaActiva = 'propias'"
                 >
                   Propias
@@ -192,7 +192,7 @@
                 <button
                   type="button"
                   class="min-h-[44px] flex-1 rounded-full px-1.5 py-1.5 text-center text-[11px] font-semibold leading-tight transition-colors sm:min-h-[44px] sm:px-3 sm:py-2 sm:text-sm sm:flex-none sm:px-3.5"
-                  :class="vistaActiva === 'compartidas' ? 'bg-[#166534] text-white' : 'text-gray-600 hover:text-gray-900'"
+                  :class="vistaActiva === 'compartidas' ? 'bg-[#166534] text-white' : 'text-texto-secundario hover:text-texto-fuerte'"
                   @click="vistaActiva = 'compartidas'"
                 >
                   Compartidas
@@ -200,7 +200,7 @@
                 <button
                   type="button"
                   class="min-h-[44px] flex-1 rounded-full px-1.5 py-1.5 text-center text-[11px] font-semibold leading-tight transition-colors sm:min-h-[44px] sm:px-3 sm:py-2 sm:text-sm sm:flex-none sm:px-3.5"
-                  :class="vistaActiva === 'socio' ? 'bg-[#166534] text-white' : 'text-gray-600 hover:text-gray-900'"
+                  :class="vistaActiva === 'socio' ? 'bg-[#166534] text-white' : 'text-texto-secundario hover:text-texto-fuerte'"
                   @click="vistaActiva = 'socio'"
                 >
                   Como socio
@@ -210,14 +210,14 @@
 
             <div class="flex min-w-0 flex-row items-end gap-2 sm:contents">
               <div class="min-w-0 flex-1 sm:flex-initial">
-                <span class="block text-[9px] font-semibold uppercase tracking-wide text-gray-600 sm:text-[10px]">Estado</span>
+                <span class="block text-[9px] font-semibold uppercase tracking-wide text-texto-secundario sm:text-[10px]">Estado</span>
                 <div
-                  class="mt-1.5 inline-flex w-full max-w-full flex-wrap rounded-full bg-white p-0.5 shadow-sm ring-1 ring-gray-100/90 sm:p-1"
+                  class="mt-1.5 inline-flex w-full max-w-full flex-wrap rounded-full bg-superficie-tarjeta p-0.5 shadow-sm ring-1 ring-borde-suave/90 sm:p-1"
                 >
                   <button
                     type="button"
                     class="min-h-[44px] flex-1 rounded-full px-1.5 py-1.5 text-center text-[11px] font-semibold leading-tight transition-colors sm:min-h-[44px] sm:px-3 sm:py-2 sm:text-sm sm:flex-none sm:px-4"
-                    :class="filtro === 'todas' ? 'bg-[#166534] text-white' : 'text-gray-600 hover:text-gray-900'"
+                    :class="filtro === 'todas' ? 'bg-[#166534] text-white' : 'text-texto-secundario hover:text-texto-fuerte'"
                     @click="filtro = 'todas'"
                   >
                     Todas
@@ -225,7 +225,7 @@
                   <button
                     type="button"
                     class="min-h-[44px] flex-1 rounded-full px-1.5 py-1.5 text-center text-[11px] font-semibold leading-tight transition-colors sm:min-h-[44px] sm:px-3 sm:py-2 sm:text-sm sm:flex-none sm:px-4"
-                    :class="filtro === 'activa' ? 'bg-[#166534] text-white' : 'text-gray-600 hover:text-gray-900'"
+                    :class="filtro === 'activa' ? 'bg-[#166534] text-white' : 'text-texto-secundario hover:text-texto-fuerte'"
                     @click="filtro = 'activa'"
                   >
                     Activas
@@ -233,7 +233,7 @@
                   <button
                     type="button"
                     class="min-h-[44px] flex-1 rounded-full px-1.5 py-1.5 text-center text-[11px] font-semibold leading-tight transition-colors sm:min-h-[44px] sm:px-3 sm:py-2 sm:text-sm sm:flex-none sm:px-4"
-                    :class="filtro === 'cerrada' ? 'bg-[#166534] text-white' : 'text-gray-600 hover:text-gray-900'"
+                    :class="filtro === 'cerrada' ? 'bg-[#166534] text-white' : 'text-texto-secundario hover:text-texto-fuerte'"
                     @click="filtro = 'cerrada'"
                   >
                     Cerradas
@@ -244,9 +244,9 @@
               <div
                 class="flex w-auto shrink-0 flex-col items-end gap-0.5 pb-0.5 sm:hidden"
               >
-                <span class="text-[9px] font-semibold uppercase tracking-wide text-gray-500">Vista</span>
+                <span class="text-[9px] font-semibold uppercase tracking-wide text-texto-suave">Vista</span>
                 <div
-                  class="inline-flex rounded-lg bg-gray-100/95 p-0.5 shadow-inner ring-1 ring-gray-200/70"
+                  class="inline-flex rounded-lg bg-superficie-hundida/95 p-0.5 shadow-inner ring-1 ring-borde/70"
                   role="group"
                   aria-label="Tipo de vista"
                 >
@@ -256,7 +256,7 @@
                     :class="
                       vistaLayout === 'tarjetas'
                         ? 'bg-[#166534] text-white shadow-sm'
-                        : 'text-gray-500 hover:bg-white/70 hover:text-gray-800'
+                        : 'text-texto-suave hover:bg-superficie-tarjeta/70 hover:text-texto'
                     "
                     :aria-pressed="vistaLayout === 'tarjetas'"
                     title="Vista de tarjetas"
@@ -270,7 +270,7 @@
                     :class="
                       vistaLayout === 'lista'
                         ? 'bg-[#166534] text-white shadow-sm'
-                        : 'text-gray-500 hover:bg-white/70 hover:text-gray-800'
+                        : 'text-texto-suave hover:bg-superficie-tarjeta/70 hover:text-texto'
                     "
                     :aria-pressed="vistaLayout === 'lista'"
                     title="Vista de lista"
@@ -286,11 +286,11 @@
           <div
             class="hidden w-full shrink-0 flex-col items-end gap-1 pb-0.5 sm:flex sm:w-auto"
           >
-            <span class="text-[9px] font-semibold uppercase tracking-wide text-gray-500 sm:text-end">
+            <span class="text-[9px] font-semibold uppercase tracking-wide text-texto-suave sm:text-end">
               Vista
             </span>
             <div
-              class="inline-flex rounded-xl bg-gray-100/95 p-1 shadow-inner ring-1 ring-gray-200/70"
+              class="inline-flex rounded-xl bg-superficie-hundida/95 p-1 shadow-inner ring-1 ring-borde/70"
               role="group"
               aria-label="Tipo de vista"
             >
@@ -300,7 +300,7 @@
                 :class="
                   vistaLayout === 'tarjetas'
                     ? 'bg-[#166534] text-white shadow-sm'
-                    : 'text-gray-500 hover:bg-white/70 hover:text-gray-800'
+                    : 'text-texto-suave hover:bg-superficie-tarjeta/70 hover:text-texto'
                 "
                 :aria-pressed="vistaLayout === 'tarjetas'"
                 title="Vista de tarjetas"
@@ -315,7 +315,7 @@
                 :class="
                   vistaLayout === 'lista'
                     ? 'bg-[#166534] text-white shadow-sm'
-                    : 'text-gray-500 hover:bg-white/70 hover:text-gray-800'
+                    : 'text-texto-suave hover:bg-superficie-tarjeta/70 hover:text-texto'
                 "
                 :aria-pressed="vistaLayout === 'lista'"
                 title="Vista de lista"
@@ -330,14 +330,14 @@
 
         <p
           v-if="mostrarBarraFiltrosNatilleras && vistaActiva !== 'socio'"
-          class="text-[10px] font-medium uppercase tracking-wide text-gray-400"
+          class="text-[10px] font-medium uppercase tracking-wide text-texto-tenue"
         >
           Mostrando {{ mostrandoListadosVista }} de {{ totalListadosVista }} natilleras
         </p>
       </div>
 
       <!-- Loading - Solo mostrar si NO está verificando el modal y NO se está eliminando una natillera -->
-      <div v-if="natillerasStore.loading && !verificandoModal && !eliminandoNatillera" class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-2 border border-natillera-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
+      <div v-if="natillerasStore.loading && !verificandoModal && !eliminandoNatillera" class="relative bg-gradient-to-br from-superficie-tarjeta via-natillera-50/30 oscuro:via-natillera-500/10 to-emerald-50/20 oscuro:to-emerald-500/10 rounded-3xl p-2 border border-natillera-200/50 oscuro:border-natillera-500/30 shadow-xl backdrop-blur-sm text-center overflow-hidden">
         <CargaCaja texto="Cargando natilleras" />
       </div>
 
@@ -392,18 +392,18 @@
           <router-link
             v-if="vistaLayout === 'tarjetas'"
             to="/natilleras/crear"
-            class="group relative flex min-h-[280px] flex-col justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-300 bg-white transition-all duration-300 hover:border-[#166534] hover:bg-natillera-50/50"
+            class="group relative flex min-h-[280px] flex-col justify-center overflow-hidden rounded-2xl border-2 border-dashed border-borde-fuerte bg-superficie-tarjeta transition-all duration-300 hover:border-[#166534] oscuro:hover:border-marca-tinta hover:bg-natillera-50/50 oscuro:hover:bg-natillera-500/15"
           >
             <div class="px-5 py-8 text-center">
-              <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-natillera-100 transition-colors group-hover:bg-natillera-200">
-                <PlusIcon class="h-8 w-8 text-[#166534]" />
+              <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-natillera-100 oscuro:bg-natillera-500/15 transition-colors group-hover:bg-natillera-200 oscuro:group-hover:bg-natillera-500/25">
+                <PlusIcon class="h-8 w-8 text-[#166534] oscuro:text-marca-tinta" />
               </div>
-              <h3 class="font-body text-lg font-bold text-gray-900">Crear nueva natillera</h3>
-              <p class="mt-2 text-sm text-gray-600">Inicia un nuevo grupo de ahorro</p>
+              <h3 class="font-body text-lg font-bold text-texto-fuerte">Crear nueva natillera</h3>
+              <p class="mt-2 text-sm text-texto-secundario">Inicia un nuevo grupo de ahorro</p>
             </div>
-            <div class="border-t border-gray-100 px-5 py-3">
-              <div class="flex items-center justify-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-gray-500">
-                <PlusIcon class="h-4 w-4 text-gray-400" />
+            <div class="border-t border-borde-suave px-5 py-3">
+              <div class="flex items-center justify-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-texto-suave">
+                <PlusIcon class="h-4 w-4 text-texto-tenue" />
                 <span>Nueva natillera</span>
               </div>
             </div>
@@ -411,7 +411,7 @@
           <router-link
             v-else
             to="/natilleras/crear"
-            class="flex min-h-[72px] items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-gray-300 bg-white px-4 py-4 text-sm font-semibold text-[#166534] transition hover:border-[#166534] hover:bg-emerald-50/60"
+            class="flex min-h-[72px] items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-borde-fuerte bg-superficie-tarjeta px-4 py-4 text-sm font-semibold text-[#166534] oscuro:text-marca-tinta transition hover:border-[#166534] oscuro:hover:border-marca-tinta hover:bg-emerald-50/60 oscuro:hover:bg-emerald-500/15"
           >
             <PlusIcon class="h-5 w-5 shrink-0" />
             Crear nueva natillera
@@ -458,18 +458,18 @@
           <router-link
             v-if="vistaLayout === 'tarjetas'"
             to="/natilleras/crear"
-            class="group relative flex min-h-[280px] flex-col justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-300 bg-white transition-all duration-300 hover:border-[#166534] hover:bg-natillera-50/50"
+            class="group relative flex min-h-[280px] flex-col justify-center overflow-hidden rounded-2xl border-2 border-dashed border-borde-fuerte bg-superficie-tarjeta transition-all duration-300 hover:border-[#166534] oscuro:hover:border-marca-tinta hover:bg-natillera-50/50 oscuro:hover:bg-natillera-500/15"
           >
             <div class="px-5 py-8 text-center">
-              <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-natillera-100 transition-colors group-hover:bg-natillera-200">
-                <PlusIcon class="h-8 w-8 text-[#166534]" />
+              <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-natillera-100 oscuro:bg-natillera-500/15 transition-colors group-hover:bg-natillera-200 oscuro:group-hover:bg-natillera-500/25">
+                <PlusIcon class="h-8 w-8 text-[#166534] oscuro:text-marca-tinta" />
               </div>
-              <h3 class="font-body text-lg font-bold text-gray-900">Crear nueva natillera</h3>
-              <p class="mt-2 text-sm text-gray-600">Inicia un nuevo grupo de ahorro</p>
+              <h3 class="font-body text-lg font-bold text-texto-fuerte">Crear nueva natillera</h3>
+              <p class="mt-2 text-sm text-texto-secundario">Inicia un nuevo grupo de ahorro</p>
             </div>
-            <div class="border-t border-gray-100 px-5 py-3">
-              <div class="flex items-center justify-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-gray-500">
-                <PlusIcon class="h-4 w-4 text-gray-400" />
+            <div class="border-t border-borde-suave px-5 py-3">
+              <div class="flex items-center justify-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-texto-suave">
+                <PlusIcon class="h-4 w-4 text-texto-tenue" />
                 <span>Nueva natillera</span>
               </div>
             </div>
@@ -477,7 +477,7 @@
           <router-link
             v-else
             to="/natilleras/crear"
-            class="flex min-h-[72px] items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-gray-300 bg-white px-4 py-4 text-sm font-semibold text-[#166534] transition hover:border-[#166534] hover:bg-emerald-50/60"
+            class="flex min-h-[72px] items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-borde-fuerte bg-superficie-tarjeta px-4 py-4 text-sm font-semibold text-[#166534] oscuro:text-marca-tinta transition hover:border-[#166534] oscuro:hover:border-marca-tinta hover:bg-emerald-50/60 oscuro:hover:bg-emerald-500/15"
           >
             <PlusIcon class="h-5 w-5 shrink-0" />
             Crear nueva natillera
@@ -529,8 +529,8 @@
       -->
       <template v-else-if="vistaActiva === 'socio'">
         <div v-if="solicitudesSocioPendientes.length > 0" class="socio-pendientes">
-          <ClockIcon class="h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
-          <p class="min-w-0 text-sm text-amber-900">
+          <ClockIcon class="h-5 w-5 shrink-0 text-amber-700 oscuro:text-amber-300" aria-hidden="true" />
+          <p class="min-w-0 text-sm text-amber-900 oscuro:text-amber-300">
             <strong>Esperando aprobación:</strong>
             {{ solicitudesSocioPendientes.map(s => s.natillera_nombre).join(', ') }}.
             Cuando el administrador la apruebe, aparecerá aquí.
@@ -567,27 +567,27 @@
       :show="!!natilleraAEliminar"
       :z-index="50"
       overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      card-class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 overflow-hidden"
+      card-class="relative bg-superficie-tarjeta rounded-2xl shadow-2xl max-w-md w-full p-6 border border-borde overflow-hidden"
       @close="cerrarModalEliminacion"
     >
         <!-- Animación de fondo sutil durante la eliminación -->
-        <div v-if="natillerasStore.loading" class="absolute inset-0 bg-gradient-to-br from-red-50/30 via-red-100/20 to-red-50/30"></div>
+        <div v-if="natillerasStore.loading" class="absolute inset-0 bg-gradient-to-br from-red-50/30 oscuro:from-red-500/15 via-red-100/20 oscuro:via-red-500/10 to-red-50/30 oscuro:to-red-500/10"></div>
         
         <div class="relative z-10">
           <div class="flex items-center gap-4 mb-4">
-            <div class="relative w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-              <TrashIcon v-if="!natillerasStore.loading" class="w-6 h-6 text-red-600" />
+            <div class="relative w-12 h-12 bg-red-100 oscuro:bg-red-500/15 rounded-full flex items-center justify-center">
+              <TrashIcon v-if="!natillerasStore.loading" class="w-6 h-6 text-red-600 oscuro:text-red-300" />
               <!-- Animación de carga moderna -->
               <div v-else class="relative w-6 h-6">
-                <div class="absolute inset-0 border-3 border-red-200 rounded-full"></div>
+                <div class="absolute inset-0 border-3 border-red-200 oscuro:border-red-500/30 rounded-full"></div>
                 <div class="absolute inset-0 border-3 border-red-600 border-t-transparent rounded-full animate-spin"></div>
               </div>
             </div>
             <div>
-              <h3 class="text-lg font-bold text-gray-800">
+              <h3 class="text-lg font-bold text-texto">
                 {{ natillerasStore.loading ? 'Eliminando Natillera...' : 'Eliminar Natillera' }}
               </h3>
-              <p class="text-sm text-gray-600">
+              <p class="text-sm text-texto-secundario">
                 {{ natillerasStore.loading ? 'Por favor espera' : 'Esta acción no se puede deshacer' }}
               </p>
             </div>
@@ -595,10 +595,10 @@
           
           <!-- Contenido del modal - siempre visible -->
           <div class="mb-6">
-            <p class="text-gray-700 mb-2">
+            <p class="text-texto-medio mb-2">
               ¿Estás seguro de que deseas eliminar la natillera <strong>"{{ natilleraAEliminar.nombre }}"</strong>?
             </p>
-            <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+            <div class="bg-red-50 oscuro:bg-red-500/15 border border-red-200 oscuro:border-red-500/30 rounded-lg p-3 text-sm text-red-700 oscuro:text-red-300">
               <p class="font-semibold mb-1">⚠️ Se eliminarán permanentemente:</p>
               <ul class="list-disc list-inside space-y-1 text-xs">
                 <li>Todos los socios asociados</li>
@@ -609,7 +609,7 @@
               </ul>
             </div>
             <!-- Indicador sutil de carga durante la eliminación -->
-            <div v-if="natillerasStore.loading" class="mt-4 flex items-center gap-2 text-sm text-red-600">
+            <div v-if="natillerasStore.loading" class="mt-4 flex items-center gap-2 text-sm text-red-600 oscuro:text-red-300">
               <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -666,7 +666,7 @@
       align="center"
       overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
       backdrop-class="absolute inset-0 bg-black/60 backdrop-blur-sm"
-      card-class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full border border-gray-200 overflow-hidden flex flex-col min-h-0 max-h-[90vh] supports-[height:100dvh]:max-h-[90dvh]"
+      card-class="relative bg-superficie-tarjeta rounded-3xl shadow-2xl max-w-md w-full border border-borde overflow-hidden flex flex-col min-h-0 max-h-[90vh] supports-[height:100dvh]:max-h-[90dvh]"
       @close="mostrarModalCrearNatillera = false"
     >
           <!-- Efectos decorativos de fondo -->
@@ -684,23 +684,23 @@
               </div>
             </div>
 
-            <h2 class="text-2xl font-display font-bold text-gray-900 mb-3">
-              ¡Hola, <span class="text-[#166534]">{{ authStore.userName }}</span>!
+            <h2 class="text-2xl font-display font-bold text-texto-fuerte mb-3">
+              ¡Hola, <span class="text-[#166534] oscuro:text-marca-tinta">{{ authStore.userName }}</span>!
             </h2>
           </div>
 
           <!-- Cuerpo con scroll propio -->
           <div class="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] px-6 sm:px-8">
             <div class="text-center mb-8">
-              <p class="text-gray-600 text-base leading-relaxed mb-4">
+              <p class="text-texto-secundario text-base leading-relaxed mb-4">
                 Estamos emocionados de tenerte aquí.
               </p>
-              <p class="text-gray-700 text-base font-medium mb-2">
+              <p class="text-texto-medio text-base font-medium mb-2">
                 Para empezar, crea tu primera natillera.
               </p>
             </div>
 
-            <div class="h-px w-full max-w-sm mx-auto mb-5 bg-[hsl(120_8%_88%)]" role="presentation" />
+            <div class="h-px w-full max-w-sm mx-auto mb-5 bg-[hsl(120_8%_88%)] oscuro:bg-borde" role="presentation" />
 
             <section
               class="text-left max-w-sm mx-auto mb-6"
@@ -708,25 +708,25 @@
             >
               <h3
                 id="modal-bienvenida-como-funciona"
-                class="text-[0.6875rem] font-semibold tracking-[0.2em] uppercase text-[hsl(215_18%_38%)] mb-4"
+                class="text-[0.6875rem] font-semibold tracking-[0.2em] uppercase text-[hsl(215_18%_38%)] oscuro:text-texto-secundario mb-4"
               >
                 Como funciona
               </h3>
               <ul class="m-0 p-0 list-none flex flex-col gap-4">
-                <li class="flex gap-3 items-start text-sm font-medium text-[hsl(220_12%_26%)] leading-snug">
-                  <BanknotesIcon class="w-[1.375rem] h-[1.375rem] shrink-0 text-[hsl(152_52%_32%)] mt-0.5" aria-hidden="true" />
+                <li class="flex gap-3 items-start text-sm font-medium text-[hsl(220_12%_26%)] oscuro:text-texto-medio leading-snug">
+                  <BanknotesIcon class="w-[1.375rem] h-[1.375rem] shrink-0 text-[hsl(152_52%_32%)] oscuro:text-marca-tinta mt-0.5" aria-hidden="true" />
                   <span>La natillera te permite realizar ahorro colectivo</span>
                 </li>
-                <li class="flex gap-3 items-start text-sm font-medium text-[hsl(220_12%_26%)] leading-snug">
-                  <UserPlusIcon class="w-[1.375rem] h-[1.375rem] shrink-0 text-[hsl(152_52%_32%)] mt-0.5" aria-hidden="true" />
+                <li class="flex gap-3 items-start text-sm font-medium text-[hsl(220_12%_26%)] oscuro:text-texto-medio leading-snug">
+                  <UserPlusIcon class="w-[1.375rem] h-[1.375rem] shrink-0 text-[hsl(152_52%_32%)] oscuro:text-marca-tinta mt-0.5" aria-hidden="true" />
                   <span>Invita a los socios de tu grupo para que se unan</span>
                 </li>
-                <li class="flex gap-3 items-start text-sm font-medium text-[hsl(220_12%_26%)] leading-snug">
-                  <CalendarIcon class="w-[1.375rem] h-[1.375rem] shrink-0 text-[hsl(152_52%_32%)] mt-0.5" aria-hidden="true" />
+                <li class="flex gap-3 items-start text-sm font-medium text-[hsl(220_12%_26%)] oscuro:text-texto-medio leading-snug">
+                  <CalendarIcon class="w-[1.375rem] h-[1.375rem] shrink-0 text-[hsl(152_52%_32%)] oscuro:text-marca-tinta mt-0.5" aria-hidden="true" />
                   <span>Define la cuota y la periodicidad de los pagos</span>
                 </li>
-                <li class="flex gap-3 items-start text-sm font-medium text-[hsl(220_12%_26%)] leading-snug">
-                  <PresentationChartLineIcon class="w-[1.375rem] h-[1.375rem] shrink-0 text-[hsl(152_52%_32%)] mt-0.5" aria-hidden="true" />
+                <li class="flex gap-3 items-start text-sm font-medium text-[hsl(220_12%_26%)] oscuro:text-texto-medio leading-snug">
+                  <PresentationChartLineIcon class="w-[1.375rem] h-[1.375rem] shrink-0 text-[hsl(152_52%_32%)] oscuro:text-marca-tinta mt-0.5" aria-hidden="true" />
                   <span>Lleva el control de pagos, multas y sorteos</span>
                 </li>
               </ul>
@@ -750,7 +750,7 @@
               <button
                 type="button"
                 @click="marcarModalComoMostrado(); mostrarModalCrearNatillera = false"
-                class="inline-flex w-full items-center justify-center rounded-full py-3.5 px-6 text-[0.9375rem] font-bold text-[hsl(220_12%_26%)] bg-[hsl(120_12%_97%)] border border-[hsl(120_8%_88%)] hover:bg-[hsl(120_10%_94%)] hover:border-[hsl(120_8%_82%)] shadow-[0_4px_14px_hsla(152,20%,12%,0.08)] transition-[background,border-color,box-shadow,transform] active:scale-[0.98] touch-manipulation"
+                class="inline-flex w-full items-center justify-center rounded-full py-3.5 px-6 text-[0.9375rem] font-bold text-[hsl(220_12%_26%)] oscuro:text-texto-medio bg-[hsl(120_12%_97%)] oscuro:bg-superficie-suave border border-[hsl(120_8%_88%)] oscuro:border-borde hover:bg-[hsl(120_10%_94%)] oscuro:hover:bg-superficie-hundida hover:border-[hsl(120_8%_82%)] oscuro:hover:border-borde-fuerte shadow-[0_4px_14px_hsla(152,20%,12%,0.08)] transition-[background,border-color,box-shadow,transform] active:scale-[0.98] touch-manipulation"
               >
                 Crear más tarde
               </button>
@@ -1857,5 +1857,11 @@ onActivated(async () => {
   border-radius: 1rem;
   border: 1px solid rgba(180, 83, 9, 0.25);
   background: #fffbeb;
+}
+
+/* ─── Modo oscuro (skill natillerapp-modo-oscuro) ─── */
+:where([data-tema=oscuro]) .socio-pendientes {
+  border-color: var(--alerta-borde);
+  background: var(--alerta-suave);
 }
 </style>

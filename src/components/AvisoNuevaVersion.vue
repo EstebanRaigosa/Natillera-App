@@ -18,9 +18,9 @@
           <p class="min-w-0 flex-1 text-sm font-semibold leading-snug text-white">
             {{ actualizando ? 'Actualizando…' : 'Hay una versión nueva' }}
           </p>
-          <button
+          <!-- tema-fijo: botón blanco sobre la píldora verde del aviso -->
+          <button class="inline-flex min-h-[2.75rem] shrink-0 items-center rounded-full bg-white px-4 text-sm font-bold text-[#1B5E37] transition hover:bg-white/90 disabled:opacity-60 touch-manipulation"
             type="button"
-            class="inline-flex min-h-[2.75rem] shrink-0 items-center rounded-full bg-white px-4 text-sm font-bold text-[#1B5E37] transition hover:bg-white/90 disabled:opacity-60 touch-manipulation"
             :disabled="actualizando"
             @click="actualizar"
           >

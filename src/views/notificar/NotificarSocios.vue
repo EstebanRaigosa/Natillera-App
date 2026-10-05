@@ -36,7 +36,7 @@
 
     <div
       v-else-if="error"
-      class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
+      class="rounded-2xl border border-red-200 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 px-4 py-3 text-sm font-medium text-red-800 oscuro:text-red-300"
     >
       {{ error }}
       <button type="button" class="ml-2 font-semibold underline" @click="cargar">Reintentar</button>
@@ -72,7 +72,7 @@
 
         <!-- Buscador: flex, sin iconos con absolute (se descolocan en Safari al enfocar) -->
         <label class="notificar-buscar">
-          <MagnifyingGlassIcon class="h-5 w-5 shrink-0 text-gray-400" aria-hidden="true" />
+          <MagnifyingGlassIcon class="h-5 w-5 shrink-0 text-texto-tenue" aria-hidden="true" />
           <input
             v-model="busqueda"
             type="text"
@@ -94,12 +94,12 @@
           </button>
         </label>
 
-        <p class="flex items-center justify-between gap-2 px-1 text-xs text-gray-500">
-          <span>Mostrando: <strong class="text-gray-800">{{ etiquetaFiltro }}</strong></span>
+        <p class="flex items-center justify-between gap-2 px-1 text-xs text-texto-suave">
+          <span>Mostrando: <strong class="text-texto">{{ etiquetaFiltro }}</strong></span>
           <button
             v-if="filtro !== 'todos'"
             type="button"
-            class="min-h-[2.75rem] font-semibold text-[color:var(--brand-primary)] touch-manipulation"
+            class="min-h-[2.75rem] font-semibold text-marca-tinta touch-manipulation"
             @click="filtro = 'todos'"
           >
             Ver todos
@@ -107,7 +107,7 @@
           <button
             v-else
             type="button"
-            class="min-h-[2.75rem] font-semibold text-[color:var(--brand-primary)] touch-manipulation"
+            class="min-h-[2.75rem] font-semibold text-marca-tinta touch-manipulation"
             @click="filtro = FILTRO_INICIAL"
           >
             Solo los que deben
@@ -128,26 +128,26 @@
               <img
                 :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed)"
                 :alt="''"
-                class="h-11 w-11 shrink-0 rounded-full border border-gray-200 bg-white object-cover"
+                class="h-11 w-11 shrink-0 rounded-full border border-borde bg-superficie-tarjeta object-cover"
                 loading="lazy"
               />
               <span class="min-w-0 flex-1 text-left">
-                <span class="block truncate font-semibold text-gray-900">{{ sn.socio?.nombre || 'Socio' }}</span>
-                <span class="block truncate text-xs text-gray-500">
+                <span class="block truncate font-semibold text-texto-fuerte">{{ sn.socio?.nombre || 'Socio' }}</span>
+                <span class="block truncate text-xs text-texto-suave">
                   {{ sn.socio?.telefono || 'Sin teléfono' }}
                 </span>
               </span>
               <span class="notificar-estado" :class="`notificar-estado--${semaforo(sn).tono}`">
                 {{ semaforo(sn).texto }}
               </span>
-              <ChevronRightIcon class="h-4 w-4 shrink-0 text-gray-300" aria-hidden="true" />
+              <ChevronRightIcon class="h-4 w-4 shrink-0 text-gray-300 oscuro:text-texto-tenue" aria-hidden="true" />
             </button>
           </li>
         </ul>
 
-        <div v-else class="rounded-2xl border border-dashed border-gray-200 bg-white px-4 py-10 text-center">
-          <UsersIcon class="mx-auto mb-2 h-8 w-8 text-gray-300" />
-          <p class="text-sm font-medium text-gray-600">
+        <div v-else class="rounded-2xl border border-dashed border-borde bg-superficie-tarjeta px-4 py-10 text-center">
+          <UsersIcon class="mx-auto mb-2 h-8 w-8 text-gray-300 oscuro:text-texto-tenue" />
+          <p class="text-sm font-medium text-texto-secundario">
             {{ busqueda
               ? 'Nadie coincide con la búsqueda'
               : filtro === 'con_deuda' ? '¡Nadie debe cuotas! Todos están al día' : 'No hay socios en este grupo' }}
@@ -166,8 +166,8 @@
           <div class="notificar-vacio__icono">
             <DocumentCheckIcon class="h-8 w-8" />
           </div>
-          <p class="font-display text-lg font-bold text-gray-900">Elige un socio</p>
-          <p class="mt-1 max-w-xs text-sm text-gray-500">
+          <p class="font-display text-lg font-bold text-texto-fuerte">Elige un socio</p>
+          <p class="mt-1 max-w-xs text-sm text-texto-suave">
             Verás su estado de cuenta tal como le llegará: ahorro, cuotas, sanciones,
             actividades y préstamos.
           </p>
@@ -184,14 +184,14 @@
             <img
               :src="getAvatarUrl(socioElegido?.socio?.nombre || socioElegidoId, socioElegido?.socio?.avatar_seed)"
               alt=""
-              class="h-14 w-14 shrink-0 rounded-full border-2 border-white bg-white object-cover shadow-sm"
+              class="h-14 w-14 shrink-0 rounded-full border-2 border-white oscuro:border-superficie-tarjeta bg-superficie-tarjeta object-cover shadow-sm"
             />
             <div class="min-w-0 flex-1">
               <p class="ds-overline">Estado de cuenta</p>
-              <h2 class="truncate font-display text-lg font-bold leading-tight text-gray-900 sm:text-xl">
+              <h2 class="truncate font-display text-lg font-bold leading-tight text-texto-fuerte sm:text-xl">
                 {{ socioElegido?.socio?.nombre || estado?.socio?.nombre || 'Socio' }}
               </h2>
-              <p class="truncate text-sm text-gray-500">
+              <p class="truncate text-sm text-texto-suave">
                 {{ socioElegido?.socio?.telefono || 'Sin teléfono registrado' }}
               </p>
             </div>
@@ -199,7 +199,7 @@
 
           <CargaCaja v-if="calculandoEstado" texto="Calculando su estado" />
 
-          <div v-else-if="errorEstado" class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <div v-else-if="errorEstado" class="rounded-2xl border border-red-200 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 px-4 py-3 text-sm text-red-800 oscuro:text-red-300">
             {{ errorEstado }}
             <button type="button" class="ml-2 font-semibold underline" @click="calcularEstado">Reintentar</button>
           </div>
@@ -208,8 +208,8 @@
             <!-- 4×1000: lo paga solo quien consigna por transferencia; se decide al enviar -->
             <label v-if="(estado.totalAPagar || 0) > 0" class="notificar-4x1000">
               <span class="min-w-0 flex-1">
-                <span class="block text-sm font-bold text-gray-900">Incluir 4×1000</span>
-                <span class="block text-xs text-gray-500">
+                <span class="block text-sm font-bold text-texto-fuerte">Incluir 4×1000</span>
+                <span class="block text-xs text-texto-suave">
                   {{ incluir4x1000 ? `Suma $${formatMoney(estado.valor4x1000 || 0)} por pago con transferencia` : 'Para pagos en efectivo' }}
                 </span>
               </span>
@@ -217,8 +217,11 @@
               <span class="notificar-switch" aria-hidden="true" />
             </label>
 
+            <!-- La vista previa es la imagen que se envía: siempre en claro, como la captura -->
             <div class="notificar-preview">
+              <div data-tema="claro">
               <ComprobanteEstadoSocio :estado="estado" :incluir4x1000="incluir4x1000" :fluido="true" />
+              </div>
             </div>
 
             <!--
@@ -245,13 +248,13 @@
               sirve: ya no está dentro del toque y Safari bloquea el `window.open`. Un enlace
               que el usuario toca sí abre.
             -->
-            <p v-if="reservaWhatsApp" class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+            <p v-if="reservaWhatsApp" class="mt-3 rounded-xl border border-amber-200 oscuro:border-amber-500/30 bg-amber-50 oscuro:bg-amber-500/15 px-4 py-3 text-sm text-amber-900 oscuro:text-amber-300" role="status">
               No se pudo abrir el menú de compartir. Descarga la imagen y adjúntala en el chat.
               <a
                 :href="reservaWhatsApp"
                 target="_blank"
                 rel="noopener"
-                class="mt-2 inline-flex min-h-11 touch-manipulation items-center gap-2 font-semibold text-[#1B5E37] underline"
+                class="mt-2 inline-flex min-h-11 touch-manipulation items-center gap-2 font-semibold text-marca-tinta underline"
               >
                 <IconoWhatsApp class="w-5 h-5 flex-shrink-0" />
                 Abrir WhatsApp
@@ -268,7 +271,7 @@
       La vista previa se ajusta al ancho disponible y saldría distinta en cada teléfono.
     -->
     <div v-if="estado" class="pointer-events-none fixed left-[-10000px] top-0" aria-hidden="true">
-      <div ref="ticketRef" style="padding: 16px; background: #eef2ee;">
+      <div ref="ticketRef" data-tema="claro" style="padding: 16px; background: #eef2ee;">
         <ComprobanteEstadoSocio :estado="estado" :incluir4x1000="incluir4x1000" />
       </div>
     </div>
@@ -333,7 +336,7 @@ async function cargar() {
   try {
     const { data: { user } } = await supabase.auth.getUser()
     const [natRes, sociosRes] = await Promise.all([
-      supabase.from('natilleras').select('id, nombre, admin_id, reglas_multas').eq('id', id.value).single(),
+      supabase.from('natilleras').select('id, nombre, admin_id, reglas_multas, reglas_interes').eq('id', id.value).single(),
       supabase
         .from('socios_natillera')
         .select('id, estado, valor_cuota_individual, socio:socios(id, nombre, telefono, avatar_seed)')
@@ -837,4 +840,45 @@ function enviarWhatsApp() {
   .notificar-switch::after { transition: none; }
   .notificar-kpi:active { transform: none; }
 }
+
+/* ==========================================================================
+   Modo oscuro: solo lo que cambia (skill natillerapp-modo-oscuro §2.5). Base
+   propuesta por scripts/tema/proponer-oscuro.mjs, revisada a mano. La perilla
+   blanca del interruptor y los rellenos verdes con texto blanco no cambian.
+   ========================================================================== */
+:where([data-tema=oscuro]) .notificar-kpi__etiqueta { color: var(--texto-secundario); }
+:where([data-tema=oscuro]) .notificar-kpi--mora .notificar-kpi__valor { color: var(--peligro); }
+:where([data-tema=oscuro]) .notificar-kpi--pendiente .notificar-kpi__valor { color: var(--alerta); }
+:where([data-tema=oscuro]) .notificar-kpi--al-dia .notificar-kpi__valor { color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .notificar-kpi--mora.is-selected { border-color: var(--peligro-borde); background: var(--peligro-suave); box-shadow: 0 0 0 1px var(--peligro-borde) inset; }
+:where([data-tema=oscuro]) .notificar-kpi--pendiente.is-selected { border-color: var(--alerta-borde); background: var(--alerta-suave); box-shadow: 0 0 0 1px var(--alerta-borde) inset; }
+:where([data-tema=oscuro]) .notificar-kpi--al-dia.is-selected { border-color: var(--marca-tinta-borde); box-shadow: 0 0 0 1px var(--marca-tinta-borde) inset; }
+
+:where([data-tema=oscuro]) .notificar-buscar { background: var(--superficie-tarjeta); }
+:where([data-tema=oscuro]) .notificar-buscar:focus-within { border-color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .notificar-buscar__input { color: var(--texto-fuerte); }
+:where([data-tema=oscuro]) .notificar-buscar__limpiar { color: var(--texto-tenue); }
+
+:where([data-tema=oscuro]) .notificar-fila:hover { border-color: var(--marca-tinta-borde); }
+:where([data-tema=oscuro]) .notificar-fila:focus-visible { outline-color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .notificar-switch__input:focus-visible + .notificar-switch { outline-color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .notificar-fila.is-selected { border-color: var(--marca-tinta); box-shadow: 0 0 0 1px var(--marca-tinta) inset; }
+
+:where([data-tema=oscuro]) .notificar-estado--mora { background: var(--peligro-suave); color: var(--peligro); }
+:where([data-tema=oscuro]) .notificar-estado--pendiente { background: var(--alerta-suave); color: var(--alerta); }
+:where([data-tema=oscuro]) .notificar-estado--al-dia { background: var(--exito-suave); color: var(--exito); }
+:where([data-tema=oscuro]) .notificar-estado--neutro { background: var(--superficie-hundida); color: var(--texto-secundario); }
+
+:where([data-tema=oscuro]) .notificar-vacio {
+  border-color: var(--marca-tinta-borde);
+  background: linear-gradient(180deg, var(--marca-suave) 0%, var(--superficie-tarjeta) 100%);
+}
+:where([data-tema=oscuro]) .notificar-volver { color: var(--marca-tinta); }
+:where([data-tema=oscuro]) .notificar-ficha {
+  border-color: var(--marca-tinta-borde);
+  background: linear-gradient(135deg, var(--marca-suave) 0%, var(--superficie-tarjeta) 70%);
+}
+:where([data-tema=oscuro]) .notificar-preview { background: var(--superficie-hundida); }
+:where([data-tema=oscuro]) .notificar-4x1000 { background: var(--superficie-tarjeta); }
+:where([data-tema=oscuro]) .notificar-switch { background: var(--borde-fuerte); }
 </style>

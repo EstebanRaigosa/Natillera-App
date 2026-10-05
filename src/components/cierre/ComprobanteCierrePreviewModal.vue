@@ -5,8 +5,8 @@
     align="bottom"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="emit('close')"
   >
@@ -56,7 +56,7 @@
     <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
         ref="scrollRef"
-        class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-[#eef2ee] px-4 pb-4 pt-4 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-6"
+        class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-[#eef2ee] oscuro:bg-superficie-hundida px-4 pb-4 pt-4 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-6"
         @scroll.passive="onScroll"
       >
         <ComprobanteCierreSocio
@@ -74,15 +74,15 @@
     </div>
 
     <div
-      class="flex-shrink-0 space-y-2 border-t border-gray-200 bg-white px-5 pt-4 sm:px-6"
+      class="flex-shrink-0 space-y-2 border-t border-borde bg-superficie-tarjeta px-5 pt-4 sm:px-6"
       :style="{ paddingBottom: `calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
     >
-      <p v-if="errorImagen" class="text-center text-xs text-red-700">{{ errorImagen }}</p>
+      <p v-if="errorImagen" class="text-center text-xs text-red-700 oscuro:text-red-300">{{ errorImagen }}</p>
       <!-- Reserva si falla el menú de compartir: desde el `.catch` Safari bloquea el
            `window.open` (ya no hay toque), así que se ofrece un enlace para tocar. -->
-      <p v-if="reservaWhatsApp" class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center text-sm text-amber-900" role="status">
+      <p v-if="reservaWhatsApp" class="rounded-xl border border-amber-200 oscuro:border-amber-500/30 bg-amber-50 oscuro:bg-amber-500/15 px-3 py-2 text-center text-sm text-amber-900 oscuro:text-amber-300" role="status">
         No se pudo abrir el menú de compartir. Descarga la imagen y adjúntala en el chat.
-        <a :href="reservaWhatsApp" target="_blank" rel="noopener" class="inline-flex min-h-11 touch-manipulation items-center font-semibold text-[#1B5E37] underline">Abrir WhatsApp</a>
+        <a :href="reservaWhatsApp" target="_blank" rel="noopener" class="inline-flex min-h-11 touch-manipulation items-center font-semibold text-marca-tinta underline">Abrir WhatsApp</a>
       </p>
       <div class="flex gap-3">
         <button
@@ -113,7 +113,7 @@
     vista previa se ajusta al ancho del modal y saldría distinta en cada teléfono.
   -->
   <div v-if="show && dato" class="pointer-events-none fixed left-[-10000px] top-0" aria-hidden="true">
-    <div ref="capturaRef">
+    <div ref="capturaRef" data-tema="claro">
       <ComprobanteCierreSocio
         :dato="dato"
         :periodicidad="periodicidad"

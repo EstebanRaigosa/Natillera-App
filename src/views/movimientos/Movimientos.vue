@@ -54,7 +54,7 @@
     <template v-if="!cargando">
       <div
         v-if="errorCarga"
-        class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
+        class="rounded-2xl border border-red-200 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 px-4 py-3 text-sm font-medium text-red-800 oscuro:text-red-300"
       >
         {{ errorCarga }}
         <button type="button" class="ml-2 font-semibold underline" @click="recargarTodo">Reintentar</button>
@@ -66,20 +66,20 @@
           cuenta, y va en línea propia —no revuelto con «Salió»— para que un efectivo en
           negativo se lea «lo consigné» y no «lo perdí».
         -->
-        <section v-if="visibles.length > 0" class="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50/70">
+        <section v-if="visibles.length > 0" class="overflow-hidden rounded-2xl border border-borde bg-superficie-suave/70">
           <div class="px-4 py-3">
-            <p class="mb-2 font-display text-[0.6875rem] font-bold uppercase tracking-wide text-gray-500">
+            <p class="mb-2 font-display text-[0.6875rem] font-bold uppercase tracking-wide text-texto-suave">
               Movimiento en cada bolsillo
             </p>
             <div class="grid gap-2 sm:grid-cols-2">
               <div
                 v-for="forma in efectoPorForma"
                 :key="forma.clave"
-                class="rounded-xl border border-gray-200 bg-white px-3 py-2.5"
+                class="rounded-xl border border-borde bg-superficie-tarjeta px-3 py-2.5"
               >
                 <div class="flex items-center gap-2">
                   <component :is="forma.icono" class="h-4 w-4 flex-shrink-0" :class="forma.acento" />
-                  <span class="font-display text-sm font-bold text-gray-800">{{ forma.titulo }}</span>
+                  <span class="font-display text-sm font-bold text-texto">{{ forma.titulo }}</span>
                 </div>
                 <dl class="mt-1.5 space-y-1 text-xs">
                   <div
@@ -87,11 +87,11 @@
                     :key="linea.etiqueta"
                     class="flex items-baseline justify-between gap-3"
                   >
-                    <dt class="text-gray-500">{{ linea.etiqueta }}</dt>
+                    <dt class="text-texto-suave">{{ linea.etiqueta }}</dt>
                     <dd class="font-semibold tabular-nums" :class="linea.clase">{{ linea.texto }}</dd>
                   </div>
-                  <div class="flex items-baseline justify-between gap-3 border-t border-gray-100 pt-1.5">
-                    <dt class="font-semibold text-gray-700">Cambio neto</dt>
+                  <div class="flex items-baseline justify-between gap-3 border-t border-borde-suave pt-1.5">
+                    <dt class="font-semibold text-texto-medio">Cambio neto</dt>
                     <dd class="font-display text-sm font-extrabold tabular-nums" :class="forma.claseEfecto">
                       {{ forma.textoEfecto }}
                     </dd>
@@ -105,16 +105,16 @@
         <!-- Solo lectura: se dice antes, no al intentar guardar -->
         <div
           v-if="!puedeEscribir"
-          class="flex items-start gap-2 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600"
+          class="flex items-start gap-2 rounded-2xl border border-borde bg-superficie-suave px-4 py-3 text-sm text-texto-secundario"
         >
-          <LockClosedIcon class="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-400" />
+          <LockClosedIcon class="mt-0.5 h-4 w-4 flex-shrink-0 text-texto-tenue" />
           <span>Puedes consultar los movimientos, pero no registrarlos ni editarlos.</span>
         </div>
 
         <!-- D-02: el traslado se reconoce adivinando, y aquí había más de un candidato -->
         <div
           v-if="trasladosAmbiguos.length > 0"
-          class="flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+          class="flex items-start gap-2 rounded-2xl border border-amber-200 oscuro:border-amber-500/30 bg-amber-50 oscuro:bg-amber-500/15 px-4 py-3 text-sm text-amber-900 oscuro:text-amber-300"
         >
           <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 flex-shrink-0" />
           <span>
@@ -125,7 +125,7 @@
             </strong>
             Hay varios apuntes del mismo importe y fecha en sentidos opuestos, así que la pareja se
             eligió por criterio fijo y puede no ser la real. Se resuelve con la columna
-            <code class="rounded bg-amber-100 px-1">grupo_traslado_id</code> del levantamiento.
+            <code class="rounded bg-amber-100 oscuro:bg-amber-500/15 px-1">grupo_traslado_id</code> del levantamiento.
           </span>
         </div>
 
@@ -136,9 +136,9 @@
         -->
         <section class="ds-card space-y-3">
           <div
-            class="flex items-center rounded-xl border border-[color:var(--surface-divider-strong)] bg-white focus-within:border-[#1B5E37] focus-within:shadow-[0_0_0_3px_rgba(27,94,55,0.18)]"
+            class="flex items-center rounded-xl border border-[color:var(--surface-divider-strong)] bg-superficie-tarjeta focus-within:border-[#1B5E37] oscuro:focus-within:border-marca-tinta focus-within:shadow-[0_0_0_3px_rgba(27,94,55,0.18)]"
           >
-            <span class="flex-shrink-0 pl-3 text-gray-400" aria-hidden="true">
+            <span class="flex-shrink-0 pl-3 text-texto-tenue" aria-hidden="true">
               <MagnifyingGlassIcon class="h-5 w-5" />
             </span>
             <input
@@ -151,7 +151,7 @@
             <button
               v-if="busqueda.trim()"
               type="button"
-              class="flex h-11 w-11 flex-shrink-0 items-center justify-center text-gray-400 touch-manipulation hover:text-gray-600"
+              class="flex h-11 w-11 flex-shrink-0 items-center justify-center text-texto-tenue touch-manipulation hover:text-texto-secundario"
               aria-label="Limpiar búsqueda"
               @click="busqueda = ''"
             >
@@ -187,8 +187,8 @@
               type="button"
               class="min-h-[44px] touch-manipulation truncate rounded-full border px-3 text-xs font-semibold transition-colors sm:px-4"
               :class="presetActivo === preset.value
-                ? 'border-[#1B5E37] bg-[#1B5E37] text-white'
-                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'"
+                ? 'border-[#1B5E37] oscuro:border-marca-tinta bg-[#1B5E37] text-white'
+                : 'border-borde bg-superficie-tarjeta text-texto-secundario hover:bg-superficie-suave'"
               @click="aplicarPreset(preset.value)"
             >
               {{ preset.label }}
@@ -198,8 +198,8 @@
               type="button"
               class="col-span-2 flex min-h-[44px] touch-manipulation items-center justify-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors sm:col-span-1 sm:px-4"
               :class="rangoAbierto || !presetActivo
-                ? 'border-[#1B5E37] bg-[#1B5E37] text-white'
-                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'"
+                ? 'border-[#1B5E37] oscuro:border-marca-tinta bg-[#1B5E37] text-white'
+                : 'border-borde bg-superficie-tarjeta text-texto-secundario hover:bg-superficie-suave'"
               :aria-expanded="rangoAbierto"
               @click="rangoAbierto = !rangoAbierto"
             >
@@ -213,22 +213,22 @@
               <label class="ds-label text-xs" for="filtro-desde">Desde</label>
               <input id="filtro-desde" v-model="desde" type="date" class="ds-input" @change="presetActivo = ''" />
             </div>
-            <span class="hidden pt-5 text-xs text-gray-400 sm:block" aria-hidden="true">→</span>
+            <span class="hidden pt-5 text-xs text-texto-tenue sm:block" aria-hidden="true">→</span>
             <div>
               <label class="ds-label text-xs" for="filtro-hasta">Hasta</label>
               <input id="filtro-hasta" v-model="hasta" type="date" class="ds-input" @change="presetActivo = ''" />
             </div>
           </div>
 
-          <div class="flex items-center justify-between gap-3 border-t border-gray-100 pt-3">
-            <p class="text-xs text-gray-500">
+          <div class="flex items-center justify-between gap-3 border-t border-borde-suave pt-3">
+            <p class="text-xs text-texto-suave">
               {{ visibles.length }} de {{ grupos.length }}
               {{ grupos.length === 1 ? 'movimiento' : 'movimientos' }}
             </p>
             <button
               v-if="hayFiltros"
               type="button"
-              class="min-h-[44px] flex-shrink-0 touch-manipulation rounded-full px-3 text-xs font-semibold text-[#1B5E37] hover:bg-[#1B5E37]/8"
+              class="min-h-[44px] flex-shrink-0 touch-manipulation rounded-full px-3 text-xs font-semibold text-marca-tinta hover:bg-[#1B5E37]/8"
               @click="limpiarFiltros"
             >
               Limpiar filtros
@@ -259,17 +259,17 @@
         <!-- Hay movimientos, pero los filtros no dejan ver ninguno -->
         <section
           v-else-if="visibles.length === 0"
-          class="rounded-2xl border border-gray-200 bg-white px-6 py-10 text-center"
+          class="rounded-2xl border border-borde bg-superficie-tarjeta px-6 py-10 text-center"
         >
-          <FunnelIcon class="mx-auto h-8 w-8 text-gray-300" />
-          <p class="mt-3 font-display text-base font-bold text-gray-800">Ningún movimiento con estos filtros</p>
-          <p class="mt-1 text-sm text-gray-500">Hay {{ grupos.length }} movimientos registrados, pero ninguno encaja.</p>
+          <FunnelIcon class="mx-auto h-8 w-8 text-gray-300 oscuro:text-texto-tenue" />
+          <p class="mt-3 font-display text-base font-bold text-texto">Ningún movimiento con estos filtros</p>
+          <p class="mt-1 text-sm text-texto-suave">Hay {{ grupos.length }} movimientos registrados, pero ninguno encaja.</p>
           <button type="button" class="ds-btn ds-btn--secondary mt-4" @click="limpiarFiltros">Limpiar filtros</button>
         </section>
 
         <!-- Lista -->
-        <section v-else class="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-          <ul class="divide-y divide-gray-100">
+        <section v-else class="overflow-hidden rounded-2xl border border-borde bg-superficie-tarjeta">
+          <ul class="divide-y divide-borde-suave">
             <li v-for="grupo in visibles" :key="grupo.clave" class="flex items-start gap-1 px-2 sm:px-3">
               <!--
                 La fila entera abre el detalle. Editar y borrar quedan FUERA del botón: no se
@@ -278,7 +278,7 @@
               -->
               <button
                 type="button"
-                class="min-w-0 flex-1 touch-manipulation rounded-xl px-1.5 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
+                class="min-w-0 flex-1 touch-manipulation rounded-xl px-1.5 py-3 text-left transition-colors hover:bg-superficie-suave active:bg-superficie-hundida"
                 :aria-label="`Ver detalle de ${etiquetaConcepto(grupo.concepto)} por ${formatMoney(grupo.monto)} pesos del ${formatDate(grupo.fecha)}`"
                 @click="abrirDetalle(grupo)"
               >
@@ -292,8 +292,8 @@
                     pago; el `aria-label` del botón sigue diciéndola completa.
                   -->
                   <span class="hidden w-9 flex-shrink-0 pt-0.5 text-center sm:block">
-                    <span class="block font-display text-base font-bold leading-none text-gray-800">{{ diaDelMes(grupo.fecha) }}</span>
-                    <span class="mt-0.5 block text-[0.625rem] uppercase tracking-wide text-gray-400">{{ mesCorto(grupo.fecha) }}</span>
+                    <span class="block font-display text-base font-bold leading-none text-texto">{{ diaDelMes(grupo.fecha) }}</span>
+                    <span class="mt-0.5 block text-[0.625rem] uppercase tracking-wide text-texto-tenue">{{ mesCorto(grupo.fecha) }}</span>
                   </span>
 
                   <span
@@ -313,10 +313,10 @@
                         <span class="rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold" :class="claseConcepto(grupo.concepto)">
                           {{ etiquetaConcepto(grupo.concepto) }}
                         </span>
-                        <LockClosedIcon v-if="!grupo.esManual" class="h-3.5 w-3.5 text-gray-400" aria-label="Generado por otro módulo" />
+                        <LockClosedIcon v-if="!grupo.esManual" class="h-3.5 w-3.5 text-texto-tenue" aria-label="Generado por otro módulo" />
                         <span
                           v-if="grupo.parAmbiguo"
-                          class="rounded-full bg-amber-100 px-2 py-0.5 text-[0.6875rem] font-semibold text-amber-800"
+                          class="rounded-full bg-amber-100 oscuro:bg-amber-500/15 px-2 py-0.5 text-[0.6875rem] font-semibold text-amber-800 oscuro:text-amber-300"
                         >
                           Pareja dudosa
                         </span>
@@ -332,11 +332,11 @@
 
                     <!-- Hasta dos líneas: con `truncate` una descripción como «Pago
                          arriendo salón diciembre» se cortaba en la primera palabra útil. -->
-                    <span class="mt-1.5 line-clamp-2 break-words text-sm leading-snug text-gray-800">
+                    <span class="mt-1.5 line-clamp-2 break-words text-sm leading-snug text-texto">
                       {{ grupo.descripcion || etiquetaConcepto(grupo.concepto) }}
                     </span>
 
-                    <span class="mt-1 block truncate text-xs text-gray-500">
+                    <span class="mt-1 block truncate text-xs text-texto-suave">
                       <span class="sm:hidden">{{ diaDelMes(grupo.fecha) }} {{ mesCorto(grupo.fecha) }} · </span>
                       <span v-if="grupo.esTraslado">
                         {{ etiquetaForma(grupo.formaOrigen) }} → {{ etiquetaForma(grupo.formaDestino) }}
@@ -349,10 +349,11 @@
                 </span>
               </button>
 
-              <div v-if="puedeEscribir && grupo.esManual" class="flex flex-shrink-0 items-center gap-0.5 py-3">
+              <div v-if="puedeEliminar(grupo)" class="flex flex-shrink-0 items-center gap-0.5 py-3">
                 <button
+                  v-if="puedeEscribir && grupo.esManual"
                   type="button"
-                  class="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                  class="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg text-texto-tenue hover:bg-superficie-hundida hover:text-texto-medio"
                   :aria-label="`Editar ${etiquetaConcepto(grupo.concepto)} de ${formatMoney(grupo.monto)} pesos`"
                   @click="abrirEdicion(grupo)"
                 >
@@ -360,7 +361,7 @@
                 </button>
                 <button
                   type="button"
-                  class="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600"
+                  class="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg text-texto-tenue hover:bg-red-50 oscuro:hover:bg-red-500/15 hover:text-red-600 oscuro:hover:text-red-300"
                   :aria-label="`Eliminar ${etiquetaConcepto(grupo.concepto)} de ${formatMoney(grupo.monto)} pesos`"
                   @click="grupoAEliminar = grupo"
                 >
@@ -389,6 +390,7 @@
       :show="detalleAbierto"
       :grupo="grupoDetalle"
       :puede-escribir="puedeEscribir"
+      :puede-eliminar-automaticos="esSuperUsuario"
       :fecha-ultimo-corte="ultimoCorte?.fecha_corte || ''"
       :ruta-origen="rutaOrigenDetalle"
       @close="cerrarDetalle"
@@ -502,6 +504,12 @@ const esAdmin = computed(() => {
 // Registrar o cambiar movimientos es gestionar «Caja» (antes se usaba la bandera de cuotas).
 const permisosNat = usePermisosNatillera(id)
 const puedeEscribir = computed(() => permisosNat.cargado.value && permisosNat.puedeGestionar('caja'))
+
+// El superusuario puede borrar cualquier movimiento, también los que generó otro módulo.
+function puedeEliminar(grupo) {
+  if (esSuperUsuario.value) return true
+  return puedeEscribir.value && grupo.esManual
+}
 
 /* ------------- Saldo esperado: solo para contar el efecto al guardar ---------- */
 
@@ -654,14 +662,14 @@ const totalesMovimientos = computed(() => {
 })
 
 const claseSigno = (valor) => {
-  if (valor > 0) return 'text-lime-700'
-  if (valor < 0) return 'text-rose-700'
-  return 'text-gray-900'
+  if (valor > 0) return 'text-lime-700 oscuro:text-lime-300'
+  if (valor < 0) return 'text-rose-700 oscuro:text-rose-300'
+  return 'text-texto-fuerte'
 }
 
 const FORMAS_EFECTO = [
-  { clave: 'efectivo', titulo: 'Efectivo', icono: BanknotesIcon, acento: 'text-green-700' },
-  { clave: 'transferencia', titulo: 'Cuenta', icono: BuildingLibraryIcon, acento: 'text-blue-700' }
+  { clave: 'efectivo', titulo: 'Efectivo', icono: BanknotesIcon, acento: 'text-green-700 oscuro:text-green-300' },
+  { clave: 'transferencia', titulo: 'Cuenta', icono: BuildingLibraryIcon, acento: 'text-blue-700 oscuro:text-blue-300' }
 ]
 
 /**
@@ -675,8 +683,8 @@ const efectoPorForma = computed(() =>
     const efecto = datos.entro - datos.salio + traslado
 
     const lineas = [
-      { etiqueta: 'Entró', texto: `$${formatMoney(datos.entro)}`, clase: 'text-lime-700' },
-      { etiqueta: 'Salió', texto: `$${formatMoney(datos.salio)}`, clase: 'text-rose-700' }
+      { etiqueta: 'Entró', texto: `$${formatMoney(datos.entro)}`, clase: 'text-lime-700 oscuro:text-lime-300' },
+      { etiqueta: 'Salió', texto: `$${formatMoney(datos.salio)}`, clase: 'text-rose-700 oscuro:text-rose-300' }
     ]
     if (datos.trasladoEntra > 0 || datos.trasladoSale > 0) {
       lineas.push({ etiqueta: 'Traslados', texto: `$${formatMoneyConSigno(traslado)}`, clase: claseSigno(traslado) })
@@ -706,17 +714,17 @@ const mesCorto = (fecha) => {
 
 const estiloIcono = (grupo) => {
   if (grupo.esTraslado) {
-    return { icono: ArrowsRightLeftIcon, fondo: 'bg-indigo-50', color: 'text-indigo-600' }
+    return { icono: ArrowsRightLeftIcon, fondo: 'bg-indigo-50 oscuro:bg-indigo-500/15', color: 'text-indigo-600 oscuro:text-indigo-300' }
   }
   if (grupo.signo > 0) {
-    return { icono: ArrowDownCircleIcon, fondo: 'bg-lime-50', color: 'text-lime-600' }
+    return { icono: ArrowDownCircleIcon, fondo: 'bg-lime-50 oscuro:bg-lime-500/15', color: 'text-lime-600 oscuro:text-lime-300' }
   }
-  return { icono: ArrowUpCircleIcon, fondo: 'bg-rose-50', color: 'text-rose-600' }
+  return { icono: ArrowUpCircleIcon, fondo: 'bg-rose-50 oscuro:bg-rose-500/15', color: 'text-rose-600 oscuro:text-rose-300' }
 }
 
 const claseImporte = (grupo) => {
-  if (grupo.esTraslado) return 'text-indigo-700'
-  return grupo.signo > 0 ? 'text-lime-700' : 'text-rose-700'
+  if (grupo.esTraslado) return 'text-indigo-700 oscuro:text-indigo-300'
+  return grupo.signo > 0 ? 'text-lime-700 oscuro:text-lime-300' : 'text-rose-700 oscuro:text-rose-300'
 }
 
 // El traslado va sin signo a propósito: no cambia el total, solo de sitio (RF-04).
@@ -790,7 +798,7 @@ const confirmarEliminacion = async () => {
   if (!grupoAEliminar.value) return
   eliminando.value = true
   try {
-    await eliminarGrupo(grupoAEliminar.value)
+    await eliminarGrupo(grupoAEliminar.value, { permitirAutomatico: esSuperUsuario.value })
     notificaciones.exito('Movimiento eliminado.', 'Listo')
     grupoAEliminar.value = null
     await cargarLibro()

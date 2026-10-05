@@ -5,6 +5,7 @@ import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../composables/u
 import { BASE_URL, devLog } from '../config/environment'
 import { enviarOTP, verificarOTP, buscarUsuarioPorTelefono, formatearTelefono } from '../services/twilio'
 import { detectIosPlatform } from '../composables/useIsIos'
+import { dispositivoActual, dispositivoActualDetallado } from '../utils/dispositivo'
 
 export const AVISO_GOOGLE_IOS_INSTALADA =
   'En la app instalada del iPhone entra con tu correo o teléfono; Google solo funciona desde Safari.'
@@ -21,11 +22,62 @@ export function googleNoDisponibleAqui() {
     window.navigator?.standalone === true
 }
 
+/*
+ * Marca de «salió hacia Google»: sobrevive a la redirección (localStorage) y permite
+ * distinguir, al volver, un inicio de sesión con Google de una simple restauración de
+ * sesión, que dispara el mismo evento SIGNED_IN. Caduca a los 10 minutos por si el
+ * usuario abandonó la pantalla de Google.
+ */
+const CLAVE_GOOGLE_PENDIENTE = 'natillerapp:google-pendiente'
+
+function marcarGooglePendiente() {
+  try { localStorage.setItem(CLAVE_GOOGLE_PENDIENTE, String(Date.now())) } catch { /* sin almacenamiento */ }
+}
+
+function tomarMarcaGooglePendiente() {
+  try {
+    const marca = Number(localStorage.getItem(CLAVE_GOOGLE_PENDIENTE))
+    localStorage.removeItem(CLAVE_GOOGLE_PENDIENTE)
+    return marca > 0 && Date.now() - marca < 10 * 60 * 1000
+  } catch {
+    return false
+  }
+}
+
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const loading = ref(false)
   const error = ref(null)
   const lastLoginAudit = ref(null)
+
+  /*
+   * Inicio y cierre de sesión en la auditoría, siempre con la misma forma: tipo LOGIN o
+   * LOGOUT, entidad `sesion`, el método y el dispositivo descrito en palabras. Un INGRESO
+   * (abrir la app con la sesión ya abierta) no pasa por aquí: lo registra el latido en
+   * `accesos_usuario`.
+   * El cierre usa la descripción síncrona del dispositivo: va con prisa, antes de que
+   * `auth.uid()` deje de existir; el inicio puede esperar a `userAgentData`.
+   */
+  const COMO_INICIO = {
+    email_password: 'con correo y contraseña',
+    sms_otp: 'con código SMS',
+    google: 'con Google'
+  }
+
+  async function auditarSesion(tipo, metodo, { quien = '', detalles = {} } = {}) {
+    const dispositivo = tipo === 'LOGIN' ? await dispositivoActualDetallado() : dispositivoActual()
+    const persona = quien || user.value?.email || 'Usuario'
+    const descripcion = tipo === 'LOGIN'
+      ? `${persona} inició sesión ${COMO_INICIO[metodo] || ''} desde ${dispositivo.etiqueta}`
+      : `${persona} cerró sesión desde ${dispositivo.etiqueta}`
+    return useAuditoria().registrar({
+      tipoAccion: tipo,
+      entidad: 'sesion',
+      descripcion: descripcion.replace(/\s+/g, ' '),
+      detalles: { metodo, dispositivo, user_agent: navigator.userAgent, ...detalles },
+      userAgent: navigator.userAgent
+    })
+  }
   const loginEnCurso = ref(false)
 
   /**
@@ -127,21 +179,9 @@ export const useAuthStore = defineStore('auth', () => {
         return { success: false, error: 'Por favor confirma tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.' }
       }
       
-      // Registrar ingreso al sistema en auditoría
-      // Se registra aquí para login con email/password, y en onAuthStateChange para OAuth
-      const auditoria = useAuditoria()
+      // Inicio de sesión con correo. Google se audita en onAuthStateChange al volver.
       lastLoginAudit.value = Date.now()
-      registrarAuditoriaEnSegundoPlano(
-        auditoria.registrar({
-          tipoAccion: 'REGISTER',
-          entidad: 'configuracion',
-          descripcion: `Usuario ${data.user.email} inició sesión en el sistema`,
-          detalles: {
-            metodo: 'email_password',
-            user_agent: navigator.userAgent
-          }
-        })
-      )
+      registrarAuditoriaEnSegundoPlano(auditarSesion('LOGIN', 'email_password', { quien: data.user.email }))
       
       return { success: true }
     } catch (e) {
@@ -331,18 +371,9 @@ async function register(email, password, nombre) {
       // antes de que auth.uid() se vuelva NULL
       if (user.value) {
         try {
-          const auditoria = useAuditoria()
           // Ejecutar de forma síncrona, pero con timeout para no bloquear si hay problemas
           await Promise.race([
-            auditoria.registrar({
-              tipoAccion: 'REGISTER',
-              entidad: 'configuracion',
-              descripcion: `Usuario ${user.value.email} cerró sesión en el sistema`,
-              detalles: {
-                metodo: 'logout',
-                user_agent: navigator.userAgent
-              }
-            }),
+            auditarSesion('LOGOUT', 'logout', { quien: user.value.email }),
             // Timeout de 2 segundos para no bloquear el logout si hay problemas de red
             new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000))
           ]).catch(error => {
@@ -385,6 +416,7 @@ async function register(email, password, nombre) {
       const redirectUrl = `${BASE_URL}/auth/welcome`
       devLog('Google OAuth - URL de redirección:', redirectUrl)
       
+      marcarGooglePendiente()
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -859,20 +891,9 @@ async function register(email, password, nombre) {
 
       user.value = loginData.user
 
-      // Registrar ingreso en auditoría
-      const auditoria = useAuditoria()
       lastLoginAudit.value = Date.now()
       registrarAuditoriaEnSegundoPlano(
-        auditoria.registrar({
-          tipoAccion: 'REGISTER',
-          entidad: 'configuracion',
-          descripcion: `Usuario ${telefono} inició sesión con autenticación por SMS`,
-          detalles: {
-            metodo: 'sms_otp',
-            telefono: telefono.trim(),
-            user_agent: navigator.userAgent
-          }
-        })
+        auditarSesion('LOGIN', 'sms_otp', { quien: telefono.trim(), detalles: { telefono: telefono.trim() } })
       )
 
       return { success: true }
@@ -914,27 +935,16 @@ async function register(email, password, nombre) {
         }
       }
 
-      const now = Date.now()
-      const shouldAudit = 
-        previousUser?.id !== session.user.id || 
-        !lastLoginAudit.value || 
-        (now - lastLoginAudit.value) > 5000
-      
-      if (shouldAudit) {
-        lastLoginAudit.value = now
-        const auditoria = useAuditoria()
-        registrarAuditoriaEnSegundoPlano(
-          auditoria.registrar({
-            tipoAccion: 'REGISTER',
-            entidad: 'configuracion',
-            descripcion: `Usuario ${session.user.email} inició sesión en el sistema`,
-            detalles: {
-              metodo: 'oauth_or_session_refresh',
-              user_agent: navigator.userAgent,
-              event_type: event
-            }
-          })
-        )
+      /*
+       * Supabase dispara SIGNED_IN también al restaurar la sesión y al volver a la pestaña:
+       * auditarlos todos llenó la auditoría de «inicios de sesión» que no lo eran (16.635
+       * de 19.410). Aquí solo se audita la vuelta de Google, marcada antes de salir hacia
+       * él; correo y SMS se auditan donde ocurren. Abrir la app ya logueado es un ingreso
+       * y lo cuenta el latido.
+       */
+      if (tomarMarcaGooglePendiente()) {
+        lastLoginAudit.value = Date.now()
+        registrarAuditoriaEnSegundoPlano(auditarSesion('LOGIN', 'google', { quien: session.user.email }))
       }
     } else if (event === 'SIGNED_OUT' && previousUser) {
       lastLoginAudit.value = null

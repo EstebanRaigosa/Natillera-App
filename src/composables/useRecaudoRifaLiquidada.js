@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { getCurrentDateISO } from '../utils/formatDate'
 
 /**
  * Recaudo que entra a una rifa DESPUÉS de haberla liquidado.
@@ -64,7 +65,9 @@ async function ajustarUtilidadRifa(natilleraId, actividadId, formaPago, delta, d
       .eq('id_actividad', actividadId)
       .is('fecha_cierre', null)
       .order('created_at', { ascending: true })
-    consulta = formaPago != null ? consulta.eq('forma_pago', formaPago) : consulta.is('forma_pago', null)
+    // `undefined` = cualquier forma de pago (la edición manual no sabe de dónde salió el cambio)
+    if (formaPago === null) consulta = consulta.is('forma_pago', null)
+    else if (formaPago !== undefined) consulta = consulta.eq('forma_pago', formaPago)
     const { data: filas, error } = await consulta
     if (error) throw error
 
@@ -205,4 +208,85 @@ export async function aplicarRecaudoRifaLiquidada(actividadId, { efectivo = 0, t
     problemas.push(`El pago quedó registrado, pero los totales de la rifa no se actualizaron: ${e.message}`)
     return { aplicado: 0, problemas }
   }
+}
+
+/**
+ * Corrección manual de las cifras de una rifa ya liquidada: lo recaudado y el premio.
+ *
+ * Mantiene las mismas tres piezas que la liquidación dejó en sincronía:
+ *   - la fila de la actividad (`ingresos`, `gastos`, `utilidad`),
+ *   - su utilidad abierta en `utilidades_clasificadas`, movida por la diferencia,
+ *   - la salida del premio en `movimientos_fondo`, que se encuentra por descripción y monto.
+ *
+ * Si el número ganador era un faltante el premio se quedó en la natillera: no hay premio
+ * que editar y la utilidad es todo lo recaudado, igual que al liquidar.
+ *
+ * @returns {Promise<{problemas: string[]}>}
+ */
+export async function editarValoresRifaLiquidada(actividad, { ingresos, gastos, descripcion }) {
+  const problemas = []
+  const ingresosViejos = Number(actividad.ingresos) || 0
+  const gastosViejos = Number(actividad.gastos) || 0
+  const utilidadVieja = Number(actividad.utilidad) || 0
+  const faltante = !!actividad.ganador_es_faltante
+  const gastosNuevos = faltante ? 0 : Math.max(0, gastos)
+  const utilidadNueva = faltante ? ingresos : ingresos - gastosNuevos
+
+  const { data: tocadas, error } = await supabase
+    .from('actividades')
+    .update({ ingresos, gastos: gastosNuevos, utilidad: utilidadNueva })
+    .eq('id', actividad.id)
+    .select('id')
+  if (error) throw error
+  if ((tocadas || []).length === 0) throw new Error('sin permisos para actualizar la actividad')
+
+  const delta = utilidadNueva - utilidadVieja
+  if (delta !== 0) {
+    const res = await ajustarUtilidadRifa(
+      actividad.natillera_id, actividad.id, undefined, delta, descripcionUtilidad(descripcion)
+    )
+    problemas.push(...res.problemas)
+  }
+
+  // Premio: la salida del fondo sigue al nuevo valor (y a la nueva descripción)
+  const descPremioVieja = `Premio rifa liquidada: ${actividad.descripcion || 'Rifa'}`
+  const descPremioNueva = `Premio rifa liquidada: ${descripcion || 'Rifa'}`
+  if (gastosNuevos === gastosViejos && descPremioNueva === descPremioVieja) return { problemas }
+  try {
+    let movimiento = null
+    if (gastosViejos > 0) {
+      const { data: movs } = await supabase
+        .from('movimientos_fondo')
+        .select('id')
+        .eq('natillera_id', actividad.natillera_id)
+        .eq('tipo', 'salida')
+        .eq('descripcion', descPremioVieja)
+        .eq('monto', gastosViejos)
+        .limit(1)
+      movimiento = movs?.[0] || null
+    }
+    if (movimiento && gastosNuevos > 0) {
+      const { error: e } = await supabase
+        .from('movimientos_fondo')
+        .update({ monto: gastosNuevos, descripcion: descPremioNueva })
+        .eq('id', movimiento.id)
+      if (e) throw e
+    } else if (movimiento) {
+      const { error: e } = await supabase.from('movimientos_fondo').delete().eq('id', movimiento.id)
+      if (e) throw e
+    } else if (gastosNuevos > 0) {
+      const { error: e } = await supabase.from('movimientos_fondo').insert({
+        natillera_id: actividad.natillera_id,
+        tipo: 'salida',
+        monto: gastosNuevos,
+        forma_pago: (actividad.forma_pago_liquidacion || 'efectivo').toLowerCase() === 'transferencia' ? 'transferencia' : 'efectivo',
+        descripcion: descPremioNueva,
+        fecha: getCurrentDateISO()
+      })
+      if (e) throw e
+    }
+  } catch (e) {
+    problemas.push(`La salida del premio en el fondo no se pudo ajustar: ${e.message}`)
+  }
+  return { problemas }
 }

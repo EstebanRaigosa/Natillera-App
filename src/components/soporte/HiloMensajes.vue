@@ -1,7 +1,7 @@
 <template>
   <div
     ref="contenedor"
-    class="flex-1 min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] bg-[#F6F7F5] px-4 py-4"
+    class="flex-1 min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] bg-[#F6F7F5] oscuro:bg-superficie-hundida px-4 py-4"
     @scroll.passive="alDesplazar"
   >
     <!-- Carga inicial -->
@@ -12,7 +12,7 @@
       <div v-if="hayMasAntiguos" class="mb-4 flex justify-center">
         <button
           type="button"
-          class="rounded-full border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 touch-manipulation"
+          class="rounded-full border border-borde-fuerte bg-superficie-tarjeta px-4 py-2 text-xs font-semibold text-texto-medio shadow-sm transition hover:bg-superficie-suave touch-manipulation"
           :disabled="cargandoAntiguos"
           @click="$emit('cargar-antiguos')"
         >
@@ -23,13 +23,15 @@
       <div class="space-y-3">
         <template v-for="(mensaje, indice) in mensajes" :key="mensaje.id || mensaje.client_id">
           <div v-if="mostrarFecha(indice)" class="flex justify-center py-1">
-            <span class="rounded-full bg-white px-3 py-1 text-[0.6875rem] font-medium text-gray-500 shadow-sm">
+            <span class="rounded-full bg-superficie-tarjeta px-3 py-1 text-[0.6875rem] font-medium text-texto-suave shadow-sm">
               {{ etiquetaFecha(mensaje.created_at) }}
             </span>
           </div>
           <BurbujaMensaje
             :mensaje="mensaje"
             :lado-propio="ladoPropio"
+            :mostrar-lectura="mostrarLectura"
+            :leido-hasta="leidoHasta"
             @reintentar="$emit('reintentar', $event)"
           />
         </template>
@@ -42,12 +44,12 @@
         de la información, no un adorno.
       -->
       <div v-if="acuse" class="mt-3 flex justify-center px-2">
-        <div class="max-w-[85%] rounded-2xl bg-[#E8F5E9] px-4 py-2.5 text-center ring-1 ring-[#1B5E37]/12">
-          <p class="flex items-center justify-center gap-1.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-[#1B5E37]/70">
+        <div class="max-w-[85%] rounded-2xl bg-marca-suave px-4 py-2.5 text-center ring-1 ring-[#1B5E37]/12">
+          <p class="flex items-center justify-center gap-1.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-marca-tinta/70">
             <SparklesIcon class="h-3.5 w-3.5" />
             Respuesta automática
           </p>
-          <p class="mt-1 text-sm leading-relaxed text-gray-700">{{ acuse }}</p>
+          <p class="mt-1 text-sm leading-relaxed text-texto-medio">{{ acuse }}</p>
         </div>
       </div>
 
@@ -57,17 +59,17 @@
         tuvo, en lugar de dejar solo un redactor bloqueado sin explicación.
       -->
       <div v-if="despedida" class="mt-3 flex justify-center px-2">
-        <div class="max-w-[85%] rounded-2xl bg-sky-50 px-4 py-2.5 text-center ring-1 ring-sky-200">
-          <p class="flex items-center justify-center gap-1.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-sky-700/80">
+        <div class="max-w-[85%] rounded-2xl bg-sky-50 oscuro:bg-sky-500/15 px-4 py-2.5 text-center ring-1 ring-sky-200 oscuro:ring-sky-500/30">
+          <p class="flex items-center justify-center gap-1.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-sky-700/80 oscuro:text-sky-300/80 oscuro:text-sky-300">
             <CheckCircleIcon class="h-3.5 w-3.5" />
             {{ tituloDespedida }}
           </p>
-          <p class="mt-1 text-sm leading-relaxed text-gray-700">{{ despedida }}</p>
+          <p class="mt-1 text-sm leading-relaxed text-texto-medio">{{ despedida }}</p>
         </div>
       </div>
 
       <div v-if="!mensajes.length" class="flex h-full items-center justify-center">
-        <p class="text-sm text-gray-500">Aún no hay mensajes en esta conversación.</p>
+        <p class="text-sm text-texto-suave">Aún no hay mensajes en esta conversación.</p>
       </div>
     </template>
   </div>
@@ -84,6 +86,10 @@ const props = defineProps({
   conversacionId: { type: String, default: null },
   mensajes: { type: Array, default: () => [] },
   ladoPropio: { type: String, default: 'usuario' },
+  /** Confirmación de lectura del usuario: solo en el panel del soporte, nunca en la pantalla del usuario. */
+  mostrarLectura: { type: Boolean, default: false },
+  /** Última lectura del usuario en la conversación: para mensajes sin `leido_at` propio. */
+  leidoHasta: { type: String, default: null },
   cargandoInicial: { type: Boolean, default: false },
   cargandoAntiguos: { type: Boolean, default: false },
   hayMasAntiguos: { type: Boolean, default: false },

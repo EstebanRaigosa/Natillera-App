@@ -167,4 +167,18 @@ function elegirNivel(modulo, nivel) {
   .editor-rol__opcion,
   .editor-rol__nivel { transition: none; }
 }
+
+/* Modo oscuro: solo lo que cambia (skill natillerapp-modo-oscuro §2.5) */
+:where([data-tema=oscuro]) .editor-rol__opcion { background: var(--superficie-tarjeta); }
+:where([data-tema=oscuro]) .editor-rol__opcion.is-activa { border-color: var(--marca-tinta); background: var(--marca-suave); }
+:where([data-tema=oscuro]) .editor-rol__nombre,
+:where([data-tema=oscuro]) .editor-rol__modulo { color: var(--texto-fuerte); }
+:where([data-tema=oscuro]) .editor-rol__desc,
+:where([data-tema=oscuro]) .editor-rol__detalle,
+:where([data-tema=oscuro]) .editor-rol__nivel { color: var(--texto-suave); }
+:where([data-tema=oscuro]) .editor-rol__tabla { background: var(--superficie-suave); }
+:where([data-tema=oscuro]) .editor-rol__niveles { background: rgb(255 255 255 / 0.06); }
+:where([data-tema=oscuro]) .editor-rol__nivel--nada.is-activo { background: var(--superficie-elevada); color: var(--texto-medio); }
+:where([data-tema=oscuro]) .editor-rol__nivel--ver.is-activo { background: var(--info-suave); color: var(--info); }
+:where([data-tema=oscuro]) .editor-rol__opcion:focus-within { box-shadow: 0 0 0 3px var(--marca-tinta-borde); }
 </style>

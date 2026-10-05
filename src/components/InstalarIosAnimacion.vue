@@ -6,7 +6,7 @@
 
     Es un mockup en CSS, sin imágenes ni vídeo, como los de CuotasAyudaModal.
   -->
-  <div class="instalar-ios">
+  <div class="instalar-ios" data-tema="claro">
     <div class="instalar-ios__telefono" aria-hidden="true">
       <span class="instalar-ios__isla" />
 
@@ -122,6 +122,7 @@ onBeforeUnmount(detener)
 </script>
 
 <style scoped>
+/* tema-fijo-inicio: dibuja un iPhone con Safari en claro (ilustración de cómo instalar) */
 .instalar-ios {
   display: flex;
   flex-direction: column;
@@ -465,4 +466,5 @@ onBeforeUnmount(detener)
     transition: none;
   }
 }
+/* tema-fijo-fin */
 </style>

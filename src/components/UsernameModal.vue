@@ -6,12 +6,13 @@
     :ios-soft-backdrop="true"
     :persistent="true"
     overlay-class="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center p-0 sm:p-4"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
   >
     <!-- Misma línea visual que modal «Crear primer socio» (NatilleraDetalle): bosque #1B5E37 + cuerpo blanco + CTA redondo -->
     <div class="relative flex-shrink-0 bg-[#1B5E37] px-6 pt-[max(2rem,env(safe-area-inset-top))] pb-7 text-center">
+      <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
       <div class="w-16 h-16 mx-auto mb-4 bg-white rounded-full flex items-center justify-center shadow-sm">
         <UserIcon class="w-8 h-8 text-[#1B5E37]" />
       </div>
@@ -23,12 +24,12 @@
       </p>
     </div>
 
-    <div class="min-h-0 overflow-y-auto flex-1 px-6 pt-6 pb-2 space-y-5 bg-white overscroll-contain [-webkit-overflow-scrolling:touch]">
-      <div class="rounded-xl bg-[#E8F5E9] px-4 py-3.5 flex gap-3 items-start">
-        <InformationCircleIcon class="w-5 h-5 text-[#1B5E37] flex-shrink-0 mt-0.5" />
-        <div class="text-left text-sm text-gray-800 leading-relaxed">
-          <span class="font-semibold text-[#1B5E37]">Importante</span>
-          <span class="text-gray-700">
+    <div class="min-h-0 overflow-y-auto flex-1 px-6 pt-6 pb-2 space-y-5 bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch]">
+      <div class="rounded-xl bg-marca-suave px-4 py-3.5 flex gap-3 items-start">
+        <InformationCircleIcon class="w-5 h-5 text-marca-tinta flex-shrink-0 mt-0.5" />
+        <div class="text-left text-sm text-texto leading-relaxed">
+          <span class="font-semibold text-marca-tinta">Importante</span>
+          <span class="text-texto-medio">
             Este nombre se mostrará en tu perfil y en las actividades de la natillera.
           </span>
         </div>
@@ -36,16 +37,16 @@
 
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <div>
-          <label class="block text-sm font-semibold text-gray-800 mb-2">
+          <label class="block text-sm font-semibold text-texto mb-2">
             Nombre de usuario <span class="text-red-500">*</span>
           </label>
           <input
             v-model="username"
             type="text"
             placeholder="Tu nombre completo"
-            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 text-base outline-none transition-all placeholder:text-gray-400 focus:ring-2 focus:ring-[#1B5E37]/35 focus:border-[#1B5E37]"
+            class="w-full px-4 py-3 rounded-xl border border-borde bg-superficie-tarjeta text-texto-fuerte text-base outline-none transition-all placeholder:text-texto-tenue focus:ring-2 focus:ring-[#1B5E37]/35 focus:border-[#1B5E37] oscuro:focus:border-marca-tinta"
             :class="{
-              'border-red-300 focus:border-red-500 focus:ring-red-500/30': error
+              'border-red-300 oscuro:border-red-500/30 focus:border-red-500 focus:ring-red-500/30': error
             }"
             :disabled="loading"
             required
@@ -53,15 +54,15 @@
             minlength="2"
             maxlength="100"
           />
-          <p v-if="error" class="mt-1.5 text-xs text-red-600">{{ error }}</p>
-          <p v-else class="mt-1.5 text-xs text-gray-500">
+          <p v-if="error" class="mt-1.5 text-xs text-red-600 oscuro:text-red-300">{{ error }}</p>
+          <p v-else class="mt-1.5 text-xs text-texto-suave">
             Será tu nombre visible en la plataforma
           </p>
         </div>
       </form>
     </div>
 
-    <div class="flex-shrink-0 px-6 pt-2 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-3 bg-white border-t border-gray-100/90">
+    <div class="flex-shrink-0 px-6 pt-2 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-3 bg-superficie-tarjeta border-t border-borde-suave/90">
       <button
         type="button"
         :disabled="loading || !username.trim() || username.trim().length < 2"

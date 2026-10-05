@@ -40,6 +40,10 @@ export async function capturarCompleto(elemento, nombreArchivo = 'captura.png') 
     pointerEvents: 'none',
     zIndex: '-1'
   })
+  // La imagen se comparte: siempre en claro aunque la app esté en oscuro (skill modo oscuro, regla 6)
+  // (equivale a data-tema="claro": en la caja y en el propio clon que se captura)
+  caja.dataset.tema = 'claro'
+  clon.dataset.tema = 'claro'
   caja.appendChild(clon)
   document.body.appendChild(caja)
 

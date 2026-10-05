@@ -6,8 +6,8 @@
     :persistent="guardando"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="cerrar"
   >
@@ -65,7 +65,7 @@
     <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
         ref="scrollRef"
-        class="flex-1 min-h-0 space-y-5 overflow-y-auto overflow-x-hidden bg-white px-5 pb-4 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-6"
+        class="flex-1 min-h-0 space-y-5 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta px-5 pb-4 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-6"
         @scroll.passive="onScroll"
       >
         <!-- Tipo: primero, porque de esto depende qué campos tienen sentido -->
@@ -77,7 +77,7 @@
               :key="opcion.value"
               type="button"
               class="flex min-h-[4.5rem] touch-manipulation flex-col items-center justify-center gap-1 rounded-xl border-2 px-2 py-3 text-xs font-semibold transition-colors"
-              :class="direccion === opcion.value ? opcion.activo : 'border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100'"
+              :class="direccion === opcion.value ? opcion.activo : 'border-borde bg-superficie-suave text-texto-secundario hover:bg-superficie-hundida'"
               :aria-pressed="direccion === opcion.value"
               @click="cambiarDireccion(opcion.value)"
             >
@@ -87,19 +87,19 @@
           </div>
         </div>
 
-        <p v-else class="rounded-xl bg-gray-50 px-4 py-3 text-xs leading-relaxed text-gray-600">
+        <p v-else class="rounded-xl bg-superficie-suave px-4 py-3 text-xs leading-relaxed text-texto-secundario">
           Estás editando {{ etiquetaDireccion }}. El tipo de movimiento no se puede cambiar: para
           convertirlo en otra cosa hay que eliminarlo y registrarlo de nuevo.
         </p>
 
         <!-- Monto -->
         <div>
-          <label for="movimiento-monto" class="ds-label">Monto <span class="text-red-600">*</span></label>
+          <label for="movimiento-monto" class="ds-label">Monto <span class="text-red-600 oscuro:text-red-300">*</span></label>
           <div
-            class="flex items-center rounded-xl border border-[color:var(--surface-divider-strong)] bg-white focus-within:border-[#1B5E37] focus-within:shadow-[0_0_0_3px_rgba(27,94,55,0.18)]"
-            :class="{ 'border-red-300': errores.monto }"
+            class="flex items-center rounded-xl border border-[color:var(--surface-divider-strong)] bg-superficie-tarjeta focus-within:border-[#1B5E37] oscuro:focus-within:border-marca-tinta focus-within:shadow-[0_0_0_3px_rgba(27,94,55,0.18)]"
+            :class="{ 'border-red-300 oscuro:border-red-500/30': errores.monto }"
           >
-            <span class="flex-shrink-0 pl-4 font-semibold text-gray-400">$</span>
+            <span class="flex-shrink-0 pl-4 font-semibold text-texto-tenue">$</span>
             <input
               id="movimiento-monto"
               :value="montoTexto"
@@ -111,7 +111,7 @@
               @input="alEscribirMonto($event.target.value)"
             />
           </div>
-          <p v-if="errores.monto" class="mt-1.5 text-xs font-medium text-red-600">{{ errores.monto }}</p>
+          <p v-if="errores.monto" class="mt-1.5 text-xs font-medium text-red-600 oscuro:text-red-300">{{ errores.monto }}</p>
         </div>
 
         <!-- Forma de pago (ingreso / egreso) -->
@@ -123,7 +123,7 @@
               :key="forma.value"
               type="button"
               class="flex min-h-[44px] touch-manipulation items-center justify-center gap-2 rounded-xl border-2 px-3 py-3 text-sm font-semibold transition-colors"
-              :class="formaPago === forma.value ? forma.activo : 'border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100'"
+              :class="formaPago === forma.value ? forma.activo : 'border-borde bg-superficie-suave text-texto-secundario hover:bg-superficie-hundida'"
               :aria-pressed="formaPago === forma.value"
               @click="formaPago = forma.value"
             >
@@ -142,7 +142,7 @@
               :key="opcion.value"
               type="button"
               class="flex min-h-[44px] w-full touch-manipulation items-center justify-center gap-2 rounded-xl border-2 px-3 py-3 text-sm font-semibold transition-colors"
-              :class="formaOrigen === opcion.value ? opcion.activo : 'border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100'"
+              :class="formaOrigen === opcion.value ? opcion.activo : 'border-borde bg-superficie-suave text-texto-secundario hover:bg-superficie-hundida'"
               :aria-pressed="formaOrigen === opcion.value"
               @click="formaOrigen = opcion.value"
             >
@@ -164,7 +164,7 @@
               :key="opcion.value"
               type="button"
               class="flex min-h-[44px] touch-manipulation items-center justify-center gap-2 rounded-xl border-2 px-3 py-3 text-sm font-semibold transition-colors"
-              :class="bolsillo === opcion.value ? opcion.activo : 'border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100'"
+              :class="bolsillo === opcion.value ? opcion.activo : 'border-borde bg-superficie-suave text-texto-secundario hover:bg-superficie-hundida'"
               :aria-pressed="bolsillo === opcion.value"
               @click="bolsillo = opcion.value"
             >
@@ -172,7 +172,7 @@
               <span>{{ opcion.label }}</span>
             </button>
           </div>
-          <p class="mt-1.5 text-xs leading-relaxed text-gray-500">{{ explicacionBolsillo }}</p>
+          <p class="mt-1.5 text-xs leading-relaxed text-texto-suave">{{ explicacionBolsillo }}</p>
         </div>
 
         <!-- Fecha -->
@@ -184,11 +184,11 @@
             type="date"
             class="ds-input"
           />
-          <p v-if="avisoCorte" class="mt-1.5 flex items-start gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
+          <p v-if="avisoCorte" class="mt-1.5 flex items-start gap-1.5 rounded-lg bg-amber-50 oscuro:bg-amber-500/15 px-3 py-2 text-xs leading-relaxed text-amber-900 oscuro:text-amber-300">
             <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 flex-shrink-0" />
             <span>{{ avisoCorte }}</span>
           </p>
-          <p v-else-if="fechaFutura" class="mt-1.5 flex items-start gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
+          <p v-else-if="fechaFutura" class="mt-1.5 flex items-start gap-1.5 rounded-lg bg-amber-50 oscuro:bg-amber-500/15 px-3 py-2 text-xs leading-relaxed text-amber-900 oscuro:text-amber-300">
             <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 flex-shrink-0" />
             <span>La fecha es futura. El saldo esperado lo contará desde ya, aunque el dinero no se haya movido.</span>
           </p>
@@ -197,7 +197,7 @@
         <!-- Descripción -->
         <div>
           <label for="movimiento-descripcion" class="ds-label">
-            Descripción <span class="font-normal text-gray-400">(opcional)</span>
+            Descripción <span class="font-normal text-texto-tenue">(opcional)</span>
           </label>
           <textarea
             id="movimiento-descripcion"
@@ -223,7 +223,7 @@
     </div>
 
     <div
-      class="flex flex-shrink-0 gap-3 border-t border-gray-200 bg-white px-5 pt-4 sm:px-6"
+      class="flex flex-shrink-0 gap-3 border-t border-borde bg-superficie-tarjeta px-5 pt-4 sm:px-6"
       :style="{ paddingBottom: `calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
     >
       <button type="button" class="btn-modal-secondary flex-1" :disabled="guardando" @click="cerrar">
@@ -272,24 +272,24 @@ const props = defineProps({
 const emit = defineEmits(['close', 'guardar'])
 
 const OPCIONES_DIRECCION = [
-  { value: 'ingreso', label: 'Entró', icono: ArrowDownCircleIcon, activo: 'border-lime-500 bg-lime-50 text-lime-800' },
-  { value: 'egreso', label: 'Salió', icono: ArrowUpCircleIcon, activo: 'border-rose-500 bg-rose-50 text-rose-800' },
-  { value: 'traslado', label: 'Se movió', icono: ArrowsRightLeftIcon, activo: 'border-indigo-500 bg-indigo-50 text-indigo-800' }
+  { value: 'ingreso', label: 'Entró', icono: ArrowDownCircleIcon, activo: 'border-lime-500 bg-lime-50 oscuro:bg-lime-500/15 text-lime-800 oscuro:text-lime-300' },
+  { value: 'egreso', label: 'Salió', icono: ArrowUpCircleIcon, activo: 'border-rose-500 bg-rose-50 oscuro:bg-rose-500/15 text-rose-800 oscuro:text-rose-300' },
+  { value: 'traslado', label: 'Se movió', icono: ArrowsRightLeftIcon, activo: 'border-indigo-500 bg-indigo-50 oscuro:bg-indigo-500/15 text-indigo-800 oscuro:text-indigo-300' }
 ]
 
 const FORMAS = [
-  { value: 'efectivo', label: 'Efectivo', icono: BanknotesIcon, activo: 'border-green-500 bg-green-50 text-green-800' },
-  { value: 'transferencia', label: 'Transferencia', icono: BuildingLibraryIcon, activo: 'border-blue-500 bg-blue-50 text-blue-800' }
+  { value: 'efectivo', label: 'Efectivo', icono: BanknotesIcon, activo: 'border-green-500 bg-green-50 oscuro:bg-green-500/15 text-green-800 oscuro:text-green-300' },
+  { value: 'transferencia', label: 'Transferencia', icono: BuildingLibraryIcon, activo: 'border-blue-500 bg-blue-50 oscuro:bg-blue-500/15 text-blue-800 oscuro:text-blue-300' }
 ]
 
 const DIRECCIONES_TRASLADO = [
-  { value: 'efectivo', desde: 'Efectivo', hacia: 'Cuenta', activo: 'border-green-500 bg-green-50 text-green-800' },
-  { value: 'transferencia', desde: 'Cuenta', hacia: 'Efectivo', activo: 'border-blue-500 bg-blue-50 text-blue-800' }
+  { value: 'efectivo', desde: 'Efectivo', hacia: 'Cuenta', activo: 'border-green-500 bg-green-50 oscuro:bg-green-500/15 text-green-800 oscuro:text-green-300' },
+  { value: 'transferencia', desde: 'Cuenta', hacia: 'Efectivo', activo: 'border-blue-500 bg-blue-50 oscuro:bg-blue-500/15 text-blue-800 oscuro:text-blue-300' }
 ]
 
 const BOLSILLOS = [
-  { value: 'recaudado', label: 'Recaudado', icono: BanknotesIcon, activo: 'border-green-500 bg-green-50 text-green-800' },
-  { value: 'utilidades', label: 'Utilidades', icono: ChartBarIcon, activo: 'border-amber-500 bg-amber-50 text-amber-800' }
+  { value: 'recaudado', label: 'Recaudado', icono: BanknotesIcon, activo: 'border-green-500 bg-green-50 oscuro:bg-green-500/15 text-green-800 oscuro:text-green-300' },
+  { value: 'utilidades', label: 'Utilidades', icono: ChartBarIcon, activo: 'border-amber-500 bg-amber-50 oscuro:bg-amber-500/15 text-amber-800 oscuro:text-amber-300' }
 ]
 
 const direccion = ref('egreso')
@@ -354,7 +354,7 @@ const efecto = computed(() => {
 
   if (importe <= 0) {
     return {
-      clase: 'border-gray-200 bg-gray-50 text-gray-500',
+      clase: 'border-borde bg-superficie-suave text-texto-suave',
       texto: 'Escribe un monto para ver cómo queda el saldo.',
       nota: ''
     }
@@ -367,7 +367,7 @@ const efecto = computed(() => {
     const nombreOrigen = origenEsEfectivo ? 'El efectivo' : 'La cuenta'
     const nombreDestino = origenEsEfectivo ? 'la cuenta' : 'el efectivo'
     return {
-      clase: 'border-indigo-200 bg-indigo-50 text-indigo-900',
+      clase: 'border-indigo-200 oscuro:border-indigo-500/30 bg-indigo-50 oscuro:bg-indigo-500/15 text-indigo-900 oscuro:text-indigo-300',
       texto: `${nombreOrigen} pasará de $${formatMoney(saldoOrigen)} a $${formatMoney(saldoOrigen - importe)}, y ${nombreDestino} de $${formatMoney(saldoDestino)} a $${formatMoney(saldoDestino + importe)}.`,
       nota: 'El total no cambia: el dinero solo cambia de sitio.'
     }
@@ -380,7 +380,7 @@ const efecto = computed(() => {
   const nombre = usaEfectivo ? 'El efectivo' : 'La cuenta'
 
   return {
-    clase: esIngreso ? 'border-lime-200 bg-lime-50 text-lime-900' : 'border-rose-200 bg-rose-50 text-rose-900',
+    clase: esIngreso ? 'border-lime-200 oscuro:border-lime-500/30 bg-lime-50 oscuro:bg-lime-500/15 text-lime-900 oscuro:text-lime-300' : 'border-rose-200 oscuro:border-rose-500/30 bg-rose-50 oscuro:bg-rose-500/15 text-rose-900 oscuro:text-rose-300',
     texto: `${nombre} pasará de $${formatMoney(saldoActual)} a $${formatMoney(saldoNuevo)}.`,
     nota: saldoNuevo < 0 ? 'Ojo: el saldo queda en negativo. Se puede registrar, pero conviene revisar si falta algún ingreso.' : ''
   }

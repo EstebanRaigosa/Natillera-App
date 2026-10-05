@@ -5,22 +5,22 @@
         <BellAlertIcon class="h-5 w-5 text-white" />
       </div>
       <div class="min-w-0">
-        <h2 class="font-display text-lg font-bold text-gray-800">Avisos de soporte</h2>
-        <p class="text-sm text-gray-500">Recibe una notificación cuando el soporte responda</p>
+        <h2 class="font-display text-lg font-bold text-texto">Avisos de soporte</h2>
+        <p class="text-sm text-texto-suave">Recibe una notificación cuando el soporte responda</p>
       </div>
     </div>
 
     <!-- Cada navegador es una suscripción independiente: se dice explícitamente
          para que nadie espere que activarlo aquí valga en su otro teléfono. -->
-    <p class="mb-4 text-sm leading-relaxed text-gray-600">
+    <p class="mb-4 text-sm leading-relaxed text-texto-secundario">
       Este ajuste vale solo para <span class="font-semibold">este dispositivo</span>.
       Si usas Natillerapp en otro teléfono o navegador, actívalo también allí.
     </p>
 
     <!-- Activo -->
-    <div v-if="estado === 'activo'" class="flex flex-col gap-3 rounded-xl bg-[#E8F5E9] p-4 ring-1 ring-[#1B5E37]/15 sm:flex-row sm:items-center">
-      <CheckCircleIcon class="h-6 w-6 shrink-0 text-[#1B5E37]" />
-      <p class="min-w-0 flex-1 text-sm text-gray-700">
+    <div v-if="estado === 'activo'" class="flex flex-col gap-3 rounded-xl bg-marca-suave p-4 ring-1 ring-[#1B5E37]/15 sm:flex-row sm:items-center">
+      <CheckCircleIcon class="h-6 w-6 shrink-0 text-marca-tinta" />
+      <p class="min-w-0 flex-1 text-sm text-texto-medio">
         Las notificaciones están <span class="font-semibold">activas</span> en este dispositivo.
       </p>
       <button
@@ -34,9 +34,9 @@
     </div>
 
     <!-- Se puede pedir permiso -->
-    <div v-else-if="estado === 'sin_conceder'" class="flex flex-col gap-3 rounded-xl bg-gray-50 p-4 ring-1 ring-gray-200 sm:flex-row sm:items-center">
-      <BellSlashIcon class="h-6 w-6 shrink-0 text-gray-400" />
-      <p class="min-w-0 flex-1 text-sm text-gray-700">
+    <div v-else-if="estado === 'sin_conceder'" class="flex flex-col gap-3 rounded-xl bg-superficie-suave p-4 ring-1 ring-borde sm:flex-row sm:items-center">
+      <BellSlashIcon class="h-6 w-6 shrink-0 text-texto-tenue" />
+      <p class="min-w-0 flex-1 text-sm text-texto-medio">
         Sin avisos. Si no los activas, te escribiremos por correo cuando respondamos.
       </p>
       <!-- El permiso se pide SOLO aquí, tras esta pulsación: pedirlo al cargar
@@ -52,12 +52,12 @@
     </div>
 
     <!-- iOS sin instalar: Safari solo admite push desde la pantalla de inicio -->
-    <div v-else-if="estado === 'requiere_instalar'" class="rounded-xl bg-blue-50 p-4 ring-1 ring-blue-200">
+    <div v-else-if="estado === 'requiere_instalar'" class="rounded-xl bg-blue-50 oscuro:bg-blue-500/15 p-4 ring-1 ring-blue-200 oscuro:ring-blue-500/30">
       <div class="flex items-start gap-3">
-        <DevicePhoneMobileIcon class="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
+        <DevicePhoneMobileIcon class="mt-0.5 h-5 w-5 shrink-0 text-blue-600 oscuro:text-blue-300" />
         <div class="min-w-0">
-          <p class="text-sm font-semibold text-blue-900">Instala la app para recibir avisos</p>
-          <p class="mt-1 text-sm leading-relaxed text-blue-800">
+          <p class="text-sm font-semibold text-blue-900 oscuro:text-blue-300">Instala la app para recibir avisos</p>
+          <p class="mt-1 text-sm leading-relaxed text-blue-800 oscuro:text-blue-300">
             En iPhone y iPad, Safari solo envía notificaciones si Natillerapp está
             en la pantalla de inicio. Pulsa <span class="font-semibold">Compartir</span> y luego
             <span class="font-semibold">«Añadir a pantalla de inicio»</span>. Mientras tanto, te
@@ -73,12 +73,12 @@
     </div>
 
     <!-- Denegado: no se vuelve a preguntar, se explica cómo revertirlo -->
-    <div v-else-if="estado === 'denegado'" class="rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
+    <div v-else-if="estado === 'denegado'" class="rounded-xl bg-amber-50 oscuro:bg-amber-500/15 p-4 ring-1 ring-amber-200 oscuro:ring-amber-500/30">
       <div class="flex items-start gap-3">
-        <ExclamationTriangleIcon class="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+        <ExclamationTriangleIcon class="mt-0.5 h-5 w-5 shrink-0 text-amber-600 oscuro:text-amber-300" />
         <div class="min-w-0">
-          <p class="text-sm font-semibold text-amber-900">Los avisos están bloqueados</p>
-          <p class="mt-1 text-sm leading-relaxed text-amber-800">
+          <p class="text-sm font-semibold text-amber-900 oscuro:text-amber-300">Los avisos están bloqueados</p>
+          <p class="mt-1 text-sm leading-relaxed text-amber-800 oscuro:text-amber-300">
             Este navegador tiene las notificaciones denegadas para Natillerapp, y por eso no se
             te puede volver a preguntar desde aquí. Para permitirlas: abre los ajustes del sitio
             (el icono a la izquierda de la dirección web), busca
@@ -90,25 +90,25 @@
     </div>
 
     <!-- No soportado -->
-    <div v-else class="rounded-xl bg-gray-50 p-4 ring-1 ring-gray-200">
+    <div v-else class="rounded-xl bg-superficie-suave p-4 ring-1 ring-borde">
       <div class="flex items-start gap-3">
-        <InformationCircleIcon class="mt-0.5 h-5 w-5 shrink-0 text-gray-400" />
-        <p class="text-sm leading-relaxed text-gray-600">
+        <InformationCircleIcon class="mt-0.5 h-5 w-5 shrink-0 text-texto-tenue" />
+        <p class="text-sm leading-relaxed text-texto-secundario">
           Este navegador no admite notificaciones push. Todo lo demás funciona con normalidad y
           te avisaremos por correo cuando el soporte responda.
         </p>
       </div>
     </div>
 
-    <p v-if="!configurado" class="mt-3 text-xs text-amber-700">
-      Falta configurar <code class="rounded bg-gray-100 px-1">VITE_VAPID_PUBLIC_KEY</code> en el
+    <p v-if="!configurado" class="mt-3 text-xs text-amber-700 oscuro:text-amber-300">
+      Falta configurar <code class="rounded bg-superficie-hundida px-1">VITE_VAPID_PUBLIC_KEY</code> en el
       entorno; sin ella no se pueden activar los avisos.
     </p>
-    <p v-if="pista" class="mt-3 flex items-start gap-1.5 text-xs leading-relaxed text-gray-500">
+    <p v-if="pista" class="mt-3 flex items-start gap-1.5 text-xs leading-relaxed text-texto-suave">
       <span class="mt-1 inline-block size-1.5 shrink-0 animate-pulse rounded-full bg-[#1B5E37]" />
       <span>{{ pista }}</span>
     </p>
-    <p v-if="error" class="mt-3 text-xs text-red-600">{{ error }}</p>
+    <p v-if="error" class="mt-3 text-xs text-red-600 oscuro:text-red-300">{{ error }}</p>
   </div>
 </template>
 

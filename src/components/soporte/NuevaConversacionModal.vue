@@ -12,15 +12,15 @@
     :persistent="enviando"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-md max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="28rem"
     @close="cerrar"
   >
     <!-- ── Cabecera marca (móvil = fila) ── -->
     <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
       <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
-        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm"><!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <LifebuoyIcon class="h-5 w-5 text-[#1B5E37]" />
         </div>
         <div class="min-w-0 flex-1 text-left">
@@ -43,7 +43,7 @@
       <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
         <div class="w-11 shrink-0" aria-hidden="true" />
         <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
-          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm"><!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <LifebuoyIcon class="h-6 w-6 text-[#1B5E37]" />
           </div>
           <h3 class="mt-2 font-display text-lg font-bold leading-tight text-white">Escribir a soporte</h3>
@@ -64,11 +64,11 @@
     <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
         ref="scrollRef"
-        class="flex-1 min-h-0 space-y-4 overflow-y-auto overflow-x-hidden bg-white px-5 pb-6 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch]"
+        class="flex-1 min-h-0 space-y-4 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta px-5 pb-6 pt-5 overscroll-contain [-webkit-overflow-scrolling:touch]"
         @scroll.passive="onScroll"
       >
         <div>
-          <label for="soporte-asunto" class="mb-1.5 block text-sm font-semibold text-gray-800">
+          <label for="soporte-asunto" class="mb-1.5 block text-sm font-semibold text-texto">
             ¿Sobre qué es?
           </label>
           <input
@@ -77,21 +77,21 @@
             type="text"
             maxlength="120"
             placeholder="Ej. No puedo registrar un pago"
-            class="w-full rounded-xl border-2 border-gray-200 bg-white px-3.5 py-3 text-base text-gray-900 outline-none transition focus:border-[#1B5E37] focus:ring-2 focus:ring-[#1B5E37]/30"
+            class="w-full rounded-xl border-2 border-borde bg-superficie-tarjeta px-3.5 py-3 text-base text-texto-fuerte outline-none transition focus:border-[#1B5E37] oscuro:focus:border-marca-tinta focus:ring-2 focus:ring-[#1B5E37]/30"
             :disabled="enviando"
           />
-          <p v-if="errores.asunto" class="mt-1 text-xs text-red-600">{{ errores.asunto }}</p>
+          <p v-if="errores.asunto" class="mt-1 text-xs text-red-600 oscuro:text-red-300">{{ errores.asunto }}</p>
         </div>
 
         <div>
-          <label for="soporte-categoria" class="mb-1.5 block text-sm font-semibold text-gray-800">
+          <label for="soporte-categoria" class="mb-1.5 block text-sm font-semibold text-texto">
             Categoría
           </label>
           <!-- select nativo a propósito: en iOS abre el selector del sistema -->
           <select
             id="soporte-categoria"
             v-model="categoria"
-            class="w-full rounded-xl border-2 border-gray-200 bg-white px-3.5 py-3 text-base text-gray-900 outline-none transition focus:border-[#1B5E37] focus:ring-2 focus:ring-[#1B5E37]/30"
+            class="w-full rounded-xl border-2 border-borde bg-superficie-tarjeta px-3.5 py-3 text-base text-texto-fuerte outline-none transition focus:border-[#1B5E37] oscuro:focus:border-marca-tinta focus:ring-2 focus:ring-[#1B5E37]/30"
             :disabled="enviando"
           >
             <option v-for="opcion in CATEGORIAS" :key="opcion.valor" :value="opcion.valor">
@@ -101,7 +101,7 @@
         </div>
 
         <div>
-          <label for="soporte-cuerpo" class="mb-1.5 block text-sm font-semibold text-gray-800">
+          <label for="soporte-cuerpo" class="mb-1.5 block text-sm font-semibold text-texto">
             Cuéntanos qué pasa
           </label>
           <textarea
@@ -110,17 +110,17 @@
             rows="5"
             maxlength="4000"
             placeholder="Cuanto más detalle, mejor: qué hacías, qué esperabas y qué ocurrió."
-            class="w-full resize-y rounded-xl border-2 border-gray-200 bg-white px-3.5 py-3 text-base leading-relaxed text-gray-900 outline-none transition focus:border-[#1B5E37] focus:ring-2 focus:ring-[#1B5E37]/30"
+            class="w-full resize-y rounded-xl border-2 border-borde bg-superficie-tarjeta px-3.5 py-3 text-base leading-relaxed text-texto-fuerte outline-none transition focus:border-[#1B5E37] oscuro:focus:border-marca-tinta focus:ring-2 focus:ring-[#1B5E37]/30"
             :disabled="enviando"
           />
           <div class="mt-1 flex items-start justify-between gap-3">
-            <p v-if="errores.cuerpo" class="text-xs text-red-600">{{ errores.cuerpo }}</p>
-            <span class="ml-auto shrink-0 text-[0.6875rem] text-gray-500">{{ cuerpo.length }} / 4000</span>
+            <p v-if="errores.cuerpo" class="text-xs text-red-600 oscuro:text-red-300">{{ errores.cuerpo }}</p>
+            <span class="ml-auto shrink-0 text-[0.6875rem] text-texto-suave">{{ cuerpo.length }} / 4000</span>
           </div>
         </div>
 
-        <div class="rounded-xl bg-[#E8F5E9] px-3.5 py-3 ring-1 ring-[#1B5E37]/10">
-          <p class="text-xs leading-relaxed text-gray-700">
+        <div class="rounded-xl bg-marca-suave px-3.5 py-3 ring-1 ring-[#1B5E37]/10">
+          <p class="text-xs leading-relaxed text-texto-medio">
             Escribes como <span class="font-semibold">{{ correo }}</span>. Solo tú y el soporte de
             Natillerapp veis esta conversación.
           </p>
@@ -131,7 +131,7 @@
     </div>
 
     <!-- ── Footer de acciones fijo ── -->
-    <div class="flex-shrink-0 space-y-3 border-t border-gray-200 bg-white px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+    <div class="flex-shrink-0 space-y-3 border-t border-borde bg-superficie-tarjeta px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
       <div class="flex gap-3">
         <button type="button" class="btn-modal-secondary flex-1" :disabled="enviando" @click="cerrar">
           Cancelar

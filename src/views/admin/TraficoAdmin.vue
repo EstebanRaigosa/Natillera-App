@@ -15,7 +15,7 @@
           </div>
           <span
             class="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.6875rem] font-semibold"
-            :class="enVivo ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-500'"
+            :class="enVivo ? 'bg-emerald-100 oscuro:bg-emerald-500/15 text-emerald-800 oscuro:text-emerald-300' : 'bg-superficie-hundida text-texto-suave'"
           >
             <span
               class="h-1.5 w-1.5 rounded-full"
@@ -34,12 +34,28 @@
       </div>
     </header>
 
+    <div class="flex justify-end">
+      <button
+        type="button"
+        role="switch"
+        :aria-checked="ocultarMiActividad"
+        class="flex min-h-11 touch-manipulation items-center gap-2 rounded-full border px-3.5 text-xs font-semibold transition-colors"
+        :class="ocultarMiActividad
+          ? 'border-marca-tinta/40 bg-emerald-50 oscuro:bg-emerald-500/15 text-marca-tinta'
+          : 'border-borde bg-superficie-tarjeta text-texto-suave'"
+        @click="ocultarMiActividad = !ocultarMiActividad"
+      >
+        <component :is="ocultarMiActividad ? EyeSlashIcon : EyeIcon" class="h-4 w-4" aria-hidden="true" />
+        {{ ocultarMiActividad ? 'Mi actividad oculta' : 'Ocultar mi actividad' }}
+      </button>
+    </div>
+
     <CargaPantalla :visible="cargando && sesiones.length === 0" text="Midiendo el pulso de la app" />
 
     <template v-if="!cargando || sesiones.length > 0">
       <div
         v-if="error"
-        class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
+        class="rounded-2xl border border-red-200 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 px-4 py-3 text-sm font-medium text-red-800 oscuro:text-red-300"
       >
         {{ error }}
         <button type="button" class="ml-2 font-semibold underline" @click="cargarTodo">Reintentar</button>
@@ -51,47 +67,47 @@
         entra y sale cinco veces son cinco ingresos y un solo usuario. Contar solo sesiones
         infla la sensación de uso.
       -->
-      <section class="grid grid-cols-2 divide-gray-200 overflow-hidden rounded-2xl border border-gray-200 bg-white sm:grid-cols-4 sm:divide-x">
-        <div class="border-b border-r border-gray-200 px-3 py-3 text-center sm:border-b-0 sm:border-r-0">
-          <p class="font-display text-xl font-extrabold tabular-nums text-[#1B5E37] sm:text-2xl">
+      <section class="grid grid-cols-2 divide-borde overflow-hidden rounded-2xl border border-borde bg-superficie-tarjeta sm:grid-cols-4 sm:divide-x">
+        <div class="border-b border-r border-borde px-3 py-3 text-center sm:border-b-0 sm:border-r-0">
+          <p class="font-display text-xl font-extrabold tabular-nums text-marca-tinta sm:text-2xl">
             {{ conectados.length }}
           </p>
-          <p class="mt-0.5 text-[0.6875rem] uppercase tracking-wide text-gray-500">En línea</p>
+          <p class="mt-0.5 text-[0.6875rem] uppercase tracking-wide text-texto-suave">En línea</p>
         </div>
-        <div class="border-b border-gray-200 px-3 py-3 text-center sm:border-b-0">
-          <p class="font-display text-xl font-extrabold tabular-nums text-gray-800 sm:text-2xl">
+        <div class="border-b border-borde px-3 py-3 text-center sm:border-b-0">
+          <p class="font-display text-xl font-extrabold tabular-nums text-texto sm:text-2xl">
             {{ usuariosHoy }}
           </p>
-          <p class="mt-0.5 text-[0.6875rem] uppercase tracking-wide text-gray-500">Usuarios hoy</p>
+          <p class="mt-0.5 text-[0.6875rem] uppercase tracking-wide text-texto-suave">Usuarios hoy</p>
         </div>
-        <div class="border-r border-gray-200 px-3 py-3 text-center sm:border-r-0">
-          <p class="font-display text-xl font-extrabold tabular-nums text-gray-800 sm:text-2xl">
+        <div class="border-r border-borde px-3 py-3 text-center sm:border-r-0">
+          <p class="font-display text-xl font-extrabold tabular-nums text-texto sm:text-2xl">
             {{ ingresosHoy }}
           </p>
-          <p class="mt-0.5 text-[0.6875rem] uppercase tracking-wide text-gray-500">Ingresos hoy</p>
+          <p class="mt-0.5 text-[0.6875rem] uppercase tracking-wide text-texto-suave">Ingresos hoy</p>
         </div>
         <div class="px-3 py-3 text-center">
-          <p class="font-display text-xl font-extrabold tabular-nums text-gray-800 sm:text-2xl">
+          <p class="font-display text-xl font-extrabold tabular-nums text-texto sm:text-2xl">
             {{ accionesHoy }}
           </p>
-          <p class="mt-0.5 text-[0.6875rem] uppercase tracking-wide text-gray-500">Acciones hoy</p>
+          <p class="mt-0.5 text-[0.6875rem] uppercase tracking-wide text-texto-suave">Acciones hoy</p>
         </div>
       </section>
 
       <div class="grid gap-4 lg:grid-cols-2">
         <!-- Quién está dentro -->
-        <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-          <div class="flex items-center gap-2 border-b border-gray-100 px-4 py-3">
-            <UsersIcon class="h-4 w-4 text-[#1B5E37]" />
-            <h2 class="font-display text-sm font-bold text-gray-900">Dentro ahora</h2>
-            <span class="ml-auto text-xs text-gray-500">{{ conectados.length }}</span>
+        <section class="overflow-hidden rounded-2xl border border-borde bg-superficie-tarjeta">
+          <div class="flex items-center gap-2 border-b border-borde-suave px-4 py-3">
+            <UsersIcon class="h-4 w-4 text-marca-tinta" />
+            <h2 class="font-display text-sm font-bold text-texto-fuerte">Dentro ahora</h2>
+            <span class="ml-auto text-xs text-texto-suave">{{ conectados.length }}</span>
           </div>
 
-          <p v-if="conectados.length === 0" class="px-4 py-8 text-center text-sm text-gray-500">
+          <p v-if="conectados.length === 0" class="px-4 py-8 text-center text-sm text-texto-suave">
             Nadie está usando la app en este momento.
           </p>
 
-          <ul v-else class="divide-y divide-gray-100">
+          <ul v-else class="divide-y divide-borde-suave">
             <li v-for="s in conectados" :key="s.id" class="flex items-center gap-3 px-4 py-3">
               <span
                 class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full font-display text-xs font-bold"
@@ -99,33 +115,33 @@
                 aria-hidden="true"
               >{{ iniciales(s.nombre || s.email) }}</span>
               <span class="min-w-0 flex-1">
-                <span class="block truncate text-sm font-semibold text-gray-900">
+                <span class="block truncate text-sm font-semibold text-texto-fuerte">
                   {{ s.nombre || s.email }}
                 </span>
-                <span class="mt-0.5 block truncate text-xs text-gray-500">
+                <span class="mt-0.5 block truncate text-xs text-texto-suave">
                   {{ ultimaAccionDe(s.email) || 'Navegando' }}
                 </span>
               </span>
-              <span class="flex-shrink-0 text-right">
-                <span class="block text-[0.6875rem] text-gray-400">{{ etiquetaPlataforma(s.plataforma) }}</span>
-                <span class="block text-[0.6875rem] text-emerald-700">{{ hace(s.ultimo_latido) }}</span>
+              <span class="max-w-[45%] flex-shrink-0 text-right">
+                <span class="block truncate text-[0.6875rem] text-texto-tenue">{{ dispositivoDeRegistro(s).etiqueta }}</span>
+                <span class="block text-[0.6875rem] text-emerald-700 oscuro:text-emerald-300">{{ hace(s.ultimo_latido) }}</span>
               </span>
             </li>
           </ul>
         </section>
 
         <!-- Qué está pasando -->
-        <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-          <div class="flex items-center gap-2 border-b border-gray-100 px-4 py-3">
-            <BoltIcon class="h-4 w-4 text-[#1B5E37]" />
-            <h2 class="font-display text-sm font-bold text-gray-900">Actividad en vivo</h2>
+        <section class="overflow-hidden rounded-2xl border border-borde bg-superficie-tarjeta">
+          <div class="flex items-center gap-2 border-b border-borde-suave px-4 py-3">
+            <BoltIcon class="h-4 w-4 text-marca-tinta" />
+            <h2 class="font-display text-sm font-bold text-texto-fuerte">Actividad en vivo</h2>
           </div>
 
-          <p v-if="actividad.length === 0" class="px-4 py-8 text-center text-sm text-gray-500">
+          <p v-if="actividad.length === 0" class="px-4 py-8 text-center text-sm text-texto-suave">
             Todavía no ha pasado nada.
           </p>
 
-          <ul v-else class="max-h-[26rem] divide-y divide-gray-100 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
+          <ul v-else class="max-h-[26rem] divide-y divide-borde-suave overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
             <li
               v-for="a in actividad"
               :key="a.id"
@@ -134,14 +150,14 @@
             >
               <div class="flex items-start gap-2">
                 <span
-                  class="mt-0.5 rounded-full px-1.5 py-0.5 text-[0.625rem] font-bold uppercase tracking-wide"
+                  class="mt-0.5 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[0.625rem] font-bold uppercase tracking-wide"
                   :class="claseAccion(a.tipo_accion)"
-                >{{ a.tipo_accion }}</span>
+                >{{ etiquetaAccion(a.tipo_accion) }}</span>
                 <span class="min-w-0 flex-1">
-                  <span class="block break-words text-xs leading-snug text-gray-800">
+                  <span class="block break-words text-xs leading-snug text-texto">
                     {{ a.descripcion || a.entidad }}
                   </span>
-                  <span class="mt-0.5 block truncate text-[0.6875rem] text-gray-500">
+                  <span class="mt-0.5 block truncate text-[0.6875rem] text-texto-suave">
                     {{ a.usuario_email }}
                     <span v-if="a.natillera_nombre"> · {{ a.natillera_nombre }}</span>
                     · {{ hace(a.created_at) }}
@@ -153,50 +169,67 @@
         </section>
       </div>
 
-      <!-- Historial de ingresos -->
-      <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-        <div class="flex items-center gap-2 border-b border-gray-100 px-4 py-3">
-          <ClockIcon class="h-4 w-4 text-[#1B5E37]" />
-          <h2 class="font-display text-sm font-bold text-gray-900">Historial de ingresos</h2>
-          <span class="ml-auto text-xs text-gray-500">{{ sesiones.length }} sesiones</span>
+      <FrecuenciaIngresos
+        v-model:dias="diasFrecuencia"
+        :ingresos="ingresosPeriodo"
+        :cargando="cargandoFrecuencia"
+        :ahora="ahora"
+      />
+
+      <!-- Historial de ingresos. Un ingreso es abrir la app (o volver tras 10 minutos fuera),
+           aunque la sesión ya estuviera iniciada; los inicios de sesión están en Auditoría. -->
+      <section class="overflow-hidden rounded-2xl border border-borde bg-superficie-tarjeta">
+        <div class="flex items-center gap-2 border-b border-borde-suave px-4 py-3">
+          <ClockIcon class="h-4 w-4 text-marca-tinta" />
+          <h2 class="font-display text-sm font-bold text-texto-fuerte">Historial de ingresos a la app</h2>
+          <span class="ml-auto text-xs text-texto-suave">{{ sesiones.length }} sesiones</span>
         </div>
 
-        <p v-if="sesiones.length === 0" class="px-4 py-8 text-center text-sm text-gray-500">
+        <p v-if="sesiones.length === 0" class="px-4 py-8 text-center text-sm text-texto-suave">
           Sin ingresos registrados todavía. Empiezan a aparecer en cuanto alguien use la app.
         </p>
 
         <div v-else class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
-              <tr class="bg-gray-50 text-left text-xs font-semibold text-gray-600">
+              <tr class="bg-superficie-suave text-left text-xs font-semibold text-texto-secundario">
                 <th class="px-4 py-2.5">Usuario</th>
                 <th class="px-4 py-2.5">Entró</th>
                 <th class="px-4 py-2.5">Última señal</th>
                 <th class="px-4 py-2.5">Duró</th>
-                <th class="hidden px-4 py-2.5 sm:table-cell">Dispositivo</th>
+                <th class="px-4 py-2.5">Dispositivo</th>
               </tr>
             </thead>
             <tbody>
               <tr
                 v-for="s in sesiones"
                 :key="s.id"
-                class="border-t border-gray-100"
-                :class="estaEnLinea(s) ? 'bg-emerald-50/40' : ''"
+                class="border-t border-borde-suave"
+                :class="estaEnLinea(s) ? 'bg-emerald-50/40 oscuro:bg-emerald-500/15' : ''"
               >
                 <td class="px-4 py-2.5">
                   <span class="flex items-center gap-2">
                     <span
                       class="h-1.5 w-1.5 flex-shrink-0 rounded-full"
-                      :class="estaEnLinea(s) ? 'bg-emerald-500' : 'bg-gray-300'"
+                      :class="estaEnLinea(s) ? 'bg-emerald-500' : 'bg-borde-fuerte'"
                       aria-hidden="true"
                     />
-                    <span class="min-w-0 truncate text-gray-800">{{ s.nombre || s.email }}</span>
+                    <span class="min-w-0 truncate text-texto">{{ s.nombre || s.email }}</span>
                   </span>
                 </td>
-                <td class="whitespace-nowrap px-4 py-2.5 text-gray-600 tabular-nums">{{ fechaHora(s.inicio) }}</td>
-                <td class="whitespace-nowrap px-4 py-2.5 text-gray-600">{{ hace(s.ultimo_latido) }}</td>
-                <td class="whitespace-nowrap px-4 py-2.5 text-gray-600 tabular-nums">{{ duracion(s) }}</td>
-                <td class="hidden px-4 py-2.5 text-gray-500 sm:table-cell">{{ etiquetaPlataforma(s.plataforma) }}</td>
+                <td class="whitespace-nowrap px-4 py-2.5 text-texto-secundario tabular-nums">{{ fechaHora(s.inicio) }}</td>
+                <td class="whitespace-nowrap px-4 py-2.5 text-texto-secundario">{{ hace(s.ultimo_latido) }}</td>
+                <td class="whitespace-nowrap px-4 py-2.5 text-texto-secundario tabular-nums">{{ duracion(s) }}</td>
+                <td class="px-4 py-2.5">
+                  <span class="block whitespace-nowrap text-texto-secundario">{{ dispositivoDeRegistro(s).etiqueta }}</span>
+                  <span
+                    v-if="s.modo_app"
+                    class="mt-0.5 inline-block rounded-full px-1.5 py-px text-[0.625rem] font-semibold"
+                    :class="s.modo_app === 'app'
+                      ? 'bg-emerald-100 oscuro:bg-emerald-500/15 text-emerald-800 oscuro:text-emerald-300'
+                      : 'bg-superficie-hundida text-texto-suave'"
+                  >{{ s.modo_app === 'app' ? 'App instalada' : 'Navegador' }}</span>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -207,17 +240,24 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import {
   ArrowPathIcon,
   BoltIcon,
   ClockIcon,
+  EyeIcon,
+  EyeSlashIcon,
   SignalIcon,
   UsersIcon
 } from '@heroicons/vue/24/outline'
 import BackButton from '../../components/BackButton.vue'
 import CargaPantalla from '../../components/carga/CargaPantalla.vue'
+import FrecuenciaIngresos from '../../components/trafico/FrecuenciaIngresos.vue'
+import { dispositivoDeRegistro } from '../../utils/dispositivo'
+import { claseAccion, etiquetaAccion } from '../../utils/catalogoAuditoria'
 import { supabase } from '../../lib/supabase'
+import { useAuthStore } from '../../stores/auth'
+import { useOcultarMiActividad, filtroSinCorreo } from '../../composables/useOcultarMiActividad'
 
 /*
  * Panel de tráfico del superadministrador.
@@ -239,6 +279,26 @@ const error = ref('')
 const sesiones = ref([])
 const actividad = ref([])
 const enVivo = ref(false)
+
+const COLUMNAS_ACCESO = 'id, user_id, email, nombre, inicio, ultimo_latido, plataforma, user_agent, dispositivo, modo_app'
+
+/* Tablero de frecuencia: todos los ingresos del periodo, no solo los 150 del historial. */
+const diasFrecuencia = ref(30)
+const ingresosPeriodo = ref([])
+const cargandoFrecuencia = ref(false)
+
+const authStore = useAuthStore()
+const { ocultarMiActividad } = useOcultarMiActividad()
+
+/*
+ * El filtro va en la consulta y no solo en pantalla: con los límites de 150 y 80 filas,
+ * filtrar después dejaría la lista casi vacía cuando quien más entra es uno mismo.
+ */
+const correoOculto = computed(() => (ocultarMiActividad.value ? authStore.userEmail : ''))
+
+function esMio(correo) {
+  return !!correoOculto.value && correo === correoOculto.value
+}
 
 /* El «hace X» tiene que envejecer solo: sin esto, «hace 1 min» se queda congelado. */
 const ahora = ref(Date.now())
@@ -290,18 +350,26 @@ function ultimaAccionDe(email) {
 }
 
 async function cargarTodo() {
+  // El tablero va aparte: tiene su propio periodo y su propio estado de carga.
+  cargarFrecuencia()
   cargando.value = true
   error.value = ''
   try {
     const [accesosRes, auditoriaRes] = await Promise.all([
-      supabase
-        .from('accesos_usuario')
-        .select('id, user_id, email, nombre, inicio, ultimo_latido, plataforma')
+      sinMiCorreo(
+        supabase
+          .from('accesos_usuario')
+          .select(COLUMNAS_ACCESO),
+        'email'
+      )
         .order('ultimo_latido', { ascending: false })
         .limit(150),
-      supabase
-        .from('auditoria')
-        .select('id, usuario_email, tipo_accion, entidad, descripcion, natillera_nombre, created_at')
+      sinMiCorreo(
+        supabase
+          .from('auditoria')
+          .select('id, usuario_email, tipo_accion, entidad, descripcion, natillera_nombre, created_at'),
+        'usuario_email'
+      )
         .order('created_at', { ascending: false })
         .limit(80)
     ])
@@ -317,6 +385,37 @@ async function cargarTodo() {
   }
 }
 
+function sinMiCorreo(consulta, columna) {
+  return correoOculto.value ? consulta.or(filtroSinCorreo(columna, correoOculto.value)) : consulta
+}
+
+async function cargarFrecuencia() {
+  cargandoFrecuencia.value = true
+  try {
+    const desde = new Date()
+    desde.setHours(0, 0, 0, 0)
+    desde.setDate(desde.getDate() - (diasFrecuencia.value - 1))
+    const { data, error: err } = await sinMiCorreo(
+      supabase
+        .from('accesos_usuario')
+        .select('id, user_id, email, nombre, inicio, user_agent, dispositivo, modo_app')
+        .gte('inicio', desde.toISOString()),
+      'email'
+    )
+      .order('inicio', { ascending: false })
+      .limit(5000)
+    if (err) throw err
+    ingresosPeriodo.value = data || []
+  } catch (e) {
+    console.error('Frecuencia de ingresos:', e)
+  } finally {
+    cargandoFrecuencia.value = false
+  }
+}
+
+watch(ocultarMiActividad, () => cargarTodo())
+watch(diasFrecuencia, cargarFrecuencia)
+
 /*
  * Realtime. Las altas de auditoría entran por arriba del feed y las de `accesos_usuario`
  * refrescan la lista de conectados. Los UPDATE de latido también llegan: son los que
@@ -326,6 +425,7 @@ function escuchar() {
   canal = supabase
     .channel('trafico-superadmin')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'auditoria' }, ({ new: fila }) => {
+      if (esMio(fila.usuario_email)) return
       actividad.value = [{ ...fila, _nuevo: true }, ...actividad.value].slice(0, 120)
       // La marca de «recién llegado» dura lo que el destello; si no, se quedaría fija.
       setTimeout(() => {
@@ -334,7 +434,11 @@ function escuchar() {
       }, 2000)
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'accesos_usuario' }, ({ new: fila, eventType }) => {
-      if (!fila?.id) return
+      if (!fila?.id || esMio(fila.email)) return
+      // Un ingreso nuevo también suma en el tablero, sin recargarlo.
+      if (eventType === 'INSERT' && !ingresosPeriodo.value.some(f => f.id === fila.id)) {
+        ingresosPeriodo.value = [fila, ...ingresosPeriodo.value]
+      }
       const resto = sesiones.value.filter(s => s.id !== fila.id)
       sesiones.value = eventType === 'DELETE' ? resto : [fila, ...resto]
         .sort((a, b) => new Date(b.ultimo_latido) - new Date(a.ultimo_latido))
@@ -381,13 +485,6 @@ function duracion(s) {
   return `${h} h ${min % 60} min`
 }
 
-function etiquetaPlataforma(p) {
-  if (p === 'ios') return 'iPhone'
-  if (p === 'android') return 'Android'
-  if (p === 'escritorio') return 'Escritorio'
-  return '—'
-}
-
 function iniciales(texto) {
   const partes = String(texto || '').trim().split(/[\s@.]+/).filter(Boolean)
   if (partes.length === 0) return '—'
@@ -397,31 +494,17 @@ function iniciales(texto) {
 
 function colorUsuario(texto) {
   const paleta = [
-    'bg-emerald-100 text-emerald-800',
-    'bg-sky-100 text-sky-800',
-    'bg-amber-100 text-amber-800',
-    'bg-violet-100 text-violet-800',
-    'bg-rose-100 text-rose-800',
-    'bg-teal-100 text-teal-800'
+    'bg-emerald-100 oscuro:bg-emerald-500/15 text-emerald-800 oscuro:text-emerald-300',
+    'bg-sky-100 oscuro:bg-sky-500/15 text-sky-800 oscuro:text-sky-300',
+    'bg-amber-100 oscuro:bg-amber-500/15 text-amber-800 oscuro:text-amber-300',
+    'bg-violet-100 oscuro:bg-violet-500/15 text-violet-800 oscuro:text-violet-300',
+    'bg-rose-100 oscuro:bg-rose-500/15 text-rose-800 oscuro:text-rose-300',
+    'bg-teal-100 oscuro:bg-teal-500/15 text-teal-800 oscuro:text-teal-300'
   ]
   let suma = 0
   const s = String(texto || '')
   for (let i = 0; i < s.length; i++) suma = (suma + s.charCodeAt(i)) % 997
   return paleta[suma % paleta.length]
-}
-
-function claseAccion(accion) {
-  const mapa = {
-    REGISTER: 'bg-emerald-100 text-emerald-800',
-    CREATE: 'bg-sky-100 text-sky-800',
-    UPDATE: 'bg-amber-100 text-amber-800',
-    DELETE: 'bg-rose-100 text-rose-800',
-    SEND: 'bg-violet-100 text-violet-800',
-    RESEND: 'bg-violet-100 text-violet-800',
-    DOWNLOAD: 'bg-teal-100 text-teal-800',
-    GENERATE: 'bg-indigo-100 text-indigo-800'
-  }
-  return mapa[accion] || 'bg-gray-100 text-gray-700'
 }
 
 onMounted(() => {
@@ -457,11 +540,11 @@ onUnmounted(() => {
 }
 
 @-webkit-keyframes trafico-entrada {
-  0% { background-color: rgba(27, 94, 55, 0.12); }
+  0% { background-color: rgba(27, 94, 55, 0.12); } /* tema-fijo: destello verde translúcido */
   100% { background-color: transparent; }
 }
 @keyframes trafico-entrada {
-  0% { background-color: rgba(27, 94, 55, 0.12); }
+  0% { background-color: rgba(27, 94, 55, 0.12); } /* tema-fijo: destello verde translúcido */
   100% { background-color: transparent; }
 }
 

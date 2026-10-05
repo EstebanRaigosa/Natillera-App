@@ -58,7 +58,7 @@
     <template v-if="!cargando">
       <div
         v-if="errorCarga"
-        class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
+        class="rounded-2xl border border-red-200 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 px-4 py-3 text-sm font-medium text-red-800 oscuro:text-red-300"
       >
         {{ errorCarga }}
       </div>
@@ -71,11 +71,11 @@
                  cuenta, así que el periodo va primero en la jerarquía. Gana presencia por
                  aislamiento y contención —superficie propia, filete de marca y la fecha
                  despegada de su etiqueta—, no agrandando la letra ni subiendo el tono. -->
-            <p class="flex items-center gap-2.5 rounded-lg border-l-[3px] border-[#1B5E37] bg-[#1B5E37]/[0.06] py-1.5 pl-2.5 pr-3.5">
-              <CalendarDaysIcon class="h-4 w-4 flex-shrink-0 text-[#1B5E37]" />
+            <p class="flex items-center gap-2.5 rounded-lg border-l-[3px] border-[#1B5E37] oscuro:border-marca-tinta bg-[#1B5E37]/[0.06] py-1.5 pl-2.5 pr-3.5">
+              <CalendarDaysIcon class="h-4 w-4 flex-shrink-0 text-marca-tinta" />
               <span class="flex flex-col leading-tight">
-                <span class="text-[0.6875rem] uppercase tracking-wide text-gray-500">Periodo abierto</span>
-                <strong class="text-sm font-semibold tabular-nums text-gray-900">{{ formatDate(periodoDesde) }} → hoy</strong>
+                <span class="text-[0.6875rem] uppercase tracking-wide text-texto-suave">Periodo abierto</span>
+                <strong class="text-sm font-semibold tabular-nums text-texto-fuerte">{{ formatDate(periodoDesde) }} → hoy</strong>
               </span>
             </p>
             <!--
@@ -95,7 +95,7 @@
               <button
                 type="button"
                 data-guia="boton-recorrido"
-                class="inline-flex min-h-[44px] flex-shrink-0 touch-manipulation items-center gap-1.5 rounded-lg border border-[#1B5E37]/20 bg-white px-3 text-xs font-semibold text-[#1B5E37] hover:bg-[#1B5E37]/8 sm:border-transparent sm:bg-transparent sm:px-2"
+                class="inline-flex min-h-[44px] flex-shrink-0 touch-manipulation items-center gap-1.5 rounded-lg border border-[#1B5E37]/20 oscuro:border-marca-tinta/20 bg-superficie-tarjeta px-3 text-xs font-semibold text-marca-tinta hover:bg-[#1B5E37]/8 sm:border-transparent sm:bg-transparent sm:px-2"
                 title="¿Cómo funciona esta pantalla?"
                 aria-label="¿Cómo funciona esta pantalla? Ver el recorrido guiado"
                 @click="abrirGuiaConciliacion({ manual: true })"
@@ -115,7 +115,7 @@
                El `data-tour` está repetido aquí y en el bloque de escritorio a propósito:
                el recorrido se queda con el que esté visible. -->
           <div
-            class="divide-y divide-gray-200 overflow-hidden rounded-xl border-2 border-gray-200 bg-white sm:hidden"
+            class="divide-y divide-borde overflow-hidden rounded-xl border-2 border-borde bg-superficie-tarjeta sm:hidden"
             data-tour="panel-corte"
           >
             <div v-for="columna in columnasCorte" :key="columna.clave" class="px-3 py-2.5">
@@ -136,7 +136,7 @@
 
               <div class="mt-1.5 flex items-end gap-3">
                 <div class="min-w-0 flex-1" :data-tour="columna.clave === 'efectivo' ? 'esperado' : null">
-                  <p class="text-[0.6875rem] leading-tight text-gray-500">Debería haber</p>
+                  <p class="text-[0.6875rem] leading-tight text-texto-suave">Debería haber</p>
                   <p class="font-display text-base font-extrabold tabular-nums" :class="columna.acento">
                     ${{ formatMoney(columna.esperado) }}
                   </p>
@@ -144,17 +144,17 @@
 
                 <div class="min-w-0 flex-1" :data-tour="columna.clave === 'efectivo' ? 'real' : null">
                   <template v-if="columna.clave === 'total'">
-                    <p class="text-[0.6875rem] leading-tight text-gray-500">Hay de verdad</p>
-                    <p class="font-display text-base font-extrabold tabular-nums text-gray-900">
+                    <p class="text-[0.6875rem] leading-tight text-texto-suave">Hay de verdad</p>
+                    <p class="font-display text-base font-extrabold tabular-nums text-texto-fuerte">
                       ${{ formatMoney(columna.real) }}
                     </p>
                   </template>
                   <template v-else>
-                    <label :for="`real-movil-${columna.clave}`" class="block text-[0.6875rem] leading-tight text-gray-500">
+                    <label :for="`real-movil-${columna.clave}`" class="block text-[0.6875rem] leading-tight text-texto-suave">
                       Hay de verdad
                     </label>
                     <div class="mt-0.5 flex items-center gap-1">
-                      <span class="flex-shrink-0 text-sm font-semibold text-gray-400">$</span>
+                      <span class="flex-shrink-0 text-sm font-semibold text-texto-tenue">$</span>
                       <input
                         :id="`real-movil-${columna.clave}`"
                         :value="columna.realTexto"
@@ -162,7 +162,7 @@
                         inputmode="numeric"
                         autocomplete="off"
                         placeholder="0"
-                        class="ds-input w-full min-w-0 px-2 tabular-nums disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                        class="ds-input w-full min-w-0 px-2 tabular-nums disabled:cursor-not-allowed disabled:bg-superficie-hundida disabled:text-texto-tenue"
                         :disabled="!puedeConciliar"
                         @input="alEscribirReal(columna.clave, $event.target.value)"
                       />
@@ -176,29 +176,29 @@
                  se consultan en cada revisión: plegados dejan sitio a lo que sí. -->
             <button
               type="button"
-              class="flex min-h-[44px] w-full touch-manipulation items-center justify-between gap-2 bg-gray-50/70 px-3 text-xs font-semibold text-gray-600"
+              class="flex min-h-[44px] w-full touch-manipulation items-center justify-between gap-2 bg-superficie-suave/70 px-3 text-xs font-semibold text-texto-secundario"
               :aria-expanded="origenAbierto"
               aria-controls="origen-corte"
               @click="origenAbierto = !origenAbierto"
             >
               <span>¿De dónde sale «debería haber»?</span>
               <ChevronDownIcon
-                class="h-4 w-4 flex-shrink-0 text-gray-400 transition-transform duration-200"
+                class="h-4 w-4 flex-shrink-0 text-texto-tenue transition-transform duration-200"
                 :class="{ 'rotate-180': origenAbierto }"
               />
             </button>
 
-            <div v-if="origenAbierto" id="origen-corte" class="space-y-2.5 bg-gray-50/70 px-3 py-2.5 text-xs">
+            <div v-if="origenAbierto" id="origen-corte" class="space-y-2.5 bg-superficie-suave/70 px-3 py-2.5 text-xs">
               <div v-for="columna in columnasCorte" :key="`desglose-${columna.clave}`">
                 <p class="font-semibold" :class="columna.acento">{{ columna.titulo }}</p>
                 <dl class="mt-0.5 space-y-0.5">
                   <div class="flex items-baseline justify-between gap-2">
-                    <dt class="text-gray-500">Saldo al inicio</dt>
-                    <dd class="tabular-nums text-gray-700">${{ formatMoney(columna.saldoInicial) }}</dd>
+                    <dt class="text-texto-suave">Saldo al inicio</dt>
+                    <dd class="tabular-nums text-texto-medio">${{ formatMoney(columna.saldoInicial) }}</dd>
                   </div>
                   <div class="flex items-baseline justify-between gap-2">
-                    <dt class="text-gray-500">Movimientos del periodo</dt>
-                    <dd class="tabular-nums text-gray-700">${{ formatMoneyConSigno(columna.movimientos) }}</dd>
+                    <dt class="text-texto-suave">Movimientos del periodo</dt>
+                    <dd class="tabular-nums text-texto-medio">${{ formatMoneyConSigno(columna.movimientos) }}</dd>
                   </div>
                 </dl>
               </div>
@@ -211,7 +211,7 @@
             <article
               v-for="columna in columnasCorte"
               :key="columna.clave"
-              class="rounded-xl border-2 bg-white p-4"
+              class="rounded-xl border-2 bg-superficie-tarjeta p-4"
               :class="columna.borde"
             >
               <div class="mb-3 flex items-center gap-2">
@@ -221,18 +221,18 @@
 
               <dl class="space-y-1.5 text-sm">
                 <div class="flex items-baseline justify-between gap-2">
-                  <dt class="text-gray-500">Saldo al inicio</dt>
-                  <dd class="tabular-nums text-gray-700">${{ formatMoney(columna.saldoInicial) }}</dd>
+                  <dt class="text-texto-suave">Saldo al inicio</dt>
+                  <dd class="tabular-nums text-texto-medio">${{ formatMoney(columna.saldoInicial) }}</dd>
                 </div>
                 <div class="flex items-baseline justify-between gap-2">
-                  <dt class="text-gray-500">Movimientos</dt>
-                  <dd class="tabular-nums text-gray-700">${{ formatMoneyConSigno(columna.movimientos) }}</dd>
+                  <dt class="text-texto-suave">Movimientos</dt>
+                  <dd class="tabular-nums text-texto-medio">${{ formatMoneyConSigno(columna.movimientos) }}</dd>
                 </div>
                 <div
-                  class="flex items-baseline justify-between gap-2 border-t border-gray-200 pt-1.5"
+                  class="flex items-baseline justify-between gap-2 border-t border-borde pt-1.5"
                   :data-tour="columna.clave === 'efectivo' ? 'esperado' : null"
                 >
-                  <dt class="font-semibold text-gray-700">Debería haber</dt>
+                  <dt class="font-semibold text-texto-medio">Debería haber</dt>
                   <dd class="font-display text-base font-extrabold tabular-nums" :class="columna.acento">
                     ${{ formatMoney(columna.esperado) }}
                   </dd>
@@ -243,12 +243,12 @@
                 <label
                   v-if="columna.clave !== 'total'"
                   :for="`real-${columna.clave}`"
-                  class="mb-1 block text-xs font-semibold text-gray-600"
+                  class="mb-1 block text-xs font-semibold text-texto-secundario"
                 >
                   Hay de verdad
                 </label>
                 <div v-if="columna.clave !== 'total'" class="flex items-center gap-1.5">
-                  <span class="text-sm font-semibold text-gray-400">$</span>
+                  <span class="text-sm font-semibold text-texto-tenue">$</span>
                   <input
                     :id="`real-${columna.clave}`"
                     :value="columna.realTexto"
@@ -256,14 +256,14 @@
                     inputmode="numeric"
                     autocomplete="off"
                     placeholder="0"
-                    class="ds-input tabular-nums disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                    class="ds-input tabular-nums disabled:cursor-not-allowed disabled:bg-superficie-hundida disabled:text-texto-tenue"
                     :disabled="!puedeConciliar"
                     @input="alEscribirReal(columna.clave, $event.target.value)"
                   />
                 </div>
                 <div v-else class="flex items-baseline justify-between gap-2">
-                  <span class="text-xs font-semibold text-gray-600">Hay de verdad</span>
-                  <span class="font-display text-base font-extrabold tabular-nums text-gray-900">
+                  <span class="text-xs font-semibold text-texto-secundario">Hay de verdad</span>
+                  <span class="font-display text-base font-extrabold tabular-nums text-texto-fuerte">
                     ${{ formatMoney(columna.real) }}
                   </span>
                 </div>
@@ -289,26 +289,26 @@
           -->
           <div
             v-if="gmfTotal > 0"
-            class="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3"
+            class="flex flex-wrap items-center gap-3 rounded-xl border border-borde bg-superficie-tarjeta px-4 py-3"
           >
-            <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#E8F5E9] text-[#1B5E37]">
+            <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-marca-suave text-marca-tinta">
               <BuildingLibraryIcon class="h-5 w-5" />
             </span>
             <div class="min-w-0 flex-1">
-              <p class="text-sm font-bold text-gray-900">4×1000 recogido</p>
-              <p class="text-xs text-gray-500">
+              <p class="text-sm font-bold text-texto-fuerte">4×1000 recogido</p>
+              <p class="text-xs text-texto-suave">
                 {{ gmfCantidad }} {{ gmfCantidad === 1 ? 'pago' : 'pagos' }} por transferencia · va dentro del saldo de transferencia
               </p>
             </div>
             <div class="text-right">
-              <p class="font-display text-lg font-extrabold tabular-nums text-[#1B5E37]">${{ formatMoney(gmfTotal) }}</p>
-              <p v-if="gmfPeriodo !== gmfTotal" class="text-xs tabular-nums text-gray-500">
+              <p class="font-display text-lg font-extrabold tabular-nums text-marca-tinta">${{ formatMoney(gmfTotal) }}</p>
+              <p v-if="gmfPeriodo !== gmfTotal" class="text-xs tabular-nums text-texto-suave">
                 ${{ formatMoney(gmfPeriodo) }} en este periodo
               </p>
             </div>
             <button
               type="button"
-              class="min-h-[44px] w-full touch-manipulation rounded-lg text-xs font-semibold text-[#1B5E37] hover:bg-[#E8F5E9] sm:w-auto sm:px-3"
+              class="min-h-[44px] w-full touch-manipulation rounded-lg text-xs font-semibold text-marca-tinta hover:bg-marca-suave sm:w-auto sm:px-3"
               @click="verGmfEnLibro"
             >
               Ver en el libro
@@ -317,7 +317,7 @@
 
           <div
             v-if="apuntesFuturos.length > 0"
-            class="flex items-start gap-2 rounded-xl bg-sky-50 px-4 py-3 text-xs leading-relaxed text-sky-900"
+            class="flex items-start gap-2 rounded-xl bg-sky-50 oscuro:bg-sky-500/15 px-4 py-3 text-xs leading-relaxed text-sky-900 oscuro:text-sky-300"
           >
             <InformationCircleIcon class="mt-0.5 h-4 w-4 flex-shrink-0" />
             <span>
@@ -329,7 +329,7 @@
 
           <div
             v-if="apuntesSinFecha.length > 0"
-            class="flex items-start gap-2 rounded-xl bg-gray-50 px-4 py-3 text-xs leading-relaxed text-gray-600"
+            class="flex items-start gap-2 rounded-xl bg-superficie-suave px-4 py-3 text-xs leading-relaxed text-texto-secundario"
           >
             <InformationCircleIcon class="mt-0.5 h-4 w-4 flex-shrink-0" />
             <span>
@@ -342,22 +342,22 @@
                ancho: en fila envuelta, el botón quedaba encajado en el hueco que dejaba la
                etiqueta y perdía el peso que le toca a la acción principal. -->
           <div
-            class="space-y-3 border-t border-gray-200/80 pt-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-3 sm:space-y-0"
+            class="space-y-3 border-t border-borde/80 pt-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-3 sm:space-y-0"
             data-tour="sellar"
           >
             <div class="flex items-center justify-between gap-3 sm:justify-start sm:gap-2">
-              <label for="umbral" class="text-xs font-semibold leading-snug text-gray-600">
+              <label for="umbral" class="text-xs font-semibold leading-snug text-texto-secundario">
                 Pedir nota si la diferencia supera
               </label>
               <div class="flex flex-shrink-0 items-center gap-1">
-                <span class="text-sm text-gray-400">$</span>
+                <span class="text-sm text-texto-tenue">$</span>
                 <input
                   id="umbral"
                   :value="umbralTexto"
                   type="text"
                   inputmode="numeric"
                   autocomplete="off"
-                  class="ds-input w-24 tabular-nums disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 sm:w-28"
+                  class="ds-input w-24 tabular-nums disabled:cursor-not-allowed disabled:bg-superficie-hundida disabled:text-texto-tenue sm:w-28"
                   :disabled="!puedeConciliar"
                   @input="alEscribirUmbral($event.target.value)"
                 />
@@ -376,7 +376,7 @@
               </button>
               <p
                 v-if="puedeConciliar && !sinNadaQueConciliar && saldoRealSinDeclarar"
-                class="mt-1.5 text-center text-xs text-gray-500 sm:text-right"
+                class="mt-1.5 text-center text-xs text-texto-suave sm:text-right"
               >
                 Escribe cuánto hay de verdad para poder cerrar.
               </p>
@@ -385,7 +385,7 @@
 
           <p
             v-if="!puedeConciliar"
-            class="flex items-start gap-2 rounded-xl bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900"
+            class="flex items-start gap-2 rounded-xl bg-amber-50 oscuro:bg-amber-500/15 px-4 py-3 text-xs leading-relaxed text-amber-900 oscuro:text-amber-300"
           >
             <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 flex-shrink-0" />
             <span>
@@ -397,11 +397,11 @@
         </section>
 
         <!-- ================= El libro: «¿dónde está la diferencia?» ================= -->
-        <section id="libro-caja" class="scroll-mt-4 rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 px-4 py-4 sm:px-5">
+        <section id="libro-caja" class="scroll-mt-4 rounded-2xl border border-borde bg-superficie-tarjeta shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-borde px-4 py-4 sm:px-5">
             <div class="min-w-0">
-              <h2 class="font-display text-base font-bold text-gray-800 sm:text-lg">Movimientos del periodo</h2>
-              <p class="mt-0.5 text-xs text-gray-500">
+              <h2 class="font-display text-base font-bold text-texto sm:text-lg">Movimientos del periodo</h2>
+              <p class="mt-0.5 text-xs text-texto-suave">
                 {{ apuntesVisibles.length }} de {{ apuntesRango.length }} apuntes · saldo corrido para acotar la diferencia
               </p>
             </div>
@@ -421,7 +421,7 @@
                vive detrás de «Más filtros»: puestos todos en fila envuelta, cada control con
                un ancho distinto, la zona se volvía un amontonamiento ilegible. En pantalla
                ancha caben todos a la vez y el desplegable no aplica. -->
-          <div class="space-y-3 border-b border-gray-200 bg-gray-50/60 px-4 py-4 sm:px-5" data-tour="filtros">
+          <div class="space-y-3 border-b border-borde bg-superficie-suave/60 px-4 py-4 sm:px-5" data-tour="filtros">
             <!-- Rango rápido: tres opciones iguales, que en móvil es lo único que se entiende -->
             <div class="grid grid-cols-3 gap-1.5 sm:flex sm:gap-2">
               <button
@@ -429,15 +429,15 @@
                 :key="preset.clave"
                 type="button"
                 class="flex min-h-[44px] touch-manipulation items-center justify-center rounded-lg px-2 text-center text-xs font-semibold leading-tight transition-all sm:px-3 sm:text-sm"
-                :class="presetActivo === preset.clave ? 'bg-[#1B5E37] text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'"
+                :class="presetActivo === preset.clave ? 'bg-[#1B5E37] text-white' : 'bg-superficie-tarjeta text-texto-secundario border border-borde hover:bg-superficie-suave'"
                 @click="aplicarPreset(preset.clave)"
               >
                 {{ preset.label }}
               </button>
             </div>
 
-            <div class="flex items-center rounded-xl border border-gray-300 bg-white focus-within:border-[#1B5E37] focus-within:ring-2 focus-within:ring-[#1B5E37]/20 sm:max-w-xs">
-              <span class="flex-shrink-0 pl-3 text-gray-400">
+            <div class="flex items-center rounded-xl border border-borde-fuerte bg-superficie-tarjeta focus-within:border-[#1B5E37] oscuro:focus-within:border-marca-tinta focus-within:ring-2 focus-within:ring-[#1B5E37]/20 sm:max-w-xs">
+              <span class="flex-shrink-0 pl-3 text-texto-tenue">
                 <MagnifyingGlassIcon class="h-5 w-5" />
               </span>
               <input
@@ -451,7 +451,7 @@
               <button
                 v-if="filtroBusqueda"
                 type="button"
-                class="flex h-11 w-11 flex-shrink-0 touch-manipulation items-center justify-center text-gray-400 hover:text-gray-600"
+                class="flex h-11 w-11 flex-shrink-0 touch-manipulation items-center justify-center text-texto-tenue hover:text-texto-secundario"
                 aria-label="Limpiar búsqueda"
                 @click="filtroBusqueda = ''"
               >
@@ -462,13 +462,13 @@
             <!-- Interruptor de los filtros avanzados: solo existe en móvil -->
             <button
               type="button"
-              class="flex min-h-[44px] w-full touch-manipulation items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-600 sm:hidden"
+              class="flex min-h-[44px] w-full touch-manipulation items-center justify-between gap-2 rounded-xl border border-borde bg-superficie-tarjeta px-4 text-sm font-semibold text-texto-secundario sm:hidden"
               :aria-expanded="filtrosAbiertos"
               aria-controls="filtros-avanzados"
               @click="filtrosAbiertos = !filtrosAbiertos"
             >
               <span class="flex items-center gap-2">
-                <FunnelIcon class="h-4 w-4 text-gray-400" />
+                <FunnelIcon class="h-4 w-4 text-texto-tenue" />
                 Más filtros
                 <span
                   v-if="filtrosAvanzadosActivos > 0"
@@ -478,7 +478,7 @@
                 </span>
               </span>
               <ChevronDownIcon
-                class="h-4 w-4 flex-shrink-0 text-gray-400 transition-transform duration-200"
+                class="h-4 w-4 flex-shrink-0 text-texto-tenue transition-transform duration-200"
                 :class="{ 'rotate-180': filtrosAbiertos }"
               />
             </button>
@@ -490,33 +490,33 @@
             >
               <div class="grid grid-cols-2 gap-2 sm:flex sm:items-end sm:gap-3">
                 <div>
-                  <label for="desde" class="mb-1 block text-xs font-semibold text-gray-600">Desde</label>
+                  <label for="desde" class="mb-1 block text-xs font-semibold text-texto-secundario">Desde</label>
                   <input id="desde" v-model="filtroDesde" type="date" class="ds-input w-full sm:w-auto" />
                 </div>
                 <div>
-                  <label for="hasta" class="mb-1 block text-xs font-semibold text-gray-600">Hasta</label>
+                  <label for="hasta" class="mb-1 block text-xs font-semibold text-texto-secundario">Hasta</label>
                   <input id="hasta" v-model="filtroHasta" type="date" class="ds-input w-full sm:w-auto" />
                 </div>
               </div>
 
               <div ref="dropdownConceptosRef" class="relative">
-                <label class="mb-1 block text-xs font-semibold text-gray-600">Concepto</label>
+                <label class="mb-1 block text-xs font-semibold text-texto-secundario">Concepto</label>
                 <button
                   type="button"
-                  class="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-left text-sm hover:bg-gray-50 sm:min-w-[11rem]"
+                  class="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-borde-fuerte bg-superficie-tarjeta px-4 py-2.5 text-left text-sm hover:bg-superficie-suave sm:min-w-[11rem]"
                   @click="dropdownConceptos = !dropdownConceptos"
                 >
                   <span class="truncate">{{ etiquetaConceptos }}</span>
-                  <ChevronDownIcon class="h-4 w-4 flex-shrink-0 text-gray-400" />
+                  <ChevronDownIcon class="h-4 w-4 flex-shrink-0 text-texto-tenue" />
                 </button>
                 <div
                   v-show="dropdownConceptos"
-                  class="absolute inset-x-0 top-full z-50 mt-1 max-h-[16rem] overflow-y-auto rounded-xl border border-gray-200 bg-white py-2 shadow-xl sm:inset-x-auto sm:left-0 sm:min-w-[13rem]"
+                  class="absolute inset-x-0 top-full z-50 mt-1 max-h-[16rem] overflow-y-auto rounded-xl border border-borde bg-superficie-tarjeta py-2 shadow-xl sm:inset-x-auto sm:left-0 sm:min-w-[13rem]"
                 >
                   <button
                     type="button"
-                    class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-emerald-50/80"
-                    :class="filtroConceptos.length === 0 ? 'bg-emerald-50 font-semibold text-[#1B5E37]' : 'text-gray-700'"
+                    class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-emerald-50/80 oscuro:hover:bg-emerald-500/15"
+                    :class="filtroConceptos.length === 0 ? 'bg-emerald-50 oscuro:bg-emerald-500/15 font-semibold text-marca-tinta' : 'text-texto-medio'"
                     @click="filtroConceptos = []"
                   >
                     Todos los conceptos
@@ -525,12 +525,12 @@
                     v-for="categoria in categoriasPresentes"
                     :key="categoria.value"
                     type="button"
-                    class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-emerald-50/80"
+                    class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-texto-medio hover:bg-emerald-50/80 oscuro:hover:bg-emerald-500/15"
                     @click="alternarConcepto(categoria.value)"
                   >
                     <span
                       class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border"
-                      :class="filtroConceptos.includes(categoria.value) ? 'border-[#1B5E37] bg-[#1B5E37]' : 'border-gray-300'"
+                      :class="filtroConceptos.includes(categoria.value) ? 'border-[#1B5E37] oscuro:border-marca-tinta bg-[#1B5E37]' : 'border-borde-fuerte'"
                     >
                       <CheckIcon v-if="filtroConceptos.includes(categoria.value)" class="h-3 w-3 text-white" />
                     </span>
@@ -540,7 +540,7 @@
               </div>
 
               <div>
-                <label for="socio" class="mb-1 block text-xs font-semibold text-gray-600">Socio</label>
+                <label for="socio" class="mb-1 block text-xs font-semibold text-texto-secundario">Socio</label>
                 <select id="socio" v-model="filtroSocio" class="ds-input w-full sm:w-auto sm:min-w-[10rem]">
                   <option value="">Todos los socios</option>
                   <option v-for="socio in sociosPresentes" :key="socio" :value="socio">{{ socio }}</option>
@@ -548,14 +548,14 @@
               </div>
 
               <div>
-                <span class="mb-1 block text-xs font-semibold text-gray-600">Forma de pago</span>
+                <span class="mb-1 block text-xs font-semibold text-texto-secundario">Forma de pago</span>
                 <div class="grid grid-cols-3 gap-1.5 sm:flex sm:gap-2">
                   <button
                     v-for="opcion in opcionesFormaPago"
                     :key="opcion.valor"
                     type="button"
                     class="flex min-h-[44px] touch-manipulation items-center justify-center rounded-lg px-2 text-center text-xs font-semibold leading-tight transition-all sm:px-3 sm:text-sm"
-                    :class="filtroFormaPago === opcion.valor ? opcion.claseActiva : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'"
+                    :class="filtroFormaPago === opcion.valor ? opcion.claseActiva : 'bg-superficie-tarjeta text-texto-secundario border border-borde hover:bg-superficie-suave'"
                     @click="filtroFormaPago = opcion.valor"
                   >
                     {{ opcion.label }}
@@ -574,7 +574,7 @@
               </button>
             </div>
 
-            <p v-if="!rangoEsPeriodoAbierto" class="text-xs leading-relaxed text-gray-500">
+            <p v-if="!rangoEsPeriodoAbierto" class="text-xs leading-relaxed text-texto-suave">
               Estás mirando un rango distinto al periodo abierto. El saldo corrido arranca en
               ${{ formatMoney(saldoBaseVisible) }}, que es lo que el sistema calcula justo antes del
               {{ formatDate(filtroDesde) }}.
@@ -584,26 +584,26 @@
           <!-- Total de lo filtrado: responde «¿cuánto se recogió por este concepto?» -->
           <div
             v-if="apuntesVisibles.length > 0"
-            class="border-b border-gray-200 bg-white px-4 py-4 sm:px-5"
+            class="border-b border-borde bg-superficie-tarjeta px-4 py-4 sm:px-5"
             data-tour="total-filtrado"
           >
-            <p class="text-xs font-semibold text-gray-500">{{ etiquetaResumen }}</p>
+            <p class="text-xs font-semibold text-texto-suave">{{ etiquetaResumen }}</p>
             <div class="mt-2 grid grid-cols-3 gap-3">
               <div>
-                <p class="text-[0.6875rem] uppercase tracking-wide text-gray-400">Entradas</p>
-                <p class="font-display text-base font-extrabold tabular-nums text-emerald-700 sm:text-lg">
+                <p class="text-[0.6875rem] uppercase tracking-wide text-texto-tenue">Entradas</p>
+                <p class="font-display text-base font-extrabold tabular-nums text-emerald-700 oscuro:text-emerald-300 sm:text-lg">
                   ${{ formatMoney(resumenFiltrado.entradas) }}
                 </p>
               </div>
               <div>
-                <p class="text-[0.6875rem] uppercase tracking-wide text-gray-400">Salidas</p>
-                <p class="font-display text-base font-extrabold tabular-nums text-red-600 sm:text-lg">
+                <p class="text-[0.6875rem] uppercase tracking-wide text-texto-tenue">Salidas</p>
+                <p class="font-display text-base font-extrabold tabular-nums text-red-600 oscuro:text-red-300 sm:text-lg">
                   ${{ formatMoney(Math.abs(resumenFiltrado.salidas)) }}
                 </p>
               </div>
               <div>
-                <p class="text-[0.6875rem] uppercase tracking-wide text-gray-400">Neto</p>
-                <p class="font-display text-base font-extrabold tabular-nums text-gray-900 sm:text-lg">
+                <p class="text-[0.6875rem] uppercase tracking-wide text-texto-tenue">Neto</p>
+                <p class="font-display text-base font-extrabold tabular-nums text-texto-fuerte sm:text-lg">
                   ${{ formatMoneyConSigno(resumenFiltrado.neto) }}
                 </p>
               </div>
@@ -611,10 +611,10 @@
 
             <!-- Desglose plegado: quien solo quiere el total no tiene que verlo, y al abrirlo
                  son filas alineadas y no chips, para poder comparar las cifras de un vistazo. -->
-            <div v-if="totalesPorConcepto.length > 1" class="mt-2 border-t border-gray-100 pt-1">
+            <div v-if="totalesPorConcepto.length > 1" class="mt-2 border-t border-borde-suave pt-1">
               <button
                 type="button"
-                class="flex min-h-[44px] w-full touch-manipulation items-center justify-between gap-2 rounded-lg px-1 text-xs font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                class="flex min-h-[44px] w-full touch-manipulation items-center justify-between gap-2 rounded-lg px-1 text-xs font-semibold text-texto-suave hover:bg-superficie-suave hover:text-texto-medio"
                 :aria-expanded="desgloseAbierto"
                 aria-controls="desglose-conceptos"
                 @click="desgloseAbierto = !desgloseAbierto"
@@ -633,11 +633,11 @@
                   class="flex items-center gap-2.5 py-1"
                 >
                   <span class="h-2 w-2 flex-shrink-0 rounded-full" :class="colorTipo(total.tipo)" />
-                  <span class="min-w-0 flex-1 truncate text-xs text-gray-600">{{ etiquetaTipo(total.tipo) }}</span>
-                  <span class="flex-shrink-0 text-[0.6875rem] tabular-nums text-gray-400">{{ total.cantidad }}</span>
+                  <span class="min-w-0 flex-1 truncate text-xs text-texto-secundario">{{ etiquetaTipo(total.tipo) }}</span>
+                  <span class="flex-shrink-0 text-[0.6875rem] tabular-nums text-texto-tenue">{{ total.cantidad }}</span>
                   <span
                     class="w-28 flex-shrink-0 text-right text-xs font-semibold tabular-nums"
-                    :class="total.monto < 0 ? 'text-red-600' : 'text-gray-800'"
+                    :class="total.monto < 0 ? 'text-red-600 oscuro:text-red-300' : 'text-texto'"
                   >
                     ${{ formatMoneyConSigno(total.monto) }}
                   </span>
@@ -648,9 +648,9 @@
 
           <!-- Vacío: nunca una tabla en blanco sin salida (§7 del levantamiento) -->
           <div v-if="apuntesVisibles.length === 0" class="px-4 py-12 text-center">
-            <MagnifyingGlassIcon class="mx-auto h-10 w-10 text-gray-300" />
-            <p class="mt-3 font-display text-sm font-bold text-gray-700">{{ vacio.titulo }}</p>
-            <p class="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-gray-500">{{ vacio.texto }}</p>
+            <MagnifyingGlassIcon class="mx-auto h-10 w-10 text-gray-300 oscuro:text-texto-tenue" />
+            <p class="mt-3 font-display text-sm font-bold text-texto-medio">{{ vacio.titulo }}</p>
+            <p class="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-texto-suave">{{ vacio.texto }}</p>
             <div v-if="vacio.conSalidas" class="mt-4 flex flex-wrap justify-center gap-2">
               <button v-if="hayFiltrosActivos" type="button" class="ds-btn ds-btn--secondary" @click="limpiarFiltros">
                 <XMarkIcon class="h-4 w-4" />
@@ -667,9 +667,9 @@
           <div v-else class="hidden overflow-x-auto lg:block" data-tour="saldo">
             <table class="w-full text-sm">
               <thead>
-                <tr class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                <tr class="border-b border-borde bg-superficie-suave text-xs uppercase tracking-wide text-texto-suave">
                   <th class="px-4 py-3 text-left font-semibold">
-                    <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="alternarOrden">
+                    <button type="button" class="inline-flex items-center gap-1 hover:text-texto-medio" @click="alternarOrden">
                       Fecha
                       <ChevronUpIcon v-if="ordenAscendente" class="h-3.5 w-3.5" />
                       <ChevronDownIcon v-else class="h-3.5 w-3.5" />
@@ -682,13 +682,13 @@
                   <th class="px-4 py-3 text-right font-semibold">Saldo</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-100">
-                <tr v-for="apunte in apuntesMostrados" :key="apunte.clave" class="hover:bg-gray-50/70">
-                  <td class="whitespace-nowrap px-4 py-3 text-gray-600">
+              <tbody class="divide-y divide-borde-suave">
+                <tr v-for="apunte in apuntesMostrados" :key="apunte.clave" class="hover:bg-superficie-suave/70">
+                  <td class="whitespace-nowrap px-4 py-3 text-texto-secundario">
                     {{ formatDate(apunte.fecha) }}
                     <span
                       v-if="apunte.fechaEstimada"
-                      class="ml-1 text-xs font-medium text-amber-600"
+                      class="ml-1 text-xs font-medium text-amber-600 oscuro:text-amber-300"
                       title="Sin fecha de pago registrada. Se usa la última modificación del registro o el inicio de su período, así que puede no ser el día en que entró el dinero."
                     >aprox.</span>
                   </td>
@@ -696,21 +696,21 @@
                     <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold" :class="claseTipo(apunte.tipo, apunte.esParcial)">
                       {{ apunte.concepto }}
                     </span>
-                    <p v-if="apunte.observaciones" class="mt-1 text-xs text-gray-500">{{ apunte.observaciones }}</p>
+                    <p v-if="apunte.observaciones" class="mt-1 text-xs text-texto-suave">{{ apunte.observaciones }}</p>
                   </td>
-                  <td class="px-4 py-3 text-gray-700">{{ apunte.socio }}</td>
+                  <td class="px-4 py-3 text-texto-medio">{{ apunte.socio }}</td>
                   <td class="px-4 py-3">
                     <span
                       class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                      :class="apunte.forma_pago === 'efectivo' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'"
+                      :class="apunte.forma_pago === 'efectivo' ? 'bg-green-100 oscuro:bg-green-500/15 text-green-800 oscuro:text-green-300' : 'bg-blue-100 oscuro:bg-blue-500/15 text-blue-800 oscuro:text-blue-300'"
                     >
                       {{ apunte.forma_pago === 'efectivo' ? 'Efectivo' : 'Transferencia' }}
                     </span>
                   </td>
-                  <td class="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums" :class="apunte.monto >= 0 ? 'text-emerald-700' : 'text-red-600'">
+                  <td class="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums" :class="apunte.monto >= 0 ? 'text-emerald-700 oscuro:text-emerald-300' : 'text-red-600 oscuro:text-red-300'">
                     ${{ formatMoneyConSigno(apunte.monto) }}
                   </td>
-                  <td class="whitespace-nowrap px-4 py-3 text-right font-bold tabular-nums text-gray-900">
+                  <td class="whitespace-nowrap px-4 py-3 text-right font-bold tabular-nums text-texto-fuerte">
                     ${{ formatMoney(apunte.saldo) }}
                   </td>
                 </tr>
@@ -719,26 +719,26 @@
           </div>
 
           <!-- Tarjetas móvil -->
-          <ul v-if="apuntesVisibles.length > 0" class="divide-y divide-gray-100 lg:hidden" data-tour="saldo">
+          <ul v-if="apuntesVisibles.length > 0" class="divide-y divide-borde-suave lg:hidden" data-tour="saldo">
             <li v-for="apunte in apuntesMostrados" :key="apunte.clave" class="px-4 py-3">
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                   <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold" :class="claseTipo(apunte.tipo, apunte.esParcial)">
                     {{ apunte.concepto }}
                   </span>
-                  <p class="mt-1 truncate text-sm text-gray-700">{{ apunte.socio }}</p>
-                  <p class="mt-0.5 text-xs text-gray-500">
-                    {{ formatDate(apunte.fecha) }}<span v-if="apunte.fechaEstimada" class="text-amber-600"> aprox.</span>
+                  <p class="mt-1 truncate text-sm text-texto-medio">{{ apunte.socio }}</p>
+                  <p class="mt-0.5 text-xs text-texto-suave">
+                    {{ formatDate(apunte.fecha) }}<span v-if="apunte.fechaEstimada" class="text-amber-600 oscuro:text-amber-300"> aprox.</span>
                     · {{ apunte.forma_pago === 'efectivo' ? 'Efectivo' : 'Transferencia' }}
                   </p>
-                  <p v-if="apunte.observaciones" class="mt-1 text-xs text-gray-500">{{ apunte.observaciones }}</p>
+                  <p v-if="apunte.observaciones" class="mt-1 text-xs text-texto-suave">{{ apunte.observaciones }}</p>
                 </div>
                 <div class="flex-shrink-0 text-right">
-                  <p class="font-semibold tabular-nums" :class="apunte.monto >= 0 ? 'text-emerald-700' : 'text-red-600'">
+                  <p class="font-semibold tabular-nums" :class="apunte.monto >= 0 ? 'text-emerald-700 oscuro:text-emerald-300' : 'text-red-600 oscuro:text-red-300'">
                     ${{ formatMoneyConSigno(apunte.monto) }}
                   </p>
-                  <p class="mt-0.5 text-xs text-gray-500">
-                    Saldo <span class="font-bold tabular-nums text-gray-800">${{ formatMoney(apunte.saldo) }}</span>
+                  <p class="mt-0.5 text-xs text-texto-suave">
+                    Saldo <span class="font-bold tabular-nums text-texto">${{ formatMoney(apunte.saldo) }}</span>
                   </p>
                 </div>
               </div>
@@ -750,20 +750,20 @@
           <div
             v-if="hayMasApuntes"
             ref="centinelaRef"
-            class="border-t border-gray-200 px-4 py-4 text-center sm:px-5"
+            class="border-t border-borde px-4 py-4 text-center sm:px-5"
           >
             <button type="button" class="ds-btn ds-btn--secondary w-full sm:w-auto" @click="cargarMasApuntes">
               <ChevronDownIcon class="h-4 w-4" />
               <span>Ver más movimientos</span>
             </button>
-            <p class="mt-2 text-xs text-gray-400">
+            <p class="mt-2 text-xs text-texto-tenue">
               Mostrando {{ apuntesMostrados.length }} de {{ apuntesVisibles.length }}
             </p>
           </div>
 
           <p
             v-else-if="hayVariasTandasDeApuntes"
-            class="border-t border-gray-200 px-4 py-3 text-center text-xs text-gray-400 sm:px-5"
+            class="border-t border-borde px-4 py-3 text-center text-xs text-texto-tenue sm:px-5"
           >
             Ya has visto los {{ apuntesVisibles.length }} movimientos.
           </p>
@@ -955,8 +955,8 @@ const columnasCorte = computed(() => [
     clave: 'efectivo',
     titulo: 'Efectivo',
     icono: BanknotesIcon,
-    acento: 'text-green-700',
-    borde: 'border-green-200',
+    acento: 'text-green-700 oscuro:text-green-300',
+    borde: 'border-green-200 oscuro:border-green-500/30',
     saldoInicial: saldoInicialEfectivo.value,
     movimientos: movimientosEfectivo.value,
     esperado: esperadoEfectivo.value,
@@ -968,8 +968,8 @@ const columnasCorte = computed(() => [
     clave: 'transferencia',
     titulo: 'Transferencia',
     icono: BuildingLibraryIcon,
-    acento: 'text-blue-700',
-    borde: 'border-blue-200',
+    acento: 'text-blue-700 oscuro:text-blue-300',
+    borde: 'border-blue-200 oscuro:border-blue-500/30',
     saldoInicial: saldoInicialTransferencia.value,
     movimientos: movimientosTransferencia.value,
     esperado: esperadoTransferencia.value,
@@ -981,8 +981,8 @@ const columnasCorte = computed(() => [
     clave: 'total',
     titulo: 'Total',
     icono: WalletIcon,
-    acento: 'text-[#1B5E37]',
-    borde: 'border-[#1B5E37]/30',
+    acento: 'text-marca-tinta',
+    borde: 'border-[#1B5E37]/30 oscuro:border-marca-tinta/30',
     saldoInicial: saldoInicialEfectivo.value + saldoInicialTransferencia.value,
     movimientos: movimientosEfectivo.value + movimientosTransferencia.value,
     esperado: esperadoEfectivo.value + esperadoTransferencia.value,
@@ -1003,8 +1003,8 @@ const saldoRealSinDeclarar = computed(
 )
 
 const claseFondoDiferencia = (valor) => {
-  if (valor === 0) return 'bg-emerald-50 text-emerald-800'
-  return valor > 0 ? 'bg-amber-50 text-amber-900' : 'bg-red-50 text-red-800'
+  if (valor === 0) return 'bg-emerald-50 oscuro:bg-emerald-500/15 text-emerald-800 oscuro:text-emerald-300'
+  return valor > 0 ? 'bg-amber-50 oscuro:bg-amber-500/15 text-amber-900 oscuro:text-amber-300' : 'bg-red-50 oscuro:bg-red-500/15 text-red-800 oscuro:text-red-300'
 }
 
 const etiquetaDiferencia = (valor) => {

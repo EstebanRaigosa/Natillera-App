@@ -4,7 +4,7 @@
     <div class="relative w-full">
       <!-- Icono de calendario a la izquierda -->
       <div class="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10 flex items-center justify-center">
-        <svg class="w-5 h-5 text-natillera-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 text-natillera-600 oscuro:text-natillera-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       </div>
@@ -21,8 +21,8 @@
         :placeholder="placeholder"
         :disabled="disabled"
         :class="[
-          'w-full input-field pl-11 sm:pl-12 pr-12 text-base font-semibold focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500 border-2 border-natillera-200 transition-all relative z-10',
-          disabled ? 'bg-gray-100 text-gray-600 cursor-not-allowed hover:border-natillera-200' : 'bg-white hover:border-natillera-300',
+          'w-full input-field pl-11 sm:pl-12 pr-12 text-base font-semibold focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500 border-2 border-natillera-200 oscuro:border-natillera-500/30 transition-all relative z-10',
+          disabled ? 'bg-superficie-hundida text-texto-secundario cursor-not-allowed hover:border-natillera-200 oscuro:hover:border-natillera-500/30' : 'bg-superficie-tarjeta hover:border-natillera-300 oscuro:hover:border-natillera-500/30',
           inputClass
         ]"
         :required="required && !disabled"
@@ -49,8 +49,8 @@
         class="date-input-calendar-button"
         :class="[
           disabled
-            ? 'cursor-default text-gray-500'
-            : 'text-gray-400 hover:text-natillera-600 hover:bg-natillera-50 active:bg-natillera-100 transition-all duration-200 cursor-pointer'
+            ? 'cursor-default text-texto-suave'
+            : 'text-texto-tenue hover:text-natillera-600 oscuro:hover:text-natillera-300 hover:bg-natillera-50 oscuro:hover:bg-natillera-500/15 active:bg-natillera-100 oscuro:active:bg-natillera-500/15 transition-all duration-200 cursor-pointer'
         ]"
         :title="disabled ? 'Fecha calculada automáticamente' : 'Abrir calendario'"
         @click.stop="!disabled && openDatePicker($event)"

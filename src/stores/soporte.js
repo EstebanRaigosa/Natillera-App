@@ -58,27 +58,27 @@ export const CATEGORIAS = [
 export const ESTADOS = {
   abierta: {
     etiqueta: 'Abierta',
-    clase: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    clase: 'bg-emerald-50 text-emerald-800 border-emerald-200 oscuro:bg-exito-suave oscuro:text-exito oscuro:border-exito-borde',
     barra: 'bg-emerald-400',
-    tinte: 'bg-white',
+    tinte: 'bg-superficie-tarjeta',
   },
   en_proceso: {
     etiqueta: 'En proceso',
-    clase: 'bg-amber-50 text-amber-800 border-amber-200',
+    clase: 'bg-amber-50 text-amber-800 border-amber-200 oscuro:bg-alerta-suave oscuro:text-alerta oscuro:border-alerta-borde',
     barra: 'bg-amber-400',
-    tinte: 'bg-amber-50/70',
+    tinte: 'bg-amber-50/70 oscuro:bg-alerta-suave',
   },
   resuelta: {
     etiqueta: 'Resuelta',
-    clase: 'bg-sky-50 text-sky-800 border-sky-200',
+    clase: 'bg-sky-50 text-sky-800 border-sky-200 oscuro:bg-info-suave oscuro:text-info oscuro:border-info-borde',
     barra: 'bg-sky-400',
-    tinte: 'bg-sky-50/80',
+    tinte: 'bg-sky-50/80 oscuro:bg-info-suave',
   },
   archivada: {
     etiqueta: 'Archivada',
-    clase: 'bg-gray-100 text-gray-600 border-gray-200',
+    clase: 'bg-superficie-hundida text-texto-secundario border-borde',
     barra: 'bg-gray-300',
-    tinte: 'bg-gray-100/80',
+    tinte: 'bg-superficie-hundida/80',
   },
 }
 
@@ -275,6 +275,7 @@ export const useSoporteStore = defineStore('soporte', () => {
   const totalBandeja = ref(0)
   const mensajes = ref({})              // { [conversacionId]: Mensaje[] }
   const hayMasAntiguos = ref({})        // { [conversacionId]: boolean }
+  const lecturaUsuario = ref({})        // { [conversacionId]: leido_usuario_at } (panel del soporte)
   const cola = ref(leerCola())          // envíos pendientes de reintento
   const noLeidos = ref(0)
   const cargando = ref(false)
@@ -417,7 +418,7 @@ export const useSoporteStore = defineStore('soporte', () => {
     try {
       let consulta = supabase
         .from('soporte_mensajes')
-        .select('id, conversacion_id, client_id, autor, cuerpo, created_at, soporte_adjuntos(id, ruta, nombre, mime, bytes)')
+        .select('id, conversacion_id, client_id, autor, cuerpo, created_at, leido_at, soporte_adjuntos(id, ruta, nombre, mime, bytes)')
         .eq('conversacion_id', conversacionId)
         .order('created_at', { ascending: false })
         .order('id', { ascending: false })          // desempate estable (caso borde 6)
@@ -509,6 +510,48 @@ export const useSoporteStore = defineStore('soporte', () => {
     } catch {
       // Un contador que no carga no debe romper la pantalla.
     }
+  }
+
+  /**
+   * Última lectura del usuario en una conversación (solo la usa el panel del
+   * soporte). Hace falta para los mensajes anteriores a la 056, que no tienen
+   * hora de lectura propia: se dan por leídos si son de antes de esta marca.
+   */
+  async function cargarLecturaUsuario(conversacionId) {
+    try {
+      const { data, error: e } = await supabase
+        .from('soporte_conversaciones')
+        .select('leido_usuario_at')
+        .eq('id', conversacionId)
+        .maybeSingle()
+      if (e) throw e
+      lecturaUsuario.value = { ...lecturaUsuario.value, [conversacionId]: data?.leido_usuario_at ?? null }
+    } catch {
+      // Sin este dato los mensajes antiguos salen como enviados, no como leídos.
+    }
+  }
+
+  /**
+   * Primer nombre del usuario de una conversación, para las respuestas
+   * predefinidas del soporte («Hola, María»). Se guarda en memoria: la bandeja
+   * abre muchas veces las mismas conversaciones. Vacío si no se conoce.
+   */
+  const nombresUsuario = {}
+  async function nombreDeUsuario(userId) {
+    if (!userId) return ''
+    if (userId in nombresUsuario) return nombresUsuario[userId]
+    try {
+      const { data, error: e } = await supabase
+        .from('user_profiles')
+        .select('nombre')
+        .eq('id', userId)
+        .maybeSingle()
+      if (e) throw e
+      nombresUsuario[userId] = data?.nombre || ''
+    } catch {
+      return ''   // sin nombre la respuesta sale igual, solo sin personalizar
+    }
+    return nombresUsuario[userId]
   }
 
   async function marcarLeido(conversacionId) {
@@ -921,7 +964,30 @@ export const useSoporteStore = defineStore('soporte', () => {
     if (enBandeja) {
       enBandeja.estado = fila.estado
       enBandeja.ultimo_mensaje_at = fila.ultimo_mensaje_at
+      if (fila.leido_usuario_at) enBandeja.leido_usuario_at = fila.leido_usuario_at
     }
+
+    if (fila.leido_usuario_at) aplicarLecturaUsuario(fila.id, fila.leido_usuario_at)
+  }
+
+  /**
+   * El usuario leyó la conversación: los mensajes del soporte que aún no tenían
+   * hora de lectura la toman, igual que hace el trigger de la 056 en la base.
+   * Así el panel del soporte ve el «Leído» sin recargar el hilo.
+   */
+  function aplicarLecturaUsuario(conversacionId, leidoAt) {
+    lecturaUsuario.value = { ...lecturaUsuario.value, [conversacionId]: leidoAt }
+    const lista = mensajes.value[conversacionId]
+    if (!lista?.length) return
+    const limite = new Date(leidoAt).getTime()
+    let cambio = false
+    const nueva = lista.map((m) => {
+      if (m.autor !== 'soporte' || m.leido_at || m._local) return m
+      if (new Date(m.created_at).getTime() > limite) return m
+      cambio = true
+      return { ...m, leido_at: leidoAt }
+    })
+    if (cambio) mensajes.value = { ...mensajes.value, [conversacionId]: nueva }
   }
 
   /** Inserta un mensaje llegado por Realtime, emparejando por client_id. */
@@ -971,7 +1037,7 @@ export const useSoporteStore = defineStore('soporte', () => {
     noLeidos, cargando, cargandoMensajes, error, esSoporte,
     conversacionAbiertaUsuario, conversacionAbiertaBandeja,
     // lectura
-    comprobarRol, cargarConversaciones, cargarBandeja, cargarMensajes, refrescarNoLeidos, marcarLeido,
+    comprobarRol, cargarConversaciones, cargarBandeja, cargarMensajes, refrescarNoLeidos, marcarLeido, cargarLecturaUsuario, lecturaUsuario, nombreDeUsuario,
     escucharInsignia, dejarDeEscucharInsignia,
     // adjuntos
     subirAdjuntos, validarArchivo, validarTipoArchivo, validarTamanoArchivo, urlFirmada, urlesFirmadas,

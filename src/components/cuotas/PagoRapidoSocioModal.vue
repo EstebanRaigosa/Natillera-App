@@ -14,8 +14,8 @@
     :persistent="true"
     :ios-soft-backdrop="true"
     overlay-class="fixed inset-0 z-[55] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-    card-class="relative w-full sm:max-w-lg max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    backdrop-class="absolute inset-0 bg-velo-modal backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-lg max-h-[92dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-borde/60 bg-superficie-tarjeta"
     card-max-width="32rem"
     @close="cerrar"
   >
@@ -31,6 +31,7 @@
         >
           <ChevronLeftIcon class="h-6 w-6" />
         </button>
+        <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
         <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
           <CurrencyDollarIcon class="h-5 w-5 text-[#1B5E37]" />
         </div>
@@ -61,6 +62,7 @@
           </button>
         </div>
         <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
+          <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm">
             <CurrencyDollarIcon class="h-6 w-6 text-[#1B5E37]" />
           </div>
@@ -82,40 +84,40 @@
     <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
         ref="areaScroll"
-        class="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden bg-white px-4 pt-4 pb-6 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-5"
+        class="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta px-4 pt-4 pb-6 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-5"
         @scroll.passive="programarNatiscroll"
       >
         <CargaCaja v-if="cargando" texto="Buscando lo que debe" detalle="Cuotas, sanciones, actividades y préstamos de todos los meses." />
 
-        <p v-else-if="errorCarga" class="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">{{ errorCarga }}</p>
+        <p v-else-if="errorCarga" class="rounded-xl border border-red-200 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 px-3 py-2.5 text-sm text-red-700 oscuro:text-red-300">{{ errorCarga }}</p>
 
-        <div v-else-if="filas.length === 0" class="rounded-xl bg-[#E8F5E9] px-4 py-6 text-center">
-          <CheckCircleIcon class="mx-auto h-8 w-8 text-[#1B5E37]" />
-          <p class="mt-2 font-semibold text-[#1B5E37]">Está al día</p>
-          <p class="mt-1 text-sm text-gray-600">No tiene cuotas ni conceptos con saldo.</p>
+        <div v-else-if="filas.length === 0" class="rounded-xl bg-marca-suave px-4 py-6 text-center">
+          <CheckCircleIcon class="mx-auto h-8 w-8 text-marca-tinta" />
+          <p class="mt-2 font-semibold text-marca-tinta">Está al día</p>
+          <p class="mt-1 text-sm text-texto-secundario">No tiene cuotas ni conceptos con saldo.</p>
         </div>
 
         <template v-else>
           <!-- Cómo pagó: la forma decide el 4×1000. La fecha va en cada cuota. -->
-          <section class="space-y-3 rounded-xl border border-gray-200 bg-gray-50/60 p-3">
+          <section class="space-y-3 rounded-xl border border-borde bg-superficie-suave/60 p-3">
             <SwitchSegmentado v-model="formaPago" :opciones="OPCIONES_FORMA_PAGO" aria-label="Forma de pago" :disabled="guardando" />
             <label
               v-if="formaPago === 'transferencia'"
-              class="flex min-h-[44px] cursor-pointer touch-manipulation items-center gap-2 text-sm font-semibold text-gray-700"
+              class="flex min-h-[44px] cursor-pointer touch-manipulation items-center gap-2 text-sm font-semibold text-texto-medio"
             >
-              <input v-model="cobrar4x1000" type="checkbox" class="h-5 w-5 rounded border-gray-300 text-[#1B5E37] focus:ring-[#1B5E37]" :disabled="guardando" />
+              <input v-model="cobrar4x1000" type="checkbox" class="h-5 w-5 rounded border-borde-fuerte text-marca-tinta focus:ring-[#1B5E37]" :disabled="guardando" />
               Cobrar 4×1000
             </label>
           </section>
 
           <div class="flex items-center justify-between gap-2">
-            <p class="text-xs font-bold uppercase tracking-wide text-gray-500">
+            <p class="text-xs font-bold uppercase tracking-wide text-texto-suave">
               {{ filas.length }} {{ filas.length === 1 ? 'cuota con saldo' : 'cuotas con saldo' }}
             </p>
             <button
               v-if="indiceUltimaVencida >= 0"
               type="button"
-              class="min-h-[44px] touch-manipulation px-2 text-xs font-semibold text-[#1B5E37]"
+              class="min-h-[44px] touch-manipulation px-2 text-xs font-semibold text-marca-tinta"
               :disabled="guardando"
               @click="marcarVencidas"
             >
@@ -129,7 +131,7 @@
               v-for="(fila, i) in filas"
               :key="fila.cuota.id"
               class="overflow-hidden rounded-xl border-2 transition-colors"
-              :class="seleccion.has(fila.cuota.id) ? 'border-[#1B5E37] bg-[#F4FAF5]' : 'border-gray-200 bg-white'"
+              :class="seleccion.has(fila.cuota.id) ? 'border-[#1B5E37] oscuro:border-marca-tinta bg-[#F4FAF5] oscuro:bg-marca-suave' : 'border-borde bg-superficie-tarjeta'"
             >
               <button
                 type="button"
@@ -141,48 +143,50 @@
               >
                 <span
                   class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border-2"
-                  :class="seleccion.has(fila.cuota.id) ? 'border-[#1B5E37] bg-[#1B5E37] text-white' : 'border-gray-300 bg-white'"
+                  :class="seleccion.has(fila.cuota.id) ? 'border-[#1B5E37] oscuro:border-marca-tinta bg-[#1B5E37] text-white' : 'border-borde-fuerte bg-superficie-tarjeta'"
                 >
                   <CheckIcon v-if="seleccion.has(fila.cuota.id)" class="h-4 w-4" stroke-width="3" />
                 </span>
                 <span class="min-w-0 flex-1">
-                  <span class="block text-sm font-bold text-gray-900">{{ fila.periodo }}</span>
+                  <span class="block text-sm font-bold text-texto-fuerte">{{ fila.periodo }}</span>
                   <span class="mt-0.5 inline-flex rounded-md px-1.5 py-0.5 text-[11px] font-bold" :class="fila.estado.clase">{{ fila.estado.texto }}</span>
                 </span>
                 <span class="flex-shrink-0 text-right">
-                  <span class="block text-base font-extrabold tabular-nums text-gray-900">${{ formatMoney(fila.total) }}</span>
+                  <span class="block text-base font-extrabold tabular-nums text-texto-fuerte">${{ formatMoney(fila.total) }}</span>
                 </span>
               </button>
 
               <!-- Todos los conceptos de la cuota -->
-              <ul class="mx-3 mb-2 space-y-0.5 border-l-2 border-[#E8F5E9] pl-3 text-xs">
+              <ul class="mx-3 mb-2 space-y-0.5 border-l-2 border-[#E8F5E9] oscuro:border-borde pl-3 text-xs">
                 <li v-for="(linea, j) in fila.lineas" :key="j" class="flex justify-between gap-3">
                   <span class="min-w-0" :class="linea.clase">{{ linea.nombre }}</span>
                   <span class="flex-shrink-0 tabular-nums font-semibold" :class="linea.clase">${{ formatMoney(linea.valor) }}</span>
                 </li>
               </ul>
 
-              <!-- Fecha de este pago: por defecto hoy. La sanción de la cuota se calcula a esta fecha. -->
-              <label class="mx-3 mb-2 flex items-center justify-between gap-3 text-xs font-semibold text-gray-600">
-                <span class="flex items-center gap-1.5">
-                  <CalendarDaysIcon class="h-4 w-4 text-gray-400" />
+              <!--
+                Fecha de este pago: por defecto hoy. La sanción de la cuota se calcula a esta fecha.
+                Etiqueta encima y campo a lo ancho: en fila, el input date nativo de móvil se salía
+                y se montaba sobre la etiqueta. DateInput es el campo de fecha de la app (texto
+                dd/MM/aaaa + calendario nativo que funciona en iOS).
+              -->
+              <div class="mx-3 mb-2">
+                <p class="mb-1 flex items-center gap-1.5 text-xs font-semibold text-texto-secundario">
+                  <CalendarDaysIcon class="h-4 w-4 text-texto-tenue" aria-hidden="true" />
                   Fecha de pago
-                </span>
-                <input
-                  :value="fechaDe(fila.cuota.id)"
-                  type="date"
-                  :max="hoyIso"
-                  class="min-h-[44px] rounded-lg border border-gray-300 bg-white px-2 text-base text-gray-900"
+                </p>
+                <DateInput
+                  :model-value="fechaDe(fila.cuota.id)"
                   :disabled="guardando"
-                  @change="cambiarFecha(fila.cuota.id, $event.target.value)"
+                  @update:model-value="cambiarFecha(fila.cuota.id, $event)"
                 />
-              </label>
+              </div>
 
               <!-- Abono o valor distinto: el modal de pago de siempre -->
               <div class="px-3 pb-3">
                 <button
                   type="button"
-                  class="inline-flex min-h-[44px] w-full touch-manipulation items-center justify-center gap-2 rounded-full border-2 border-[#1B5E37]/30 bg-white px-4 text-sm font-semibold text-[#1B5E37] transition-colors hover:border-[#1B5E37] hover:bg-[#E8F5E9] disabled:opacity-50"
+                  class="inline-flex min-h-[44px] w-full touch-manipulation items-center justify-center gap-2 rounded-full border-2 border-[#1B5E37]/30 oscuro:border-marca-tinta/30 bg-superficie-tarjeta px-4 text-sm font-semibold text-marca-tinta transition-colors hover:border-[#1B5E37] oscuro:hover:border-marca-tinta hover:bg-marca-suave disabled:opacity-50"
                   :disabled="guardando"
                   @click="emit('detalle', fila.cuota.id)"
                 >
@@ -193,7 +197,7 @@
             </li>
           </ul>
 
-          <p class="text-xs leading-snug text-gray-500">
+          <p class="text-xs leading-snug text-texto-suave">
             Las cuotas se pagan en orden: al marcar una se marcan las anteriores.
           </p>
         </template>
@@ -204,12 +208,12 @@
 
     <!-- Pie fijo. La barra de Safari tapa el pie de una hoja inferior: se suma `tapado` al padding. -->
     <div
-      class="flex-shrink-0 space-y-2.5 border-t border-gray-200 bg-white px-4 pt-3 sm:px-5"
+      class="flex-shrink-0 space-y-2.5 border-t border-borde bg-superficie-tarjeta px-4 pt-3 sm:px-5"
       :style="{ paddingBottom: `calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
     >
       <div v-if="filasElegidas.length > 0" class="flex items-baseline justify-between gap-3">
-        <span class="min-w-0 text-xs text-gray-600">{{ resumenElegido }}</span>
-        <span class="flex-shrink-0 text-lg font-extrabold tabular-nums text-[#1B5E37]">${{ formatMoney(totalElegido) }}</span>
+        <span class="min-w-0 text-xs text-texto-secundario">{{ resumenElegido }}</span>
+        <span class="flex-shrink-0 text-lg font-extrabold tabular-nums text-marca-tinta">${{ formatMoney(totalElegido) }}</span>
       </div>
       <button
         type="button"
@@ -246,6 +250,7 @@ import ModalWrapper from '../ModalWrapper.vue'
 import NatiscrollHint from '../NatiscrollHint.vue'
 import SwitchSegmentado from '../SwitchSegmentado.vue'
 import CargaCaja from '../carga/CargaCaja.vue'
+import DateInput from '../DateInput.vue'
 import { supabase } from '../../lib/supabase'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useTapadoInferior } from '../../composables/useTapadoInferior'
@@ -253,6 +258,8 @@ import { registrarPagoCompletoDeCuota, calcular4x1000 } from '../../composables/
 import { useCuotasStore, capitalCuotaCompleto, cuotaPagadaDentroDePlazo } from '../../stores/cuotas'
 import { useNotificationStore } from '../../stores/notifications'
 import { formatMoney } from '../../utils/formatMoney'
+import { parseDateLocal } from '../../utils/formatDate'
+import { calcularMoraCuota, reglasMoraNatillera } from '../../composables/usePagoPrestamo'
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -297,6 +304,7 @@ function cambiarFecha(cuotaId, valor) {
 }
 
 const socio = ref(null)
+const reglasMora = ref({ tasaMora: 0, diasGracia: 0 })
 const cuotas = ref([])
 const actividades = ref([])
 const cuotasPrestamo = ref([])
@@ -325,7 +333,7 @@ async function cargar() {
   seleccion.value = new Set()
   try {
     const [natRes, snRes, cuotasRes, saRes, prestRes] = await Promise.all([
-      supabase.from('natilleras').select('reglas_multas').eq('id', props.natilleraId).single(),
+      supabase.from('natilleras').select('reglas_multas, reglas_interes').eq('id', props.natilleraId).single(),
       supabase.from('socios_natillera').select('id, periodicidad, socio:socios(nombre, telefono)').eq('id', props.socioNatilleraId).single(),
       supabase.from('cuotas').select('*').eq('socio_natillera_id', props.socioNatilleraId),
       supabase.from('socios_actividad').select('*').eq('socio_natillera_id', props.socioNatilleraId).in('estado', ['pendiente', 'parcial', 'mora']),
@@ -335,6 +343,8 @@ async function cargar() {
 
     configSanciones.value = natRes.data?.reglas_multas?.sanciones || null
     diasGracia.value = natRes.data?.reglas_multas?.dias_gracia ?? 3
+    // Mora de préstamos: mismas reglas que Préstamos (tasa de mora y gracia del préstamo)
+    reglasMora.value = reglasMoraNatillera(natRes.data || {})
     socio.value = {
       nombre: snRes.data?.socio?.nombre || 'Socio',
       telefono: snRes.data?.socio?.telefono || '',
@@ -358,7 +368,7 @@ async function cargar() {
     if (prestamoIds.length > 0) {
       const { data, error } = await supabase
         .from('plan_pagos_prestamo')
-        .select('id, prestamo_id, numero_cuota, valor_cuota, valor_pagado, valor_pagado_efectivo, valor_pagado_transferencia, fecha_proyectada, mes, anio, quincena')
+        .select('id, prestamo_id, numero_cuota, valor_cuota, valor_pagado, valor_pagado_efectivo, valor_pagado_transferencia, capital, fecha_proyectada, mes, anio, quincena')
         .in('prestamo_id', prestamoIds)
         .eq('pagada', false)
         .order('fecha_proyectada', { ascending: true })
@@ -456,19 +466,19 @@ function enMoraPorFecha(cuota) {
 function estadoDe(cuota, sancion) {
   if (capitalCuotaCompleto(cuota)) {
     return sancion > 0
-      ? { texto: 'Cuota pagada · debe sanción', clase: 'bg-red-100 text-red-800' }
-      : { texto: 'Cuota pagada · faltan conceptos', clase: 'bg-amber-100 text-amber-800' }
+      ? { texto: 'Cuota pagada · debe sanción', clase: 'bg-red-100 oscuro:bg-red-500/15 text-red-800 oscuro:text-red-300' }
+      : { texto: 'Cuota pagada · faltan conceptos', clase: 'bg-amber-100 oscuro:bg-amber-500/15 text-amber-800 oscuro:text-amber-300' }
   }
   // Mora es por fecha, no por sanción: sin multas activas o con «no calcular multa» una
   // cuota vencida sigue en mora aunque no cobre nada extra.
   if (sancion > 0 || enMoraPorFecha(cuota)) {
     return aNumero(cuota.valor_pagado) > 0
-      ? { texto: 'En mora · pago parcial', clase: 'bg-red-100 text-red-800' }
-      : { texto: 'En mora', clase: 'bg-red-100 text-red-800' }
+      ? { texto: 'En mora · pago parcial', clase: 'bg-red-100 oscuro:bg-red-500/15 text-red-800 oscuro:text-red-300' }
+      : { texto: 'En mora', clase: 'bg-red-100 oscuro:bg-red-500/15 text-red-800 oscuro:text-red-300' }
   }
-  if (aNumero(cuota.valor_pagado) > 0) return { texto: 'Pago parcial', clase: 'bg-violet-100 text-violet-800' }
-  if (String(cuota.fecha_limite || '').slice(0, 10) > hoyIso) return { texto: 'Adelantada', clase: 'bg-slate-100 text-slate-700' }
-  return { texto: 'Pendiente', clase: 'bg-gray-100 text-gray-800' }
+  if (aNumero(cuota.valor_pagado) > 0) return { texto: 'Pago parcial', clase: 'bg-violet-100 oscuro:bg-violet-500/15 text-violet-800 oscuro:text-violet-300' }
+  if (String(cuota.fecha_limite || '').slice(0, 10) > hoyIso) return { texto: 'Adelantada', clase: 'bg-slate-100 oscuro:bg-superficie-hundida text-slate-700 oscuro:text-texto-medio' }
+  return { texto: 'Pendiente', clase: 'bg-superficie-hundida text-texto' }
 }
 
 const filas = computed(() => {
@@ -511,15 +521,24 @@ const filas = computed(() => {
       const cuotaPend = Math.max(0, Math.round(aNumero(cuota.valor_cuota) - aNumero(cuota.valor_pagado)))
       const multa = sancionDe(cuota)
       const acts = actsPorCuota.get(cuota.id) || []
-      const prest = prestPorCuota.get(cuota.id) || []
+      // Cada cuota de préstamo lleva su mora a la fecha de este pago, calculada como en
+      // Préstamos (capital pendiente × tasa/30 × días tras la gracia). Se cobra primero.
+      const corte = parseDateLocal(fechaDe(cuota.id))
+      const prest = (prestPorCuota.get(cuota.id) || []).map(cp => ({
+        ...cp,
+        mora: Math.round(calcularMoraCuota(cp, reglasMora.value.tasaMora, corte, reglasMora.value.diasGracia))
+      }))
       const lineas = []
-      if (cuotaPend > 0) lineas.push({ nombre: aNumero(cuota.valor_pagado) > 0 ? 'Cuota (lo que falta)' : 'Cuota', valor: cuotaPend, clase: 'text-gray-700' })
-      if (multa > 0) lineas.push({ nombre: 'Sanción', valor: multa, clase: 'text-red-700' })
-      acts.forEach(sa => lineas.push({ nombre: sa.actividad?.descripcion || 'Actividad', valor: Math.round(sa.valor_pendiente), clase: 'text-purple-800' }))
-      prest.forEach(cp => lineas.push({ nombre: `Cuota préstamo #${cp.numero_cuota}`, valor: Math.round(cp.valor_pendiente), clase: 'text-blue-800' }))
+      if (cuotaPend > 0) lineas.push({ nombre: aNumero(cuota.valor_pagado) > 0 ? 'Cuota (lo que falta)' : 'Cuota', valor: cuotaPend, clase: 'text-texto-medio' })
+      if (multa > 0) lineas.push({ nombre: 'Sanción', valor: multa, clase: 'text-red-700 oscuro:text-red-300' })
+      acts.forEach(sa => lineas.push({ nombre: sa.actividad?.descripcion || 'Actividad', valor: Math.round(sa.valor_pendiente), clase: 'text-purple-800 oscuro:text-purple-300' }))
+      prest.forEach(cp => {
+        if (cp.mora > 0) lineas.push({ nombre: `Mora préstamo #${cp.numero_cuota}`, valor: cp.mora, clase: 'text-rose-700 oscuro:text-rose-300' })
+        lineas.push({ nombre: `Cuota préstamo #${cp.numero_cuota}`, valor: Math.round(cp.valor_pendiente), clase: 'text-blue-800 oscuro:text-blue-300' })
+      })
       const neto = lineas.reduce((s, l) => s + l.valor, 0)
       const gmf = conGmf ? calcular4x1000(neto) : 0
-      if (gmf > 0) lineas.push({ nombre: '4×1000 (GMF)', valor: gmf, clase: 'text-sky-700' })
+      if (gmf > 0) lineas.push({ nombre: '4×1000 (GMF)', valor: gmf, clase: 'text-sky-700 oscuro:text-sky-300' })
       return {
         cuota,
         periodo: textoPeriodo(cuota),
