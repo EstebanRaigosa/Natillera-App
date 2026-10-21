@@ -55,6 +55,7 @@ const Soporte = () => import('../views/soporte/Soporte.vue')
 const SoporteAdmin = () => import('../views/admin/SoporteAdmin.vue')
 const TraficoAdmin = () => import('../views/admin/TraficoAdmin.vue')
 const CorreosAdmin = () => import('../views/admin/CorreosAdmin.vue')
+const VerComoSocioAdmin = () => import('../views/admin/VerComoSocioAdmin.vue')
 const Opinion = () => import('../views/opinion/Opinion.vue')
 const UnirmeNatillera = () => import('../views/invitaciones/UnirmeNatillera.vue')
 const PortalSocio = () => import('../views/portal/PortalSocio.vue')
@@ -360,6 +361,23 @@ const routes = [
         name: 'CorreosAdmin',
         component: CorreosAdmin,
         meta: { title: 'Correos', requiresSuperAdmin: true, temaOscuro: true }
+      },
+      {
+        // Ver como socio: buscador de socios de todas las natilleras y el portal de cualquiera.
+        // Igual que Tráfico, el guard es comodidad: quien protege es la base de datos
+        // (superadmin_buscar_socios y portal_datos_socio exigen es_super_admin()).
+        path: 'admin/ver-como-socio',
+        name: 'VerComoSocioAdmin',
+        component: VerComoSocioAdmin,
+        meta: { title: 'Ver como socio', requiresSuperAdmin: true, temaOscuro: true }
+      },
+      {
+        // El mismo portal del socio, con otro nombre de ruta: así no se guarda como «último
+        // lugar» del superadmin (afterEach solo mira PortalSocio) y la vista sabe que es ajeno.
+        path: 'admin/ver-como-socio/:socioNatilleraId',
+        name: 'PortalSocioSuperadmin',
+        component: PortalSocio,
+        meta: { title: 'Ver como socio', requiresSuperAdmin: true, temaOscuro: true }
       },
       {
         // Destino de las caritas del correo de experiencia. Pide sesión (está bajo el

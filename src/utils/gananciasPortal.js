@@ -1,6 +1,9 @@
 /*
  * Ganancias del socio para el portal, con la administración ya descontada.
  *
+ * Las fotos nuevas ya no pasan por aquí: guardan los netos del cierre (`neto` en
+ * calcularCierreNatillera). Queda para las fotos viejas que aún traen el aporte aparte.
+ *
  * El socio no ve la administración como una línea aparte: se le resta de sus ganancias,
  * repartida entre los conceptos en la misma proporción, y su ahorro queda intacto (el
  * mismo que ve en Cuotas). Así «ahorro + ganancias − lo que debes = recibirías» cuadra

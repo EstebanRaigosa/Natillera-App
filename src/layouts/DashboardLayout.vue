@@ -242,7 +242,7 @@
           </div>
 
           <!-- Otras natilleras donde también es socio: saltar de un portal a otro sin pasar por el inicio -->
-          <div v-if="esPortal && portalNav.misNatilleras.value.length > 1" class="sidebar-section space-y-1">
+          <div v-if="esPortal && !esVerComoSocio && portalNav.misNatilleras.value.length > 1" class="sidebar-section space-y-1">
             <p class="sidebar-section-heading">Mis natilleras</p>
             <button
               v-for="n in portalNav.misNatilleras.value"
@@ -312,6 +312,15 @@
             >
               <EnvelopeIcon class="w-5 h-5 shrink-0" />
               <span class="sidebar-option-label">Correos</span>
+            </button>
+            <button
+              type="button"
+              class="nav-link nav-link-option w-full text-left"
+              :class="{ 'nav-link-active': route.path.startsWith('/admin/ver-como-socio') }"
+              @click="abrirRutaDesdeSidebar('/admin/ver-como-socio')"
+            >
+              <EyeIcon class="w-5 h-5 shrink-0" />
+              <span class="sidebar-option-label">Ver como socio</span>
             </button>
             <button
               type="button"
@@ -486,7 +495,7 @@
                 <WalletIcon class="h-5 w-5" aria-hidden="true" />
               </span>
               <span class="min-w-0">
-                <span class="block text-[10px] font-bold uppercase tracking-[0.14em] text-marca-tinta">Mi natillera</span>
+                <span class="block text-[10px] font-bold uppercase tracking-[0.14em] text-marca-tinta">{{ esVerComoSocio ? 'Viendo como socio' : 'Mi natillera' }}</span>
                 <span class="block truncate font-display text-base font-bold leading-tight text-texto-fuerte">{{ nombreNatilleraPortal || 'Portal del socio' }}</span>
               </span>
             </div>
@@ -550,7 +559,7 @@
          chat sobre la pantalla en la que estés, sin perder lo que estabas
          haciendo. -->
     <BotonSoporte
-      :hay-barra-inferior="!!natilleraIdRuta || route.name === 'PortalSocio'"
+      :hay-barra-inferior="!!natilleraIdRuta || esPortal"
       @abrir="chatSoporteAbierto = true"
       @abrir-panel="abrirPanelSoporte"
     />
@@ -616,6 +625,7 @@ import {
   ReceiptPercentIcon,
   SignalIcon,
   EnvelopeIcon,
+  EyeIcon,
   ScaleIcon,
   MagnifyingGlassIcon,
   DocumentCheckIcon,
@@ -705,10 +715,14 @@ const modulosOcultos = computed(() =>
 
 // ─── Portal del socio en la barra lateral ───
 const portalNav = usePortalNavegacion()
-const esPortal = computed(() => route.name === 'PortalSocio')
+// El superadmin viendo el portal de otro socio usa la misma vista con otra ruta.
+const esVerComoSocio = computed(() => route.name === 'PortalSocioSuperadmin')
+const esPortal = computed(() => route.name === 'PortalSocio' || esVerComoSocio.value)
 // Nombre de la natillera del portal abierto, para la cabecera móvil.
 const nombreNatilleraPortal = computed(() => {
   if (!esPortal.value) return ''
+  // Ese portal no está entre las natilleras de esta cuenta: el nombre lo publica la página.
+  if (esVerComoSocio.value) return portalNav.nombreNatillera.value
   const id = String(route.params.socioNatilleraId || '')
   return portalNav.misNatilleras.value.find(n => String(n.socio_natillera_id) === id)?.natillera_nombre || ''
 })
@@ -729,7 +743,7 @@ function elegirSeccionPortal(valor) {
   portalNav.elegir(valor)
 }
 watch([esPortal, () => authStore.user?.id], ([enPortal, usuarioId]) => {
-  if (enPortal) portalNav.cargarMisNatilleras(usuarioId)
+  if (enPortal && !esVerComoSocio.value) portalNav.cargarMisNatilleras(usuarioId)
 }, { immediate: true })
 
 const natilleraIdRuta = computed(() => {

@@ -26,17 +26,23 @@ export async function guardarFotoGanancias(natilleraId, resultadoCierre, configC
     .filter(s => s.socioNatillera?.id)
     .map(s => {
       /*
-       * La administración no viaja al portal: el socio no la ve. Se guardan sus ganancias
-       * ya con ella descontada (gananciasPortal.js), así que ni el porcentaje ni el monto
-       * llegan a su celular, y aun así ahorro + ganancias − deudas = lo que recibe.
+       * La administración no viaja al portal: el socio no la ve. Se guardan los valores
+       * NETOS del propio cierre (`s.neto`), los mismos de su comprobante de liquidación,
+       * así que ni el porcentaje ni el monto llegan a su celular y las cifras cuadran con
+       * el cierre al centavo.
+       *
+       * Antes se descontaba la administración entera de las ganancias. Con base «total»
+       * (ahorro + utilidades) eso les cargaba también la parte del ahorro, y cada concepto
+       * —los ingresos a utilidades registrados en Movimientos incluidos— salía en el
+       * portal bastante por debajo del cierre.
        */
-      const netas = gananciasSinAdministracion(s)
+      const netas = s.neto || { ahorro: s.ahorro, ...gananciasSinAdministracion(s) }
       return {
         socio_natillera_id: s.socioNatillera.id,
         natillera_id: natilleraId,
         calculado_en: new Date().toISOString(),
         datos: {
-          ahorro: s.ahorro || 0,
+          ahorro: netas.ahorro || 0,
           utilidadesTotal: netas.utilidadesTotal,
           utilidadesPorConcepto: netas.utilidadesPorConcepto,
           descuentos: s.descuentos || 0,

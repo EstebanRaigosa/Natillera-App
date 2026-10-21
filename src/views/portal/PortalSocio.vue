@@ -11,17 +11,43 @@
     :class="{ 'portal--con-barra': !!datos }"
     :style="{ '--tapado-inferior': tapado + 'px' }"
   >
+    <!--
+      Superadmin viendo el portal de otro socio (ruta PortalSocioSuperadmin). Siempre a la
+      vista para no confundir este portal con el propio; la base de datos registra cada
+      apertura en superadmin_vistas_socio.
+    -->
+    <div
+      v-if="comoSuperadmin"
+      class="flex items-center gap-3 rounded-2xl border border-alerta-borde bg-alerta-suave px-3 py-2 text-alerta sm:px-4"
+      role="status"
+    >
+      <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-superficie-tarjeta/70" aria-hidden="true">
+        <EyeIcon class="h-5 w-5" />
+      </span>
+      <p class="min-w-0 flex-1 text-sm leading-snug">
+        <span class="font-semibold">Viendo como {{ datos?.socio?.nombre || 'socio' }}</span>
+        <span v-if="datos?.natillera?.nombre"> · {{ datos.natillera.nombre }}</span>
+        <span class="block text-xs opacity-80">Solo lectura · queda registrado</span>
+      </p>
+      <router-link
+        :to="{ name: 'VerComoSocioAdmin' }"
+        class="ds-btn ds-btn--secondary shrink-0 touch-manipulation"
+      >
+        Salir
+      </router-link>
+    </div>
+
     <!-- En móvil la tarjeta principal hace de cabecera; esta queda para escritorio -->
     <header class="ds-page-header max-lg:hidden">
       <div class="ds-page-header__row">
         <div class="ds-page-header__lead">
-          <BackButton to="/dashboard" :inline="true" />
+          <BackButton :to="comoSuperadmin ? '/admin/ver-como-socio' : '/dashboard'" :inline="true" />
           <div class="ds-page-header__icon">
             <WalletIcon class="h-5 w-5 sm:h-6 sm:w-6" />
           </div>
           <div class="min-w-0 flex-1">
             <h1 class="ds-page-header__title truncate">{{ datos?.natillera?.nombre || 'Mi natillera' }}</h1>
-            <p class="ds-page-header__sub">Tu cuenta como socio</p>
+            <p class="ds-page-header__sub">{{ comoSuperadmin ? 'Portal del socio, visto por el superadmin' : 'Tu cuenta como socio' }}</p>
           </div>
         </div>
         <div class="ds-page-header__actions hidden sm:flex">
@@ -52,11 +78,18 @@
     <section v-else-if="!datos" class="ds-empty-state">
       <div class="ds-empty-state__header">
         <div class="ds-empty-state__icon-wrap"><LockClosedIcon class="h-7 w-7 sm:h-8 sm:w-8" /></div>
-        <h2 class="ds-empty-state__title">No tienes acceso a esta natillera</h2>
-        <p class="ds-empty-state__subtitle">Si eres socio, pídele al administrador que revise tu vínculo.</p>
+        <template v-if="comoSuperadmin">
+          <h2 class="ds-empty-state__title">No se encontró ese socio</h2>
+          <p class="ds-empty-state__subtitle">Puede que lo hayan eliminado de la natillera.</p>
+        </template>
+        <template v-else>
+          <h2 class="ds-empty-state__title">No tienes acceso a esta natillera</h2>
+          <p class="ds-empty-state__subtitle">Si eres socio, pídele al administrador que revise tu vínculo.</p>
+        </template>
       </div>
       <div class="ds-empty-state__body">
-        <router-link to="/dashboard" class="ds-btn ds-btn--primary">Ir al inicio</router-link>
+        <router-link v-if="comoSuperadmin" :to="{ name: 'VerComoSocioAdmin' }" class="ds-btn ds-btn--primary">Buscar otro socio</router-link>
+        <router-link v-else to="/dashboard" class="ds-btn ds-btn--primary">Ir al inicio</router-link>
       </div>
     </section>
 
@@ -739,6 +772,7 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   DocumentTextIcon,
+  EyeIcon,
   InformationCircleIcon,
   LockClosedIcon,
   ReceiptPercentIcon,
@@ -769,6 +803,10 @@ import { formatDate, parseDateLocal } from '../../utils/formatDate'
 const route = useRoute()
 const router = useRouter()
 const socioNatilleraId = computed(() => route.params.socioNatilleraId)
+// La misma vista sirve al superadmin para ver el portal de cualquier socio. Quien decide
+// si puede es la base de datos (portal_datos_socio + es_super_admin()), no esta bandera:
+// aquí solo cambia textos y salidas.
+const comoSuperadmin = computed(() => route.name === 'PortalSocioSuperadmin')
 
 const cargando = ref(true)
 const error = ref('')
@@ -791,7 +829,7 @@ const ETIQUETA_UTILIDAD = {
   evento: 'Eventos',
   otro: 'Otras actividades',
   sanciones: 'Sanciones',
-  utilidades_adicionales: 'Otros ingresos'
+  utilidades_adicionales: 'Adicionales'
 }
 const FILTROS_APORTES = [
   { valor: 'todas', etiqueta: 'Todas' },
@@ -838,7 +876,8 @@ async function comprobarSiAdministra(natilleraId) {
   const turno = ++turnoAdministra
   natilleraQueAdministra.value = null
   const usuarioId = authStore.user?.id
-  if (!natilleraId || !usuarioId) return
+  // Mirando el portal de otro: el atajo llevaría a administrar, que no es lo que se vino a ver.
+  if (!natilleraId || !usuarioId || comoSuperadmin.value) return
   try {
     const [dueno, colaborador] = await Promise.all([
       supabase.from('natilleras').select('id').eq('id', natilleraId).eq('admin_id', usuarioId).limit(1),
@@ -853,7 +892,7 @@ async function comprobarSiAdministra(natilleraId) {
   }
 }
 // También depende del usuario: la sesión puede terminar de cargar después que los datos.
-watch(() => [datos.value?.natillera?.id, authStore.user?.id], ([natilleraId]) => comprobarSiAdministra(natilleraId), { immediate: true })
+watch(() => [datos.value?.natillera?.id, authStore.user?.id, comoSuperadmin.value], ([natilleraId]) => comprobarSiAdministra(natilleraId), { immediate: true })
 
 const diasGracia = computed(() => datos.value?.natillera?.reglas_multas?.dias_gracia || 3)
 const natilleraCerrada = computed(() => String(datos.value?.natillera?.estado || '').toLowerCase() === 'cerrada')
@@ -1439,7 +1478,7 @@ function contenedorScroll() {
 
 function elegirDesdeBarra(valor) {
   if (valor === 'natilleras') {
-    router.push('/dashboard')
+    router.push(comoSuperadmin.value ? { name: 'VerComoSocioAdmin' } : '/dashboard')
     return
   }
   if (valor === 'estado') {
@@ -1497,6 +1536,7 @@ watchEffect(() => {
   portalNav.secciones.value = datos.value ? pestanas.value : []
   portalNav.activa.value = seccionNavActiva.value
   portalNav.natilleraQueAdministra.value = natilleraQueAdministra.value
+  portalNav.nombreNatillera.value = datos.value?.natillera?.nombre || ''
 })
 onUnmounted(darseDeBaja)
 </script>

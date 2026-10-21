@@ -14,6 +14,8 @@ import { supabase } from '../lib/supabase'
 const secciones = ref([])
 const activa = ref('resumen')
 const natilleraQueAdministra = ref(null)
+// Para la cabecera móvil cuando el portal no es de esta cuenta (superadmin viendo como socio)
+const nombreNatillera = ref('')
 const misNatilleras = ref([])
 let alElegir = null
 let natilleras = null // promesa en curso o ya resuelta
@@ -28,6 +30,7 @@ function registrarPortal(fn) {
     secciones.value = []
     activa.value = 'resumen'
     natilleraQueAdministra.value = null
+    nombreNatillera.value = ''
   }
 }
 
@@ -67,6 +70,7 @@ export function usePortalNavegacion() {
     secciones,
     activa,
     natilleraQueAdministra,
+    nombreNatillera,
     misNatilleras,
     registrarPortal,
     elegir,
