@@ -123,6 +123,9 @@
               Último ingreso {{ hace(u.ultimo) }} · {{ u.dispositivo }}
               <template v-if="u.diasActivos > 1"> · {{ u.diasActivos }} días distintos</template>
             </p>
+            <div v-if="natillerasDe" class="mt-1 text-[0.6875rem]">
+              <NatillerasUsuario :natilleras="natillerasDe(u.userId)" />
+            </div>
           </li>
         </ul>
         <button
@@ -186,6 +189,7 @@ import { ref, computed, watch } from 'vue'
 import { ChartBarIcon } from '@heroicons/vue/24/outline'
 import CargaCaja from '../carga/CargaCaja.vue'
 import { dispositivoDeRegistro, familiaDispositivo } from '../../utils/dispositivo'
+import NatillerasUsuario from './NatillerasUsuario.vue'
 
 /*
  * Tablero de frecuencia de INGRESOS (abrir la app), no de inicios de sesión: cada fila de
@@ -201,7 +205,9 @@ const props = defineProps({
   dias: { type: Number, default: 30 },
   cargando: { type: Boolean, default: false },
   /** Reloj compartido con el panel, para que «hace X» envejezca solo. */
-  ahora: { type: Number, default: () => Date.now() }
+  ahora: { type: Number, default: () => Date.now() },
+  /** userId -> natilleras (ver useNatillerasUsuarios); opcional. */
+  natillerasDe: { type: Function, default: null }
 })
 const emit = defineEmits(['update:dias'])
 

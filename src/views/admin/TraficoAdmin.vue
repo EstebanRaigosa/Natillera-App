@@ -121,6 +121,9 @@
                 <span class="mt-0.5 block truncate text-xs text-texto-suave">
                   {{ ultimaAccionDe(s.email) || 'Navegando' }}
                 </span>
+                <span class="mt-1 block text-[0.6875rem]">
+                  <NatillerasUsuario :natilleras="natillerasDe(s.user_id)" />
+                </span>
               </span>
               <span class="max-w-[45%] flex-shrink-0 text-right">
                 <span class="block truncate text-[0.6875rem] text-texto-tenue">{{ dispositivoDeRegistro(s).etiqueta }}</span>
@@ -174,6 +177,7 @@
         :ingresos="ingresosPeriodo"
         :cargando="cargandoFrecuencia"
         :ahora="ahora"
+        :natilleras-de="natillerasDe"
       />
 
       <!-- Historial de ingresos. Un ingreso es abrir la app (o volver tras 10 minutos fuera),
@@ -194,6 +198,7 @@
             <thead>
               <tr class="bg-superficie-suave text-left text-xs font-semibold text-texto-secundario">
                 <th class="px-4 py-2.5">Usuario</th>
+                <th class="px-4 py-2.5">Natilleras</th>
                 <th class="px-4 py-2.5">Entró</th>
                 <th class="px-4 py-2.5">Última señal</th>
                 <th class="px-4 py-2.5">Duró</th>
@@ -215,6 +220,11 @@
                       aria-hidden="true"
                     />
                     <span class="min-w-0 truncate text-texto">{{ s.nombre || s.email }}</span>
+                  </span>
+                </td>
+                <td class="max-w-[16rem] px-4 py-2.5 text-xs">
+                  <span class="block">
+                    <NatillerasUsuario :natilleras="natillerasDe(s.user_id)" />
                   </span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-2.5 text-texto-secundario tabular-nums">{{ fechaHora(s.inicio) }}</td>
@@ -253,6 +263,8 @@ import {
 import BackButton from '../../components/BackButton.vue'
 import CargaPantalla from '../../components/carga/CargaPantalla.vue'
 import FrecuenciaIngresos from '../../components/trafico/FrecuenciaIngresos.vue'
+import NatillerasUsuario from '../../components/trafico/NatillerasUsuario.vue'
+import { useNatillerasUsuarios } from '../../composables/useNatillerasUsuarios'
 import { dispositivoDeRegistro } from '../../utils/dispositivo'
 import { claseAccion, etiquetaAccion } from '../../utils/catalogoAuditoria'
 import { supabase } from '../../lib/supabase'
@@ -288,6 +300,16 @@ const ingresosPeriodo = ref([])
 const cargandoFrecuencia = ref(false)
 
 const authStore = useAuthStore()
+
+/*
+ * Natilleras de cada usuario que aparece en pantalla. Se pide por los que van
+ * llegando (carga, frecuencia y Realtime); el composable solo consulta los nuevos.
+ */
+const { pedir: pedirNatilleras, natillerasDe, detener: detenerNatilleras } = useNatillerasUsuarios()
+watch(
+  () => [...sesiones.value, ...ingresosPeriodo.value].map(s => s.user_id),
+  pedirNatilleras
+)
 const { ocultarMiActividad } = useOcultarMiActividad()
 
 /*
@@ -516,6 +538,7 @@ onMounted(() => {
 onUnmounted(() => {
   if (relojId != null) clearInterval(relojId)
   if (canal) supabase.removeChannel(canal)
+  detenerNatilleras()
 })
 </script>
 
