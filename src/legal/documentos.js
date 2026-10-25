@@ -75,7 +75,8 @@ export const POLITICA_DATOS = {
           'Mostrarle a cada socio su estado de cuenta, cuando su cuenta está vinculada.',
           'Vincular la cuenta de un socio con su registro en la natillera usando su número de celular, siempre con aprobación del administrador.',
           'Generar comprobantes y mensajes para que el administrador los comparta, por ejemplo por WhatsApp.',
-          'Enviarte notificaciones de la app y códigos de verificación.',
+          'Enviarte notificaciones de la app, códigos de verificación y, por correo, las respuestas a tus solicitudes de soporte y los avisos sobre tu cuenta.',
+          'Escribirte por correo, de vez en cuando, para pedirte tu opinión sobre la app o contarte novedades. Puedes dejar de recibir estos correos cuando quieras con el enlace «Darte de baja» que trae cada uno o desde Mi cuenta; los de soporte y los avisos de tu cuenta te seguirán llegando.',
           'Atender soporte, cuidar la seguridad, prevenir fraudes y abusos, y llevar el registro de cambios (auditoría).',
           'Mejorar la app con estadísticas de uso.'
         ] },
@@ -89,7 +90,8 @@ export const POLITICA_DATOS = {
         { lista: [
           'Dentro de la natillera: el administrador y los colaboradores que él autorice ven los datos de los socios. Cada socio vinculado ve solo lo suyo y, si el administrador lo permite, algunos datos generales del grupo.',
           'Proveedores tecnológicos que trabajan por encargo nuestro: Supabase (base de datos e inicio de sesión), Netlify (alojamiento de la app), ' +
-            'Google (inicio de sesión con Google), Twilio (códigos por SMS), los servicios de notificaciones del navegador (Google, Apple, Mozilla) ' +
+            'Google (inicio de sesión con Google), Twilio (códigos por SMS), Resend (envío de correos; recibe tu nombre y tu correo), ' +
+            'los servicios de notificaciones del navegador (Google, Apple, Mozilla) ' +
             'y DiceBear (dibujos de avatar; solo recibe un texto al azar, no tus datos).',
           'Autoridades, cuando una ley u orden judicial lo exija.'
         ] }

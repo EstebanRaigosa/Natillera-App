@@ -16,8 +16,8 @@ export const RESPONSABLE = {
   sitio: 'https://natillerapp.com'
 }
 
-export const VERSION_LEGAL = '2026-09-25'
-export const VIGENTE_DESDE = '25 de septiembre de 2026'
+export const VERSION_LEGAL = '2026-10-25'
+export const VIGENTE_DESDE = '25 de octubre de 2026'
 
 // Casilla marcada al registrarse: se guarda aquí hasta que haya sesión para dejar constancia.
 export const CLAVE_CONSENTIMIENTO_REGISTRO = 'natillerapp_consentimiento_registro'

@@ -73,6 +73,8 @@ const experiencia = `<!doctype html>
             <td align="center" style="background: #f6faf6; border-top: 1px solid #e6efe6; padding: 16px 24px; color: #9aa39a; font-size: 12px; line-height: 18px;">
               Recibes este correo porque tienes una cuenta en Natillerapp.<br>
               <a href="{{app_url}}" target="_blank" style="color: #1B5E37; font-weight: bold; text-decoration: none;">Abrir Natillerapp</a>
+              &nbsp;·&nbsp;
+              <a href="{{baja_url}}" target="_blank" style="color: #9aa39a; text-decoration: underline;">Darte de baja</a>
             </td>
           </tr>
         </table>
@@ -114,4 +116,5 @@ export function rellenarEjemplo(html, { nombre = 'Ana', appUrl = window.location
     .replaceAll('{{nombre}}', nombre)
     .replaceAll('{{app_url}}', appUrl)
     .replaceAll('{{correo_id}}', 'prueba')
+    .replaceAll('{{baja_url}}', `${appUrl}/correos/baja`)
 }

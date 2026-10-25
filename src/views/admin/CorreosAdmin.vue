@@ -66,11 +66,16 @@
 
           <ul class="max-h-[28rem] divide-y divide-borde-suave overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
             <li v-for="u in usuariosFiltrados" :key="u.id">
-              <label class="flex min-h-[56px] cursor-pointer items-center gap-3 px-4 py-2 hover:bg-superficie-suave">
+              <!-- Quien se dio de baja no se puede elegir: la función tampoco le enviaría. -->
+              <label
+                class="flex min-h-[56px] items-center gap-3 px-4 py-2"
+                :class="bajas.has(u.id) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-superficie-suave'"
+              >
                 <input
                   type="checkbox"
                   class="h-5 w-5 flex-shrink-0 rounded border-borde-fuerte accent-[#1B5E37]"
                   :checked="seleccionados.has(u.id)"
+                  :disabled="bajas.has(u.id)"
                   @change="alternar(u.id)"
                 />
                 <span class="min-w-0 flex-1">
@@ -80,6 +85,7 @@
                 <span class="flex-shrink-0 text-right text-[11px] text-texto-tenue">
                   {{ u.ultimo_acceso ? `Entró ${haceCuanto(u.ultimo_acceso)}` : 'Nunca entró' }}
                   <span v-if="notaDe(u.id)" class="mt-0.5 block font-semibold text-marca-tinta">Opinó: {{ notaDe(u.id) }}/5</span>
+                  <span v-if="bajas.has(u.id)" class="mt-0.5 block font-semibold text-texto-suave">Se dio de baja</span>
                 </span>
               </label>
             </li>
@@ -135,7 +141,8 @@
             class="mt-1 h-[32rem] w-full rounded-xl border border-borde bg-[#eef4ee] oscuro:bg-superficie-hundida"
           />
           <p class="mt-1 text-xs text-texto-suave">
-            Variables: <code v-pre>{{saludo}}</code>, <code v-pre>{{nombre}}</code>, <code v-pre>{{app_url}}</code>, <code v-pre>{{correo_id}}</code>.
+            Variables: <code v-pre>{{saludo}}</code>, <code v-pre>{{nombre}}</code>, <code v-pre>{{app_url}}</code>, <code v-pre>{{correo_id}}</code>, <code v-pre>{{baja_url}}</code>.
+            Si el correo no usa <code v-pre>{{baja_url}}</code>, se le añade un pie con el enlace para darse de baja: ninguno sale sin él.
           </p>
 
           <p v-if="mensaje" class="mt-3 rounded-xl px-3 py-2 text-sm font-medium" :class="mensaje.ok ? 'bg-marca-suave text-marca-tinta' : 'bg-red-50 oscuro:bg-red-500/15 text-red-800 oscuro:text-red-300'">
@@ -237,6 +244,7 @@ const cargando = ref(true)
 const errorCarga = ref('')
 const usuarios = ref([])
 const opiniones = ref([])
+const bajas = ref(new Set())   // usuarios que no quieren correos de novedades ni encuestas
 const envios = ref([])
 
 const busqueda = ref('')
@@ -299,7 +307,7 @@ function alternar(id) {
 
 function seleccionarVisibles() {
   const s = new Set(seleccionados.value)
-  for (const u of usuariosFiltrados.value) s.add(u.id)
+  for (const u of usuariosFiltrados.value) if (!bajas.value.has(u.id)) s.add(u.id)
   seleccionados.value = s
   confirmando.value = false
 }
@@ -357,7 +365,9 @@ async function enviar() {
     return
   }
   const partes = [`Enviado a ${r.enviados} de ${r.destinatarios}.`]
-  if (r.omitidos) partes.push(`${r.omitidos} sin correo o inactivos.`)
+  const sinCorreo = (r.omitidos || 0) - (r.deBaja || 0)
+  if (sinCorreo > 0) partes.push(`${sinCorreo} sin correo o inactivos.`)
+  if (r.deBaja) partes.push(`${r.deBaja} se ${r.deBaja === 1 ? 'dio' : 'dieron'} de baja y no ${r.deBaja === 1 ? 'lo recibió' : 'lo recibieron'}.`)
   if (r.error) partes.push(`Falló un lote: ${r.error}`)
   mensaje.value = { ok: !r.error, texto: partes.join(' ') }
   seleccionados.value = new Set()
@@ -376,14 +386,17 @@ async function cargarEnvios() {
 async function cargarTodo() {
   cargando.value = true
   errorCarga.value = ''
-  const [u, o] = await Promise.all([
+  const [u, o, b] = await Promise.all([
     supabase.from('user_profiles').select('id, email, nombre, activo, ultimo_acceso').order('nombre'),
     supabase.from('opiniones_plataforma').select('id, user_id, correo_id, nota, comentario, updated_at').order('updated_at', { ascending: false }),
-    cargarEnvios()
+    cargarEnvios(),
+    supabase.rpc('correos_bajas')
   ])
   if (u.error) errorCarga.value = `No se pudieron cargar los usuarios: ${u.error.message}`
   usuarios.value = (u.data || []).filter(x => x.activo !== false && x.email)
   opiniones.value = o.data || []
+  // `SETOF uuid` llega como lista de ids sueltos.
+  bajas.value = new Set((b.data || []).map(fila => (typeof fila === 'string' ? fila : fila?.correos_bajas)).filter(Boolean))
   cargando.value = false
 }
 

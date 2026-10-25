@@ -44,6 +44,7 @@
     <AjustesTema />
     <AjustesNotificaciones />
     <AjustesBotonSoporte />
+    <AjustesCorreos />
 
     <!-- ── Tus datos (Ley 1581): qué aceptaste y cómo ejercer tus derechos ── -->
     <section class="card">
@@ -75,6 +76,7 @@ import { computed, ref, watch } from 'vue'
 import { PencilSquareIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline'
 import AjustesNotificaciones from '../../components/soporte/AjustesNotificaciones.vue'
 import AjustesBotonSoporte from '../../components/soporte/AjustesBotonSoporte.vue'
+import AjustesCorreos from '../../components/usuario/AjustesCorreos.vue'
 import AjustesTema from '../../components/AjustesTema.vue'
 import UsernameModal from '../../components/UsernameModal.vue'
 import { useAuthStore } from '../../stores/auth'

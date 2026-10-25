@@ -61,6 +61,7 @@ const UnirmeNatillera = () => import('../views/invitaciones/UnirmeNatillera.vue'
 const PortalSocio = () => import('../views/portal/PortalSocio.vue')
 const SociosEnApp = () => import('../views/socios/SociosEnApp.vue')
 const PaginaLegal = () => import('../views/legal/PaginaLegal.vue')
+const BajaCorreos = () => import('../views/correos/BajaCorreos.vue')
 const AdministradoresNatillera = () => import('../views/natilleras/AdministradoresNatillera.vue')
 const PaginaNoEncontrada = () => import('../views/publico/PaginaNoEncontrada.vue')
 
@@ -109,6 +110,17 @@ const routes = [
     component: UnirmeNatillera,
     props: true,
     meta: { title: 'Unirme a mi natillera' }
+  },
+  {
+    /*
+     * Enlace «Darte de baja» de los correos de novedades y encuestas. Sin sesión: el
+     * token del enlace basta, y nadie debería tener que entrar a la app para esto. Sin
+     * `meta.publico`, así que va con noindex.
+     */
+    path: '/correos/baja',
+    name: 'BajaCorreos',
+    component: BajaCorreos,
+    meta: { title: 'Correos de Natillerapp' }
   },
   {
     // Documentos legales: públicos (se leen antes de crear la cuenta) e indexables.
