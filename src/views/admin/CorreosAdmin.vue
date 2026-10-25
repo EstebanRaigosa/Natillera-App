@@ -386,7 +386,8 @@ async function cargarEnvios() {
 async function cargarTodo() {
   cargando.value = true
   errorCarga.value = ''
-  const [u, o, b] = await Promise.all([
+  // El tercero es cargarEnvios(), que guarda su resultado él mismo: se salta.
+  const [u, o, , b] = await Promise.all([
     supabase.from('user_profiles').select('id, email, nombre, activo, ultimo_acceso').order('nombre'),
     supabase.from('opiniones_plataforma').select('id, user_id, correo_id, nota, comentario, updated_at').order('updated_at', { ascending: false }),
     cargarEnvios(),
