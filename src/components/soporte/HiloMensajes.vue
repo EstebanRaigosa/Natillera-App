@@ -35,6 +35,7 @@
             :cita="citaDe(mensaje)"
             :destacado="destacadoId === mensaje.id"
             :permite-citar="permiteCitar"
+            :mostrar-dispositivo="mostrarLectura"
             @reintentar="$emit('reintentar', $event)"
             @responder="$emit('responder', $event)"
             @ir-a-cita="irAMensaje"
@@ -93,7 +94,11 @@ const props = defineProps({
   conversacionId: { type: String, default: null },
   mensajes: { type: Array, default: () => [] },
   ladoPropio: { type: String, default: 'usuario' },
-  /** Confirmación de lectura del usuario: solo en el panel del soporte, nunca en la pantalla del usuario. */
+  /**
+   * Confirmación de lectura del usuario: solo en el panel del soporte, nunca en
+   * la pantalla del usuario. También activa el dispositivo de cada mensaje, que
+   * es igual de exclusivo del soporte.
+   */
   mostrarLectura: { type: Boolean, default: false },
   /** Última lectura del usuario en la conversación: para mensajes sin `leido_at` propio. */
   leidoHasta: { type: String, default: null },

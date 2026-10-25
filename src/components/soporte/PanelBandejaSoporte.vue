@@ -224,6 +224,21 @@
 
               <button
                 type="button"
+                :class="[
+                  'inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-sm transition touch-manipulation',
+                  mostrarFicha
+                    ? 'border-[#1B5E37] bg-[#1B5E37]/10 text-marca-tinta oscuro:border-marca-tinta'
+                    : 'border-borde-fuerte bg-superficie-tarjeta text-texto-medio hover:bg-superficie-suave',
+                ]"
+                :aria-expanded="mostrarFicha ? 'true' : 'false'"
+                @click="mostrarFicha = !mostrarFicha"
+              >
+                <UserCircleIcon class="h-4 w-4" />
+                Usuario
+              </button>
+
+              <button
+                type="button"
                 class="inline-flex items-center gap-1.5 rounded-lg border border-borde-fuerte bg-superficie-tarjeta px-2.5 py-2 text-sm text-texto-medio transition hover:bg-superficie-suave touch-manipulation"
                 @click="mostrarNota = !mostrarNota"
               >
@@ -243,6 +258,12 @@
                 {{ enviandoCorreo ? 'Enviando…' : 'Reenviar por correo' }}
               </button>
             </div>
+
+            <FichaUsuarioSoporte
+              v-if="mostrarFicha && conversacionActiva.user_id"
+              :user-id="conversacionActiva.user_id"
+              :dispositivo-chat="dispositivoChat"
+            />
 
             <!-- Nota interna: privada del soporte (RN-11). El usuario no la
                  recibe por ninguna vía; ni siquiera está en su vista. -->
@@ -338,11 +359,12 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowLeftIcon, EnvelopeIcon, ExclamationTriangleIcon, InboxIcon, LockClosedIcon,
-  MagnifyingGlassIcon, TrashIcon, XMarkIcon,
+  MagnifyingGlassIcon, TrashIcon, UserCircleIcon, XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import HiloMensajes from './HiloMensajes.vue'
 import RedactorMensaje from './RedactorMensaje.vue'
 import EliminarConversacionModal from './EliminarConversacionModal.vue'
+import FichaUsuarioSoporte from './FichaUsuarioSoporte.vue'
 import { CATEGORIAS, codigoConversacion, ESTADOS, ESTADOS_CERRADOS, useSoporteStore } from '../../stores/soporte'
 import { useSoporteRealtime } from '../../composables/useSoporteRealtime'
 import { useNotificationStore } from '../../stores/notifications'
@@ -388,6 +410,9 @@ const filtroEstado = ref('todas')
 const filtroCategoria = ref('todas')
 const pagina = ref(0)
 const mostrarNota = ref(false)
+// La ficha se queda abierta al cambiar de conversación: quien la abre suele
+// querer verla en todas mientras repasa la bandeja.
+const mostrarFicha = ref(false)
 const notaInterna = ref('')
 const guardandoNota = ref(false)
 const enviandoCorreo = ref(false)
@@ -411,6 +436,15 @@ watch(() => conversacionActiva.value?.user_id, async (userId) => {
 }, { immediate: true })
 
 const mensajesActivos = computed(() => soporte.mensajes[idActivo.value] ?? [])
+
+/** Dispositivo del último mensaje del usuario con dispositivo registrado. */
+const dispositivoChat = computed(() => {
+  for (let i = mensajesActivos.value.length - 1; i >= 0; i--) {
+    const m = mensajesActivos.value[i]
+    if (m.autor === 'usuario' && m.dispositivo?.etiqueta) return m.dispositivo
+  }
+  return null
+})
 
 const totalPaginas = computed(() =>
   Math.max(1, Math.ceil(soporte.totalBandeja / soporte.CONVERSACIONES_POR_PAGINA)))

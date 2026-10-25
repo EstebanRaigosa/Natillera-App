@@ -221,6 +221,17 @@
       <div :class="['mt-1 flex items-center gap-1.5 px-1', esPropio ? 'justify-end' : 'justify-start']">
         <span class="text-[0.6875rem] text-texto-suave">{{ hora }}</span>
 
+        <!-- Desde dónde escribió el usuario (solo lo ve el soporte). -->
+        <span
+          v-if="dispositivo"
+          class="inline-flex min-w-0 items-center gap-1 text-[0.6875rem] text-texto-tenue"
+          :title="`Enviado desde ${dispositivo.etiqueta}`"
+        >
+          <span aria-hidden="true">·</span>
+          <component :is="iconoDispositivo(dispositivo.tipo)" class="h-3.5 w-3.5 shrink-0" />
+          <span class="truncate">{{ dispositivo.etiqueta }}</span>
+        </span>
+
         <!--
           Estado del envío (RF-04). Se distingue por FORMA además de por color:
           reloj, marca de verificación o triángulo de alerta.
@@ -261,7 +272,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import {
-  ArrowUturnLeftIcon, CheckIcon, ClockIcon, DocumentTextIcon, ExclamationTriangleIcon, FilmIcon, PaperClipIcon, PhotoIcon, PlayIcon,
+  ArrowUturnLeftIcon, CheckIcon, ClockIcon, ComputerDesktopIcon, DevicePhoneMobileIcon, DeviceTabletIcon, DocumentTextIcon, ExclamationTriangleIcon, FilmIcon, PaperClipIcon, PhotoIcon, PlayIcon,
 } from '@heroicons/vue/24/outline'
 import { useSoporteStore } from '../../stores/soporte'
 import { esImagen, esTexto, esVideo, formatearTamano } from '../../utils/adjuntosSoporte'
@@ -281,6 +292,8 @@ const props = defineProps({
   destacado: { type: Boolean, default: false },
   /** Falso donde no se puede responder (conversación archivada, por ejemplo). */
   permiteCitar: { type: Boolean, default: true },
+  /** Panel del soporte: muestra desde qué dispositivo escribió el otro lado. */
+  mostrarDispositivo: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['reintentar', 'responder', 'ir-a-cita'])
@@ -293,6 +306,17 @@ const rotas = ref(new Set())      // adjuntos que el navegador no supo pintar
 
 const esPropio = computed(() => props.mensaje.autor === props.ladoPropio)
 const citable = computed(() => props.permiteCitar && sePuedeCitar(props.mensaje))
+
+const dispositivo = computed(() => {
+  if (!props.mostrarDispositivo || esPropio.value) return null
+  return props.mensaje.dispositivo?.etiqueta ? props.mensaje.dispositivo : null
+})
+
+function iconoDispositivo(tipo) {
+  if (tipo === 'movil') return DevicePhoneMobileIcon
+  if (tipo === 'tablet') return DeviceTabletIcon
+  return ComputerDesktopIcon
+}
 
 // ---- Deslizar para citar ------------------------------------------------
 //

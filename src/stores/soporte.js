@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { supabase } from '../lib/supabase'
 import { MIMES_VIDEO, comprimirImagen, crearVistaPrevia, esVideo, revocarVistasPrevias } from '../utils/adjuntosSoporte'
 import { anotarUsaSoporte, pedirAvisoNotificaciones } from '../composables/useAvisoNotificaciones'
+import { dispositivoActual, dispositivoActualDetallado } from '../utils/dispositivo'
 
 /**
  * Store del chat de soporte (Especificaciones/chat-soporte/especificacion.md).
@@ -54,6 +55,28 @@ const MIMES_CONVERTIBLES = ['image/heif']
  * cita vacía hasta que el usuario pagine hacia atrás.
  */
 const SELECCION_CITADO = 'citado:respuesta_a(id, autor, cuerpo, soporte_adjuntos(mime))'
+
+/*
+ * Dispositivo que viaja con cada mensaje, para que el soporte sepa desde dónde
+ * le escriben. La versión detallada (modelo y versión reales en Android) es
+ * asíncrona: se pide una vez y, mientras no llega, va la del user agent. Así el
+ * envío nunca espera por ella.
+ */
+let dispositivoDetallado = null
+let pidiendoDispositivo = false
+function dispositivoParaEnvio() {
+  if (!dispositivoDetallado && !pidiendoDispositivo) {
+    pidiendoDispositivo = true
+    dispositivoActualDetallado()
+      .then((d) => { dispositivoDetallado = d })
+      .catch(() => {})
+  }
+  try {
+    return dispositivoDetallado ?? dispositivoActual()
+  } catch {
+    return null   // sin dispositivo el mensaje sale igual
+  }
+}
 
 export const CATEGORIAS = [
   { valor: 'error', etiqueta: 'Algo no funciona' },
@@ -432,7 +455,7 @@ export const useSoporteStore = defineStore('soporte', () => {
     try {
       let consulta = supabase
         .from('soporte_mensajes')
-        .select(`id, conversacion_id, client_id, autor, cuerpo, created_at, leido_at, respuesta_a,
+        .select(`id, conversacion_id, client_id, autor, cuerpo, created_at, leido_at, respuesta_a, dispositivo,
           soporte_adjuntos(id, ruta, nombre, mime, bytes), ${SELECCION_CITADO}`)
         .eq('conversacion_id', conversacionId)
         .order('created_at', { ascending: false })
@@ -567,6 +590,25 @@ export const useSoporteStore = defineStore('soporte', () => {
       return ''   // sin nombre la respuesta sale igual, solo sin personalizar
     }
     return nombresUsuario[userId]
+  }
+
+  /*
+   * Ficha del usuario de una conversación (solo superadministrador): perfil,
+   * dispositivos recientes y natilleras. Se guarda un par de minutos: al saltar
+   * entre conversaciones del mismo usuario no hace falta volver a pedirla, pero
+   * tampoco debe quedarse vieja toda la sesión.
+   */
+  const fichas = new Map()  // userId -> { datos, en }
+  const VIDA_FICHA_MS = 2 * 60 * 1000
+
+  async function detalleUsuario(userId, { forzar = false } = {}) {
+    if (!userId) return null
+    const guardada = fichas.get(userId)
+    if (!forzar && guardada && Date.now() - guardada.en < VIDA_FICHA_MS) return guardada.datos
+    const { data, error: e } = await supabase.rpc('soporte_detalle_usuario', { p_user_id: userId })
+    if (e) throw new Error(traducirError(e).mensaje)
+    fichas.set(userId, { datos: data, en: Date.now() })
+    return data
   }
 
   async function marcarLeido(conversacionId) {
@@ -771,6 +813,7 @@ export const useSoporteStore = defineStore('soporte', () => {
         p_categoria: categoria,
         p_adjuntos: adjuntos,
         p_respuesta_a: cita?.id ?? null,
+        p_dispositivo: dispositivoParaEnvio(),
       })
       if (e) throw e
 
@@ -1070,7 +1113,7 @@ export const useSoporteStore = defineStore('soporte', () => {
     noLeidos, cargando, cargandoMensajes, error, esSoporte,
     conversacionAbiertaUsuario, conversacionAbiertaBandeja,
     // lectura
-    comprobarRol, cargarConversaciones, cargarBandeja, cargarMensajes, refrescarNoLeidos, marcarLeido, cargarLecturaUsuario, lecturaUsuario, nombreDeUsuario,
+    comprobarRol, cargarConversaciones, cargarBandeja, cargarMensajes, refrescarNoLeidos, marcarLeido, cargarLecturaUsuario, lecturaUsuario, nombreDeUsuario, detalleUsuario,
     escucharInsignia, dejarDeEscucharInsignia,
     // adjuntos
     subirAdjuntos, validarArchivo, validarTipoArchivo, validarTamanoArchivo, urlFirmada, urlesFirmadas,

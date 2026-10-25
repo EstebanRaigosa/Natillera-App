@@ -180,6 +180,19 @@ Es el requisito que separa un chat usable de uno que frustra. Tres piezas:
   conversación (`migrations/068_soporte_citar_mensaje.sql`). Solo se citan mensajes ya
   confirmados por el servidor, y no en conversaciones con el redactor bloqueado.
 
+#### RF-05 ter — Quién escribe: dispositivo y ficha del usuario
+- **Dispositivo por mensaje:** cada mensaje guarda el dispositivo desde el que se envió
+  (`soporte_mensajes.dispositivo`, la misma descripción que `accesos_usuario`: «iPhone ·
+  iOS 26 · App instalada»). Lo declara el cliente; el servidor solo admite las claves
+  conocidas y las recorta (`soporte_limpiar_dispositivo`). Se muestra bajo la hora de los
+  mensajes del usuario, **solo en el panel del soporte**.
+- **Ficha del usuario:** botón «Usuario» en la cabecera de la conversación. Muestra
+  perfil (nombre, correo, teléfono, antigüedad, último ingreso), el dispositivo desde el
+  que escribe, los dispositivos de los últimos 90 días con sus ingresos y sus natilleras
+  con el rol (administrador, coadministrador, colaborador, visor o socio) y el número de
+  socios. La sirve `soporte_detalle_usuario`, solo para superadministrador
+  (`migrations/069_soporte_ficha_usuario.sql`).
+
 #### RF-06 — Bandeja del superadministrador
 - **Descripción:** lista ordenada por `ultimo_mensaje_at` descendente.
 - **Filtros:** estado (todas / sin responder / abiertas / en proceso / resueltas) y
@@ -748,6 +761,7 @@ cumplir mejor su intención. Están comentados también en el propio código.
 
 | Versión | Fecha | Cambio |
 |---------|-------|--------|
+| 2.14 | 2026-10-25 | Dispositivo de cada mensaje y ficha del usuario en el panel del soporte (RF-05 ter). `migrations/069_soporte_ficha_usuario.sql` |
 | 2.13 | 2026-10-25 | Citar un mensaje al responder: deslizar la burbuja en táctil o botón en escritorio, barra en el redactor y salto al original desde la cita (RF-05 bis). `migrations/068_soporte_citar_mensaje.sql` añade `respuesta_a` y el parámetro `p_respuesta_a` |
 | 2.12 | 2026-10-25 | Vídeos cortos como adjunto: MP4, MOV y WebM de menos de 2 minutos y hasta 50 MB (RF-05). `migrations/067_soporte_adjuntos_video.sql` amplía bucket, CHECK de `soporte_adjuntos.bytes` y `soporte_enviar_mensaje`, que pasa a medir el tamaño real del objeto subido |
 | 2.11 | 2026-09-03 | *Mi cuenta* pierde el enlace «Abrir el soporte» y el cuadro «¿Buscabas los mensajes de recordatorio?». La vía de rescate pasa a ser el interruptor Visible/Oculto del botón flotante |
