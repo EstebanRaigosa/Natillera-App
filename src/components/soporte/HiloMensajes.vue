@@ -32,7 +32,12 @@
             :lado-propio="ladoPropio"
             :mostrar-lectura="mostrarLectura"
             :leido-hasta="leidoHasta"
+            :cita="citaDe(mensaje)"
+            :destacado="destacadoId === mensaje.id"
+            :permite-citar="permiteCitar"
             @reintentar="$emit('reintentar', $event)"
+            @responder="$emit('responder', $event)"
+            @ir-a-cita="irAMensaje"
           />
         </template>
       </div>
@@ -76,10 +81,12 @@
 </template>
 
 <script setup>
-import { nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { CheckCircleIcon, SparklesIcon } from '@heroicons/vue/24/outline'
 import BurbujaMensaje from './BurbujaMensaje.vue'
 import CargaCaja from '../carga/CargaCaja.vue'
+import { crearCita } from '../../utils/citasSoporte'
+import { useNotificationStore } from '../../stores/notifications'
 
 const props = defineProps({
   /** Conversación que se está mostrando: al cambiar, el hilo baja al final. */
@@ -99,9 +106,55 @@ const props = defineProps({
   despedida: { type: String, default: '' },
   /** Encabezado del bloque de despedida: el estado que la cerró. */
   tituloDespedida: { type: String, default: 'Conversación cerrada' },
+  /** Si se ofrece citar mensajes (deslizar o botón). Falso con el redactor bloqueado. */
+  permiteCitar: { type: Boolean, default: true },
 })
 
-defineEmits(['cargar-antiguos', 'reintentar'])
+defineEmits(['cargar-antiguos', 'reintentar', 'responder'])
+
+const notificaciones = useNotificationStore()
+
+// ---- Citas --------------------------------------------------------------
+
+const porId = computed(() => new Map(props.mensajes.map((m) => [m.id, m])))
+
+/*
+ * La cita embebida manda (viene del servidor o del envío propio); si falta —un
+ * mensaje llegado en vivo cuyo citado aún no se ha completado—, se busca en el
+ * hilo cargado.
+ */
+function citaDe(mensaje) {
+  if (mensaje.citado) return mensaje.citado
+  if (!mensaje.respuesta_a) return null
+  return crearCita(porId.value.get(mensaje.respuesta_a))
+}
+
+const destacadoId = ref(null)
+let temporizadorDestacado = null
+
+/*
+ * Lleva el hilo hasta el mensaje citado. Se calcula el desplazamiento a mano en
+ * vez de usar `scrollIntoView`: en Safari de iOS este mueve también la página o
+ * el modal que contiene el hilo, no solo el contenedor (manual §5).
+ */
+function irAMensaje(id) {
+  const el = contenedor.value
+  const destino = el?.querySelector(`[data-mensaje-id="${CSS.escape(String(id))}"]`)
+  if (!destino) {
+    notificaciones.alerta('Ese mensaje es más antiguo. Pulsa «Ver mensajes anteriores» para encontrarlo.')
+    return
+  }
+  const margen = el.clientHeight / 3
+  const objetivo = destino.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop - margen
+  const sinAnimacion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  el.scrollTo({ top: Math.max(0, objetivo), behavior: sinAnimacion ? 'auto' : 'smooth' })
+
+  clearTimeout(temporizadorDestacado)
+  destacadoId.value = id
+  temporizadorDestacado = setTimeout(() => { destacadoId.value = null }, 1600)
+}
+
+onBeforeUnmount(() => clearTimeout(temporizadorDestacado))
 
 const contenedor = ref(null)
 // Si el usuario ha subido a leer mensajes viejos, un mensaje nuevo no debe

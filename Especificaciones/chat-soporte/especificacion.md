@@ -140,10 +140,17 @@ Es el requisito que separa un chat usable de uno que frustra. Tres piezas:
 - **Errores:** un fallo de red deja el mensaje en `fallido`, nunca lo hace desaparecer.
 
 #### RF-05 — Adjuntos
-- **Límites:** 5 archivos por mensaje, 5 MB cada uno.
+- **Límites:** 5 archivos por mensaje, 5 MB cada uno; los vídeos, 50 MB y **menos de
+  2 minutos**.
 - **Tipos admitidos:** `image/png`, `image/jpeg`, `image/webp`, `image/heic`,
-  `application/pdf`, `text/plain`. Cualquier otro se rechaza en cliente y en la política
-  del bucket.
+  `application/pdf`, `text/plain`, `video/mp4`, `video/quicktime`, `video/webm`. Cualquier
+  otro se rechaza en cliente y en la política del bucket.
+- **Vídeos:** no se recodifican. La duración se lee de los metadatos al elegirlo y se
+  rechaza si pasa de 2 minutos; si el navegador no sabe leerla (MOV en HEVC en Chrome,
+  WebM de MediaRecorder) se admite y el tope de 50 MB hace de límite. El servidor
+  comprueba el peso por tipo contra el tamaño real del objeto subido
+  (`migrations/067_soporte_adjuntos_video.sql`). En la burbuja se ve el primer fotograma
+  con botón de reproducir, y se reproduce en `VisorAdjunto` con los controles nativos.
 - **Orden de operaciones:** los archivos se suben **antes** de crear el mensaje. Si alguno
   falla, se avisa y el usuario decide si envía sin él o reintenta. Nunca se crea un mensaje
   que apunte a un archivo inexistente.
@@ -157,6 +164,21 @@ Es el requisito que separa un chat usable de uno que frustra. Tres piezas:
   también asoma el texto plano y embebe el PDF donde el navegador lo permite. Las URL
   firmadas se piden por lote y se cachean mientras duran (RF-17).
 - **Representación:** filas en `soporte_adjuntos`. El cuerpo del mensaje no contiene URLs.
+
+#### RF-05 bis — Citar un mensaje al responder
+- **Gesto:** en táctil, se desliza la burbuja hacia la derecha; pasado el umbral (56 px)
+  asoma una flecha rellena y, al soltar, el mensaje queda citado. En escritorio, un botón
+  «Responder» aparece al pasar el ratón o con el foco del teclado (solo en dispositivos con
+  hover). Esc en el campo quita la cita.
+- **Redactor:** barra «Respondiendo a…» con el autor y una línea del original, y una X
+  para quitarla. Se suelta al enviar y al cambiar de conversación.
+- **Burbuja:** la cita va arriba, con autor y hasta dos líneas (o «Foto», «Vídeo»,
+  «Archivo» si el original era solo un adjunto). Al tocarla, el hilo se desplaza hasta el
+  original y lo resalta; si aún no está cargado, se avisa de que hay que ver los anteriores.
+- **Datos:** `soporte_mensajes.respuesta_a` (uuid, FK al propio mensaje, ON DELETE SET
+  NULL). `soporte_enviar_mensaje` recibe `p_respuesta_a` y rechaza citar un mensaje de otra
+  conversación (`migrations/068_soporte_citar_mensaje.sql`). Solo se citan mensajes ya
+  confirmados por el servidor, y no en conversaciones con el redactor bloqueado.
 
 #### RF-06 — Bandeja del superadministrador
 - **Descripción:** lista ordenada por `ultimo_mensaje_at` descendente.
@@ -682,7 +704,7 @@ Por qué cada pieza:
 | 5 | El mismo usuario en varios dispositivos | Push a todas las suscripciones activas; el `tag` evita apilarlos |
 | 6 | Dos mensajes simultáneos en la misma conversación | Ambos se guardan; el hilo ordena por `created_at` y desempata por `id` |
 | 7 | Cuerpo de 4.000 caracteres exactos | Se acepta; 4.001 se rechaza antes de llamar a la red |
-| 8 | Adjunto de más de 5 MB o de tipo no admitido | Se rechaza en el cliente antes de subir, indicando el motivo |
+| 8 | Adjunto de más de 5 MB (50 MB si es vídeo), vídeo de más de 2 minutos o de tipo no admitido | Se rechaza en el cliente antes de subir, indicando el motivo |
 | 9 | La conversación se archiva (RN-07) mientras el usuario la tiene abierta | Al refrescar, el redactor se deshabilita; un envío en curso devuelve error explicativo |
 | 10 | El soporte responde a una conversación recién borrada | La escritura falla por clave foránea; se avisa y se recarga la bandeja |
 | 11 | Navegador sin service worker (modo privado de Firefox) | RF-13 muestra «no soportado»; el resto funciona y la vía es el correo |
@@ -726,6 +748,8 @@ cumplir mejor su intención. Están comentados también en el propio código.
 
 | Versión | Fecha | Cambio |
 |---------|-------|--------|
+| 2.13 | 2026-10-25 | Citar un mensaje al responder: deslizar la burbuja en táctil o botón en escritorio, barra en el redactor y salto al original desde la cita (RF-05 bis). `migrations/068_soporte_citar_mensaje.sql` añade `respuesta_a` y el parámetro `p_respuesta_a` |
+| 2.12 | 2026-10-25 | Vídeos cortos como adjunto: MP4, MOV y WebM de menos de 2 minutos y hasta 50 MB (RF-05). `migrations/067_soporte_adjuntos_video.sql` amplía bucket, CHECK de `soporte_adjuntos.bytes` y `soporte_enviar_mensaje`, que pasa a medir el tamaño real del objeto subido |
 | 2.11 | 2026-09-03 | *Mi cuenta* pierde el enlace «Abrir el soporte» y el cuadro «¿Buscabas los mensajes de recordatorio?». La vía de rescate pasa a ser el interruptor Visible/Oculto del botón flotante |
 | 2.10 | 2026-09-03 | «Atrás» del navegador y de Android cierra el overlay de soporte de encima en vez de salir de la pantalla: chat, bandeja y visor entran en una pila `useModalStack` con sincronización de historial. El visor pasa a montarse una sola vez en el layout (`useVisorAdjunto`) y la conversación abierta se recuerda en el store, para que apilar un overlay no pierda el hilo |
 | 2.9 | 2026-09-03 | Cuatro cambios: (1) la bandeja del soporte abre como **modal** (`PanelSoporteAdminModal.vue`) con el cuerpo extraído a `PanelBandejaSoporte.vue`, compartido con la ruta; (2) **adjuntos**: compresión de imágenes al elegirlas, subida en paralelo, miniatura visible desde el instante del envío y visor dentro de la app (`VisorAdjunto.vue`); (3) **RN-06 cambia**: una conversación resuelta ya no se reabre escribiendo (`migrations/025_soporte_resuelta_no_se_reabre.sql`), con **despedida automática** de 15 variantes; (4) los acuses dejan de sugerir que el usuario se marche |

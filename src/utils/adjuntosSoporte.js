@@ -33,6 +33,19 @@ export function esPdf(mime) {
   return mime === 'application/pdf'
 }
 
+/*
+ * Vídeos: MP4 (Android y casi todo), MOV (lo que entrega el iPhone) y WebM
+ * (grabaciones de pantalla de escritorio). No se recodifican: hacerlo en el
+ * navegador tarda más que el propio vídeo y no funciona igual en todos. Al
+ * elegir uno desde la galería, iOS ya lo comprime antes de entregarlo.
+ */
+export const MIMES_VIDEO = ['video/mp4', 'video/quicktime', 'video/webm']
+export const MAX_SEGUNDOS_VIDEO = 120
+
+export function esVideo(mime) {
+  return MIMES_VIDEO.includes(mime)
+}
+
 export function formatearTamano(bytes) {
   if (!bytes) return ''
   if (bytes < 1024) return `${bytes} B`
@@ -171,13 +184,56 @@ async function comprimirSinTope(archivo) {
   }
 }
 
+const TOPE_DURACION_MS = 10000
+
+/**
+ * Duración del vídeo en segundos, leída de sus metadatos sin reproducirlo.
+ * Devuelve null si el navegador no sabe leerla: un MOV en HEVC en Chrome de
+ * escritorio, o un WebM grabado con MediaRecorder, que no la apunta en la
+ * cabecera (`duration` sale Infinity). En ese caso quien llama lo deja pasar y
+ * el tope de peso hace de límite: rechazar un vídeo válido porque este
+ * navegador no lo descifra sería peor que admitir uno algo más largo.
+ */
+export function leerDuracionVideo(archivo) {
+  if (typeof document === 'undefined') return Promise.resolve(null)
+  return new Promise((resolver) => {
+    let url = null
+    try {
+      url = URL.createObjectURL(archivo)
+    } catch {
+      resolver(null)
+      return
+    }
+    const video = document.createElement('video')
+    const terminar = (segundos) => {
+      clearTimeout(tope)
+      video.removeAttribute('src')
+      video.load()
+      URL.revokeObjectURL(url)
+      resolver(Number.isFinite(segundos) && segundos > 0 ? segundos : null)
+    }
+    const tope = setTimeout(() => terminar(null), TOPE_DURACION_MS)
+    video.preload = 'metadata'
+    video.muted = true
+    video.onloadedmetadata = () => terminar(video.duration)
+    video.onerror = () => terminar(null)
+    video.src = url
+  })
+}
+
+export function formatearDuracion(segundos) {
+  if (!Number.isFinite(segundos)) return ''
+  const total = Math.round(segundos)
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
+}
+
 /**
  * Miniatura local para ver el adjunto en el hilo desde el primer instante, sin
  * esperar a que termine la subida. Quien la crea es responsable de revocarla
  * con `URL.revokeObjectURL` (ver `revocarVistasPrevias`).
  */
 export function crearVistaPrevia(archivo) {
-  if (!esImagen(archivo?.type)) return null
+  if (!esImagen(archivo?.type) && !esVideo(archivo?.type)) return null
   try {
     return URL.createObjectURL(archivo)
   } catch {

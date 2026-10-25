@@ -51,7 +51,28 @@
             v-if="elegido.previa"
             class="relative h-16 w-16 overflow-hidden rounded-xl ring-1 ring-borde"
           >
+            <!-- Vídeo: el primer fotograma hace de miniatura. `#t=0.1`,
+                 `muted` y `playsinline` porque sin ellos Safari de iOS deja el
+                 cuadro negro hasta que se reproduce. -->
+            <template v-if="esVideo(elegido.archivo.type)">
+              <video
+                :src="`${elegido.previa}#t=0.1`"
+                :aria-label="elegido.archivo.name"
+                muted
+                playsinline
+                preload="metadata"
+                :class="['h-full w-full bg-black object-cover', elegido.preparando ? 'opacity-60' : '']"
+              />
+              <span
+                v-if="!elegido.preparando"
+                class="absolute bottom-1 left-1 flex items-center gap-0.5 rounded bg-black/60 px-1 text-[0.625rem] font-semibold text-white"
+              >
+                <PlayIcon class="h-2.5 w-2.5" />
+                {{ formatearDuracion(elegido.duracion) }}
+              </span>
+            </template>
             <img
+              v-else
               :src="elegido.previa"
               :alt="elegido.archivo.name"
               :class="['h-full w-full object-cover', elegido.preparando ? 'opacity-60' : '']"
@@ -90,6 +111,27 @@
           </button>
         </li>
       </ul>
+
+      <!-- Mensaje que se va a citar: el mismo dibujo que tendrá en la burbuja. -->
+      <div
+        v-if="cita"
+        class="mb-2 flex items-center gap-2 rounded-xl border-l-4 border-[#1B5E37] bg-superficie-suave py-1.5 pl-3 pr-1 oscuro:border-marca-tinta"
+      >
+        <ArrowUturnLeftIcon class="h-4 w-4 shrink-0 text-marca-tinta" />
+        <div class="min-w-0 flex-1">
+          <p class="text-[0.6875rem] font-semibold text-marca-tinta">Respondiendo a {{ destinatarioCita }}</p>
+          <p class="truncate text-xs text-texto-suave">{{ resumenCita(cita) }}</p>
+        </div>
+        <button
+          type="button"
+          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-texto-suave transition hover:bg-superficie-hundida touch-manipulation"
+          aria-label="Quitar la cita"
+          @mousedown.prevent
+          @click="$emit('cancelar-cita')"
+        >
+          <XMarkIcon class="h-4 w-4" />
+        </button>
+      </div>
 
       <div class="relative flex items-end gap-2">
         <!--
@@ -186,7 +228,7 @@
           v-if="permiteAdjuntos"
           type="button"
           class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-texto-suave transition hover:bg-superficie-hundida disabled:opacity-40 touch-manipulation"
-          aria-label="Adjuntar archivo"
+          aria-label="Adjuntar archivo, foto o vídeo"
           :disabled="enviando || archivos.length >= MAX_ADJUNTOS"
           @click="entradaArchivos?.click()"
         >
@@ -254,13 +296,17 @@
 import CargaBoton from '../carga/CargaBoton.vue'
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import {
-  BoltIcon, ChevronLeftIcon, ExclamationTriangleIcon, LockClosedIcon, PaperAirplaneIcon,
-  PaperClipIcon, PlusIcon, XMarkIcon,
+  ArrowUturnLeftIcon, BoltIcon, ChevronLeftIcon, ExclamationTriangleIcon, LockClosedIcon, PaperAirplaneIcon,
+  PaperClipIcon, PlayIcon, PlusIcon, XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import { MAX_ADJUNTOS, MIMES_SELECTOR, useSoporteStore } from '../../stores/soporte'
-import { comprimirImagen, crearVistaPrevia, esHeic, esImagen, revocarVistasPrevias } from '../../utils/adjuntosSoporte'
+import {
+  MAX_SEGUNDOS_VIDEO, comprimirImagen, crearVistaPrevia, esHeic, esImagen, esVideo, formatearDuracion,
+  leerDuracionVideo, revocarVistasPrevias,
+} from '../../utils/adjuntosSoporte'
 import { useNotificationStore } from '../../stores/notifications'
 import { filtrarComandos, rellenarRespuesta } from '../../utils/respuestasSoporte'
+import { autorCita, resumenCita } from '../../utils/citasSoporte'
 
 const MAX_CUERPO = 4000
 
@@ -278,16 +324,20 @@ const props = defineProps({
   respuestas: { type: Array, default: () => [] },
   /** Valores de los marcadores de las respuestas, p. ej. { nombre: 'María' }. */
   variablesRespuesta: { type: Object, default: () => ({}) },
+  /** Mensaje citado en la respuesta (ver `crearCita`); null si no se cita. */
+  cita: { type: Object, default: null },
+  /** Para decir «tu mensaje» o «Soporte» en la barra de la cita. */
+  ladoPropio: { type: String, default: 'usuario' },
 })
 
-const emit = defineEmits(['update:modelValue', 'enviar', 'accion'])
+const emit = defineEmits(['update:modelValue', 'enviar', 'accion', 'cancelar-cita'])
 
 const soporte = useSoporteStore()
 const notificaciones = useNotificationStore()
 
 const campo = ref(null)
 const entradaArchivos = ref(null)
-const archivos = ref([])   // { archivo: File, previa: string|null }
+const archivos = ref([])   // { archivo: File, previa: string|null, preparando, duracion? }
 
 // Handlers con nombre: los anónimos no se pueden quitar, y este componente es un
 // modal que se monta y desmonta. Con funciones inline cada apertura del redactor
@@ -306,6 +356,11 @@ const puedeEnviar = computed(() =>
   !props.enviando
   && !preparandoAdjuntos.value
   && props.modelValue.trim().length >= props.minimo)
+
+const destinatarioCita = computed(() => {
+  const autor = autorCita(props.cita, props.ladoPropio)
+  return autor === 'Tú' ? 'tu mensaje' : autor
+})
 
 const cercaDelLimite = computed(() => props.modelValue.length > MAX_CUERPO - 200)
 
@@ -461,6 +516,13 @@ function alTecla(evento) {
       return
     }
   }
+  if (evento.key === 'Escape' && props.cita) {
+    evento.preventDefault()
+    // Que el Esc quite la cita y no cierre además el panel que contiene el chat.
+    evento.stopPropagation()
+    emit('cancelar-cita')
+    return
+  }
   // Las flechas mueven el cursor: puede entrar o salir de un «/comando».
   if (evento.key === 'ArrowLeft' || evento.key === 'ArrowRight') nextTick(detectarBarra)
   if (evento.key === 'Enter' && !evento.shiftKey && !evento.ctrlKey && !evento.altKey && !evento.metaKey) {
@@ -500,10 +562,14 @@ function elegirArchivos(evento) {
      * enteraba de `preparando = false`: la miniatura se quedaba «cargando» y el botón de
      * enviar bloqueado para siempre, aunque la foto ya estuviera lista.
      */
-    const entrada = reactive({ archivo, previa: crearVistaPrevia(archivo), preparando: esImagen(archivo.type) })
+    const video = esVideo(archivo.type)
+    const entrada = reactive({
+      archivo, previa: crearVistaPrevia(archivo), preparando: esImagen(archivo.type) || video, duracion: null,
+    })
     archivos.value.push(entrada)
 
-    if (entrada.preparando) prepararImagen(entrada)
+    if (video) prepararVideo(entrada)
+    else if (entrada.preparando) prepararImagen(entrada)
     else rechazarSiPesaDemasiado(entrada)
   }
 }
@@ -519,6 +585,26 @@ async function prepararImagen(entrada) {
     entrada.preparando = false
     rechazarSiPesaDemasiado(entrada)
   }
+}
+
+/*
+ * El vídeo no se recodifica: solo se comprueba que dure menos de dos minutos y
+ * que quepa. Mientras se leen los metadatos el envío queda en espera, igual que
+ * con una foto que se está comprimiendo.
+ */
+async function prepararVideo(entrada) {
+  try {
+    entrada.duracion = await leerDuracionVideo(entrada.archivo)
+  } finally {
+    entrada.preparando = false
+  }
+  if (!archivos.value.includes(entrada)) return
+  if (entrada.duracion && entrada.duracion > MAX_SEGUNDOS_VIDEO) {
+    quitarArchivo(archivos.value.indexOf(entrada))
+    notificaciones.alerta(`«${entrada.archivo.name}» dura ${formatearDuracion(entrada.duracion)}. Los vídeos pueden durar hasta 2 minutos.`)
+    return
+  }
+  rechazarSiPesaDemasiado(entrada)
 }
 
 /*

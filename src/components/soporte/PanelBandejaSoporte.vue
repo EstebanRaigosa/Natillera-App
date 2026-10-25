@@ -280,8 +280,10 @@
             :cargando-inicial="soporte.cargandoMensajes && !mensajesActivos.length"
             :cargando-antiguos="soporte.cargandoMensajes"
             :hay-mas-antiguos="soporte.hayMasAntiguos[idActivo] === true"
+            :permite-citar="conversacionActiva.estado !== 'archivada'"
             @cargar-antiguos="cargarAntiguos"
             @reintentar="() => soporte.procesarCola()"
+            @responder="citar"
           />
 
           <RedactorMensaje
@@ -293,6 +295,9 @@
             marcador="Responder… (escribe / para respuestas)"
             :respuestas="RESPUESTAS_SOPORTE"
             :variables-respuesta="{ nombre: nombreUsuarioActivo }"
+            :cita="cita"
+            lado-propio="soporte"
+            @cancelar-cita="cita = null"
             @enviar="responder"
           />
         </template>
@@ -341,6 +346,7 @@ import EliminarConversacionModal from './EliminarConversacionModal.vue'
 import { CATEGORIAS, codigoConversacion, ESTADOS, ESTADOS_CERRADOS, useSoporteStore } from '../../stores/soporte'
 import { useSoporteRealtime } from '../../composables/useSoporteRealtime'
 import { useNotificationStore } from '../../stores/notifications'
+import { crearCita } from '../../utils/citasSoporte'
 import { primerNombre, RESPUESTAS_SOPORTE } from '../../utils/respuestasSoporte'
 
 const props = defineProps({
@@ -361,6 +367,21 @@ const idActivo = ref(props.usarRuta
   ? (route.params.conversacionId ?? null)
   : (props.conversacionInicial ?? soporte.conversacionAbiertaBandeja))
 const borrador = ref('')
+
+/*
+ * Mensaje citado en la respuesta. Se suelta al cambiar de conversación (citar
+ * algo de otro hilo no tiene sentido y el servidor lo rechazaría) y al enviar.
+ * El foco va al campo en el mismo gesto que cita: en iOS es lo que abre el
+ * teclado; un focus() fuera del gesto no lo abre.
+ */
+const cita = ref(null)
+watch(idActivo, () => { cita.value = null })
+
+function citar(mensaje) {
+  cita.value = crearCita(mensaje)
+  redactor.value?.enfocar()
+}
+
 const enviando = ref(false)
 const busqueda = ref('')
 const filtroEstado = ref('todas')
@@ -504,14 +525,16 @@ async function responder({ cuerpo, archivos }) {
   enviando.value = true
   const textoEnviado = cuerpo
   try {
-    const resultado = await soporte.enviar({ conversacionId: idActivo.value, cuerpo, archivos })
+    const resultado = await soporte.enviar({ conversacionId: idActivo.value, cuerpo, archivos, cita: cita.value })
     if (resultado.ok) {
       borrador.value = ''
       redactor.value?.limpiar()
+      cita.value = null
       await recargarBandeja({ conservarPagina: true })
     } else if (resultado.encolado) {
       borrador.value = ''
       redactor.value?.limpiar()
+      cita.value = null
       notificaciones.alerta(resultado.error)
     } else {
       borrador.value = textoEnviado

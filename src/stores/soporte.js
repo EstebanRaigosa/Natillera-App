@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { supabase } from '../lib/supabase'
-import { comprimirImagen, crearVistaPrevia, revocarVistasPrevias } from '../utils/adjuntosSoporte'
+import { MIMES_VIDEO, comprimirImagen, crearVistaPrevia, esVideo, revocarVistasPrevias } from '../utils/adjuntosSoporte'
 import { anotarUsaSoporte, pedirAvisoNotificaciones } from '../composables/useAvisoNotificaciones'
 
 /**
@@ -26,8 +26,15 @@ const CONVERSACIONES_POR_PAGINA = 25     // RNF-08
 
 export const MAX_ADJUNTOS = 5
 export const MAX_BYTES_ADJUNTO = 5 * 1024 * 1024
+/*
+ * Un vídeo no se puede encoger como una foto, así que tiene su propio tope. 50 MB
+ * caben dos minutos de grabación de pantalla o de un vídeo que iOS ya comprimió al
+ * elegirlo, y es también el máximo de subida del plan gratuito de Supabase.
+ */
+export const MAX_BYTES_VIDEO = 50 * 1024 * 1024
 export const MIMES_ADMITIDOS = [
   'image/png', 'image/jpeg', 'image/webp', 'image/heic', 'application/pdf', 'text/plain',
+  ...MIMES_VIDEO,
 ]
 /*
  * Lo que se ofrece en el `accept` del selector: lo mismo sin HEIC. Si el accept
@@ -41,6 +48,13 @@ export const MIMES_SELECTOR = MIMES_ADMITIDOS.filter((mime) => mime !== 'image/h
 // porque se convierte a JPEG; si no se puede convertir, el redactor lo rechaza
 // (el servidor solo admite `image/heic` como tal).
 const MIMES_CONVERTIBLES = ['image/heif']
+/*
+ * El mensaje citado viene embebido con lo justo para pintar la cita: si solo
+ * se buscara entre los ya cargados, citar algo de hace 40 mensajes dejaría la
+ * cita vacía hasta que el usuario pagine hacia atrás.
+ */
+const SELECCION_CITADO = 'citado:respuesta_a(id, autor, cuerpo, soporte_adjuntos(mime))'
+
 export const CATEGORIAS = [
   { valor: 'error', etiqueta: 'Algo no funciona' },
   { valor: 'duda', etiqueta: 'Tengo una duda' },
@@ -418,7 +432,8 @@ export const useSoporteStore = defineStore('soporte', () => {
     try {
       let consulta = supabase
         .from('soporte_mensajes')
-        .select('id, conversacion_id, client_id, autor, cuerpo, created_at, leido_at, soporte_adjuntos(id, ruta, nombre, mime, bytes)')
+        .select(`id, conversacion_id, client_id, autor, cuerpo, created_at, leido_at, respuesta_a,
+          soporte_adjuntos(id, ruta, nombre, mime, bytes), ${SELECCION_CITADO}`)
         .eq('conversacion_id', conversacionId)
         .order('created_at', { ascending: false })
         .order('id', { ascending: false })          // desempate estable (caso borde 6)
@@ -622,6 +637,10 @@ export const useSoporteStore = defineStore('soporte', () => {
   }
 
   function validarTamanoArchivo(archivo) {
+    if (esVideo(archivo.type)) {
+      if (archivo.size > MAX_BYTES_VIDEO) return `«${archivo.name}» supera los 50 MB que admite un vídeo`
+      return null
+    }
     if (archivo.size > MAX_BYTES_ADJUNTO) return `«${archivo.name}» supera los 5 MB`
     return null
   }
@@ -701,7 +720,7 @@ export const useSoporteStore = defineStore('soporte', () => {
    * Envía un mensaje (o abre una conversación si `conversacionId` es null).
    * Devuelve { ok, conversacionId, clientId, error }.
    */
-  async function enviar({ conversacionId = null, cuerpo, asunto = null, categoria = null, archivos = [], clientId = null }) {
+  async function enviar({ conversacionId = null, cuerpo, asunto = null, categoria = null, archivos = [], clientId = null, cita = null }) {
     const idCliente = clientId ?? uuid()
 
     /*
@@ -732,6 +751,8 @@ export const useSoporteStore = defineStore('soporte', () => {
       autor: esSoporte.value && conversacionId ? 'soporte' : 'usuario',
       cuerpo,
       created_at: new Date().toISOString(),
+      respuesta_a: cita?.id ?? null,
+      citado: cita,
       soporte_adjuntos: adjuntosLocales,
       _local: true,
       _estado: 'enviando',
@@ -749,6 +770,7 @@ export const useSoporteStore = defineStore('soporte', () => {
         p_asunto: asunto,
         p_categoria: categoria,
         p_adjuntos: adjuntos,
+        p_respuesta_a: cita?.id ?? null,
       })
       if (e) throw e
 
@@ -758,6 +780,7 @@ export const useSoporteStore = defineStore('soporte', () => {
       const confirmado = {
         ...data.mensaje,
         conversacion_id: idReal,
+        citado: cita,
         // Se conserva la miniatura local junto a la ruta ya subida: sin ella, el
         // mensaje confirmado se quedaría sin imagen el rato que tarda en llegar
         // la URL firmada, y la foto parecería desaparecer justo al enviarse.
@@ -799,7 +822,7 @@ export const useSoporteStore = defineStore('soporte', () => {
       // el texto se devuelve al redactor con el motivo, sin encolarlo.
       const recuperable = codigo === 'RED' || codigo === 'DESCONOCIDO'
       if (recuperable) {
-        encolar({ clientId: idCliente, conversacionId, cuerpo, asunto, categoria, creadoEn: Date.now() })
+        encolar({ clientId: idCliente, conversacionId, cuerpo, asunto, categoria, cita, creadoEn: Date.now() })
         // La cola solo reenvía texto (caso borde 2): los archivos elegidos no
         // sobreviven a una recarga. Se quitan del mensaje en pantalla para no
         // prometer un envío que no va a ocurrir, y se dice sin rodeos.
@@ -879,6 +902,7 @@ export const useSoporteStore = defineStore('soporte', () => {
         asunto: item.asunto,
         categoria: item.categoria,
         clientId: item.clientId,   // mismo client_id: el reintento no duplica
+        cita: item.cita ?? null,
       })
     }
   }
@@ -998,13 +1022,18 @@ export const useSoporteStore = defineStore('soporte', () => {
       mensajes.value = {
         ...mensajes.value,
         [mensaje.conversacion_id]: lista.map((m) =>
-          m.client_id === mensaje.client_id ? { ...mensaje, soporte_adjuntos: m.soporte_adjuntos ?? [], _estado: 'enviado' } : m),
+          m.client_id === mensaje.client_id
+            ? { ...mensaje, soporte_adjuntos: m.soporte_adjuntos ?? [], citado: m.citado ?? null, _estado: 'enviado' }
+            : m),
       }
       return false
     }
+    // Realtime trae solo el id de la cita. Casi siempre el citado está en el hilo
+    // cargado; si no, `completarAdjuntos` lo trae junto con los archivos.
+    const citado = mensaje.respuesta_a ? lista.find((m) => m.id === mensaje.respuesta_a) ?? null : null
     mensajes.value = {
       ...mensajes.value,
-      [mensaje.conversacion_id]: [...lista, { ...mensaje, soporte_adjuntos: [], _estado: 'enviado' }],
+      [mensaje.conversacion_id]: [...lista, { ...mensaje, soporte_adjuntos: [], citado, _estado: 'enviado' }],
     }
     // Realtime publica la fila del mensaje, no sus adjuntos: sin esto, quien
     // recibe ve el texto y los archivos no aparecen hasta recargar el hilo.
@@ -1015,16 +1044,20 @@ export const useSoporteStore = defineStore('soporte', () => {
   async function completarAdjuntos(mensaje) {
     try {
       const { data, error: e } = await supabase
-        .from('soporte_adjuntos')
-        .select('id, ruta, nombre, mime, bytes')
-        .eq('mensaje_id', mensaje.id)
-      if (e || !data?.length) return
+        .from('soporte_mensajes')
+        .select(`soporte_adjuntos(id, ruta, nombre, mime, bytes), ${SELECCION_CITADO}`)
+        .eq('id', mensaje.id)
+        .maybeSingle()
+      if (e || !data) return
+      if (!data.soporte_adjuntos?.length && !data.citado) return
 
       const lista = mensajes.value[mensaje.conversacion_id] ?? []
       mensajes.value = {
         ...mensajes.value,
         [mensaje.conversacion_id]: lista.map((m) =>
-          m.id === mensaje.id ? { ...m, soporte_adjuntos: data } : m),
+          m.id === mensaje.id
+            ? { ...m, soporte_adjuntos: data.soporte_adjuntos ?? [], citado: m.citado ?? data.citado ?? null }
+            : m),
       }
     } catch {
       // El adjunto se verá al recargar el hilo; no es motivo para avisar.

@@ -162,8 +162,10 @@
           :acuse="acuse"
           :despedida="despedida"
           :titulo-despedida="conversacionActiva.estado === 'archivada' ? 'Conversación archivada' : 'Conversación resuelta'"
+          :permite-citar="!redactorBloqueado"
           @cargar-antiguos="cargarAntiguos"
           @reintentar="reintentarMensaje"
+          @responder="citar"
         />
 
         <RedactorMensaje
@@ -173,6 +175,9 @@
           :bloqueado="redactorBloqueado"
           :motivo-bloqueo="motivoBloqueo"
           :texto-accion="redactorBloqueado ? 'Abrir una conversación nueva' : ''"
+          :cita="cita"
+          lado-propio="usuario"
+          @cancelar-cita="cita = null"
           @enviar="enviarMensaje"
           @accion="abrirNueva"
         />
@@ -220,6 +225,7 @@ import NuevaConversacionModal from './NuevaConversacionModal.vue'
 import { acuseParaConversacion, codigoConversacion, despedidaParaConversacion, ESTADOS, ESTADOS_CERRADOS, useSoporteStore } from '../../stores/soporte'
 import { useSoporteRealtime } from '../../composables/useSoporteRealtime'
 import { useNotificationStore } from '../../stores/notifications'
+import { crearCita } from '../../utils/citasSoporte'
 
 const props = defineProps({
   compacto: { type: Boolean, default: false },
@@ -237,6 +243,21 @@ const idActivo = ref(props.usarRuta
   ? (route.params.conversacionId ?? null)
   : soporte.conversacionAbiertaUsuario)
 const borrador = ref('')
+
+/*
+ * Mensaje citado en la respuesta. Se suelta al cambiar de conversación (citar
+ * algo de otro hilo no tiene sentido y el servidor lo rechazaría) y al enviar.
+ * El foco va al campo en el mismo gesto que cita: en iOS es lo que abre el
+ * teclado; un focus() fuera del gesto no lo abre.
+ */
+const cita = ref(null)
+watch(idActivo, () => { cita.value = null })
+
+function citar(mensaje) {
+  cita.value = crearCita(mensaje)
+  redactor.value?.enfocar()
+}
+
 const enviando = ref(false)
 const creando = ref(false)
 const mostrarNueva = ref(false)
@@ -432,14 +453,16 @@ async function enviarMensaje({ cuerpo, archivos }) {
   enviando.value = true
   const textoEnviado = cuerpo
   try {
-    const resultado = await soporte.enviar({ conversacionId: idActivo.value, cuerpo, archivos })
+    const resultado = await soporte.enviar({ conversacionId: idActivo.value, cuerpo, archivos, cita: cita.value })
 
     if (resultado.ok) {
       borrador.value = ''
       redactor.value?.limpiar()
+      cita.value = null
     } else if (resultado.encolado) {
       borrador.value = ''
       redactor.value?.limpiar()
+      cita.value = null
       notificaciones.alerta(resultado.error)
     } else {
       borrador.value = textoEnviado

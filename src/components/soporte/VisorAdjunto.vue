@@ -76,6 +76,26 @@
           />
         </div>
 
+        <!--
+          Vídeo: controles nativos. `playsinline` lo mantiene dentro del visor en
+          iOS (sin él salta al reproductor a pantalla completa del sistema, que
+          desde ahí el usuario sigue teniendo en el botón de los controles).
+          `autoplay` arranca si el navegador lo permite; si no, queda el botón.
+        -->
+        <div v-else-if="modo === 'video'" class="visor-adjunto__centro px-2" @click.self="$emit('cerrar')">
+          <video
+            ref="reproductor"
+            :src="url"
+            :aria-label="adjunto?.nombre"
+            controls
+            playsinline
+            autoplay
+            preload="metadata"
+            class="max-h-full max-w-full bg-black"
+            @error="fallo = 'No se pudo reproducir el vídeo en este navegador. Prueba con «Abrir».'"
+          />
+        </div>
+
         <!-- Texto plano: panel legible, no negro sobre negro. -->
         <div v-else-if="modo === 'texto'" class="visor-adjunto__documento">
           <div
@@ -128,7 +148,7 @@ import NatiscrollHint from '../NatiscrollHint.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useNatiscroll } from '../../composables/useNatiscroll'
 import { useIsIos } from '../../composables/useIsIos'
-import { esImagen, esPdf, esTexto, formatearTamano } from '../../utils/adjuntosSoporte'
+import { esImagen, esPdf, esTexto, esVideo, formatearTamano } from '../../utils/adjuntosSoporte'
 import { useSoporteStore } from '../../stores/soporte'
 
 const props = defineProps({
@@ -154,10 +174,12 @@ const textoPlano = ref('')
 const cargando = ref(false)
 const fallo = ref('')
 const ampliada = ref(false)
+const reproductor = ref(null)
 
 const modo = computed(() => {
   const mime = props.adjunto?.mime
   if (esImagen(mime)) return 'imagen'
+  if (esVideo(mime)) return 'video'
   if (esTexto(mime)) return 'texto'
   if (esPdf(mime)) return isIos.value ? 'externo' : 'pdf'
   return 'externo'
@@ -184,6 +206,12 @@ watch(() => [props.show, props.adjunto], async () => {
   fallo.value = ''
   ampliada.value = false
 
+  // Un vídeo ya subido va por la firmada antes que por su copia local: esa
+  // copia se revoca a los 15 s del envío y el reproductor la vuelve a leer.
+  if (props.adjunto._urlFirmada && modo.value === 'video') {
+    url.value = props.adjunto._urlFirmada
+    return
+  }
   // Un adjunto que todavía se está subiendo ya tiene su copia local: no hay
   // nada que pedir al servidor.
   if (props.adjunto._previsualizacion) {
@@ -238,6 +266,9 @@ function alPulsarTecla(evento) {
 }
 
 watch(() => props.show, (visible) => {
+  // La transición de salida deja el <video> montado unos milisegundos: sin
+  // pausarlo, el sonido sigue mientras el visor se desvanece.
+  if (!visible) reproductor.value?.pause?.()
   if (typeof document === 'undefined') return
   if (visible) document.addEventListener('keydown', alPulsarTecla)
   else document.removeEventListener('keydown', alPulsarTecla)
