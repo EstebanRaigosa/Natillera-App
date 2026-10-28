@@ -1718,13 +1718,13 @@
       card-max-width="28rem"
       @close="!desactivando && cerrarModalDesactivar()"
     >
-      <!-- Cabecera warning (ámbar): comunica acción reversible pero crítica -->
-      <div class="flex-shrink-0 bg-[color:var(--brand-warning)] text-white">
+      <!-- Cabecera de marca: retirar es reversible (se reactiva), no una alerta -->
+      <div class="flex-shrink-0 bg-[#1B5E37] text-white"><!-- tema-fijo: cabecera de marca -->
         <!-- Móvil: una sola fila -->
         <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
           <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
           <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
-            <XCircleIcon class="w-5 h-5 text-[color:var(--brand-warning)]" />
+            <ArrowRightOnRectangleIcon class="w-5 h-5 text-[#1B5E37]" />
           </div>
           <div class="min-w-0 flex-1 text-left">
             <h3 class="font-display font-bold text-white text-base leading-tight truncate">
@@ -1750,7 +1750,7 @@
           <div class="flex-1 min-w-0 flex flex-col items-center text-center">
             <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
             <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm">
-              <XCircleIcon class="w-6 h-6 text-[color:var(--brand-warning)]" />
+              <ArrowRightOnRectangleIcon class="w-6 h-6 text-[#1B5E37]" />
             </div>
             <h3 class="font-display font-bold text-white text-lg leading-tight">
               Retirar socio
@@ -1775,42 +1775,38 @@
       <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="scrollAreaModalDesactivarSocio"
-          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-4"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-3"
           @scroll.passive="programarNatiscrollModalDesactivarSocio"
         >
 
           <!--
-            Orden deliberado: primero CUÁNTO se le entrega, que es la única cifra por la
-            que se abre esta ventana; después de dónde sale; y al final las dos decisiones
-            (sanción y forma de pago). Antes empezaba por el toggle de sanción, o sea
-            pidiendo decidir un descuento sobre un número que todavía no se había visto.
+            Primero las decisiones que cambian la cifra (sanción, utilidades, préstamo) y
+            luego la cifra: así se lee el número ya decidido. Las tres opciones comparten
+            una misma tarjeta con interruptor en el verde de la app; lo que resta o suma se
+            distingue en el reparto de abajo, no tiñendo cada tarjeta de un color.
           -->
-
-          <!--
-            La sanción va arriba del todo: es la única decisión que cambia la cifra de
-            abajo, así que se decide antes de leerla. En rosa, no en el ámbar de la
-            cabecera ni en el verde de lo que se entrega: es dinero que se resta.
-          -->
-          <section class="retiro-sancion" :class="{ 'is-active': desactivarSancionar }">
+          <section class="retiro-opcion" :class="{ 'is-active': desactivarSancionar }">
             <button
               type="button"
-              class="retiro-sancion__cabecera"
+              class="retiro-opcion__cabecera"
               :aria-pressed="desactivarSancionar"
               @click="desactivarSancionar = !desactivarSancionar"
             >
-              <span class="retiro-sancion__icono" aria-hidden="true">
+              <span class="retiro-opcion__icono" aria-hidden="true">
                 <ReceiptPercentIcon class="h-5 w-5" />
               </span>
               <span class="min-w-0 flex-1 text-left">
-                <span class="retiro-sancion__titulo">Sanción por retiro</span>
-                <span class="retiro-sancion__sub">Se descuenta del ahorro y queda en el fondo</span>
+                <span class="retiro-opcion__titulo">Sanción por retiro</span>
+                <span class="retiro-opcion__sub">
+                  Se descuenta {{ sancionIncluyeUtilidades ? 'del ahorro y las utilidades' : 'del ahorro' }} y queda en el fondo
+                </span>
               </span>
-              <span class="retiro-sancion__switch" aria-hidden="true">
-                <span class="retiro-sancion__bolita"></span>
+              <span class="retiro-opcion__switch" aria-hidden="true">
+                <span class="retiro-opcion__bolita"></span>
               </span>
             </button>
 
-            <div v-if="desactivarSancionar" class="retiro-sancion__cuerpo">
+            <div v-if="desactivarSancionar" class="retiro-opcion__cuerpo">
               <div class="grid grid-cols-4 gap-2">
                 <button
                   v-for="pct in PORCENTAJES_SANCION_RETIRO"
@@ -1822,7 +1818,7 @@
                 >{{ pct }} %</button>
               </div>
               <div class="mt-2 flex items-center gap-2">
-                <label for="desactivar-porcentaje" class="whitespace-nowrap text-xs text-rose-700/80 oscuro:text-rose-300/80">Otro</label>
+                <label for="desactivar-porcentaje" class="whitespace-nowrap text-xs text-texto-suave">Otro</label>
                 <div class="relative flex-1">
                   <input
                     id="desactivar-porcentaje"
@@ -1835,43 +1831,62 @@
                     class="ds-input pr-8"
                     placeholder="0"
                   />
-                  <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 oscuro:text-texto-tenue">%</span>
+                  <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-texto-tenue">%</span>
                 </div>
               </div>
             </div>
           </section>
 
-          <!--
-            Préstamo pendiente: lo que se le devuelve (ya sin la sanción) puede pagar lo que
-            debe. Naranja, un tono distinto del rosa de la sanción y del verde de lo que se
-            lleva: es dinero que tampoco sale, pero por otra razón.
-          -->
+          <section v-if="retiroPermiteUtilidades" class="retiro-opcion" :class="{ 'is-active': sumarUtilidadesRetiro }">
+            <button
+              type="button"
+              class="retiro-opcion__cabecera"
+              :aria-pressed="sumarUtilidadesRetiro"
+              @click="sumarUtilidadesRetiro = !sumarUtilidadesRetiro"
+            >
+              <span class="retiro-opcion__icono" aria-hidden="true">
+                <SparklesIcon class="h-5 w-5" />
+              </span>
+              <span class="min-w-0 flex-1 text-left">
+                <span class="retiro-opcion__titulo">Sumar sus utilidades</span>
+                <span class="retiro-opcion__sub">
+                  <template v-if="!sumarUtilidadesRetiro">Su parte de lo que ha ganado la natillera</template>
+                  <template v-else-if="loadingUtilidadesRetiro">Calculando su parte…</template>
+                  <template v-else>Le corresponden ${{ formatMoney(utilidadesRetiro) }}</template>
+                </span>
+              </span>
+              <span class="retiro-opcion__switch" aria-hidden="true">
+                <span class="retiro-opcion__bolita"></span>
+              </span>
+            </button>
+          </section>
+
           <section
             v-if="loadingPrestamosRetiro || deudaPrestamosRetiro > 0"
-            class="retiro-prestamo"
+            class="retiro-opcion"
             :class="{ 'is-active': cruzarPrestamoRetiro && deudaPrestamosRetiro > 0 }"
           >
-            <p v-if="loadingPrestamosRetiro" class="px-4 py-3.5 text-sm text-slate-500 oscuro:text-texto-suave">Revisando préstamos…</p>
+            <p v-if="loadingPrestamosRetiro" class="px-4 py-3.5 text-sm text-texto-suave">Revisando préstamos…</p>
             <template v-else>
               <button
                 type="button"
-                class="retiro-prestamo__cabecera"
+                class="retiro-opcion__cabecera"
                 :aria-pressed="cruzarPrestamoRetiro"
                 @click="cruzarPrestamoRetiro = !cruzarPrestamoRetiro"
               >
-                <span class="retiro-prestamo__icono" aria-hidden="true">
+                <span class="retiro-opcion__icono" aria-hidden="true">
                   <BanknotesIcon class="h-5 w-5" />
                 </span>
                 <span class="min-w-0 flex-1 text-left">
-                  <span class="retiro-prestamo__titulo">Debe ${{ formatMoney(deudaPrestamosRetiro) }} de préstamo</span>
-                  <span class="retiro-prestamo__sub">Pagarlo con lo que se le devuelve</span>
+                  <span class="retiro-opcion__titulo">Debe ${{ formatMoney(deudaPrestamosRetiro) }} de préstamo</span>
+                  <span class="retiro-opcion__sub">Pagarlo con lo que se le devuelve</span>
                 </span>
-                <span class="retiro-prestamo__switch" aria-hidden="true">
-                  <span class="retiro-prestamo__bolita"></span>
+                <span class="retiro-opcion__switch" aria-hidden="true">
+                  <span class="retiro-opcion__bolita"></span>
                 </span>
               </button>
 
-              <div class="retiro-prestamo__cuerpo">
+              <div class="retiro-opcion__cuerpo">
                 <div class="modal-data-list">
                   <div class="modal-data-list__row">
                     <span class="modal-data-list__label">Saldo del préstamo</span>
@@ -1882,7 +1897,7 @@
                     <span class="modal-data-list__value modal-data-list__value--danger tabular-nums">${{ formatMoney(moraPrestamosRetiro) }}</span>
                   </div>
                 </div>
-                <p v-if="cruzarPrestamoRetiro && pagoPrestamosRetiro > 0" class="retiro-prestamo__nota">
+                <p v-if="cruzarPrestamoRetiro && pagoPrestamosRetiro > 0" class="retiro-opcion__nota">
                   <template v-if="saldoPendienteRetiro > 0">
                     Alcanza para <strong>${{ formatMoney(pagoPrestamosRetiro) }}</strong>.
                     Queda debiendo <strong>${{ formatMoney(saldoPendienteRetiro) }}</strong>.
@@ -1891,21 +1906,21 @@
                     Se paga completo: <strong>${{ formatMoney(pagoPrestamosRetiro) }}</strong>.
                   </template>
                 </p>
-                <p v-else-if="!cruzarPrestamoRetiro" class="retiro-prestamo__nota">
+                <p v-else-if="!cruzarPrestamoRetiro" class="retiro-opcion__nota">
                   Se le entrega todo y el préstamo sigue abierto por ${{ formatMoney(deudaPrestamosRetiro) }}.
                 </p>
               </div>
             </template>
           </section>
 
-          <!-- 2. La cifra que manda -->
+          <!-- La cifra que manda -->
           <section class="retiro-hero">
             <p class="retiro-hero__label">
               {{ hayRepartoRetiro
-                  ? `Cómo se reparte el ahorro de ${primerNombreSocioARetirar}`
+                  ? `Cómo se reparte lo de ${primerNombreSocioARetirar}`
                   : `Se le entrega a ${primerNombreSocioARetirar}` }}
             </p>
-            <p v-if="loadingTotalesDesactivar" class="retiro-hero__valor retiro-hero__valor--cargando">
+            <p v-if="loadingTotalesDesactivar || loadingUtilidadesRetiro" class="retiro-hero__valor retiro-hero__valor--cargando">
               Calculando…
             </p>
             <p
@@ -1914,13 +1929,8 @@
             >
               ${{ formatMoney(entregaFinalRetiro) }}
             </p>
-            <!--
-              El reparto explícito: quién se lleva qué. Antes era una nota al pie y el
-              dinero que retiene la natillera se leía como letra pequeña, cuando es la
-              mitad de la decisión.
-            -->
             <div
-              v-if="!loadingTotalesDesactivar && hayRepartoRetiro"
+              v-if="!loadingTotalesDesactivar && !loadingUtilidadesRetiro && hayRepartoRetiro"
               class="retiro-reparto"
             >
               <div class="retiro-reparto__col">
@@ -1949,7 +1959,11 @@
             </div>
           </section>
 
-          <!-- 3. De dónde sale esa cifra -->
+          <!--
+            De dónde sale: solo el ahorro. Lo que pagó en actividades o en sanciones no se
+            le devuelve, así que mostrarlo aquí solo confundía. Las utilidades aparecen
+            únicamente si se decidió sumarlas.
+          -->
           <section>
             <h4 class="ds-overline mb-2">De dónde sale</h4>
             <div class="modal-data-list">
@@ -1960,18 +1974,11 @@
                   ${{ formatMoney(totalesDesactivar.totalAhorrado) }}
                 </span>
               </div>
-              <div class="modal-data-list__row">
-                <span class="modal-data-list__label">Entregado en actividades</span>
-                <span v-if="loadingTotalesDesactivar" class="modal-data-list__value modal-data-list__value--muted">—</span>
-                <span v-else class="modal-data-list__value tabular-nums">
-                  ${{ formatMoney(totalesDesactivar.totalActividades) }}
-                </span>
-              </div>
-              <div class="modal-data-list__row">
-                <span class="modal-data-list__label">Pagado en sanciones</span>
-                <span v-if="loadingTotalesDesactivar" class="modal-data-list__value modal-data-list__value--muted">—</span>
-                <span v-else class="modal-data-list__value modal-data-list__value--danger tabular-nums">
-                  ${{ formatMoney(totalesDesactivar.totalSancionesPagadas) }}
+              <div v-if="sumarUtilidadesRetiro" class="modal-data-list__row">
+                <span class="modal-data-list__label">Sus utilidades</span>
+                <span v-if="loadingUtilidadesRetiro" class="modal-data-list__value modal-data-list__value--muted">Calculando…</span>
+                <span v-else class="modal-data-list__value modal-data-list__value--positive tabular-nums">
+                  + ${{ formatMoney(utilidadesRetiro) }}
                 </span>
               </div>
             </div>
@@ -2044,12 +2051,12 @@
         </button>
         <button
           type="button"
-          class="ds-btn modal-btn-warning flex-1"
-          :disabled="desactivando"
+          class="btn-modal-primary flex-1"
+          :disabled="desactivando || loadingTotalesDesactivar || loadingUtilidadesRetiro"
           @click="confirmarDesactivarSocio"
         >
           <CargaBoton v-if="desactivando" pequena />
-          <XCircleIcon v-else class="w-4 h-4" />
+          <ArrowRightOnRectangleIcon v-else class="w-4 h-4" />
           {{ desactivando ? 'Retirando…' : 'Confirmar retiro' }}
         </button>
       </div>
@@ -2659,6 +2666,7 @@ import { cuotasParaPonerAlDia, ponerSocioAlDia, total4x1000DeCuotas } from '../.
 import CargaPantalla from '../../components/carga/CargaPantalla.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import ComprobanteRetiroSocio from '../../components/estado/ComprobanteRetiroSocio.vue'
+import { calcularCierreNatillera } from '../../composables/useCierreNatillera'
 import { cargarDeudaPrestamosSocio, registrarAbonoPrestamo, revertirAbonoPrestamo } from '../../composables/usePagoPrestamo'
 import { EVENTO_SOLICITUDES, EVENTO_SOLICITUDES_CAMBIO } from '../../composables/useSolicitudesVinculo'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
@@ -2699,6 +2707,7 @@ import {
   CheckIcon,
   BuildingOffice2Icon,
   ReceiptPercentIcon,
+  ArrowRightOnRectangleIcon,
   LinkIcon,
   CheckBadgeIcon,
 } from '@heroicons/vue/24/outline'
@@ -2932,6 +2941,16 @@ onUnmounted(() => {
 const prestamosRetiro = ref([])
 const loadingPrestamosRetiro = ref(false)
 const cruzarPrestamoRetiro = ref(true)
+/*
+ * Utilidades al retirarse: opcionales. Por reglamento al socio que se va se le devuelve
+ * solo lo que ahorró, pero hay natilleras que le reconocen su parte de lo ganado. Esa
+ * parte sale del mismo cálculo del cierre (neto de administración), para que cuadre al
+ * centavo con lo que le habría tocado en la liquidación.
+ */
+const sumarUtilidadesRetiro = ref(false)
+const utilidadesRetiro = ref(0)
+const loadingUtilidadesRetiro = ref(false)
+const utilidadesRetiroCargadas = ref(false)
 const comprobantesSalidaGuardados = ref({})
 const loadingComprobanteSalida = ref(false)
 useBodyScrollLock(computed(() => !!socioADesactivar.value))
@@ -4028,17 +4047,43 @@ function cerrarModalProgreso() {
   }
 }
 
-// Totales para modal desactivar: valor recaudado = total ahorrado (base para %)
-const valorEntregarDesactivar = computed(() => {
-  const rec = totalesDesactivar.value.valorRecaudado || 0
-  const pct = desactivarSancionar.value ? Math.min(100, Math.max(0, desactivarPorcentajeSancion.value)) : 0
-  return rec * (1 - pct / 100)
+/**
+ * Utilidades en el retiro, según el mismo bloque «Devolución por mora excesiva» del que
+ * sale el porcentaje: `sinUtilidades` (guardado así, en negativo) y la base de la multa.
+ * Con el bloque apagado no se ofrecen, igual que la sanción.
+ */
+const configRetiro = computed(() => {
+  const nat = natillerasStore.natilleraActual
+  const devolucion = nat?.id === id ? nat?.reglas_multas?.sanciones?.devolucion : null
+  const sumarUtilidades = !!devolucion?.activo && devolucion.sinUtilidades === false
+  return {
+    sumarUtilidades,
+    sancionSobreUtilidades: sumarUtilidades && devolucion.sancionSobreUtilidades === true
+  }
 })
-const valorFondoDesactivar = computed(() => {
-  const rec = totalesDesactivar.value.valorRecaudado || 0
-  const pct = desactivarSancionar.value ? Math.min(100, Math.max(0, desactivarPorcentajeSancion.value)) : 0
-  return rec * (pct / 100)
-})
+const retiroPermiteUtilidades = computed(() => configRetiro.value.sumarUtilidades)
+const sancionIncluyeUtilidades = computed(() =>
+  configRetiro.value.sancionSobreUtilidades && sumarUtilidadesRetiro.value
+)
+
+// Totales para modal desactivar: la sanción va sobre el ahorro y, si la natillera lo
+// configuró así, también sobre las utilidades que se le suman.
+const utilidadesSumadasRetiro = computed(() =>
+  retiroPermiteUtilidades.value && sumarUtilidadesRetiro.value && utilidadesRetiroCargadas.value ? utilidadesRetiro.value : 0
+)
+const pctSancionRetiro = computed(() =>
+  desactivarSancionar.value ? Math.min(100, Math.max(0, desactivarPorcentajeSancion.value)) / 100 : 0
+)
+const sancionAhorroRetiro = computed(() => (totalesDesactivar.value.valorRecaudado || 0) * pctSancionRetiro.value)
+// La parte de la sanción que sale de las utilidades nunca sale de su bolsillo: se le
+// entregan menos utilidades y el resto se queda para los demás.
+const sancionUtilidadesRetiro = computed(() =>
+  configRetiro.value.sancionSobreUtilidades ? utilidadesSumadasRetiro.value * pctSancionRetiro.value : 0
+)
+const valorFondoDesactivar = computed(() => sancionAhorroRetiro.value + sancionUtilidadesRetiro.value)
+const valorEntregarDesactivar = computed(() =>
+  (totalesDesactivar.value.valorRecaudado || 0) + utilidadesSumadasRetiro.value - valorFondoDesactivar.value
+)
 
 const saldoPrestamosRetiro = computed(() => prestamosRetiro.value.reduce((s, p) => s + p.saldo, 0))
 const moraPrestamosRetiro = computed(() => prestamosRetiro.value.reduce((s, p) => s + p.mora, 0))
@@ -4067,6 +4112,35 @@ async function cargarPrestamosRetiro(socioNatilleraId) {
     loadingPrestamosRetiro.value = false
   }
 }
+
+// Solo se calcula al encender la opción: es el cálculo completo del cierre y la mayoría
+// de retiros no lo necesita.
+async function cargarUtilidadesRetiro(socioNatilleraId) {
+  if (!socioNatilleraId || !id) return
+  loadingUtilidadesRetiro.value = true
+  utilidadesRetiroCargadas.value = false
+  try {
+    const resultado = await calcularCierreNatillera(id)
+    if (resultado?.error) throw new Error(resultado.error)
+    const fila = (resultado?.socios || []).find(s => s.socioNatillera?.id === socioNatilleraId)
+    const util = fila?.neto?.utilidadesTotal ?? fila?.utilidadesTotal ?? 0
+    // Un saldo negativo de utilidades no se le cobra al que se va
+    utilidadesRetiro.value = Math.max(0, Math.round(Number(util) || 0))
+    utilidadesRetiroCargadas.value = true
+  } catch (e) {
+    console.error('Error calculando utilidades del socio a retirar:', e)
+    notificationStore.error('No se pudieron calcular sus utilidades', 'Error')
+    sumarUtilidadesRetiro.value = false
+  } finally {
+    loadingUtilidadesRetiro.value = false
+  }
+}
+
+watch(sumarUtilidadesRetiro, (activo) => {
+  if (activo && !utilidadesRetiroCargadas.value && socioADesactivar.value) {
+    cargarUtilidadesRetiro(socioADesactivar.value.id)
+  }
+})
 
 async function cargarTotalesDesactivar(socioNatilleraId) {
   if (!socioNatilleraId || !id) return
@@ -4109,15 +4183,42 @@ const porcentajeSancionRetiroConfigurado = computed(() => {
   return Number.isFinite(pct) && pct > 0 ? Math.min(100, pct) : 0
 })
 
-function abrirModalDesactivar(sn) {
-  if (sn.estado !== 'activo') return
-  socioADesactivar.value = sn
-  // Se propone lo que dice el reglamento; si no hay nada configurado, nada que descontar.
+// Se propone lo que dice el reglamento; si no hay nada configurado, nada que descontar.
+function aplicarConfigRetiro() {
   const pctConfigurado = porcentajeSancionRetiroConfigurado.value
   desactivarSancionar.value = pctConfigurado > 0
   desactivarPorcentajeSancion.value = pctConfigurado
+  // Al encenderse, el watch de abajo calcula sus utilidades
+  sumarUtilidadesRetiro.value = configRetiro.value.sumarUtilidades
+}
+
+/*
+ * La natillera de la tienda puede ser de antes de cambiar la configuración (se carga una
+ * vez al entrar). Se relee `reglas_multas` al abrir para que el modal proponga lo que hay
+ * guardado ahora; si falla, se queda con lo que ya tenía.
+ */
+async function refrescarReglasRetiro(sn) {
+  try {
+    const { data, error } = await supabase.from('natilleras').select('reglas_multas').eq('id', id).maybeSingle()
+    if (error || !data) return
+    const nat = natillerasStore.natilleraActual
+    if (nat?.id === id) nat.reglas_multas = data.reglas_multas
+    // Solo si sigue abierto el mismo retiro: no pisar lo que el usuario ya movió en otro
+    if (socioADesactivar.value?.id === sn.id) aplicarConfigRetiro()
+  } catch (e) {
+    console.error('No se pudo releer la configuración del retiro:', e)
+  }
+}
+
+function abrirModalDesactivar(sn) {
+  if (sn.estado !== 'activo') return
+  socioADesactivar.value = sn
   desactivarFormaPago.value = 'efectivo'
   cruzarPrestamoRetiro.value = true
+  utilidadesRetiro.value = 0
+  utilidadesRetiroCargadas.value = false
+  aplicarConfigRetiro()
+  refrescarReglasRetiro(sn)
   cargarTotalesDesactivar(sn.id)
   cargarPrestamosRetiro(sn.id)
 }
@@ -4129,6 +4230,9 @@ function cerrarModalDesactivar() {
   desactivarFormaPago.value = 'efectivo'
   prestamosRetiro.value = []
   cruzarPrestamoRetiro.value = true
+  sumarUtilidadesRetiro.value = false
+  utilidadesRetiro.value = 0
+  utilidadesRetiroCargadas.value = false
 }
 
 function abrirModalActivar(sn) {
@@ -4150,7 +4254,8 @@ async function confirmarActivarSocio() {
     // Si existe comprobante de salida, revertir los movimientos que se hicieron al desactivar
     const { data: comprobante, error: errComp } = await supabase
       .from('comprobantes_salida')
-      .select('socio_nombre, valor_entregar, valor_sancion, detalle_prestamos')
+      // '*' y no la lista: `valor_utilidades` solo existe con la migración 072
+      .select('*')
       .eq('socio_natillera_id', sn.id)
       .maybeSingle()
     // Sin poder leer el comprobante no se sabe qué deshacer: mejor no activar a medias.
@@ -4159,7 +4264,11 @@ async function confirmarActivarSocio() {
     if (comprobante) {
       const valorEntregar = parseFloat(comprobante.valor_entregar) || 0
       const valorSancion = parseFloat(comprobante.valor_sancion) || 0
-      const totalSalida = valorEntregar + valorSancion
+      const valorUtilidades = parseFloat(comprobante.valor_utilidades) || 0
+      // Parte de la sanción cobrada a las utilidades: nunca salió de ese bolsillo
+      const sancionUtilidades = parseFloat(comprobante.valor_sancion_utilidades) || 0
+      // `valor_entregar` incluye las utilidades, que salieron en su propio movimiento
+      const totalSalida = valorEntregar - valorUtilidades + valorSancion
       const socioNombre = comprobante.socio_nombre || nombreSocio
 
       if (totalSalida > 0) {
@@ -4190,8 +4299,34 @@ async function confirmarActivarSocio() {
         if (errEntrada) throw errEntrada
       }
 
-      // Revertir sanción por retiro en utilidades (si hubo sanción)
-      if (valorSancion > 0) {
+      // Las utilidades que se le entregaron vuelven al bolsillo de utilidades
+      const salidaUtilidades = valorUtilidades - sancionUtilidades
+      if (salidaUtilidades > 0) {
+        const { data: movsUtil } = await supabase
+          .from('movimientos_fondo')
+          .select('forma_pago')
+          .eq('natillera_id', natilleraId)
+          .eq('tipo', 'salida')
+          .eq('descripcion', `Liquidación por salida - ${socioNombre} (utilidades)`)
+          .order('created_at', { ascending: false })
+          .limit(1)
+        const formaUtil = (movsUtil?.[0]?.forma_pago || 'efectivo').toLowerCase().trim() === 'transferencia' ? 'transferencia' : 'efectivo'
+        const { error: errEntradaUtil } = await supabase.from('movimientos_fondo').insert({
+          natillera_id: natilleraId,
+          tipo: 'entrada',
+          monto: salidaUtilidades,
+          forma_pago: formaUtil,
+          destino_ingreso: 'utilidades',
+          descripcion: `Reversión reactivación - ${socioNombre} (utilidades)`,
+          fecha: new Date().toISOString().split('T')[0]
+        })
+        if (errEntradaUtil) throw errEntradaUtil
+      }
+
+      // Revertir sanción por retiro en utilidades (si hubo sanción); solo la parte del
+      // ahorro, que es la única que se registró como sanción
+      const sancionAhorro = valorSancion - sancionUtilidades
+      if (sancionAhorro > 0) {
         const { data: utilList } = await supabase
           .from('utilidades_clasificadas')
           .select('id, forma_pago')
@@ -4209,7 +4344,7 @@ async function confirmarActivarSocio() {
           const { error: errUtil } = await supabase.from('utilidades_clasificadas').insert({
             natillera_id: natilleraId,
             tipo: 'sanciones',
-            monto: -valorSancion,
+            monto: -sancionAhorro,
             forma_pago: formaPagoUtilNorm,
             descripcion: `Reversión reactivación - Sanción por retiro: ${socioNombre}`
           })
@@ -4381,9 +4516,11 @@ async function confirmarDesactivarSocio() {
   const nombreSocio = sn.socio?.nombre || 'Socio'
   const pagoPrestamos = pagoPrestamosRetiro.value
   const saldoPendientePrestamo = saldoPendienteRetiro.value
+  const valorUtilidades = utilidadesSumadasRetiro.value
+  const sancionUtilidades = sancionUtilidadesRetiro.value
   const detallePrestamos = []
   // Lo que ya se escribió, para deshacerlo si algo posterior falla (no hay transacción).
-  const hecho = { comprobante: false, sancionId: null, salidaId: null }
+  const hecho = { comprobante: false, sancionId: null, salidaId: null, salidaUtilidadesId: null }
   try {
     /*
      * Cruce con los préstamos, lo primero: es lo más delicado y, si falla, el socio sigue
@@ -4430,17 +4567,22 @@ async function confirmarDesactivarSocio() {
       valor_entregar: valorEntregar,
       codigo_comprobante: codigoComprobante,
       valor_prestamo: pagoPrestamos,
-      detalle_prestamos: detallePrestamos
+      detalle_prestamos: detallePrestamos,
+      // Solo si se suman: así un retiro sin utilidades no depende de la migración 072
+      ...(valorUtilidades > 0 ? { valor_utilidades: valorUtilidades } : {}),
+      ...(sancionUtilidades > 0 ? { valor_sancion_utilidades: sancionUtilidades } : {})
     }, { onConflict: 'socio_natillera_id' })
     if (errComprobante) throw new Error(`No se pudo guardar el comprobante de salida: ${errComprobante.message}`)
     hecho.comprobante = true
 
     // Sanción por retiro → utilidades (con forma de pago para cuadre)
-    if (desactivarSancionar.value && desactivarPorcentajeSancion.value > 0 && valorFondo > 0) {
+    // Solo la parte del ahorro: la de las utilidades ya está en ese bolsillo
+    const sancionAhorro = valorFondo - sancionUtilidades
+    if (desactivarSancionar.value && desactivarPorcentajeSancion.value > 0 && sancionAhorro > 0) {
       const insertUtilidad = {
         natillera_id: natilleraId,
         tipo: 'sanciones',
-        monto: valorFondo,
+        monto: sancionAhorro,
         forma_pago: formaPagoNorm,
         descripcion: `Sanción por retiro: ${nombreSocio}`
       }
@@ -4448,8 +4590,10 @@ async function confirmarDesactivarSocio() {
       if (error) throw error
       hecho.sancionId = filaSancion?.id || null
     }
-    // Salida en movimientos_fondo: total entregado al socio + sanción (se descuenta de efectivo o transferencia)
-    const totalSalida = valorEntregar + valorFondo
+    // Salida en movimientos_fondo: el ahorro completo (lo entregado + la sanción). Las
+    // utilidades van en su propia salida, más abajo, porque salen de otro bolsillo.
+    const totalSalida = valorEntregar - valorUtilidades + valorFondo
+    const salidaUtilidades = valorUtilidades - sancionUtilidades
     if (totalSalida > 0) {
       const descripcionSalida = `Liquidación por salida - ${nombreSocio}`
       const { data: filaSalida, error: errMov } = await supabase.from('movimientos_fondo').insert({
@@ -4462,6 +4606,24 @@ async function confirmarDesactivarSocio() {
       }).select('id').single()
       if (errMov) throw errMov
       hecho.salidaId = filaSalida?.id || null
+    }
+    /*
+     * Utilidades: egreso contra el bolsillo de utilidades. El cierre las resta del pozo, así
+     * que los socios que se quedan reparten lo que queda. Mantiene «Liquidación por salida»
+     * en el texto para que el cuadre y el libro la cuenten como parte de la liquidación.
+     */
+    if (salidaUtilidades > 0) {
+      const { data: filaUtil, error: errUtilMov } = await supabase.from('movimientos_fondo').insert({
+        natillera_id: natilleraId,
+        tipo: 'salida',
+        monto: salidaUtilidades,
+        forma_pago: formaPagoNorm,
+        origen_egreso: 'utilidades',
+        descripcion: `Liquidación por salida - ${nombreSocio} (utilidades)`,
+        fecha: new Date().toISOString().split('T')[0]
+      }).select('id').single()
+      if (errUtilMov) throw errUtilMov
+      hecho.salidaUtilidadesId = filaUtil?.id || null
     }
     const resultado = await sociosStore.cambiarEstadoSocio(sn.id, 'inactivo')
     if (!resultado.success) throw new Error(resultado.error || 'No se pudo desactivar')
@@ -4483,6 +4645,7 @@ async function confirmarDesactivarSocio() {
       valorFondo,
       porcentajeSancion: porcentajeSancionAplicado,
       valorPrestamo: pagoPrestamos,
+      valorUtilidades,
       saldoPendientePrestamo,
       codigoComprobante
     }
@@ -4500,6 +4663,7 @@ async function confirmarDesactivarSocio() {
     // Deshacer lo que alcanzó a escribirse, en orden inverso: el socio sigue activo y la
     // caja, las utilidades y el préstamo quedan como estaban antes del retiro.
     try {
+      if (hecho.salidaUtilidadesId) await supabase.from('movimientos_fondo').delete().eq('id', hecho.salidaUtilidadesId)
       if (hecho.salidaId) await supabase.from('movimientos_fondo').delete().eq('id', hecho.salidaId)
       if (hecho.sancionId) await supabase.from('utilidades_clasificadas').delete().eq('id', hecho.sancionId)
       if (hecho.comprobante) await supabase.from('comprobantes_salida').delete().eq('socio_natillera_id', sn.id)
@@ -5546,7 +5710,7 @@ async function verComprobanteSalida(sn) {
   loadingComprobanteSalida.value = true
   const { data: row, error } = await supabase
     .from('comprobantes_salida')
-    .select('socio_nombre, socio_telefono, fecha, total_ahorrado, valor_sancion, valor_entregar, codigo_comprobante, valor_prestamo, detalle_prestamos')
+    .select('*') // `valor_utilidades` solo existe con la migración 072
     .eq('socio_natillera_id', sn.id)
     .maybeSingle()
   loadingComprobanteSalida.value = false
@@ -5558,7 +5722,10 @@ async function verComprobanteSalida(sn) {
   if (row) {
     const valorFondoRow = parseFloat(row.valor_sancion) || 0
     const valorEntregarRow = parseFloat(row.valor_entregar) || 0
-    const baseRecaudada = valorFondoRow + valorEntregarRow
+    const valorUtilidadesRow = parseFloat(row.valor_utilidades) || 0
+    // La base de la sanción es el ahorro, más las utilidades si la sanción también las tocó
+    const sobreUtilidades = (parseFloat(row.valor_sancion_utilidades) || 0) > 0
+    const baseRecaudada = valorFondoRow + valorEntregarRow - (sobreUtilidades ? 0 : valorUtilidadesRow)
     const porcentajeDerivado = baseRecaudada > 0 ? (valorFondoRow / baseRecaudada) * 100 : 0
     comprobanteDesactivacion.value = {
       socioNombre: row.socio_nombre || sn.socio?.nombre || 'Socio',
@@ -5569,6 +5736,7 @@ async function verComprobanteSalida(sn) {
       valorEntregar: valorEntregarRow,
       porcentajeSancion: porcentajeDerivado,
       valorPrestamo: parseFloat(row.valor_prestamo) || 0,
+      valorUtilidades: valorUtilidadesRow,
       saldoPendientePrestamo: (row.detalle_prestamos || []).reduce((s, d) => s + (Number(d.saldo_restante) || 0), 0),
       codigoComprobante: row.codigo_comprobante
     }
@@ -7492,8 +7660,8 @@ onUnmounted(() => {
  */
 .retiro-hero {
   border-radius: 1rem;
-  border: 1px solid rgba(27, 94, 55, 0.18);
-  background: linear-gradient(180deg, #f3faf4 0%, #ffffff 100%);
+  border: 1px solid var(--marca-tinta-borde);
+  background: linear-gradient(180deg, var(--marca-suave) 0%, var(--superficie-tarjeta) 100%);
   padding: 1rem 1.125rem 1.125rem;
   text-align: center;
 }
@@ -7575,37 +7743,38 @@ onUnmounted(() => {
 }
 
 /*
- * Sanción por retiro. Rosa a propósito: la cabecera del modal es ámbar y la cifra que se
- * entrega es verde, así que un tercer tono evita que todo el cuerpo se lea igual — y el
- * rosa dice «esto resta» sin gritar como un rojo de error.
- *
- * Apagada es una tarjeta gris discreta; al encenderla se tiñe y despliega el porcentaje.
+ * Opciones del retiro (sanción, utilidades, préstamo): una sola tarjeta con
+ * interruptor. Apagada es neutra; encendida se tiñe del verde de la app. Antes cada
+ * una tenía su color (rosa, naranja) y con la cabecera ámbar el cuerpo era un
+ * arcoíris: lo que suma o resta ya lo dice el reparto, con su propio color.
+ * Todo con tokens, así el modo oscuro sale solo.
  */
-.retiro-sancion {
+.retiro-opcion {
   border-radius: 1rem;
-  border: 1px solid var(--surface-divider-strong, #cbd5e1);
-  background: #fff;
+  border: 1px solid var(--borde);
+  background: var(--superficie-tarjeta);
   overflow: hidden;
   transition: border-color 200ms ease, background-color 200ms ease;
 }
 
-.retiro-sancion.is-active {
-  border-color: rgba(190, 24, 93, 0.28);
-  background: linear-gradient(180deg, #fff1f5 0%, #ffffff 62%);
+.retiro-opcion.is-active {
+  border-color: var(--marca-tinta-borde);
+  background: linear-gradient(180deg, var(--marca-suave) 0%, var(--superficie-tarjeta) 70%);
 }
 
-.retiro-sancion__cabecera {
+.retiro-opcion__cabecera {
   display: flex;
   width: 100%;
+  min-height: 3.5rem;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 1rem;
   text-align: left;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
-.retiro-sancion__icono {
+.retiro-opcion__icono {
   display: flex;
   height: 2.25rem;
   width: 2.25rem;
@@ -7613,38 +7782,36 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   border-radius: 0.75rem;
-  background: #f1f5f9;
-  color: #94a3b8;
+  background: var(--superficie-hundida);
+  color: var(--texto-tenue);
   transition: background-color 200ms ease, color 200ms ease;
 }
 
-.retiro-sancion.is-active .retiro-sancion__icono {
-  background: #fce7f3;
-  color: #be185d;
+.retiro-opcion.is-active .retiro-opcion__icono {
+  background: var(--marca-suave);
+  color: var(--marca-texto);
 }
 
-.retiro-sancion__titulo {
+.retiro-opcion__titulo {
   display: block;
   font-family: var(--font-display);
   font-size: 0.875rem;
   font-weight: 700;
-  color: #334155;
+  color: var(--texto-fuerte);
 }
 
-.retiro-sancion.is-active .retiro-sancion__titulo { color: #9d174d; }
-
-.retiro-sancion__sub {
+.retiro-opcion__sub {
   display: block;
   margin-top: 0.125rem;
   font-size: 0.75rem;
   line-height: 1.35;
-  color: #94a3b8;
+  color: var(--texto-suave);
 }
 
-.retiro-sancion.is-active .retiro-sancion__sub { color: #be185d; opacity: 0.85; }
+.retiro-opcion.is-active .retiro-opcion__sub { color: var(--marca-texto); }
 
 /* Interruptor: más claro que una casilla para algo que enciende un bloque entero. */
-.retiro-sancion__switch {
+.retiro-opcion__switch {
   position: relative;
   display: inline-flex;
   height: 1.625rem;
@@ -7652,15 +7819,13 @@ onUnmounted(() => {
   flex-shrink: 0;
   align-items: center;
   border-radius: 9999px;
-  background: #e2e8f0; /* tema-fijo: la pista se ajusta a mano justo debajo */
+  background: var(--borde-fuerte);
   transition: background-color 200ms ease;
 }
-/* Modo oscuro (a mano): pista visible sobre la tarjeta oscura */
-:where([data-tema=oscuro]) .retiro-sancion__switch:not(:where([data-tema=claro] *)) { background: var(--borde-fuerte); }
 
-.retiro-sancion.is-active .retiro-sancion__switch { background: #ec4899; }
+.retiro-opcion.is-active .retiro-opcion__switch { background: var(--marca); }
 
-.retiro-sancion__bolita {
+.retiro-opcion__bolita {
   position: absolute;
   left: 0.1875rem;
   height: 1.25rem;
@@ -7668,38 +7833,47 @@ onUnmounted(() => {
   border-radius: 9999px;
   background: #fff; /* tema-fijo: la bolita del interruptor es blanca en los dos modos */
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+  -webkit-transition: -webkit-transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
   transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.retiro-sancion.is-active .retiro-sancion__bolita {
+.retiro-opcion.is-active .retiro-opcion__bolita {
+  -webkit-transform: translate3d(1.25rem, 0, 0);
   transform: translate3d(1.25rem, 0, 0);
 }
 
-.retiro-sancion__cuerpo {
+.retiro-opcion__cuerpo {
   padding: 0 1rem 1rem;
 }
 
-/* Atajos de porcentaje, en la misma familia rosa del bloque. */
+.retiro-opcion__nota {
+  margin-top: 0.625rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--texto-secundario);
+}
+
+/* Atajos de porcentaje de la sanción */
 .retiro-pct {
   min-height: 2.75rem;
   border-radius: 0.75rem;
-  border: 1px solid rgba(190, 24, 93, 0.2);
-  background: #fff;
+  border: 1px solid var(--borde);
+  background: var(--superficie-tarjeta);
   font-family: var(--font-display);
   font-size: 0.875rem;
   font-weight: 700;
-  color: #9f1239;
+  color: var(--texto-medio);
   touch-action: manipulation;
   transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
 }
 
-.retiro-pct:hover { border-color: rgba(190, 24, 93, 0.45); }
+.retiro-pct:hover { border-color: var(--marca-tinta-borde); }
 
 .retiro-pct.is-active {
-  border-color: #ec4899;
-  background: #fce7f3;
-  color: #9d174d;
-  box-shadow: inset 0 0 0 1px #ec4899;
+  border-color: var(--marca);
+  background: var(--marca-suave);
+  color: var(--marca-texto);
+  box-shadow: inset 0 0 0 1px var(--marca);
 }
 
 /* ─── Vínculo del socio con su cuenta (portal de socios) ─── */
@@ -7803,107 +7977,17 @@ onUnmounted(() => {
   color: #92400e;
   opacity: 0.85;
 }
-/*
- * Préstamo pendiente al retirarse. Misma estructura que la sanción (cabecera con
- * interruptor + cuerpo), en naranja: también es dinero que no se lleva el socio, pero no
- * se queda en el fondo como utilidad, paga su deuda. Encendida por defecto.
- */
-.retiro-prestamo {
-  border-radius: 1rem;
-  border: 1px solid var(--surface-divider-strong, #cbd5e1);
-  background: #fff;
-  overflow: hidden;
-  transition: border-color 200ms ease, background-color 200ms ease;
-}
-.retiro-prestamo.is-active {
-  border-color: rgba(194, 65, 12, 0.3);
-  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 62%);
-}
-.retiro-prestamo__cabecera {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem 1rem;
-  text-align: left;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-.retiro-prestamo__icono {
-  display: flex;
-  height: 2.25rem;
-  width: 2.25rem;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.75rem;
-  background: #f1f5f9;
-  color: #94a3b8;
-  transition: background-color 200ms ease, color 200ms ease;
-}
-.retiro-prestamo.is-active .retiro-prestamo__icono { background: #ffedd5; color: #c2410c; }
-.retiro-prestamo__titulo {
-  display: block;
-  font-family: var(--font-display);
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #334155;
-}
-.retiro-prestamo.is-active .retiro-prestamo__titulo { color: #9a3412; }
-.retiro-prestamo__sub {
-  display: block;
-  margin-top: 0.125rem;
-  font-size: 0.75rem;
-  line-height: 1.35;
-  color: #94a3b8;
-}
-.retiro-prestamo.is-active .retiro-prestamo__sub { color: #c2410c; opacity: 0.85; }
-.retiro-prestamo__switch {
-  position: relative;
-  display: inline-flex;
-  height: 1.625rem;
-  width: 2.875rem;
-  flex-shrink: 0;
-  align-items: center;
-  border-radius: 9999px;
-  background: #e2e8f0; /* tema-fijo: la pista se ajusta a mano justo debajo */
-  transition: background-color 200ms ease;
-}
-/* Modo oscuro (a mano): pista visible sobre la tarjeta oscura */
-:where([data-tema=oscuro]) .retiro-prestamo__switch:not(:where([data-tema=claro] *)) { background: var(--borde-fuerte); }
-.retiro-prestamo.is-active .retiro-prestamo__switch { background: #ea580c; }
-.retiro-prestamo__bolita {
-  position: absolute;
-  left: 0.1875rem;
-  height: 1.25rem;
-  width: 1.25rem;
-  border-radius: 9999px;
-  background: #fff; /* tema-fijo: la bolita del interruptor es blanca en los dos modos */
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
-  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-.retiro-prestamo.is-active .retiro-prestamo__bolita { transform: translate3d(1.25rem, 0, 0); }
-.retiro-prestamo__cuerpo { padding: 0 1rem 1rem; }
-.retiro-prestamo__nota {
-  margin-top: 0.625rem;
-  font-size: 0.8125rem;
-  line-height: 1.4;
-  color: #9a3412;
-}
 .retiro-reparto__valor--prestamo { color: #c2410c; }
 /* Con tres columnas (socio · préstamo · fondo) la cifra se ajusta al ancho del teléfono. */
 .retiro-reparto__valor { font-size: clamp(1rem, 4.6vw, 1.375rem); }
 
 @media (prefers-reduced-motion: reduce) {
-  .retiro-sancion,
-  .retiro-sancion__icono,
-  .retiro-sancion__switch,
-  .retiro-sancion__bolita,
-  .retiro-pct,
-  .retiro-prestamo,
-  .retiro-prestamo__icono,
-  .retiro-prestamo__switch,
-  .retiro-prestamo__bolita {
+  .retiro-opcion,
+  .retiro-opcion__icono,
+  .retiro-opcion__switch,
+  .retiro-opcion__bolita,
+  .retiro-pct {
+    -webkit-transition: none;
     transition: none;
   }
 }
@@ -7936,7 +8020,9 @@ onUnmounted(() => {
 .modal-liquidacion__value--main    { color: var(--brand-success, #15803d); }
 .modal-liquidacion__value--warning { color: var(--brand-warning, #b45309); }
 
-/* Segmented (forma de pago) */
+/* Segmented (forma de pago del retiro). Verde de la app, como las opciones y los
+   porcentajes de la misma modal; antes era ámbar, el color de la cabecera vieja.
+   Con tokens: el modo oscuro no necesita reglas aparte. */
 .modal-segmented {
   display: inline-flex;
   align-items: center;
@@ -7944,10 +8030,10 @@ onUnmounted(() => {
   gap: 0.4375rem;
   min-height: 44px;
   padding: 0.625rem 0.75rem;
-  border-radius: var(--radius-md, 0.625rem);
-  border: 1px solid var(--surface-divider, #e5e7eb);
-  background: #fff;
-  color: #475569;
+  border-radius: 0.75rem;
+  border: 1px solid var(--borde);
+  background: var(--superficie-tarjeta);
+  color: var(--texto-medio);
   font-weight: 600;
   font-size: 0.8125rem;
   transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
@@ -7955,32 +8041,12 @@ onUnmounted(() => {
   touch-action: manipulation;
   cursor: pointer;
 }
-.modal-segmented:hover { border-color: #cbd5e1; }
+.modal-segmented:hover { border-color: var(--marca-tinta-borde); }
 .modal-segmented.is-active {
-  background: #fffbeb;
-  border-color: var(--brand-warning, #b45309);
-  color: var(--brand-warning, #b45309);
-  box-shadow: 0 0 0 1px var(--brand-warning, #b45309) inset;
-}
-
-/* Botón warning sólido (acción primaria de desactivar) */
-.modal-btn-warning {
-  background: var(--brand-warning, #b45309);
-  color: #fff;
-  box-shadow: 0 4px 12px -2px rgba(180, 83, 9, 0.32);
-}
-.modal-btn-warning:hover:not(:disabled) {
-  background: #92400e;
-  box-shadow: 0 6px 16px -2px rgba(180, 83, 9, 0.4);
-}
-.modal-btn-warning:active:not(:disabled) {
-  background: #78350f;
-  box-shadow: 0 2px 6px -1px rgba(180, 83, 9, 0.3);
-}
-.modal-btn-warning:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  box-shadow: none;
+  background: var(--marca-suave);
+  border-color: var(--marca);
+  color: var(--marca-texto);
+  box-shadow: 0 0 0 1px var(--marca) inset;
 }
 
 /* Botón success sólido (acción primaria de activar / éxito) */
@@ -8312,10 +8378,6 @@ onUnmounted(() => {
 :where([data-tema=oscuro]) .modal-data-list__value--muted:not(:where([data-tema=claro] *)) {
   color: var(--texto-tenue);
 }
-:where([data-tema=oscuro]) .retiro-hero:not(:where([data-tema=claro] *)) {
-  border: 1px solid var(--marca-tinta-borde);
-  background: linear-gradient(180deg, var(--marca-suave) 0%, var(--superficie-tarjeta) 100%);
-}
 :where([data-tema=oscuro]) .retiro-hero__label:not(:where([data-tema=claro] *)) {
   color: var(--texto-secundario);
 }
@@ -8342,40 +8404,6 @@ onUnmounted(() => {
 }
 :where([data-tema=oscuro]) .retiro-reparto__pie:not(:where([data-tema=claro] *)) {
   color: color-mix(in oklab, #be185d 55%, #fff);
-}
-:where([data-tema=oscuro]) .retiro-sancion:not(:where([data-tema=claro] *)) {
-  background: var(--superficie-tarjeta);
-}
-:where([data-tema=oscuro]) .retiro-sancion.is-active:not(:where([data-tema=claro] *)) {
-  background: linear-gradient(180deg, var(--peligro-suave) 0%, var(--superficie-tarjeta) 62%);
-}
-:where([data-tema=oscuro]) .retiro-sancion__icono:not(:where([data-tema=claro] *)) {
-  background: var(--superficie-suave);
-  color: var(--texto-tenue);
-}
-:where([data-tema=oscuro]) .retiro-sancion.is-active .retiro-sancion__icono:not(:where([data-tema=claro] *)) {
-  background: color-mix(in oklab, #fce7f3 14%, var(--superficie-tarjeta));
-  color: color-mix(in oklab, #be185d 55%, #fff);
-}
-:where([data-tema=oscuro]) .retiro-sancion__titulo:not(:where([data-tema=claro] *)) {
-  color: var(--texto);
-}
-:where([data-tema=oscuro]) .retiro-sancion.is-active .retiro-sancion__titulo:not(:where([data-tema=claro] *)) {
-  color: color-mix(in oklab, #9d174d 55%, #fff);
-}
-:where([data-tema=oscuro]) .retiro-sancion__sub:not(:where([data-tema=claro] *)) {
-  color: var(--texto-tenue);
-}
-:where([data-tema=oscuro]) .retiro-sancion.is-active .retiro-sancion__sub:not(:where([data-tema=claro] *)) {
-  color: color-mix(in oklab, #be185d 55%, #fff);
-}
-:where([data-tema=oscuro]) .retiro-pct:not(:where([data-tema=claro] *)) {
-  background: var(--superficie-tarjeta);
-  color: var(--peligro);
-}
-:where([data-tema=oscuro]) .retiro-pct.is-active:not(:where([data-tema=claro] *)) {
-  background: color-mix(in oklab, #fce7f3 14%, var(--superficie-tarjeta));
-  color: color-mix(in oklab, #9d174d 55%, #fff);
 }
 :where([data-tema=oscuro]) .socio-vinculado:not(:where([data-tema=claro] *)) {
   color: var(--marca-tinta);
@@ -8420,36 +8448,6 @@ onUnmounted(() => {
 :where([data-tema=oscuro]) .solicitudes-aviso__sub:not(:where([data-tema=claro] *)) {
   color: var(--alerta);
 }
-:where([data-tema=oscuro]) .retiro-prestamo:not(:where([data-tema=claro] *)) {
-  background: var(--superficie-tarjeta);
-}
-:where([data-tema=oscuro]) .retiro-prestamo.is-active:not(:where([data-tema=claro] *)) {
-  border-color: var(--alerta-borde);
-  background: linear-gradient(180deg, var(--alerta-suave) 0%, var(--superficie-tarjeta) 62%);
-}
-:where([data-tema=oscuro]) .retiro-prestamo__icono:not(:where([data-tema=claro] *)) {
-  background: var(--superficie-suave);
-  color: var(--texto-tenue);
-}
-:where([data-tema=oscuro]) .retiro-prestamo.is-active .retiro-prestamo__icono:not(:where([data-tema=claro] *)) {
-  background: var(--alerta-suave);
-  color: var(--alerta);
-}
-:where([data-tema=oscuro]) .retiro-prestamo__titulo:not(:where([data-tema=claro] *)) {
-  color: var(--texto);
-}
-:where([data-tema=oscuro]) .retiro-prestamo.is-active .retiro-prestamo__titulo:not(:where([data-tema=claro] *)) {
-  color: var(--alerta);
-}
-:where([data-tema=oscuro]) .retiro-prestamo__sub:not(:where([data-tema=claro] *)) {
-  color: var(--texto-tenue);
-}
-:where([data-tema=oscuro]) .retiro-prestamo.is-active .retiro-prestamo__sub:not(:where([data-tema=claro] *)) {
-  color: var(--alerta);
-}
-:where([data-tema=oscuro]) .retiro-prestamo__nota:not(:where([data-tema=claro] *)) {
-  color: var(--alerta);
-}
 :where([data-tema=oscuro]) .retiro-reparto__valor--prestamo:not(:where([data-tema=claro] *)) {
   color: var(--alerta);
 }
@@ -8463,18 +8461,6 @@ onUnmounted(() => {
   color: var(--exito);
 }
 :where([data-tema=oscuro]) .modal-liquidacion__value--warning:not(:where([data-tema=claro] *)) {
-  color: var(--alerta);
-}
-:where([data-tema=oscuro]) .modal-segmented:not(:where([data-tema=claro] *)) {
-  background: var(--superficie-tarjeta);
-  color: var(--texto-medio);
-}
-:where([data-tema=oscuro]) .modal-segmented:hover:not(:where([data-tema=claro] *)) {
-  border-color: var(--borde-fuerte);
-}
-:where([data-tema=oscuro]) .modal-segmented.is-active:not(:where([data-tema=claro] *)) {
-  background: var(--alerta-suave);
-  border-color: var(--alerta);
   color: var(--alerta);
 }
 </style>

@@ -426,6 +426,7 @@
                       {{ socioMora.cuotasMora }} {{ socioMora.cuotasMora === 1 ? 'cuota' : 'cuotas' }}
                       · {{ socioMora.diasMora }}d
                     </p>
+                    <p v-if="esMoraExcesiva(socioMora)" class="mora-excesiva mt-1">Mora excesiva · retirar</p>
                   </div>
                   <div class="flex-shrink-0 pl-2 text-right tabular-nums leading-tight">
                     <p class="text-sm font-bold text-red-600 oscuro:text-red-300">${{ formatMoney(socioMora.totalDeudaCuotas + socioMora.totalSanciones) }}</p>
@@ -2200,6 +2201,7 @@
                         <span v-if="socioMora.cuotasMora > 0" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 oscuro:bg-red-500/15 text-red-700 oscuro:text-red-300 border border-red-200 oscuro:border-red-500/30 whitespace-nowrap">
                           {{ socioMora.cuotasMora }} en mora
                         </span>
+                        <span v-if="esMoraExcesiva(socioMora)" class="mora-excesiva">Mora excesiva · retirar</span>
                         <span v-if="socioMora.cuotasMora > 0 && socioMora.diasMora > 0" class="text-xs text-red-600 oscuro:text-red-300 font-semibold whitespace-nowrap">
                           {{ socioMora.diasMora }} {{ socioMora.diasMora === 1 ? 'día' : 'días' }}
                         </span>
@@ -3731,6 +3733,7 @@ import {
   registrarGuiaDetalleVista,
 } from '../../composables/useTourDetalleNatillera'
 import { recaudadoIndicador, utilidadIndicador } from '../../utils/indicadoresNatillera'
+import { limiteMoraExcesiva, tieneMoraExcesiva } from '../../utils/moraExcesiva'
 import PiggyBankIcon from '../../components/icons/PiggyBankIcon.vue'
 import CargaPantalla from '../../components/carga/CargaPantalla.vue'
 import CargaCaja from '../../components/carga/CargaCaja.vue'
@@ -3864,20 +3867,11 @@ function construirPasosGuia({ manual = false } = {}) {
           icono: Bars3Icon,
           gesto: 'tocar',
           titulo: 'El menú ☰',
-          texto: 'Ábrelo aquí: acciones de la natillera y tu cuenta.',
+          texto: 'Ábrelo aquí: cambia de natillera o entra a tu cuenta.',
           radio: 14,
           margen: 4
         },
-        {
-          // El cajón ya abierto: qué se puede hacer con la natillera desde aquí.
-          selector: '#tour-acciones-natillera',
-          recorrer: '#tour-acciones-natillera .nav-link',
-          icono: DocumentCheckIcon,
-          titulo: 'Acciones de la natillera',
-          texto: 'Comprobantes, colaboradores, avisos y cierre.',
-          antes: abrirMenuMovil,
-          ...flujoMenuMovil
-        },
+        // Las acciones de la natillera no van en el cajón en móvil: ya están en la barra inferior.
         { ...pasoPanelUsuario(abrirMenuMovil, cerrarMenuMovil), ...flujoMenuMovil, antes: abrirMenuMovil }
       ]
     : [
@@ -6008,6 +6002,9 @@ const cantidadCuotasEnMoraAlertas = computed(() =>
 const ALERTAS_RECIENTES_PREVIEW = 5
 
 const sociosCuotasMoraLista = computed(() => sociosEnMora.value.filter((s) => s.cuotasMora > 0))
+// Límite de «Devolución por mora excesiva»; 0 si la natillera no lo usa
+const limiteMoraExcesivaNatillera = computed(() => limiteMoraExcesiva(natillera.value?.reglas_multas))
+const esMoraExcesiva = (socioMora) => tieneMoraExcesiva(socioMora.cuotasMora, limiteMoraExcesivaNatillera.value)
 
 /** Vista previa: como máximo 5 filas en total (primero cuotas de la natillera, luego préstamos). */
 const previewCuotasCount = computed(() => {
@@ -7720,6 +7717,27 @@ onUnmounted(() => {
 })
 </script>
 <style scoped>
+/*
+ * Socio que llegó al límite de «Devolución por mora excesiva»: el reglamento dice que
+ * sale. Rojo sólido para que se distinga del rojo suave de «N en mora».
+ */
+.mora-excesiva {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background: #b91c1c;
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+:where([data-tema=oscuro]) .mora-excesiva {
+  background: var(--peligro);
+  color: var(--superficie-tarjeta);
+}
 /* Animaciones de la vista. Solo quedan las que usa la plantilla (las de la antigua pantalla
    de carga, los tooltips y los float-* no tenían elementos). Llevan -webkit- y translate3d
    porque Safari antiguo ignora @keyframes sin prefijo y, sin capa propia, las repinta en CPU

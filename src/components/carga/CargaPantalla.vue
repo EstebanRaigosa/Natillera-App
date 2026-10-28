@@ -12,6 +12,7 @@
       <div
         v-if="visible"
         class="carga"
+        :class="{ 'carga--junto-al-menu': dentroDelPanel }"
         role="status"
         aria-live="polite"
         :aria-label="texto"
@@ -41,7 +42,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import DestellosFondo from '../publico/DestellosFondo.vue'
 import EscenaAlcancia from '../publico/EscenaAlcancia.vue'
 
@@ -51,6 +52,11 @@ const props = defineProps({
 })
 
 const texto = computed(() => props.text || 'Cargando')
+
+// Dentro del panel (DashboardLayout) la barra lateral sigue a la vista mientras
+// carga la vista, para que se vea la pestaña llegar a la opción elegida.
+// Fuera de él (bienvenida, login) no hay barra y la carga ocupa todo.
+const dentroDelPanel = inject('dashboardSidebar', null) !== null
 </script>
 
 <style scoped>
@@ -71,6 +77,16 @@ const texto = computed(() => props.text || 'Cargando')
   background: linear-gradient(to bottom, #04110a 0%, #0b2a1a 55%, #1b5e37 100%); /* tema-fijo: la pantalla de carga es verde noche en los dos modos */
   touch-action: none;
   overscroll-behavior: contain;
+}
+
+/* Solo en escritorio (xl): es donde la barra es fija. En lg la barra se abre
+   por hover encima del contenido y en móvil es un cajón, así que ahí la carga
+   sigue cubriendo todo. 18rem = `w-72` de la barra en DashboardLayout. */
+@media (min-width: 1280px) {
+  .carga--junto-al-menu {
+    left: 18rem;
+    padding-left: 0;
+  }
 }
 
 .carga__contenido {

@@ -75,8 +75,9 @@ import { formatMoney } from '../../utils/formatMoney'
 const props = defineProps({
   /**
    * Datos del retiro: socioNombre, fecha, totalAhorrado, valorFondo (sanción),
-   * porcentajeSancion, valorEntregar (después de la sanción), valorPrestamo (lo que se
-   * cruzó con su préstamo), saldoPendientePrestamo y codigoComprobante.
+   * porcentajeSancion, valorEntregar (después de la sanción, con las utilidades si se
+   * sumaron), valorUtilidades, valorPrestamo (lo que se cruzó con su préstamo),
+   * saldoPendientePrestamo y codigoComprobante.
    */
   datos: { type: Object, required: true },
   /** true en la vista previa (se ajusta al modal); false para generar la imagen. */
@@ -100,6 +101,9 @@ const renglones = computed(() => {
   const filas = [
     { clave: 'ahorro', etiqueta: 'Total ahorrado', valor: numero(d.totalAhorrado), signo: '', color: '#0f172a' }
   ]
+  if (numero(d.valorUtilidades) > 0) {
+    filas.push({ clave: 'utilidades', etiqueta: 'Sus utilidades', valor: numero(d.valorUtilidades), signo: '+ ', color: '#15803d' })
+  }
   if (numero(d.valorFondo) > 0) {
     filas.push({ clave: 'sancion', etiqueta: 'Sanción por retiro', nota: porcentajeTexto.value, valor: numero(d.valorFondo), signo: '− ', color: '#b91c1c' })
   }

@@ -21,9 +21,10 @@
       @mouseenter="clearSidebarTimeout(); sidebarHover = true; hoverAreaActive = false"
       @mouseleave="startSidebarTimeout()"
       :class="[
-        'fixed inset-y-0 left-0 z-50 w-72 app-shell-nav-bg border-r border-white/10 transform transition-transform duration-300',
-        // En pantallas xl (1280px+): siempre visible y estático
-        'xl:translate-x-0 xl:static',
+        'fixed inset-y-0 left-0 z-50 w-72 app-shell-nav-bg transform transition-transform duration-300',
+        // En pantallas xl (1280px+): siempre visible, en el flujo pero pegada al alto de la
+        // pantalla (sticky): así su menú tiene scroll propio y no se va con el de la página
+        'xl:translate-x-0 xl:sticky xl:top-0 xl:self-start xl:h-screen xl:supports-[height:100dvh]:h-[100dvh]',
         // En lg (1024px-1279px): oculto por defecto, visible con hover
         // En móvil/tablet (<1024px): controlado por sidebarOpen
         (sidebarOpen || (isLgScreen && sidebarHover)) ? 'translate-x-0' : '-translate-x-full'
@@ -53,9 +54,22 @@
 
         <!-- Navegación -->
         <nav
-          class="flex-1 p-4 space-y-4 overflow-y-auto"
-          :class="natilleraIdRuta ? 'pb-[8.25rem]' : 'pb-24'"
+          ref="navLateral"
+          class="nav-lateral relative flex-1 min-h-0 p-4 space-y-4 overflow-y-auto overscroll-contain"
+          :class="natilleraParaVolver ? 'pb-[15.5rem]' : 'pb-[12.5rem]'"
         >
+          <!-- Pestaña de la opción activa: viaja entre opciones y se funde con el contenido -->
+          <span
+            v-show="pestana.visible"
+            class="nav-pestana"
+            :class="{ 'nav-pestana--quieta': !pestana.animar }"
+            :style="{
+              left: pestana.x + 'px',
+              height: pestana.alto + 'px',
+              transform: `translate3d(0, ${pestana.y}px, 0)`
+            }"
+            aria-hidden="true"
+          />
           <!-- Instalar PWA: solo visible si la app se puede instalar y no lo está -->
           <InstallPwaButton variant="sidebar" />
 
@@ -145,11 +159,12 @@
               </button>
           </div>
 
-          <!-- Acciones de la natillera actual (barra lateral; en detalle ya no se muestran) -->
+          <!-- Acciones de la natillera actual. En móvil no: ya están en la barra inferior
+               (botón «Acciones»), y repetirlas en el cajón solo lo alargaba. -->
           <div
             v-if="natilleraIdRuta"
             id="tour-acciones-natillera"
-            class="sidebar-section space-y-1"
+            class="sidebar-section hidden lg:block space-y-1"
           >
             <p class="sidebar-section-heading">Acciones Natillera</p>
             <button
@@ -347,7 +362,8 @@
       @mouseleave="handleUserPanelMouseLeave"
       :style="{ paddingBottom: `calc(max(0.625rem, env(safe-area-inset-bottom, 0px)) + ${tapadoInferior}px)` }"
       :class="[
-        'fixed bottom-0 left-0 w-72 p-2.5 z-50 transition-all duration-300',
+        // Fondo del shell: el menú se desplaza por debajo y no debe transparentarse.
+        'panel-usuario-fijo fixed bottom-0 left-0 w-72 p-3 z-50 transition-all duration-300 app-shell-nav-bg',
         // En xl (1280px+): siempre visible
         'xl:translate-x-0',
         // En lg (1024px-1279px): visible con hover
@@ -355,110 +371,95 @@
         (sidebarOpen || (isLgScreen && sidebarHover)) ? 'translate-x-0' : '-translate-x-full'
       ]"
     >
-      <div data-guia="panel-usuario" class="user-panel group flex flex-col gap-0">
-        <!-- Efecto de brillo animado en hover -->
-        <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-natillera-400/0 via-white/30 to-natillera-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -translate-x-full group-hover:translate-x-full pointer-events-none"></div>
-
-        <!--
-          Cambiar o elegir natillera. Antes solo aparecía dentro de una
-          natillera, así que en las pantallas transversales —panel de soporte,
-          configuración, auditoría— no había forma de saltar a una sin pasar por
-          el dashboard. En el propio dashboard se oculta: ahí la elección ya
-          está en el contenido.
-        -->
-        <template v-if="natilleraParaVolver">
-          <button
-            type="button"
-            class="cambiar-natillera-btn relative z-[1] w-full text-left"
-            :title="natilleraParaVolver.nombre ? `Volver a ${natilleraParaVolver.nombre}` : 'Volver a la natillera'"
-            @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraParaVolver.id)"
-          >
-            <span class="cambiar-natillera-btn__icon-wrap" aria-hidden="true">
-              <ArrowUturnLeftIcon class="cambiar-natillera-btn__icon" />
-            </span>
-            <span class="cambiar-natillera-btn__text">
-              <span class="cambiar-natillera-btn__title">Volver a la natillera</span>
-              <span class="cambiar-natillera-btn__hint w-full min-w-0 truncate">
-                {{ natilleraParaVolver.nombre || 'La última que abriste' }}
-              </span>
-            </span>
-          </button>
-
-          <div class="user-panel-divider relative z-[1]" role="presentation" />
-        </template>
-
-        <template v-if="mostrarSelectorNatillera">
-          <button
-            type="button"
-            data-guia="panel-cambiar-natillera"
-            class="cambiar-natillera-btn relative z-[1] w-full text-left"
-            @click="abrirRutaDesdeSidebar({ name: 'Dashboard' })"
-          >
-            <span class="cambiar-natillera-btn__icon-wrap" aria-hidden="true">
-              <ArrowsRightLeftIcon class="cambiar-natillera-btn__icon" />
-            </span>
-            <span class="cambiar-natillera-btn__text">
-              <span class="cambiar-natillera-btn__title">
-                {{ natilleraIdRuta ? 'Cambiar natillera' : 'Seleccionar natillera' }}
-              </span>
-              <span
-                class="cambiar-natillera-btn__hint w-full min-w-0 truncate"
-                :title="textoSelectorNatillera"
-              >
-                {{ textoSelectorNatillera }}
-              </span>
-            </span>
-          </button>
-
-          <div class="user-panel-divider relative z-[1]" role="presentation" />
-        </template>
-
-        <div class="user-panel-row relative z-[1]">
-          <div class="user-panel-avatar-wrap shrink-0">
-            <img
-              :src="getAvatarUrl(authStore.userEmail || authStore.userName)"
-              :alt="authStore.userName || ''"
-              class="user-panel-avatar-img"
-              width="40"
-              height="40"
-              decoding="async"
-              draggable="false"
-            />
-          </div>
-
-          <div class="user-panel-user-text">
-            <p class="user-panel-user-name">{{ authStore.userName }}</p>
-            <p class="user-panel-user-email">{{ authStore.userEmail }}</p>
-          </div>
-
+      <!--
+        «Tu cuenta» como lista agrupada: una fila por cosa que se puede hacer, cada una
+        con su nombre escrito. Antes «Mi cuenta» y «Cerrar sesión» eran dos iconos junto
+        al avatar y en el celular no había title que dijera cuál era cuál.
+      -->
+      <div data-guia="panel-usuario" class="flex flex-col gap-2">
+        <div class="panel-cuenta">
           <!--
-            Ajustes de la persona. Van junto al avatar porque es donde se
-            buscan, y a una pantalla propia (`/mi-cuenta`) porque
-            `/configuracion` guarda los mensajes por defecto, el periodo y los
-            días de gracia: ajustes de la natillera, compartidos, no personales.
+            Ajustes de la persona: la fila es la propia persona (avatar + nombre) porque
+            es donde se buscan. Van a `/mi-cuenta` y no a `/configuracion`, que guarda
+            ajustes de la natillera, compartidos, no personales.
           -->
           <button
             type="button"
             data-guia="panel-mi-cuenta"
-            class="logout-btn group/btn"
-            title="Mi cuenta"
-            aria-label="Mi cuenta"
+            class="panel-cuenta__fila"
+            :class="{ 'panel-cuenta__fila--actual': route.path === '/mi-cuenta' }"
+            :title="authStore.userEmail || 'Mi cuenta'"
             @click="abrirRutaDesdeSidebar('/mi-cuenta')"
           >
-            <Cog6ToothIcon class="logout-btn__icon" />
+            <img
+              :src="getAvatarUrl(authStore.userEmail || authStore.userName)"
+              alt=""
+              class="panel-cuenta__avatar"
+              width="36"
+              height="36"
+              decoding="async"
+              draggable="false"
+            />
+            <span class="panel-cuenta__textos">
+              <span class="panel-cuenta__titulo">{{ authStore.userName || 'Mi cuenta' }}</span>
+              <span class="panel-cuenta__pista">Mi cuenta · datos y avisos</span>
+            </span>
+            <ChevronRightIcon class="panel-cuenta__flecha" aria-hidden="true" />
+          </button>
+
+          <!--
+            Volver o cambiar de natillera. Se ofrece también fuera de una natillera
+            (soporte, configuración, auditoría) para no tener que pasar por el
+            dashboard; en el propio dashboard se oculta porque la elección ya es el
+            contenido.
+          -->
+          <button
+            v-if="natilleraParaVolver"
+            type="button"
+            class="panel-cuenta__fila"
+            :title="natilleraParaVolver.nombre ? `Volver a ${natilleraParaVolver.nombre}` : 'Volver a la natillera'"
+            @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraParaVolver.id)"
+          >
+            <span class="panel-cuenta__icono" aria-hidden="true">
+              <ArrowUturnLeftIcon class="h-[1.125rem] w-[1.125rem]" />
+            </span>
+            <span class="panel-cuenta__textos">
+              <span class="panel-cuenta__titulo">Volver a la natillera</span>
+              <span class="panel-cuenta__pista">{{ natilleraParaVolver.nombre || 'La última que abriste' }}</span>
+            </span>
+            <ChevronRightIcon class="panel-cuenta__flecha" aria-hidden="true" />
           </button>
 
           <button
+            v-if="mostrarSelectorNatillera"
             type="button"
-            data-guia="panel-cerrar-sesion"
-            class="logout-btn group/btn"
-            title="Cerrar sesión"
-            aria-label="Cerrar sesión"
-            @click="handleLogout"
+            data-guia="panel-cambiar-natillera"
+            class="panel-cuenta__fila"
+            :title="textoSelectorNatillera"
+            @click="abrirRutaDesdeSidebar({ name: 'Dashboard' })"
           >
-            <ArrowRightOnRectangleIcon class="logout-btn__icon" />
+            <span class="panel-cuenta__icono" aria-hidden="true">
+              <ArrowsRightLeftIcon class="h-[1.125rem] w-[1.125rem]" />
+            </span>
+            <span class="panel-cuenta__textos">
+              <span class="panel-cuenta__titulo">{{ natilleraIdRuta ? 'Cambiar natillera' : 'Seleccionar natillera' }}</span>
+              <span class="panel-cuenta__pista">{{ textoSelectorNatillera }}</span>
+            </span>
+            <ChevronRightIcon class="panel-cuenta__flecha" aria-hidden="true" />
           </button>
         </div>
+
+        <!-- Fuera de la lista: no lleva a otra pantalla, termina la sesión. Separado
+             y en rosa para que no se toque creyendo que es una fila más. -->
+        <button
+          type="button"
+          data-guia="panel-cerrar-sesion"
+          class="boton-salir"
+          @click="handleLogout"
+        >
+          <ArrowRightOnRectangleIcon class="boton-salir__icono" aria-hidden="true" />
+          <span>Cerrar sesión</span>
+        </button>
       </div>
     </div>
 
@@ -641,6 +642,7 @@ import {
 import { isBodyScrollLocked } from '../composables/useBodyScrollLock'
 import { useScrollRestoration } from '../composables/useScrollRestoration'
 import { useTapadoInferior } from '../composables/useTapadoInferior'
+import { usePestanaLateral } from '../composables/usePestanaLateral'
 import InvitacionesPendientes from '../components/InvitacionesPendientes.vue'
 import MobileBottomNav from '../components/MobileBottomNav.vue'
 import SolicitudesVinculoModal from '../components/vinculo/SolicitudesVinculoModal.vue'
@@ -682,6 +684,9 @@ useLatido(() => authStore.isAuthenticated)
  * Fuera de iOS —o con la PWA instalada— vale 0 y el CSS queda igual que siempre.
  */
 const { tapado: tapadoInferior } = useTapadoInferior()
+
+const navLateral = ref(null)
+const { pestana } = usePestanaLateral(navLateral)
 
 const natillerasStore = useNatillerasStore()
 const colaboradoresStore = useColaboradoresStore()
@@ -1290,52 +1295,129 @@ onUnmounted(() => {
 
 .nav-link {
   @apply flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200;
+  /* Por encima de la pestaña, que pasa por detrás al deslizarse */
+  position: relative;
+  z-index: 1;
+  touch-action: manipulation;
   color: hsl(152 42% 78% / 0.95);
 }
 
 .nav-link:hover {
   @apply text-white;
-  background: hsl(var(--primary) / 0.22);
+  background: rgb(255 255 255 / 0.07);
 }
 
-/* Opción seleccionada (referencia dashboard): píldora clara crema, texto/ícono
-   oscuros y barra de acento dorada a la izquierda, sobre el shell verde. */
-.nav-link-active {
+/* Opción seleccionada: el fondo lo pone `.nav-pestana`, que se desliza hasta aquí.
+   El color del texto espera a que llegue la pestaña para no quedar verde sobre verde. */
+.nav-link-active,
+.nav-link-active:hover {
   @apply font-semibold;
-  position: relative;
-  padding-left: 1.35rem; /* deja aire para la barra de acento */
-  background: #f5f1e7;
+  border-radius: 1.25rem 0 0 1.25rem;
+  background: transparent;
   color: var(--brand-primary);
-  border: none;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  transition: color 0.2s ease 0.12s;
 }
 
-.nav-link-active::before {
+/* Pestaña de la opción activa (referencia «Table-journal»): del color del lienzo
+   y pegada al borde derecho, de modo que la opción parece salir del contenido.
+   Usa el token del lienzo, no un color fijo: tiene que coincidir con el fondo
+   de la página en los dos modos aunque el resto del shell sea fijo. */
+.nav-pestana {
+  --radio-pestana: 1.25rem;
+  position: absolute;
+  top: 0;
+  /* right: 0 y no un ancho medido: un ancho en px redondeado dejaba una rendija
+     de medio píxel entre la pestaña y el contenido */
+  right: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--superficie-lienzo);
+  border-radius: var(--radio-pestana) 0 0 var(--radio-pestana);
+  -webkit-transition: -webkit-transform 0.42s cubic-bezier(0.65, 0, 0.25, 1), height 0.42s cubic-bezier(0.65, 0, 0.25, 1);
+  transition: transform 0.42s cubic-bezier(0.65, 0, 0.25, 1), height 0.42s cubic-bezier(0.65, 0, 0.25, 1);
+  will-change: transform;
+}
+
+/* Sin barra de scroll visible: se interpondría entre la pestaña y el contenido
+   y rompería la unión. El menú sigue desplazándose con rueda, trackpad y dedo. */
+.nav-lateral {
+  scrollbar-width: none;
+}
+
+.nav-lateral::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-pestana--quieta {
+  -webkit-transition: none;
+  transition: none;
+}
+
+/* Esquinas invertidas arriba y abajo a la derecha: el menú «se curva» hacia la pestaña */
+.nav-pestana::before,
+.nav-pestana::after {
   content: '';
   position: absolute;
-  left: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 1.4rem;
+  right: 0;
+  width: var(--radio-pestana);
+  height: var(--radio-pestana);
+}
+
+.nav-pestana::before {
+  bottom: 100%;
+  background: radial-gradient(circle at 0 0, transparent calc(var(--radio-pestana) - 0.5px), var(--superficie-lienzo) var(--radio-pestana));
+}
+
+.nav-pestana::after {
+  top: 100%;
+  background: radial-gradient(circle at 0 100%, transparent calc(var(--radio-pestana) - 0.5px), var(--superficie-lienzo) var(--radio-pestana));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-pestana,
+  .nav-link-active {
+    -webkit-transition: none;
+    transition: none;
+  }
+}
+
+/* Secciones planas, sin recuadro: la pestaña activa sale hasta el contenido y
+   un borde de sección la cortaba por la mitad (referencia «Table-journal»). */
+.sidebar-section {
+  @apply py-1;
+}
+
+/* Más aire entre bloques: junto con la línea del título es lo que separa las
+   secciones ahora que no tienen recuadro. */
+.sidebar-section + .sidebar-section {
+  @apply mt-3;
+}
+
+/* Título de bloque (Menú, Acciones, …): hace de separador. Punto dorado, nombre
+   y una línea que llena el resto, en flujo (no `absolute`) para que la pestaña
+   siga pasando por detrás. La línea se queda a 1rem del borde derecho: ahí sale
+   la pestaña y no deben tocarse. */
+.sidebar-section-heading {
+  position: relative;
+  z-index: 1;
+  @apply mb-2.5 flex items-center gap-2.5 px-4 text-[0.72rem] font-bold uppercase tracking-[0.18em] text-white/85;
+}
+
+.sidebar-section-heading::before {
+  content: '';
+  width: 0.4rem;
+  height: 0.4rem;
+  flex-shrink: 0;
   border-radius: 9999px;
   background: var(--color-accent-400);
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 0.08);
 }
 
-.nav-link-active:hover {
-  background: #fdfbf6;
-  color: var(--brand-primary);
-  filter: none;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
-}
-
-.sidebar-section {
-  @apply rounded-xl border border-white/20 bg-black/15 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)];
-}
-
-/* Título de bloque (Menú, Acciones, …): distinto de las etiquetas de cada opción */
-.sidebar-section-heading {
-  @apply mb-3 border-b border-white/30 px-2 pb-2.5 text-[0.7rem] font-extrabold uppercase tracking-[0.2em] text-white drop-shadow-sm;
+.sidebar-section-heading::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 1px;
+  background: linear-gradient(to right, rgb(255 255 255 / 0.35), rgb(255 255 255 / 0.06));
 }
 
 .sidebar-option-label {
@@ -1346,6 +1428,40 @@ onUnmounted(() => {
 .nav-link-option.nav-link-active .sidebar-option-label {
   @apply font-semibold;
   color: var(--brand-primary);
+}
+
+/* Sobre el lienzo oscuro el verde marca no se lee */
+:where([data-tema=oscuro]) .nav-link-active,
+:where([data-tema=oscuro]) .nav-link-option.nav-link-active .sidebar-option-label {
+  color: var(--marca-texto);
+}
+
+/* En móvil la barra es un cajón encima de la página: no hay contenido al lado
+   con el que unirse, así que la pestaña se vuelve una píldora crema que sigue
+   deslizándose entre opciones. Es fija en los dos modos (como el shell), por eso
+   aquí el texto vuelve al verde marca también en oscuro. */
+@media (max-width: 1023.98px) {
+  .nav-pestana {
+    right: 1rem;
+    border-radius: 0.875rem;
+    background: #f5f1e7; /* tema-fijo: píldora activa del cajón, igual en los dos modos */
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  }
+
+  .nav-pestana::before,
+  .nav-pestana::after {
+    display: none;
+  }
+
+  .nav-link-active,
+  .nav-link-active:hover {
+    border-radius: 0.875rem;
+  }
+
+  :where([data-tema=oscuro]) .nav-link-active,
+  :where([data-tema=oscuro]) .nav-link-option.nav-link-active .sidebar-option-label {
+    color: var(--brand-primary);
+  }
 }
 
 .nav-link-option {
@@ -1360,198 +1476,103 @@ onUnmounted(() => {
   @apply bg-white/25 text-white font-semibold border-white/40 shadow-md backdrop-blur-sm;
 }
 
-/* Panel de usuario fijo */
-.user-panel {
-  @apply relative p-2.5 rounded-xl overflow-hidden;
-  @apply bg-white/[0.12] backdrop-blur-xl;
-  @apply border border-white/25;
-  @apply shadow-[0_8px_32px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.1)];
-  @apply transition-all duration-300;
+/* Panel «Tu cuenta»: lista agrupada, opaca (el menú pasa por debajo al desplazarse)
+   y sin backdrop-filter, que sobre un fondo sólido no aporta y en Safari es caro. */
+.panel-cuenta {
+  @apply overflow-hidden rounded-2xl border border-white/10;
+  background: #0b301a; /* tema-fijo: un tono más hundido que el shell */
 }
 
-.user-panel:hover {
-  @apply border-white/35 bg-white/[0.16];
-  box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  transform: translateY(-1px);
+.panel-cuenta__fila {
+  @apply flex w-full items-center gap-3 px-3 py-2 text-left transition-colors duration-200;
+  min-height: 3rem;
+  color: #fff;
+  touch-action: manipulation;
 }
 
-/* Cerrar sesión: discreto al lado del bloque usuario (referencia: fila limpia) */
-.logout-btn {
-  @apply relative inline-flex shrink-0 items-center justify-center rounded-lg;
-  @apply min-h-10 min-w-10 p-2;
-  @apply text-emerald-100/90;
-  @apply border border-white/15 bg-white/5;
-  @apply transition-colors duration-200;
+.panel-cuenta__fila + .panel-cuenta__fila {
+  border-top: 1px solid rgb(255 255 255 / 0.08);
 }
 
-.logout-btn:hover {
-  @apply text-white border-white/25 bg-white/10;
+.panel-cuenta__fila:hover,
+.panel-cuenta__fila:active,
+.panel-cuenta__fila--actual {
+  background: rgb(255 255 255 / 0.07);
 }
 
-.logout-btn:focus-visible {
+.panel-cuenta__fila:focus-visible {
   outline: 2px solid hsl(var(--primary));
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
 
-.logout-btn__icon {
-  width: 1.125rem;
-  height: 1.125rem;
-  transition: transform 0.2s ease;
+.panel-cuenta__avatar {
+  @apply h-9 w-9 shrink-0 rounded-full object-cover;
+  border: 2px solid rgba(255, 255, 255, 0.9);
 }
 
-.logout-btn:hover .logout-btn__icon {
+/* Mismo tamaño que el avatar: los títulos de todas las filas quedan alineados */
+.panel-cuenta__icono {
+  @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-xl;
+  background: rgb(255 255 255 / 0.08);
+  color: hsl(152 42% 85%);
+}
+
+.panel-cuenta__textos {
+  @apply flex min-w-0 flex-1 flex-col;
+}
+
+.panel-cuenta__titulo {
+  @apply truncate font-display text-sm font-semibold leading-tight;
+}
+
+.panel-cuenta__pista {
+  @apply mt-0.5 truncate text-xs leading-tight;
+  color: hsla(152, 42%, 78%, 0.8);
+}
+
+.panel-cuenta__flecha {
+  @apply h-4 w-4 shrink-0 transition-transform duration-200;
+  color: rgb(255 255 255 / 0.45);
+}
+
+.panel-cuenta__fila:hover .panel-cuenta__flecha {
   transform: translateX(2px);
 }
 
-/* Cambiar natillera: fila tipo referencia (icono gris + título + subtítulo) */
-.cambiar-natillera-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  width: 100%;
-  padding: 0.35rem 0.15rem;
-  margin: 0;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  color: inherit;
-  background: transparent;
-  border: 1px solid transparent;
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease;
+/* Cerrar sesión: botón propio bajo la lista, rosa suave sobre el verde */
+.boton-salir {
+  @apply flex w-full items-center justify-center gap-2 rounded-xl border px-3 text-sm font-semibold transition-colors duration-200;
+  min-height: 2.75rem;
+  color: #fecdd3; /* tema-fijo: rose-200 */
+  background: rgb(244 63 94 / 0.1);
+  border-color: rgb(253 164 175 / 0.22);
+  touch-action: manipulation;
 }
 
-.cambiar-natillera-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.08);
+.boton-salir:hover,
+.boton-salir:active {
+  color: #fff;
+  background: rgb(244 63 94 / 0.22);
+  border-color: rgb(253 164 175 / 0.4);
 }
 
-.cambiar-natillera-btn:focus-visible {
-  outline: 2px solid hsl(var(--primary));
+.boton-salir:focus-visible {
+  outline: 2px solid #fda4af; /* tema-fijo: rose-300 */
   outline-offset: 2px;
 }
 
-.cambiar-natillera-btn__icon-wrap {
-  flex-shrink: 0;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 0.45rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: hsl(215 14% 22%);
-  border: 1px solid hsl(215 12% 16%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+.boton-salir__icono {
+  @apply h-[1.125rem] w-[1.125rem] shrink-0 transition-transform duration-200;
 }
 
-.cambiar-natillera-btn__icon {
-  width: 1.125rem;
-  height: 1.125rem;
-  color: #fff;
+.boton-salir:hover .boton-salir__icono {
+  transform: translateX(2px);
 }
 
-.cambiar-natillera-btn__text {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.05rem;
-  text-align: left;
-}
-
-.cambiar-natillera-btn__title {
-  font-family: var(--font-display, 'Outfit', system-ui, sans-serif);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.cambiar-natillera-btn__hint {
-  font-size: 0.625rem;
-  font-weight: 500;
-  line-height: 1.25;
-  letter-spacing: 0.02em;
-  color: hsla(152, 42%, 78%, 0.92);
-}
-
-.user-panel-divider {
-  height: 1px;
-  margin: 0.4rem 0 0.35rem;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.18) 22%,
-    rgba(255, 255, 255, 0.22) 50%,
-    rgba(255, 255, 255, 0.18) 78%,
-    transparent 100%
-  );
-}
-
-.user-panel-row {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  padding-top: 0.15rem;
-}
-
-.user-panel-avatar-wrap {
-  position: relative;
-}
-
-.user-panel-avatar-img {
-  display: block;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 9999px;
-  object-fit: cover;
-  border: 2px solid rgba(255, 255, 255, 0.95);
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(0, 0, 0, 0.06);
-}
-
-.user-panel-user-text {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.1rem;
-  text-align: left;
-}
-
-.user-panel-user-name {
-  margin: 0;
-  width: 100%;
-  font-family: var(--font-display, 'Outfit', system-ui, sans-serif);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.user-panel-user-email {
-  margin: 0;
-  width: 100%;
-  font-size: 0.625rem;
-  font-weight: 500;
-  line-height: 1.25;
-  letter-spacing: 0.02em;
-  color: hsla(152, 42%, 78%, 0.92);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* Panel fijo: una sombra hacia arriba marca dónde se mete el menú
+   al desplazarse, ahora que el fondo es opaco */
+.panel-usuario-fijo {
+  box-shadow: 0 -10px 18px -10px rgba(0, 0, 0, 0.45);
 }
 
 /* Pestaña para abrir sidebar en lg: acento alineado al botón primario del login */
@@ -1564,14 +1585,9 @@ onUnmounted(() => {
   backdrop-filter: blur(8px);
 }
 
-/* iOS Safari: fondo sólido en el panel de usuario (backdrop-blur-xl se reduce a 4px y queda muy transparente) */
+/* iOS Safari: el blur de la pestaña de hover se reduce y queda transparente. El panel
+   de usuario ya no lleva backdrop-filter, así que no necesita su fondo de respaldo. */
 @supports (-webkit-touch-callout: none) {
-  .user-panel {
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
-    background: hsl(150 26% 17% / 0.97) !important;
-  }
-
   .sidebar-hover-tab {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;

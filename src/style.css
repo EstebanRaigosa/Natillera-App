@@ -3351,28 +3351,9 @@ html[data-theme='forest'] body {
   -webkit-backdrop-filter: none !important;
 }
 
-/* Quitar el blur obliga a REPONER el fondo, o la superficie desaparece.
-   
-   Las superficies de «vidrio» no pintan su fondo: pintan un tinte muy
-   translúcido y dejan que el blur haga de fondo desenfocando lo de detrás.
-   Sin blur, ese tinte es casi transparente y el panel se ve atravesado: es lo
-   que pasó con «Cambiar de Natillera» y el bloque de usuario de la barra
-   lateral, un blanco al 12 % sobre el verde.
-   
-   Es el mismo arreglo que ya tenía el bloque de iOS en DashboardLayout.vue,
-   donde el blur también se anula; aquí se repite para el modo ligero. Los
-   colores son los sólidos equivalentes: no se cambia el diseño, se pinta de
-   verdad lo que antes pintaba el desenfoque. */
-[data-ligero] .user-panel {
-  background: hsl(150 26% 17% / 0.97) !important;
-}
-
-/* El hover del panel aclaraba el fondo; con la regla de arriba fija se
-   perdería. Se conserva el gesto con el sólido equivalente. */
-[data-ligero] .user-panel:hover {
-  background: hsl(150 26% 21% / 0.97) !important;
-}
-
+/* Quitar el blur obliga a REPONER el fondo, o la superficie desaparece: las
+   superficies de «vidrio» pintan un tinte translúcido y dejan que el blur haga
+   de fondo. (El panel de cuenta de la barra lateral ya es opaco y no lo necesita.) */
 [data-ligero] .cabecera-movil {
   background: #fff !important;
 }

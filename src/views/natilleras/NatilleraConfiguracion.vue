@@ -26,7 +26,7 @@
         :class="[
             'w-full relative overflow-hidden rounded-2xl border transition-all duration-300 touch-manipulation',
           seccionActiva === 'basica'
-              ? 'bg-[var(--brand-primary)] border-transparent shadow-lg'
+              ? 'bg-[var(--brand-primary)] border-transparent shadow-lg max-sm:rounded-b-none max-sm:shadow-none'
               : 'bg-superficie-tarjeta border-borde shadow-sm hover:border-borde-fuerte hover:shadow-md'
           ]"
         >
@@ -57,9 +57,15 @@
       leave-from-class="opacity-100 translate-y-0"
           leave-to-class="opacity-0 -translate-y-2"
         >
-          <div v-if="seccionActiva === 'basica'" class="relative overflow-hidden bg-superficie-tarjeta rounded-2xl shadow-sm border border-borde ml-4 sm:ml-6">
-            <div class="absolute top-0 left-0 w-1 h-full bg-[var(--brand-primary)]"></div>
-            <div class="relative p-5 sm:p-6 space-y-4">
+          <!--
+            En móvil el panel continúa el botón verde de la sección: la barra de pestañas va
+            sobre el mismo verde y debajo sube una hoja blanca con los apartados en acordeón
+            y el botón de guardar al final (estilos en el bloque «Móvil: hoja» del CSS).
+            Desde sm vuelve a ser un panel colgado del botón, con su barra a la izquierda.
+          -->
+          <div v-if="seccionActiva === 'basica'" class="relative max-sm:-mt-3 sm:overflow-hidden sm:bg-superficie-tarjeta sm:rounded-2xl sm:shadow-sm sm:border sm:border-borde sm:ml-6">
+            <div class="absolute top-0 left-0 hidden w-1 h-full bg-[var(--brand-primary)] sm:block"></div>
+            <div class="relative sm:p-6 space-y-4">
               <!-- Guardando: caja de carga flotante (carga/CargaCaja.vue) -->
               <CargaCaja :visible="guardandoBasica" flotante texto="Guardando configuración" detalle="Un momento" />
 
@@ -131,8 +137,8 @@
                 <div class="cfg-tabs__panel">
               <!-- Tab Información básica -->
               <div v-if="tabGeneralActiva === 'basica'" class="cfg-tab space-y-5">
-                <section class="cfg-card">
-                  <header class="cfg-card__header">
+                <section class="cfg-card" :class="{ 'is-cerrado': !estaAbierto('identidad') }">
+                  <header class="cfg-card__header" @click="alternarApartado('identidad')">
                     <span class="cfg-card__icono">
                       <UserGroupIcon class="w-5 h-5" />
                     </span>
@@ -140,7 +146,9 @@
                       <p class="cfg-card__overline">Identidad</p>
                       <h3 class="cfg-card__titulo">Nombre y descripción</h3>
                       <p class="cfg-card__sub">Cómo ven la natillera los socios.</p>
+                      <p class="cfg-card__resumen">{{ resumenApartados.identidad }}</p>
                     </div>
+                  <button type="button" class="cfg-card__plegar" :aria-expanded="estaAbierto('identidad')" aria-label="Mostrar u ocultar nombre y descripción" @click.stop="alternarApartado('identidad')"><ChevronDownIcon class="w-5 h-5" aria-hidden="true" /></button>
                   </header>
 
                   <div class="cfg-card__body space-y-4">
@@ -175,8 +183,8 @@
                   </div>
                 </section>
 
-                <section class="cfg-card">
-                  <header class="cfg-card__header">
+                <section class="cfg-card" :class="{ 'is-cerrado': !estaAbierto('ritmo') }">
+                  <header class="cfg-card__header" @click="alternarApartado('ritmo')">
                     <span class="cfg-card__icono">
                       <ArrowPathIcon class="w-5 h-5" />
                     </span>
@@ -184,7 +192,9 @@
                       <p class="cfg-card__overline">Ritmo</p>
                       <h3 class="cfg-card__titulo">Periodicidad e inicio</h3>
                       <p class="cfg-card__sub">Cada cuánto se cobra y desde cuándo.</p>
+                      <p class="cfg-card__resumen">{{ resumenApartados.ritmo }}</p>
                     </div>
+                  <button type="button" class="cfg-card__plegar" :aria-expanded="estaAbierto('ritmo')" aria-label="Mostrar u ocultar periodicidad e inicio" @click.stop="alternarApartado('ritmo')"><ChevronDownIcon class="w-5 h-5" aria-hidden="true" /></button>
                   </header>
 
                   <!-- En escritorio, periodicidad y fecha lado a lado; en móvil, una debajo de otra. -->
@@ -266,8 +276,8 @@
                   Ahora ambos usan la tarjeta del DS y el verde de marca; el color pasa a
                   significar algo (el aviso de «cruza años» sigue en ámbar).
                 -->
-                <section class="cfg-card">
-                  <header class="cfg-card__header">
+                <section class="cfg-card" :class="{ 'is-cerrado': !estaAbierto('rango') }">
+                  <header class="cfg-card__header" @click="alternarApartado('rango')">
                     <span class="cfg-card__icono">
                       <CalendarDaysIcon class="w-5 h-5" />
                     </span>
@@ -275,7 +285,9 @@
                       <p class="cfg-card__overline">Rango</p>
                       <h3 class="cfg-card__titulo">Período de la natillera</h3>
                       <p class="cfg-card__sub">Desde qué mes y año hasta cuál se generan las cuotas.</p>
+                      <p class="cfg-card__resumen">{{ resumenApartados.rango }}</p>
                     </div>
+                  <button type="button" class="cfg-card__plegar" :aria-expanded="estaAbierto('rango')" aria-label="Mostrar u ocultar período de la natillera" @click.stop="alternarApartado('rango')"><ChevronDownIcon class="w-5 h-5" aria-hidden="true" /></button>
                   </header>
 
                   <div class="cfg-card__body grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -326,8 +338,8 @@
                   </div>
                 </section>
 
-                <section class="cfg-card">
-                  <header class="cfg-card__header">
+                <section class="cfg-card" :class="{ 'is-cerrado': !estaAbierto('gracia') }">
+                  <header class="cfg-card__header" @click="alternarApartado('gracia')">
                     <span class="cfg-card__icono">
                       <ClockIcon class="w-5 h-5" />
                     </span>
@@ -335,21 +347,27 @@
                       <p class="cfg-card__overline">Mora</p>
                       <h3 class="cfg-card__titulo">Días de gracia</h3>
                       <p class="cfg-card__sub">Días extra tras el vencimiento antes de que una cuota entre en mora.</p>
+                      <p class="cfg-card__resumen">{{ resumenApartados.gracia }}</p>
                     </div>
+                  <button type="button" class="cfg-card__plegar" :aria-expanded="estaAbierto('gracia')" aria-label="Mostrar u ocultar días de gracia" @click.stop="alternarApartado('gracia')"><ChevronDownIcon class="w-5 h-5" aria-hidden="true" /></button>
                   </header>
 
-                  <div class="cfg-card__body flex flex-wrap items-center gap-3">
-                    <label class="ds-label mb-0" for="dias-gracia-cuotas">Días</label>
-                    <input
-                      id="dias-gracia-cuotas"
-                      v-model.number="configDiasGracia.dias_gracia"
-                      type="number"
-                      class="ds-input w-20 text-center font-semibold"
-                      min="0"
-                      max="30"
-                      :disabled="esVisor"
-                    />
-                    <p class="text-sm text-texto-secundario basis-full sm:basis-auto">
+                  <div class="cfg-card__body space-y-2">
+                    <label class="ds-label" for="dias-gracia-cuotas">Días de gracia</label>
+                    <div class="cfg-sufijo max-w-[12rem]">
+                      <input
+                        id="dias-gracia-cuotas"
+                        v-model.number="configDiasGracia.dias_gracia"
+                        type="number"
+                        inputmode="numeric"
+                        class="ds-input font-semibold"
+                        min="0"
+                        max="30"
+                        :disabled="esVisor"
+                      />
+                      <span class="cfg-sufijo__texto" aria-hidden="true">días</span>
+                    </div>
+                    <p class="text-sm text-texto-secundario">
                       Las cuotas tendrán
                       <strong class="text-texto-fuerte">{{ configDiasGracia.dias_gracia }}</strong>
                       {{ configDiasGracia.dias_gracia === 1 ? 'día' : 'días' }} de gracia.
@@ -373,8 +391,8 @@
                 </label>
 
                 <div v-if="configPrestamos.activo" class="space-y-4">
-                  <section class="cfg-card">
-                  <header class="cfg-card__header">
+                  <section class="cfg-card" :class="{ 'is-cerrado': !estaAbierto('condiciones') }">
+                  <header class="cfg-card__header" @click="alternarApartado('condiciones')">
                     <span class="cfg-card__icono">
                       <BanknotesIcon class="w-5 h-5" />
                     </span>
@@ -382,7 +400,9 @@
                       <p class="cfg-card__overline">Condiciones</p>
                       <h3 class="cfg-card__titulo">Condiciones del préstamo</h3>
                       <p class="cfg-card__sub">Valores por defecto al crear un préstamo nuevo.</p>
+                      <p class="cfg-card__resumen">{{ resumenApartados.condiciones }}</p>
                     </div>
+                  <button type="button" class="cfg-card__plegar" :aria-expanded="estaAbierto('condiciones')" aria-label="Mostrar u ocultar condiciones del préstamo" @click.stop="alternarApartado('condiciones')"><ChevronDownIcon class="w-5 h-5" aria-hidden="true" /></button>
                   </header>
 
                     <div class="cfg-card__body grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -411,8 +431,8 @@
                     </div>
                   </section>
 
-                  <section class="cfg-card">
-                  <header class="cfg-card__header cfg-card__header--peligro">
+                  <section class="cfg-card" :class="{ 'is-cerrado': !estaAbierto('mora') }">
+                  <header class="cfg-card__header cfg-card__header--peligro" @click="alternarApartado('mora')">
                     <span class="cfg-card__icono">
                       <ExclamationTriangleIcon class="w-5 h-5" />
                     </span>
@@ -420,7 +440,9 @@
                       <p class="cfg-card__overline">Atraso</p>
                       <h3 class="cfg-card__titulo">Interés de mora</h3>
                       <p class="cfg-card__sub">Sobre el capital pendiente y proporcional a los días de atraso (base de 30 días). No se capitaliza al saldo.</p>
+                      <p class="cfg-card__resumen">{{ resumenApartados.mora }}</p>
                     </div>
+                  <button type="button" class="cfg-card__plegar" :aria-expanded="estaAbierto('mora')" aria-label="Mostrar u ocultar interés de mora" @click.stop="alternarApartado('mora')"><ChevronDownIcon class="w-5 h-5" aria-hidden="true" /></button>
                   </header>
 
                     <div class="cfg-card__body space-y-2">
@@ -504,8 +526,8 @@
 
                 <div v-if="configSanciones.activa" class="space-y-5">
                   <!-- Tipo de sanción -->
-                  <section class="cfg-card">
-                    <header class="cfg-card__header cfg-card__header--peligro">
+                  <section class="cfg-card" :class="{ 'is-cerrado': !estaAbierto('tipo') }">
+                    <header class="cfg-card__header cfg-card__header--peligro" @click="alternarApartado('tipo')">
                       <span class="cfg-card__icono">
                         <ExclamationTriangleIcon class="w-5 h-5" />
                       </span>
@@ -513,8 +535,10 @@
                         <p class="cfg-card__overline">Multa</p>
                         <h3 class="cfg-card__titulo">Tipo de sanción</h3>
                         <p class="cfg-card__sub">Cómo se calcula lo que debe quien se atrasa.</p>
+                      <p class="cfg-card__resumen">{{ resumenApartados.tipo }}</p>
                       </div>
-                    </header>
+                    <button type="button" class="cfg-card__plegar" :aria-expanded="estaAbierto('tipo')" aria-label="Mostrar u ocultar tipo de sanción" @click.stop="alternarApartado('tipo')"><ChevronDownIcon class="w-5 h-5" aria-hidden="true" /></button>
+                  </header>
 
                     <div class="cfg-card__body space-y-4">
                       <!--
@@ -693,8 +717,8 @@
                   </section>
 
                   <!-- Intereses adicionales por días (aplica a cualquier tipo) -->
-                  <section class="cfg-card">
-                    <header class="cfg-card__header cfg-card__header--peligro">
+                  <section class="cfg-card" :class="{ 'is-cerrado': !estaAbierto('recargo') }">
+                    <header class="cfg-card__header cfg-card__header--peligro" @click="alternarApartado('recargo')">
                       <span class="cfg-card__icono">
                         <ClockIcon class="w-5 h-5" />
                       </span>
@@ -702,6 +726,7 @@
                         <p class="cfg-card__overline">Recargo</p>
                         <h3 class="cfg-card__titulo">Intereses adicionales por días</h3>
                         <p class="cfg-card__sub">Suma extra mientras la cuota siga sin pagarse.</p>
+                      <p class="cfg-card__resumen">{{ resumenApartados.recargo }}</p>
                       </div>
                       <!--
                         El handler va en el `label`, no en el `input`: al tocar el label el
@@ -719,7 +744,8 @@
                         <span class="cfg-switch__pista" aria-hidden="true"></span>
                         <span class="sr-only">Activar intereses adicionales por días</span>
                       </label>
-                    </header>
+                    <button type="button" class="cfg-card__plegar" :aria-expanded="estaAbierto('recargo')" aria-label="Mostrar u ocultar intereses adicionales por días" @click.stop="alternarApartado('recargo')"><ChevronDownIcon class="w-5 h-5" aria-hidden="true" /></button>
+                  </header>
 
                     <Transition
                       enter-active-class="transition duration-200 ease-out"
@@ -730,33 +756,43 @@
                       leave-to-class="opacity-0 -translate-y-2"
                     >
                       <div v-if="configSanciones.interesesAdicionales.activo" class="cfg-card__body">
-                        <div class="flex flex-wrap items-center gap-2 text-sm">
-                          <span class="text-texto-secundario font-medium">Cada</span>
-                          <input
-                            v-model.number="configSanciones.interesesAdicionales.dias"
-                            type="number"
-                            min="1"
-                            max="30"
-                            class="ds-input w-20 text-center font-semibold"
-                            :disabled="esVisor"
-                          />
-                          <span class="text-texto-secundario font-medium">días, sumar</span>
-                          <div class="cfg-money w-full sm:w-40">
-                            <span class="cfg-money__signo" aria-hidden="true">$</span>
-                            <input
-                              :value="formatNumberWithSeparators(configSanciones.interesesAdicionales.valor)"
-                              @input="(e) => {
-                                const rawValue = removeNumberFormat(e.target.value)
-                                configSanciones.interesesAdicionales.valor = rawValue ? parseInt(rawValue) || 0 : 0
-                              }"
-                              @focus="(e) => e.target.select()"
-                              type="text"
-                              inputmode="numeric"
-                              pattern="[0-9.,]*"
-                              class="ds-input pl-8 font-semibold"
-                              placeholder="0"
-                              :disabled="esVisor"
-                            />
+                        <div class="grid grid-cols-2 gap-3">
+                          <div class="min-w-0">
+                            <label class="ds-label" for="cfg-intereses-dias">Cada</label>
+                            <div class="cfg-sufijo">
+                              <input
+                                id="cfg-intereses-dias"
+                                v-model.number="configSanciones.interesesAdicionales.dias"
+                                type="number"
+                                min="1"
+                                max="30"
+                                inputmode="numeric"
+                                class="ds-input font-semibold"
+                                :disabled="esVisor"
+                              />
+                              <span class="cfg-sufijo__texto" aria-hidden="true">días</span>
+                            </div>
+                          </div>
+                          <div class="min-w-0">
+                            <label class="ds-label" for="cfg-intereses-valor">Sumar</label>
+                            <div class="cfg-money">
+                              <span class="cfg-money__signo" aria-hidden="true">$</span>
+                              <input
+                                id="cfg-intereses-valor"
+                                :value="formatNumberWithSeparators(configSanciones.interesesAdicionales.valor)"
+                                @input="(e) => {
+                                  const rawValue = removeNumberFormat(e.target.value)
+                                  configSanciones.interesesAdicionales.valor = rawValue ? parseInt(rawValue) || 0 : 0
+                                }"
+                                @focus="(e) => e.target.select()"
+                                type="text"
+                                inputmode="numeric"
+                                pattern="[0-9.,]*"
+                                class="ds-input pl-8 font-semibold"
+                                placeholder="0"
+                                :disabled="esVisor"
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -764,8 +800,8 @@
                   </section>
 
                   <!-- Devolución por mora excesiva (aplica a cualquier tipo) -->
-                  <section class="cfg-card">
-                    <header class="cfg-card__header cfg-card__header--peligro">
+                  <section class="cfg-card" :class="{ 'is-cerrado': !estaAbierto('devolucion') }">
+                    <header class="cfg-card__header cfg-card__header--peligro" @click="alternarApartado('devolucion')">
                       <span class="cfg-card__icono">
                         <ArrowPathIcon class="w-5 h-5" />
                       </span>
@@ -773,6 +809,7 @@
                         <p class="cfg-card__overline">Retiro</p>
                         <h3 class="cfg-card__titulo">Devolución por mora excesiva</h3>
                         <p class="cfg-card__sub">Qué pasa con quien acumula demasiadas cuotas sin pagar.</p>
+                      <p class="cfg-card__resumen">{{ resumenApartados.devolucion }}</p>
                       </div>
                       <!--
                         El handler va en el `label`, no en el `input`: al tocar el label el
@@ -790,7 +827,8 @@
                         <span class="cfg-switch__pista" aria-hidden="true"></span>
                         <span class="sr-only">Activar devolución por mora excesiva</span>
                       </label>
-                    </header>
+                    <button type="button" class="cfg-card__plegar" :aria-expanded="estaAbierto('devolucion')" aria-label="Mostrar u ocultar devolución por mora excesiva" @click.stop="alternarApartado('devolucion')"><ChevronDownIcon class="w-5 h-5" aria-hidden="true" /></button>
+                  </header>
 
                     <Transition
                       enter-active-class="transition duration-200 ease-out"
@@ -800,42 +838,90 @@
                       leave-from-class="opacity-100 translate-y-0"
                       leave-to-class="opacity-0 -translate-y-2"
                     >
-                      <div v-if="configSanciones.devolucion.activo" class="cfg-card__body space-y-4">
-                        <div class="flex flex-wrap items-center gap-2 text-sm">
-                          <span class="text-texto-secundario font-medium">Después de</span>
-                          <input
-                            v-model.number="configSanciones.devolucion.cuotasLimite"
-                            type="number"
-                            min="1"
-                            max="12"
-                            class="ds-input w-20 text-center font-semibold"
-                            :disabled="esVisor"
-                          />
-                          <span class="text-texto-secundario font-medium">cuotas, multa del</span>
-                          <input
-                            v-model.number="configSanciones.devolucion.porcentajeMulta"
-                            type="number"
-                            min="0"
-                            max="100"
-                            class="ds-input w-20 text-center font-semibold"
-                            :disabled="esVisor"
-                          />
-                          <span class="text-texto-secundario font-medium">%</span>
+                      <!--
+                        Campos con su etiqueta encima y no una frase con inputs en medio: en
+                        móvil la frase partía en tres líneas y los inputs quedaban sueltos.
+                      -->
+                      <div v-if="configSanciones.devolucion.activo" class="cfg-card__body space-y-5">
+                        <div class="grid grid-cols-2 gap-3">
+                          <div class="min-w-0">
+                            <label class="ds-label" for="cfg-devolucion-cuotas">Cuotas en mora</label>
+                            <div class="cfg-sufijo">
+                              <input
+                                id="cfg-devolucion-cuotas"
+                                v-model.number="configSanciones.devolucion.cuotasLimite"
+                                type="number"
+                                min="1"
+                                max="12"
+                                inputmode="numeric"
+                                class="ds-input font-semibold"
+                                :disabled="esVisor"
+                              />
+                              <span class="cfg-sufijo__texto" aria-hidden="true">cuotas</span>
+                            </div>
+                          </div>
+                          <div class="min-w-0">
+                            <label class="ds-label" for="cfg-devolucion-multa">Multa</label>
+                            <div class="cfg-sufijo">
+                              <input
+                                id="cfg-devolucion-multa"
+                                v-model.number="configSanciones.devolucion.porcentajeMulta"
+                                type="number"
+                                min="0"
+                                max="100"
+                                inputmode="decimal"
+                                class="ds-input font-semibold"
+                                :disabled="esVisor"
+                              />
+                              <span class="cfg-sufijo__texto" aria-hidden="true">%</span>
+                            </div>
+                          </div>
+                          <p class="col-span-2 -mt-1 text-xs leading-relaxed text-texto-suave">
+                            Al llegar a {{ configSanciones.devolucion.cuotasLimite || 0 }} cuotas en mora sale de la natillera
+                            con una multa del {{ configSanciones.devolucion.porcentajeMulta || 0 }} %.
+                          </p>
                         </div>
-                        <label class="cfg-switch" @click.prevent.stop="toggleSinUtilidades">
+                        <!--
+                          Se guarda invertido (`sinUtilidades`) porque así lo leen el portal del
+                          socio y las natilleras existentes; en pantalla se pregunta en positivo.
+                        -->
+                        <label class="cfg-switch cfg-fila" @click.prevent.stop="toggleSinUtilidades">
                           <input
                             type="checkbox"
                             class="cfg-switch__input"
                             tabindex="0"
-                            :checked="configSanciones.devolucion.sinUtilidades"
+                            :checked="!configSanciones.devolucion.sinUtilidades"
                             @keydown.enter.prevent="toggleSinUtilidades"
                           />
                           <span class="cfg-switch__pista" aria-hidden="true"></span>
                           <span class="min-w-0">
-                            <span class="cfg-switch__titulo">Devolución sin utilidades</span>
-                            <span class="cfg-switch__ayuda">Se le devuelve solo lo ahorrado.</span>
+                            <span class="cfg-switch__titulo">Incluir sus utilidades</span>
+                            <span class="cfg-switch__ayuda">
+                              {{ configSanciones.devolucion.sinUtilidades
+                                ? 'Se le devuelve solo lo ahorrado.'
+                                : 'Se le devuelve lo ahorrado más su parte de las utilidades.' }}
+                            </span>
                           </span>
                         </label>
+                        <div v-if="!configSanciones.devolucion.sinUtilidades" class="space-y-2">
+                          <p class="ds-label">El {{ configSanciones.devolucion.porcentajeMulta || 0 }} % se saca de</p>
+                          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Base de la multa por retiro">
+                            <button
+                              v-for="base in BASES_SANCION_RETIRO"
+                              :key="String(base.value)"
+                              type="button"
+                              role="radio"
+                              :aria-checked="configSanciones.devolucion.sancionSobreUtilidades === base.value"
+                              :disabled="esVisor"
+                              :class="['cfg-opcion cfg-opcion--fila', configSanciones.devolucion.sancionSobreUtilidades === base.value ? 'is-selected' : '']"
+                              @click="configSanciones.devolucion.sancionSobreUtilidades = base.value"
+                            >
+                              <span class="cfg-opcion__marca" aria-hidden="true"><CheckIcon class="w-3 h-3" /></span>
+                              <span class="cfg-opcion__titulo">{{ base.label }}</span>
+                              <span class="cfg-opcion__ayuda">{{ base.ayuda }}</span>
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </Transition>
                   </section>
@@ -871,14 +957,16 @@
 
               <!-- Tab Portal de socios: qué ve cada socio vinculado -->
               <div v-if="tabGeneralActiva === 'portal'" class="cfg-tab space-y-5">
-                <section class="cfg-card">
-                  <header class="cfg-card__header">
+                <section class="cfg-card" :class="{ 'is-cerrado': !estaAbierto('ganancias') }">
+                  <header class="cfg-card__header" @click="alternarApartado('ganancias')">
                     <span class="cfg-card__icono"><SparklesIcon class="w-5 h-5" /></span>
                     <div class="min-w-0">
                       <p class="cfg-card__overline">Su dinero</p>
                       <h3 class="cfg-card__titulo">Ganancias estimadas</h3>
                       <p class="cfg-card__sub">Su parte de las utilidades y lo que recibiría al cierre.</p>
+                      <p class="cfg-card__resumen">{{ resumenApartados.ganancias }}</p>
                     </div>
+                  <button type="button" class="cfg-card__plegar" :aria-expanded="estaAbierto('ganancias')" aria-label="Mostrar u ocultar ganancias estimadas" @click.stop="alternarApartado('ganancias')"><ChevronDownIcon class="w-5 h-5" aria-hidden="true" /></button>
                   </header>
                   <div class="cfg-card__body space-y-3">
                     <label class="cfg-switch">
@@ -900,14 +988,16 @@
                   </div>
                 </section>
 
-                <section class="cfg-card">
-                  <header class="cfg-card__header">
+                <section class="cfg-card" :class="{ 'is-cerrado': !estaAbierto('detalleSanciones') }">
+                  <header class="cfg-card__header" @click="alternarApartado('detalleSanciones')">
                     <span class="cfg-card__icono"><ScaleIcon class="w-5 h-5" /></span>
                     <div class="min-w-0">
                       <p class="cfg-card__overline">Sus cuotas</p>
                       <h3 class="cfg-card__titulo">Detalle de sanciones</h3>
                       <p class="cfg-card__sub">Cómo se calculó cada sanción y cómo las maneja la natillera.</p>
+                      <p class="cfg-card__resumen">{{ resumenApartados.detalleSanciones }}</p>
                     </div>
+                  <button type="button" class="cfg-card__plegar" :aria-expanded="estaAbierto('detalleSanciones')" aria-label="Mostrar u ocultar detalle de sanciones" @click.stop="alternarApartado('detalleSanciones')"><ChevronDownIcon class="w-5 h-5" aria-hidden="true" /></button>
                   </header>
                   <div class="cfg-card__body space-y-3">
                     <label class="cfg-switch">
@@ -925,14 +1015,16 @@
                   </div>
                 </section>
 
-                <section class="cfg-card">
-                  <header class="cfg-card__header">
+                <section class="cfg-card" :class="{ 'is-cerrado': !estaAbierto('transparencia') }">
+                  <header class="cfg-card__header" @click="alternarApartado('transparencia')">
                     <span class="cfg-card__icono"><UserGroupIcon class="w-5 h-5" /></span>
                     <div class="min-w-0">
                       <p class="cfg-card__overline">Transparencia</p>
                       <h3 class="cfg-card__titulo">Lo que ve del grupo</h3>
                       <p class="cfg-card__sub">Nunca se muestran teléfonos, documentos, correos ni saldos de otros socios.</p>
+                      <p class="cfg-card__resumen">{{ resumenApartados.transparencia }}</p>
                     </div>
+                  <button type="button" class="cfg-card__plegar" :aria-expanded="estaAbierto('transparencia')" aria-label="Mostrar u ocultar lo que ve del grupo" @click.stop="alternarApartado('transparencia')"><ChevronDownIcon class="w-5 h-5" aria-hidden="true" /></button>
                   </header>
                   <div class="cfg-card__body">
                     <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-3" role="radiogroup" aria-label="Lo que ve del grupo">
@@ -973,14 +1065,16 @@
                   con check), y con el valor en pesos a la vista: un «2 %» no dice nada
                   hasta que se ve que son seiscientos mil.
                 -->
-                <div class="cfg-seccion mb-5">
-                  <header class="cfg-card__header cfg-seccion__header">
+                <div class="cfg-seccion mb-5" :class="{ 'is-cerrado': !estaAbierto('administracion') }">
+                  <header class="cfg-card__header cfg-seccion__header" @click="alternarApartado('administracion')">
                     <span class="cfg-card__icono"><BanknotesIcon class="w-5 h-5" /></span>
                     <div class="min-w-0">
                       <p class="cfg-card__overline">Antes de repartir</p>
                       <h3 class="cfg-card__titulo">Gastos de administración</h3>
                       <p class="cfg-card__sub">Define el porcentaje que se queda la natillera para cubrir sus gastos de administración.</p>
+                      <p class="cfg-card__resumen">{{ resumenApartados.administracion }}</p>
                     </div>
+                  <button type="button" class="cfg-card__plegar" :aria-expanded="estaAbierto('administracion')" aria-label="Mostrar u ocultar gastos de administración" @click.stop="alternarApartado('administracion')"><ChevronDownIcon class="w-5 h-5" aria-hidden="true" /></button>
                   </header>
 
                   <div>
@@ -1073,14 +1167,16 @@
                   ayuda de la opción elegida queda debajo, en una sola línea.
                 -->
                 <!-- Configuración de Utilidades de Actividades -->
-                <div class="cfg-seccion mb-5">
-                  <header class="cfg-card__header cfg-seccion__header">
+                <div class="cfg-seccion mb-5" :class="{ 'is-cerrado': !estaAbierto('actividades') }">
+                  <header class="cfg-card__header cfg-seccion__header" @click="alternarApartado('actividades')">
                     <span class="cfg-card__icono"><CalendarDaysIcon class="w-5 h-5" /></span>
                     <div class="min-w-0">
                       <p class="cfg-card__overline">Reparto</p>
                       <h3 class="cfg-card__titulo">Utilidades de actividades</h3>
                       <p class="cfg-card__sub">Todas las actividades igual, o cada una por separado.</p>
+                      <p class="cfg-card__resumen">{{ resumenApartados.actividades }}</p>
                     </div>
+                  <button type="button" class="cfg-card__plegar" :aria-expanded="estaAbierto('actividades')" aria-label="Mostrar u ocultar utilidades de actividades" @click.stop="alternarApartado('actividades')"><ChevronDownIcon class="w-5 h-5" aria-hidden="true" /></button>
                   </header>
 
                   <label class="ds-label">Modo de configuración</label>
@@ -1123,14 +1219,16 @@
                 </div>
 
                 <!-- Configuración de Utilidades de Préstamos -->
-                <div class="cfg-seccion mb-5">
-                  <header class="cfg-card__header cfg-seccion__header">
+                <div class="cfg-seccion mb-5" :class="{ 'is-cerrado': !estaAbierto('repartoPrestamos') }">
+                  <header class="cfg-card__header cfg-seccion__header" @click="alternarApartado('repartoPrestamos')">
                     <span class="cfg-card__icono"><BanknotesIcon class="w-5 h-5" /></span>
                     <div class="min-w-0">
                       <p class="cfg-card__overline">Reparto</p>
                       <h3 class="cfg-card__titulo">Utilidades de préstamos</h3>
                       <p class="cfg-card__sub">Cómo se reparten los intereses que generaron los préstamos.</p>
+                      <p class="cfg-card__resumen">{{ resumenApartados.repartoPrestamos }}</p>
                     </div>
+                  <button type="button" class="cfg-card__plegar" :aria-expanded="estaAbierto('repartoPrestamos')" aria-label="Mostrar u ocultar utilidades de préstamos" @click.stop="alternarApartado('repartoPrestamos')"><ChevronDownIcon class="w-5 h-5" aria-hidden="true" /></button>
                   </header>
                   <SwitchSegmentado
                     v-model="configCierre.prestamos"
@@ -1140,14 +1238,16 @@
                 </div>
 
                 <!-- Configuración de Sanciones al cierre -->
-                <div class="cfg-seccion mb-5">
-                  <header class="cfg-card__header cfg-card__header--peligro cfg-seccion__header">
+                <div class="cfg-seccion mb-5" :class="{ 'is-cerrado': !estaAbierto('repartoSanciones') }">
+                  <header class="cfg-card__header cfg-card__header--peligro cfg-seccion__header" @click="alternarApartado('repartoSanciones')">
                     <span class="cfg-card__icono"><ExclamationTriangleIcon class="w-5 h-5" /></span>
                     <div class="min-w-0">
                       <p class="cfg-card__overline">Reparto</p>
                       <h3 class="cfg-card__titulo">Sanciones al cierre</h3>
                       <p class="cfg-card__sub">Cómo se reparten las multas por mora al cerrar.</p>
+                      <p class="cfg-card__resumen">{{ resumenApartados.repartoSanciones }}</p>
                     </div>
+                  <button type="button" class="cfg-card__plegar" :aria-expanded="estaAbierto('repartoSanciones')" aria-label="Mostrar u ocultar sanciones al cierre" @click.stop="alternarApartado('repartoSanciones')"><ChevronDownIcon class="w-5 h-5" aria-hidden="true" /></button>
                   </header>
                   <SwitchSegmentado
                     v-model="configCierre.sanciones"
@@ -1161,13 +1261,14 @@
                   va en línea bajo la cabecera y no en un tooltip flotante: `.cfg-seccion`
                   tiene `overflow: hidden` y lo recortaría.
                 -->
-                <div class="cfg-seccion mb-6">
-                  <header class="cfg-card__header cfg-seccion__header">
+                <div class="cfg-seccion mb-6" :class="{ 'is-cerrado': !estaAbierto('adicionales') }">
+                  <header class="cfg-card__header cfg-seccion__header" @click="alternarApartado('adicionales')">
                     <span class="cfg-card__icono"><ArrowTrendingUpIcon class="w-5 h-5" /></span>
                     <div class="min-w-0 flex-1">
                       <p class="cfg-card__overline">Reparto</p>
                       <h3 class="cfg-card__titulo">Utilidades adicionales</h3>
                       <p class="cfg-card__sub">Los ingresos a utilidades registrados desde el Cuadre de Caja.</p>
+                      <p class="cfg-card__resumen">{{ resumenApartados.adicionales }}</p>
                     </div>
                     <button
                       type="button"
@@ -1175,10 +1276,11 @@
                       :aria-expanded="tooltipUtilidadesAdicionales"
                       aria-controls="ayuda-utilidades-adicionales"
                       aria-label="Información sobre utilidades adicionales"
-                      @click="tooltipUtilidadesAdicionales = !tooltipUtilidadesAdicionales"
+                      @click.stop="tooltipUtilidadesAdicionales = !tooltipUtilidadesAdicionales"
                     >
                       <InformationCircleIcon class="w-5 h-5" />
                     </button>
+                  <button type="button" class="cfg-card__plegar" :aria-expanded="estaAbierto('adicionales')" aria-label="Mostrar u ocultar utilidades adicionales" @click.stop="alternarApartado('adicionales')"><ChevronDownIcon class="w-5 h-5" aria-hidden="true" /></button>
                   </header>
                   <p
                     v-show="tooltipUtilidadesAdicionales"
@@ -1200,15 +1302,18 @@
                 </div>
                 </div>
 
-              <div class="flex justify-end pt-4 border-t border-borde mt-4">
-          <button
-            @click="guardarConfigBasica"
-            :disabled="guardandoBasica || esVisor"
-            class="ds-btn ds-btn--primary"
-          >
-            {{ guardandoBasica ? 'Guardando...' : 'Guardar toda la configuración' }}
-          </button>
-        </div>
+              <!-- Cierra la hoja en móvil: botón a todo el ancho dentro de la misma superficie -->
+              <div class="cfg-guardar">
+                <p class="cfg-guardar__texto">Guarda los cambios de todas las pestañas.</p>
+                <button
+                  type="button"
+                  @click="guardarConfigBasica"
+                  :disabled="guardandoBasica || esVisor"
+                  class="ds-btn ds-btn--primary cfg-guardar__boton"
+                >
+                  {{ guardandoBasica ? 'Guardando...' : 'Guardar toda la configuración' }}
+                </button>
+              </div>
       </div>
       </div>
     </Transition>
@@ -1256,9 +1361,9 @@
       leave-from-class="opacity-100 translate-y-0"
           leave-to-class="opacity-0 -translate-y-2"
         >
-          <div v-if="seccionActiva === 'mensajes'" class="relative overflow-hidden bg-superficie-tarjeta rounded-2xl shadow-sm border border-borde ml-4 sm:ml-6">
+          <div v-if="seccionActiva === 'mensajes'" class="relative overflow-hidden bg-superficie-tarjeta rounded-2xl shadow-sm border border-borde sm:ml-6">
             <div class="absolute top-0 left-0 w-1 h-full bg-[var(--brand-primary)]"></div>
-            <div class="relative p-5 sm:p-6">
+            <div class="relative p-4 sm:p-6">
               <!-- Tabs para tipos de mensajes - Destacado -->
               <div class="mb-6 bg-gradient-to-br from-superficie-suave via-superficie-tarjeta to-superficie-suave rounded-xl border-2 border-borde shadow-lg p-4">
                 <div class="mb-2">
@@ -1638,9 +1743,9 @@
           leave-from-class="opacity-100 translate-y-0"
           leave-to-class="opacity-0 -translate-y-2"
         >
-          <div v-if="seccionActiva === 'reasignar'" class="relative overflow-hidden bg-superficie-tarjeta rounded-2xl shadow-sm border border-borde ml-4 sm:ml-6">
+          <div v-if="seccionActiva === 'reasignar'" class="relative overflow-hidden bg-superficie-tarjeta rounded-2xl shadow-sm border border-borde sm:ml-6">
             <div class="absolute top-0 left-0 w-1 h-full bg-[var(--brand-primary)]"></div>
-            <div class="relative p-5 sm:p-6">
+            <div class="relative p-4 sm:p-6">
               <div class="mb-6">
                 <h4 class="text-lg font-bold text-texto mb-2">Administrador Actual</h4>
                 <div class="bg-superficie-suave rounded-xl p-4 border border-borde">
@@ -1912,6 +2017,94 @@ onUnmounted(() => {
   document.removeEventListener('click', alTocarFueraTipoSancion)
   document.removeEventListener('touchstart', alTocarFueraTipoSancion)
   document.removeEventListener('keydown', alTeclaTipoSancion)
+})
+
+/*
+ * Móvil: los apartados de cada pestaña son un acordeón con un solo apartado abierto, y
+ * los cerrados muestran su valor en una línea. En escritorio todo sigue abierto: hay sitio
+ * de sobra y plegar solo escondería información.
+ */
+const MEDIA_MOVIL_CFG = '(max-width: 639px)'
+const esMovilCfg = ref(false)
+let consultaMovilCfg = null
+function alCambiarMovilCfg(evento) {
+  esMovilCfg.value = evento.matches
+}
+onMounted(() => {
+  if (typeof window === 'undefined' || !window.matchMedia) return
+  consultaMovilCfg = window.matchMedia(MEDIA_MOVIL_CFG)
+  esMovilCfg.value = consultaMovilCfg.matches
+  // `addListener` para Safari < 14, que no tiene `addEventListener` en MediaQueryList
+  if (consultaMovilCfg.addEventListener) consultaMovilCfg.addEventListener('change', alCambiarMovilCfg)
+  else consultaMovilCfg.addListener(alCambiarMovilCfg)
+})
+onUnmounted(() => {
+  if (!consultaMovilCfg) return
+  if (consultaMovilCfg.removeEventListener) consultaMovilCfg.removeEventListener('change', alCambiarMovilCfg)
+  else consultaMovilCfg.removeListener(alCambiarMovilCfg)
+})
+
+// El primero de cada pestaña arranca abierto para que al entrar ya se vea un formulario
+const apartadoAbierto = ref({
+  basica: 'identidad',
+  periodo: 'rango',
+  prestamos: 'condiciones',
+  sanciones: 'tipo',
+  portal: 'ganancias',
+  cierre: 'administracion'
+})
+function estaAbierto(clave) {
+  return !esMovilCfg.value || apartadoAbierto.value[tabGeneralActiva.value] === clave
+}
+function alternarApartado(clave) {
+  if (!esMovilCfg.value) return
+  const tab = tabGeneralActiva.value
+  apartadoAbierto.value = { ...apartadoAbierto.value, [tab]: apartadoAbierto.value[tab] === clave ? null : clave }
+}
+
+const etiquetaReparto = valor => (valor === 'proporcional' ? 'Proporcional' : 'Equitativa')
+const etiquetaMes = numero => meses.find(m => m.value === Number(numero))?.label?.slice(0, 3) || ''
+
+// Lo que dice cada apartado cerrado: el valor, no la explicación
+const resumenApartados = computed(() => {
+  const b = configBasica.value
+  const per = configPeriodo.value
+  const pre = configPrestamos.value
+  const san = configSanciones.value
+  const cie = configCierre.value
+  const dev = san.devolucion || {}
+  const rec = san.interesesAdicionales || {}
+  const fechaInicio = b.fecha_inicio
+    ? new Date(`${b.fecha_inicio}T00:00:00`).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
+    : 'sin fecha'
+  const tipo = {
+    simple: `Simple · $${formatMoney(san.valorFijo)} por cuota`,
+    escalonada: `Escalonada · ${san.niveles?.length || 0} niveles`,
+    diaria: `Por día · $${formatMoney(san.valorPorDia)}`
+  }[san.tipo] || 'Simple'
+  return {
+    identidad: b.nombre || 'Sin nombre',
+    ritmo: `${periodicidadActiva.value.label} · desde ${fechaInicio}`,
+    rango: `${etiquetaMes(per.mes_inicio)} ${per.anio_inicio} a ${etiquetaMes(per.mes_fin)} ${per.anio} · ${cantidadMesesPeriodo.value} meses`,
+    gracia: `${configDiasGracia.value.dias_gracia} ${configDiasGracia.value.dias_gracia === 1 ? 'día' : 'días'}`,
+    condiciones: `${pre.porcentaje} % mensual · hasta ${pre.plazo_maximo} meses`,
+    mora: Number(pre.tasa_mora) > 0
+      ? `${pre.tasa_mora} % mensual${pre.dias_gracia_activo ? ` · ${pre.dias_gracia} días de gracia` : ''}`
+      : 'Sin interés de mora',
+    tipo,
+    recargo: rec.activo ? `Cada ${rec.dias} días · $${formatMoney(rec.valor)}` : 'Apagado',
+    devolucion: dev.activo
+      ? `${dev.cuotasLimite} cuotas · ${dev.porcentajeMulta} %${dev.sinUtilidades ? '' : ' · con utilidades'}`
+      : 'Apagado',
+    ganancias: configPortal.value.mostrar_ganancias ? 'Las ve' : 'No las ve',
+    detalleSanciones: configPortal.value.mostrar_sanciones ? 'Lo ve' : 'No lo ve',
+    transparencia: NIVELES_TRANSPARENCIA.find(n => n.value === configPortal.value.nivel_transparencia)?.label || '',
+    administracion: `${cie.administracion?.porcentaje || 0} % · ${cie.administracion?.base === 'utilidades' ? 'solo utilidades' : 'todo lo recogido'}`,
+    actividades: cie.modoActividades === 'individual' ? 'Una por una' : `${etiquetaReparto(cie.actividades?.general)} · todas igual`,
+    repartoPrestamos: etiquetaReparto(cie.prestamos),
+    repartoSanciones: etiquetaReparto(cie.sanciones),
+    adicionales: etiquetaReparto(cie.utilidades_adicionales)
+  }
 })
 
 const OPCIONES_PERIODICIDAD = [
@@ -2270,9 +2463,16 @@ const configSanciones = ref({
     activo: false,
     cuotasLimite: 5,
     porcentajeMulta: 25,
-    sinUtilidades: true
+    sinUtilidades: true,
+    // Con utilidades incluidas: true = la multa se saca de ahorro + utilidades
+    sancionSobreUtilidades: false
   }
 })
+
+const BASES_SANCION_RETIRO = [
+  { value: false, label: 'Solo lo ahorrado', ayuda: 'Las utilidades se entregan completas.' },
+  { value: true, label: 'Ahorro + utilidades', ayuda: 'El porcentaje se aplica al total que se le entrega.' }
+]
 
 // Formatear dinero
 function formatMoney(value) {
@@ -2801,11 +3001,15 @@ function actualizarValoresDesdeNatillera() {
           dias: 2,
           valor: 500
         },
-        devolucion: sanciones.devolucion || {
+        // Fusionado con los valores por defecto: las natilleras guardadas antes no traen
+        // `sancionSobreUtilidades` y el selector necesita la clave para marcar una opción
+        devolucion: {
           activo: false,
           cuotasLimite: 5,
           porcentajeMulta: 25,
-          sinUtilidades: true
+          sinUtilidades: true,
+          sancionSobreUtilidades: false,
+          ...(sanciones.devolucion || {})
         }
       }
     }
@@ -3622,6 +3826,77 @@ onUnmounted(() => {
   .cfg-card__body { padding: 1.25rem; }
 }
 
+/* Pie con el botón de guardar, separado del contenido por una línea */
+.cfg-guardar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--borde);
+}
+.cfg-guardar__texto {
+  font-size: 0.8125rem;
+  color: var(--texto-suave);
+}
+.cfg-guardar__boton {
+  width: 100%;
+  min-height: 2.75rem;
+  touch-action: manipulation;
+}
+@media (min-width: 640px) {
+  .cfg-guardar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .cfg-guardar__boton { width: auto; }
+}
+
+/* Input con su unidad dentro, a la derecha («cuotas», «%») */
+.cfg-sufijo {
+  position: relative;
+}
+.cfg-sufijo .ds-input {
+  width: 100%;
+  padding-right: 4.25rem;
+  /* 16px: con menos, iOS hace zoom al enfocar */
+  font-size: 1rem;
+}
+.cfg-sufijo__texto {
+  position: absolute;
+  top: 50%;
+  right: 0.875rem;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+  color: var(--texto-suave);
+  pointer-events: none;
+}
+
+/* Interruptor dentro del cuerpo: en su propia caja para que no flote entre campos */
+.cfg-fila {
+  min-height: 3.5rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radius-md);
+  background: var(--superficie-hundida);
+}
+
+/* Opción en una línea: marca a la izquierda y textos al lado (menos alta en móvil) */
+.cfg-opcion--fila {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.625rem;
+  row-gap: 0.125rem;
+  align-items: center;
+  min-height: 3.5rem;
+}
+.cfg-opcion--fila .cfg-opcion__marca {
+  grid-row: span 2;
+  align-self: center;
+  margin-bottom: 0;
+}
+
 /* Variante de aviso: mismo formato, rojo donde el bloque habla de mora. */
 .cfg-card__header--peligro {
   background: #b91c1c;
@@ -3688,4 +3963,182 @@ onUnmounted(() => {
 /* Focos: el verde de marca apenas se ve sobre superficie oscura */
 :where([data-tema=oscuro]) .cfg-select__opcion:focus-visible,
 :where([data-tema=oscuro]) .cfg-switch__input:focus-visible + .cfg-switch__pista { outline-color: var(--marca-tinta); }
+
+/* ==========================================================================
+   Móvil: hoja (opción B del diseño)
+   La barra de pestañas va sobre el verde del botón «Configuración General» y
+   debajo sube una hoja blanca: pestaña, apartados y botón de guardar son una
+   sola superficie. Cada tarjeta pierde su caja y su cabecera de color y queda
+   como un apartado plegable (ver `estaAbierto`): cerrado muestra su valor en
+   `.cfg-card__resumen`. Desde sm vuelven las tarjetas, todas abiertas.
+   ========================================================================== */
+.cfg-card__resumen,
+.cfg-card__plegar { display: none; }
+
+@media (max-width: 639px) {
+  /* --- Cabecera verde con pestañas subrayadas --- */
+  .cfg-tabs {
+    background: var(--brand-primary);
+    padding-top: 0.25rem;
+  }
+  .cfg-tabs__barra { padding: 0 0.75rem; }
+  .cfg-tabs__lista {
+    gap: 1.25rem;
+    padding: 0 0.25rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .cfg-tabs__lista .ds-segmented__opt {
+    min-height: 44px;
+    padding: 0.5rem 0.125rem;
+    border-radius: 0;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    box-shadow: none;
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: 700;
+  }
+  .cfg-tabs__lista .ds-segmented__opt.is-selected {
+    background: transparent;
+    box-shadow: none;
+    color: #fff;
+    font-weight: 800;
+    border-bottom-color: #fff;
+  }
+  .cfg-tabs__lista .ds-segmented__opt:not(.is-selected):hover { color: #fff; }
+  .cfg-tabs__flecha {
+    border-color: transparent;
+    background: var(--brand-primary);
+    color: #fff;
+    box-shadow: -10px 0 12px -2px var(--brand-primary);
+  }
+  .cfg-tabs__flecha--izq { box-shadow: 10px 0 12px -2px var(--brand-primary); }
+  .cfg-tabs__flecha:active { background: var(--brand-primary); }
+  .cfg-tabs__pista {
+    margin: 0.25rem 0 0;
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  /* --- La hoja --- */
+  .cfg-tabs__panel {
+    margin-top: 0.75rem;
+    padding: 0.25rem 1rem 0;
+    border-radius: 1.5rem 1.5rem 0 0;
+    background: var(--superficie-tarjeta);
+  }
+  /* Pegado a la hoja: el space-y del contenedor lo separaría */
+  .cfg-tabs { margin-block-end: 0; }
+  .cfg-guardar {
+    margin-top: 0;
+    padding: 1.25rem 1rem;
+    border-top: 1px solid var(--borde);
+    border-radius: 0 0 1.5rem 1.5rem;
+    background: var(--superficie-tarjeta);
+    text-align: center;
+  }
+
+  /* --- Apartados --- */
+  .cfg-card,
+  .cfg-seccion,
+  .cfg-switch--destacado {
+    margin-block: 0;
+    border: 0;
+    border-top: 1px solid var(--borde);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .cfg-card,
+  .cfg-seccion { padding: 0 0 1.25rem; }
+  .cfg-card.is-cerrado,
+  .cfg-seccion.is-cerrado { padding-bottom: 0; }
+  .cfg-switch--destacado { padding: 1rem 0; }
+  /* El primero de la pestaña arranca pegado al borde redondeado de la hoja */
+  .cfg-tab > :is(.cfg-card, .cfg-seccion, .cfg-switch--destacado):first-child { border-top: 0; }
+  /* Cerrado: solo la cabecera. Lo demás puede ser un div, un Transition o un SwitchSegmentado */
+  .is-cerrado > :not(.cfg-card__header) { display: none; }
+
+  .cfg-card > .cfg-card__header:first-child { border-radius: 0; }
+  .cfg-card__header,
+  .cfg-card__header--peligro {
+    min-height: 4.5rem;
+    padding: 0.75rem 0;
+    background: transparent;
+    color: var(--texto-fuerte);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cfg-seccion__header { margin: 0; }
+  .cfg-card:not(.is-cerrado) > .cfg-card__header,
+  .cfg-seccion:not(.is-cerrado) > .cfg-card__header { margin-bottom: 0.25rem; }
+  .cfg-card__icono {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    background: var(--marca-suave);
+    color: var(--marca-texto);
+    box-shadow: none;
+  }
+  .cfg-card__header--peligro .cfg-card__icono {
+    background: var(--peligro-suave);
+    color: var(--peligro);
+  }
+  .cfg-card__overline { display: none; }
+  .cfg-card__titulo { color: var(--texto-fuerte); }
+  .cfg-card__sub { color: var(--texto-suave); }
+  /* Cerrado se ve el valor; abierto, la explicación */
+  .is-cerrado .cfg-card__sub { display: none; }
+  .is-cerrado .cfg-card__resumen {
+    display: block;
+    margin-top: 0.125rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--marca-texto);
+  }
+  .is-cerrado .cfg-card__header--peligro .cfg-card__resumen { color: var(--peligro); }
+  .cfg-card__plegar {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-left: auto;
+    margin-right: -0.5rem;
+    border: 0;
+    border-radius: 9999px;
+    background: transparent;
+    color: var(--texto-suave);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cfg-card__plegar svg { transition: transform 0.2s ease; }
+  .cfg-card__plegar[aria-expanded="true"] svg { transform: rotate(180deg); }
+  .cfg-card__plegar:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
+  /* Botones de ayuda de la cabecera: eran blancos sobre el verde */
+  .cfg-card__header button:not(.cfg-card__plegar) { color: var(--texto-suave); }
+  .cfg-card__body { padding: 0; }
+  .cfg-card__pie {
+    margin-top: 1rem;
+    padding: 0.875rem 0 0;
+    background: none;
+  }
+  /* Interruptor de cabecera con los colores normales, ya sin fondo de color detrás */
+  .cfg-switch--cabecera { margin-left: auto; }
+  .cfg-switch--cabecera .cfg-switch__pista { background: #cbd5e1; }
+  .cfg-switch--cabecera .cfg-switch__input:checked + .cfg-switch__pista { background: var(--brand-primary); }
+  .cfg-switch--cabecera .cfg-switch__input:checked + .cfg-switch__pista::after { background: #fff; }
+  .cfg-card__header--peligro .cfg-switch__input:checked + .cfg-switch__pista { background: #b91c1c; }
+  .cfg-card__header--peligro .cfg-switch__input:checked + .cfg-switch__pista::after { background: #fff; }
+  .cfg-switch--cabecera .cfg-switch__input:focus-visible + .cfg-switch__pista { outline-color: var(--brand-primary); }
+  .cfg-switch--cabecera + .cfg-card__plegar { margin-left: 0.25rem; }
+
+  :where([data-tema=oscuro]) .cfg-switch--cabecera .cfg-switch__pista { background: var(--borde-fuerte); }
+  :where([data-tema=oscuro]) .cfg-card__pie { background: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cfg-card__plegar svg { transition: none; }
+}
 </style>

@@ -136,6 +136,7 @@
                 <span class="block truncate text-xs text-texto-suave">
                   {{ sn.socio?.telefono || 'Sin teléfono' }}
                 </span>
+                <span v-if="esMoraExcesiva(sn)" class="notificar-excesiva">Mora excesiva · retirar</span>
               </span>
               <span class="notificar-estado" :class="`notificar-estado--${semaforo(sn).tono}`">
                 {{ semaforo(sn).texto }}
@@ -195,6 +196,16 @@
                 {{ socioElegido?.socio?.telefono || 'Sin teléfono registrado' }}
               </p>
             </div>
+          </div>
+
+          <div v-if="socioElegido && esMoraExcesiva(socioElegido)" class="notificar-aviso-excesiva" role="note">
+            <ExclamationTriangleIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+            <p class="min-w-0 flex-1 text-sm">
+              <strong>Mora excesiva.</strong>
+              Tiene {{ semaforoPorSocio[socioElegido.id]?.mora }} cuotas en mora y el reglamento fija
+              {{ limiteMoraExcesivaNatillera }}: le corresponde salir de la natillera.
+              <router-link :to="{ name: 'Socios', params: { id } }" class="font-semibold underline">Retirarlo en Socios</router-link>
+            </p>
           </div>
 
           <CargaCaja v-if="calculandoEstado" texto="Calculando su estado" />
@@ -291,6 +302,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   DocumentCheckIcon,
+  ExclamationTriangleIcon,
   LockClosedIcon,
   MagnifyingGlassIcon,
   UsersIcon,
@@ -305,6 +317,7 @@ import { useColaboradoresStore } from '../../stores/colaboradores'
 import { calcularEstadoSocio, cargarSemaforoCuotas, textoEstadoSocio } from '../../composables/useEstadoSocio'
 import { getAvatarUrl } from '../../utils/avatars'
 import { formatMoney } from '../../utils/formatMoney'
+import { limiteMoraExcesiva, tieneMoraExcesiva } from '../../utils/moraExcesiva'
 
 const route = useRoute()
 const router = useRouter()
@@ -373,6 +386,11 @@ async function cargar() {
 onMounted(cargar)
 
 // ─── Lista, filtros y semáforo ───
+const limiteMoraExcesivaNatillera = computed(() => limiteMoraExcesiva(natillera.value?.reglas_multas))
+function esMoraExcesiva(sn) {
+  return tieneMoraExcesiva(semaforoPorSocio.value[sn.id]?.mora, limiteMoraExcesivaNatillera.value)
+}
+
 function semaforo(sn) {
   const fila = semaforoPorSocio.value[sn.id]
   if (!fila) return { tono: 'neutro', texto: '—', grupo: 'al_dia' }
@@ -710,6 +728,30 @@ function enviarWhatsApp() {
 .notificar-estado--pendiente { background: #fef3c7; color: #92400e; }
 .notificar-estado--al-dia { background: #dcfce7; color: #166534; }
 .notificar-estado--neutro { background: #f1f5f9; color: #64748b; }
+.notificar-aviso-excesiva {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #fecaca;
+  border-radius: 1rem;
+  background: #fef2f2;
+  color: #991b1b;
+}
+/* Llegó al límite de «Devolución por mora excesiva»: rojo sólido, distinto de «N en mora» */
+.notificar-excesiva {
+  display: inline-flex;
+  margin-top: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background: #b91c1c;
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+}
 
 /* ─── Detalle ─── */
 .notificar-vacio {
@@ -868,6 +910,14 @@ function enviarWhatsApp() {
 :where([data-tema=oscuro]) .notificar-estado--pendiente { background: var(--alerta-suave); color: var(--alerta); }
 :where([data-tema=oscuro]) .notificar-estado--al-dia { background: var(--exito-suave); color: var(--exito); }
 :where([data-tema=oscuro]) .notificar-estado--neutro { background: var(--superficie-hundida); color: var(--texto-secundario); }
+:where([data-tema=oscuro]) .notificar-aviso-excesiva {
+  /* color-mix llega en iOS 16.2; antes se queda el borde neutro */
+  border-color: var(--borde);
+  border-color: color-mix(in srgb, var(--peligro) 35%, transparent);
+  background: var(--peligro-suave);
+  color: var(--peligro);
+}
+:where([data-tema=oscuro]) .notificar-excesiva { background: var(--peligro); color: var(--superficie-tarjeta); }
 
 :where([data-tema=oscuro]) .notificar-vacio {
   border-color: var(--marca-tinta-borde);

@@ -86,7 +86,7 @@ export function startNatilleraDetalleNavTour(opts) {
       onTourEnd?.({ started: false })
       return false
     }
-  } else if (!barraInferior || !hamburger || !acciones) {
+  } else if (!barraInferior || !hamburger) {
     onTourEnd?.({ started: false })
     return false
   }
@@ -197,7 +197,7 @@ export function startNatilleraDetalleNavTour(opts) {
         popover: {
           title: 'Abrir el panel lateral',
           description:
-            'Toca las tres rayas para abrir el panel lateral. Ahí están las mismas opciones que en escritorio y la sección «Acciones Natillera».',
+            'Toca las tres rayas para abrir el panel lateral: ahí cambias de natillera, entras a tu cuenta o cierras sesión.',
           side: 'bottom',
           align: 'start',
           onNextClick: (_el, _step, { driver: drv }) => {
@@ -207,12 +207,13 @@ export function startNatilleraDetalleNavTour(opts) {
         }
       },
       {
-        element: '#tour-acciones-natillera',
+        // En móvil las acciones de la natillera viven en la barra inferior; el cajón es la cuenta
+        element: '[data-guia="panel-usuario"]',
         popover: {
-          title: 'Acciones de la natillera',
+          title: 'Tu cuenta',
           description:
-            '«Acciones Natillera» agrupa lo que no es navegación diaria: buscar comprobante, invitar colaborador, configurar, notificar a los socios y cerrar la natillera al terminar el ciclo.',
-          side: 'right',
+            'Cambia de natillera, edita tus datos en «Mi cuenta» o cierra sesión.',
+          side: 'top',
           align: 'start',
           onPrevClick: (_el, _step, { driver: drv }) => {
             closeSidebar?.()

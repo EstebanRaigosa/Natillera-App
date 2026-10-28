@@ -12610,9 +12610,11 @@ function getTotalAPagarConActividades(cuota) {
   return totalCuota + totalActividades + totalCuotasPrestamos
 }
 
-// Cambiar la fecha del pago cambia la sanción, y con ella el total sugerido.
+// Cambiar la fecha del pago cambia la sanción (y la mora de préstamos), y con ella el total:
+// el valor se iguala al nuevo total. Antes solo se recortaba si se pasaba, así que al elegir
+// una fecha con más sanción el campo se quedaba con el valor viejo, por debajo del total.
 watch(() => formPago.fecha_pago, () => {
-  if (modalPago.value && cuotaSeleccionada.value) actualizarValorPagoConActividades()
+  if (modalPago.value && cuotaSeleccionada.value) actualizarValorPagoConCuotasPrestamos()
 })
 
 // Actualizar la función existente para incluir cuotas de préstamos

@@ -36,6 +36,9 @@ let intervaloComprobacion = null
 /** Cada media hora. Una PWA instalada no se cierra sola. */
 const MS_ENTRE_COMPROBACIONES = 30 * 60 * 1000
 
+/** Lo que se espera al relevo del service worker antes de recargar de todos modos. */
+const MS_TOPE_RELEVO = 5000
+
 export function useActualizacionApp() {
   function iniciar() {
     if (iniciado || typeof window === 'undefined') return
@@ -88,14 +91,31 @@ export function useActualizacionApp() {
   }
 
   /**
-   * Da el relevo al service worker nuevo. La recarga la dispara él mismo al
-   * tomar el control (evento `controlling` de workbox-window), no hace falta
-   * llamar a `location.reload()` aquí.
+   * Da el relevo al service worker nuevo y recarga cuando toma el control.
+   *
+   * No basta con la recarga del plugin. vite-plugin-pwa solo recarga si el
+   * evento `controlling` trae `isUpdate`, y eso es falso cuando la página se
+   * abrió sin service worker al mando —Ctrl+Shift+R en escritorio, o las
+   * DevTools saltándose el SW—: el nuevo toma el control y nadie recarga, y el
+   * aviso se quedaba en «Actualizando…» para siempre. Por eso se escucha aquí
+   * `controllerchange` directamente y, si en unos segundos no llega (el SW
+   * viejo tarda en soltar, o el relevo ya ocurrió desde otra pestaña), se
+   * recarga igual: una recarga de más es mejor que un botón muerto.
    */
   function actualizar() {
     if (!aplicarActualizacionSW || actualizando.value) return
     actualizando.value = true
-    aplicarActualizacionSW(true)
+
+    let recargando = false
+    const recargar = () => {
+      if (recargando) return
+      recargando = true
+      window.location.reload()
+    }
+    navigator.serviceWorker?.addEventListener('controllerchange', recargar, { once: true })
+    setTimeout(recargar, MS_TOPE_RELEVO)
+
+    Promise.resolve(aplicarActualizacionSW(true)).catch(recargar)
   }
 
   function detener() {
