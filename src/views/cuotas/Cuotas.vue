@@ -1333,10 +1333,9 @@
         </div>
       </template>
 
-      <!-- Vista Tarjetas: UNA FILA COMPACTA POR SOCIO.
-           Solo lo necesario para navegar y elegir a quién cobrar: avatar, nombre, cuántas cuotas
-           tiene en el mes por cuánto vale cada una, y el total a pagar (cuota + sanciones +
-           actividades + préstamos). El detalle de cada cuota vive en la modal del socio. -->
+      <!-- Vista Tarjetas: UNA TARJETA POR SOCIO con lo que debe en total y, por periodo,
+           cada concepto (ahorro, multa, actividades, préstamo) pagado o pendiente. El
+           detalle de cada pago y las acciones viven en la modal del socio. -->
       <template v-else-if="!vistaExcel && !vistaAgrupada && !vistaLista">
         <div class="space-y-2">
           <div
@@ -1346,7 +1345,7 @@
             :data-guia-tarjeta-socio="grupo.socioId"
             :id="grupo.cuotas.some(c => esPrimerFlujoSocioCuota(c)) ? 'tour-primer-flujo-socio-cuota-card' : undefined"
             @click="abrirModalCuotasSocio(grupo)"
-            class="flex items-center gap-3 min-h-[56px] cursor-pointer rounded-xl border border-borde border-l-[5px] bg-superficie-tarjeta px-3 py-2 active:bg-superficie-suave"
+            class="cursor-pointer rounded-xl border border-borde border-l-[5px] bg-superficie-tarjeta p-3 active:bg-superficie-suave"
             :class="[
               estadoTarjetaSocio(grupo) === 'pagada' ? 'border-l-green-500' :
               estadoTarjetaSocio(grupo) === 'mora' ? 'border-l-red-500' :
@@ -1354,83 +1353,135 @@
             ]"
             style="touch-action: manipulation;"
           >
-            <img
-              :src="getAvatarUrl(grupo.socio?.nombre || grupo.socioId, grupo.socio?.avatar_seed, grupo.socio?.avatar_style)"
-              :alt="grupo.socio?.nombre"
-              class="h-10 w-10 flex-shrink-0 rounded-full border border-white oscuro:border-superficie-tarjeta object-cover shadow-sm"
-            />
-
-            <div class="min-w-0 flex-1">
-              <!--
-                Tres renglones que responden, en orden, lo que se pregunta quien cobra:
-                cuánto debe, qué periodo le falta y de qué se compone el total. Antes el
-                total iba solo, los chips no incluían el ahorro (no sumaban el total) y
-                no se sabía qué quincena estaba pagada.
-              -->
-              <div class="flex items-center justify-between gap-2">
+            <!--
+              Arriba, «¿cuánto debe?» en grande a la derecha y, bajo el nombre, cuánto lleva
+              pagado del mes. Debajo, un bloque por periodo (1ª y 2ª quincena lado a lado, o
+              la cuota mensual) con cada concepto en su renglón: así se ve a qué quincena
+              pertenece cada multa, actividad o cuota de préstamo, y qué está pagado (✓ y
+              cifra verde) y qué falta (punto y cifra en negrita). Antes todo lo que no era
+              ahorro iba junto en una línea «Más…» y lo pagado desaparecía si el socio debía algo.
+            -->
+            <div class="flex items-center gap-3">
+              <img
+                :src="getAvatarUrl(grupo.socio?.nombre || grupo.socioId, grupo.socio?.avatar_seed, grupo.socio?.avatar_style)"
+                :alt="grupo.socio?.nombre"
+                class="h-10 w-10 flex-shrink-0 rounded-full border border-white oscuro:border-superficie-tarjeta object-cover shadow-sm"
+              />
+              <div class="min-w-0 flex-1">
                 <div class="flex min-w-0 items-center gap-1.5">
                   <h3 class="truncate text-sm font-semibold leading-tight text-texto-fuerte">
                     {{ grupo.socio?.nombre || 'Socio' }}
                   </h3>
                   <span
-                    class="inline-flex flex-shrink-0 items-center gap-1 rounded-full px-2 py-[3px] text-[10px] font-semibold leading-none ring-1 ring-inset"
-                    :class="CLASES_ESTADO_QUINCENA[estadoTarjetaSocio(grupo)]"
+                    v-if="estadoTarjetaSocio(grupo) === 'mora'"
+                    class="inline-flex flex-shrink-0 items-center rounded-full bg-peligro-suave px-1.5 py-[3px] text-[10px] font-bold leading-none text-red-700 oscuro:text-red-300 ring-1 ring-inset ring-peligro-borde"
                   >
-                    <span class="h-1.5 w-1.5 rounded-full" :class="PUNTO_ESTADO_TARJETA[estadoTarjetaSocio(grupo)]" aria-hidden="true" />
-                    {{ ETIQUETA_ESTADO_TARJETA[estadoTarjetaSocio(grupo)] }}
+                    En mora
                   </span>
                 </div>
-                <p
-                  class="flex-shrink-0 text-[15px] font-bold leading-tight tabular-nums"
-                  :class="grupo.totalAPagar > 0 ? (grupo.estado === 'mora' ? 'text-rose-600 oscuro:text-rose-300' : 'text-texto-fuerte') : 'text-emerald-600 oscuro:text-emerald-300'"
-                >
-                  <span class="mr-1 text-[10.5px] font-semibold uppercase tracking-wide text-texto-suave">
-                    {{ grupo.totalAPagar > 0 ? 'Debe' : 'Pagó' }}
-                  </span>${{ formatMoney(grupo.totalAPagar > 0 ? grupo.totalAPagar : grupo.montoTotal) }}
+                <p class="mt-0.5 truncate text-xs leading-tight text-texto-suave tabular-nums">
+                  <template v-if="grupo.totalAPagar > 0">
+                    Pagó ${{ formatMoney(grupo.pagado) }} de ${{ formatMoney(grupo.montoTotal) }}
+                  </template>
+                  <template v-else>Todo el mes pagado</template>
                 </p>
               </div>
-
-              <!-- Como un recibo corto: un renglón por quincena (o la cuota mensual) con su
-                   valor alineado a la derecha, en texto plano. Sin pastillas: el color va
-                   solo en el icono y en la cifra, y con los tres estados de la app. -->
-              <ul class="mt-1.5 space-y-0.5 text-xs leading-snug">
-                <li
-                  v-if="getPeriodosGrupo(grupo).every(q => q.estado === 'pagada')"
-                  class="flex items-center gap-1.5 text-emerald-700 oscuro:text-emerald-300"
+              <div class="flex-shrink-0 text-right">
+                <p
+                  class="text-[10.5px] font-bold uppercase leading-none tracking-wide"
+                  :class="grupo.totalAPagar > 0 ? 'text-texto-suave' : 'text-exito'"
                 >
-                  <CheckCircleIcon class="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
-                  <span class="font-medium">{{ getPeriodosGrupo(grupo).length > 1 ? 'Las dos quincenas pagadas' : 'Cuota del mes pagada' }}</span>
-                </li>
-                <template v-else>
-                  <li
-                    v-for="q in getPeriodosGrupo(grupo)"
-                    :key="q.id"
-                    class="flex items-center justify-between gap-2"
-                  >
-                    <span class="flex min-w-0 items-center gap-1.5 text-texto-medio">
-                      <CheckCircleIcon v-if="q.estado === 'pagada'" class="h-3.5 w-3.5 flex-shrink-0 text-emerald-600 oscuro:text-emerald-300" aria-hidden="true" />
-                      <ExclamationCircleIcon v-else-if="q.estado === 'mora'" class="h-3.5 w-3.5 flex-shrink-0 text-rose-600 oscuro:text-rose-300" aria-hidden="true" />
-                      <ClockIcon v-else class="h-3.5 w-3.5 flex-shrink-0 text-orange-500 oscuro:text-orange-300" aria-hidden="true" />
-                      <span class="truncate">{{ q.etiqueta }}</span>
-                    </span>
-                    <span
-                      class="flex-shrink-0 tabular-nums"
-                      :class="q.estado === 'pagada' ? 'text-emerald-700 oscuro:text-emerald-300' : q.estado === 'mora' ? 'font-semibold text-rose-700 oscuro:text-rose-300' : 'font-semibold text-orange-700 oscuro:text-orange-300'"
+                  {{ grupo.totalAPagar > 0 ? 'Debe' : 'Al día' }}
+                </p>
+                <p
+                  class="mt-1 text-[17px] font-extrabold leading-none tabular-nums"
+                  :class="grupo.totalAPagar > 0 ? (estadoTarjetaSocio(grupo) === 'mora' ? 'text-red-700 oscuro:text-red-300' : 'text-texto-fuerte') : 'text-exito'"
+                >
+                  ${{ formatMoney(grupo.totalAPagar > 0 ? grupo.totalAPagar : grupo.montoTotal) }}
+                </p>
+              </div>
+            </div>
+
+            <div
+              class="mt-2.5 grid gap-2"
+              :class="grupo.periodos.length > 1 ? 'grid-cols-2' : 'grid-cols-1'"
+            >
+              <!-- Un periodo por cobrar es un botón que abre directo el pago de esa cuota (misma
+                   regla que «Pagar» en la modal del socio). Uno pagado, o para el visor, no
+                   captura el toque: sube a la tarjeta y abre la modal del socio. -->
+              <component
+                :is="p.pagable && !esVisor ? 'button' : 'section'"
+                v-for="p in grupo.periodos"
+                :key="p.id"
+                :type="p.pagable && !esVisor ? 'button' : undefined"
+                class="flex min-w-0 flex-col rounded-lg border px-2.5 py-2 text-left"
+                :class="[
+                  CLASES_BLOQUE_PERIODO[p.estado],
+                  p.pagable && !esVisor ? 'cursor-pointer active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca-tinta' : ''
+                ]"
+                :style="p.pagable && !esVisor ? 'touch-action: manipulation;' : undefined"
+                :aria-label="p.pagable && !esVisor
+                  ? `Pagar ${p.etiqueta}: ${p.estado === 'mora' ? 'en mora' : 'falta'} $${formatMoney(p.debe)}`
+                  : `${p.etiqueta}: ${p.debe > 0 ? `debe $${formatMoney(p.debe)}` : 'pagada'}`"
+                @click="alTocarPeriodoTarjeta(p, $event)"
+              >
+                <p class="truncate text-[11px] font-bold uppercase leading-tight tracking-wide text-texto-medio">
+                  {{ p.etiqueta }}
+                </p>
+                <ul class="mt-1.5 flex-1 space-y-1 text-xs leading-tight">
+                  <li v-for="c in p.conceptos" :key="c.clave">
+                    <div class="flex items-center justify-between gap-1.5">
+                      <span class="flex min-w-0 items-center gap-1 text-texto-medio">
+                        <CheckIcon
+                          v-if="c.pendiente <= 0"
+                          class="h-3 w-3 flex-shrink-0 text-exito"
+                          stroke-width="3"
+                          role="img"
+                          aria-label="Pagado"
+                        />
+                        <span
+                          v-else
+                          class="mx-[3px] h-1.5 w-1.5 flex-shrink-0 rounded-full"
+                          :class="p.estado === 'mora' ? 'bg-red-500' : 'bg-amber-500'"
+                          role="img"
+                          aria-label="Falta"
+                        />
+                        <span class="truncate">{{ c.etiqueta }}</span>
+                      </span>
+                      <span
+                        class="flex-shrink-0 tabular-nums"
+                        :class="c.pendiente > 0 ? 'font-extrabold text-texto-fuerte' : 'font-semibold text-exito'"
+                      >
+                        ${{ formatMoney(c.pendiente > 0 ? c.pendiente : c.pagado) }}
+                      </span>
+                    </div>
+                    <!-- Abono parcial: sin esta línea, «$30.000» no dice que ya pagó una parte -->
+                    <p
+                      v-if="c.pendiente > 0 && c.pagado > 0"
+                      class="ml-[17px] mt-px text-[11px] leading-tight text-texto-suave tabular-nums"
                     >
-                      {{ q.estado === 'pagada' ? 'Pagada' : `$${formatMoney(q.pendiente)}` }}
-                    </span>
+                      Abonó ${{ formatMoney(c.pagado) }} de ${{ formatMoney(c.pagado + c.pendiente) }}
+                    </p>
                   </li>
-                </template>
-                <!-- Lo que no es ahorro, en una sola línea: si debe, lo que suma al total;
-                     si está al día, lo adicional que pagó -->
-                <li v-if="getOtrosGrupo(grupo).length" class="pt-0.5 text-texto-suave">
-                  {{ grupo.chipsPagados ? 'Incluye' : 'Más' }}
-                  <template v-for="(o, i) in getOtrosGrupo(grupo)" :key="o.etiqueta">
-                    <span v-if="i > 0"> · </span>{{ o.etiqueta.toLowerCase() }}
-                    <span class="font-semibold tabular-nums text-texto-medio">${{ formatMoney(o.valor) }}</span>
+                </ul>
+                <p
+                  class="mt-1.5 flex items-center justify-between gap-1.5 border-t pt-1.5 text-xs font-extrabold leading-tight"
+                  :class="p.estado === 'mora' ? 'border-peligro-borde text-red-700 oscuro:text-red-300' : p.estado === 'pagada' ? 'border-exito-borde text-exito' : 'border-borde text-alerta'"
+                >
+                  <template v-if="p.debe > 0">
+                    <span>{{ p.estado === 'mora' ? 'En mora' : 'Falta' }}</span>
+                    <span class="inline-flex items-center gap-0.5 tabular-nums">
+                      ${{ formatMoney(p.debe) }}
+                      <!-- Señal de que el bloque se toca para cobrar -->
+                      <ChevronRightIcon v-if="p.pagable && !esVisor" class="h-3.5 w-3.5 flex-shrink-0" stroke-width="2.5" aria-hidden="true" />
+                    </span>
                   </template>
-                </li>
-              </ul>
+                  <span v-else class="inline-flex items-center gap-1">
+                    <CheckCircleIcon class="h-3.5 w-3.5" aria-hidden="true" />
+                    Pagada
+                  </span>
+                </p>
+              </component>
             </div>
           </div>
         </div>
@@ -7256,48 +7307,66 @@ function getEstadoGrupoSocio(grupo) {
   if (cuotas.every(c => (c.estadoReal || c.estado) === 'pagada')) return 'pagada'
   return 'programada'
 }
-/**
- * Periodos del mes del socio para la tarjeta: cada quincena, o la cuota mensual,
- * con su estado (pagada, pendiente o mora) y el ahorro que le falta.
- * La multa no entra aquí: va en su propio chip, para no contarla dos veces.
- */
+/** Lo que falta del ahorro de una cuota, sin la multa (que va en su propio renglón). */
 function ahorroPendienteCuota(cuota) {
   return Math.max(0, getTotalAPagar(cuota) - getSancionCuota(cuota))
 }
 /**
- * Estado del socio en la tarjeta, reducido a los tres de la app: un abono
- * parcial o un mes que aún no vence siguen siendo «pendiente».
+ * Estado del socio en la tarjeta, reducido a los tres de la app. Sale de sus
+ * periodos: basta uno en mora para marcarlo, y sin nada pendiente está al día
+ * aunque alguna cuota diga otra cosa (p. ej. pagada con la multa pendiente).
  */
 function estadoTarjetaSocio(grupo) {
-  if (grupo?.estado === 'pagada') return 'pagada'
-  if (grupo?.estado === 'mora') return 'mora'
+  if (!(grupo?.totalAPagar > 0)) return 'pagada'
+  if ((grupo.periodos || []).some(p => p.estado === 'mora')) return 'mora'
   return 'pendiente'
 }
-const ETIQUETA_ESTADO_TARJETA = { pagada: 'Pagada', pendiente: 'Pendiente', mora: 'Mora' }
-const PUNTO_ESTADO_TARJETA = { pagada: 'bg-emerald-500', pendiente: 'bg-orange-500', mora: 'bg-rose-500' }
-/** Conceptos adicionales al ahorro (multa, actividades, préstamo) para la línea «Más». */
-function getOtrosGrupo(grupo) {
-  return (grupo?.chips || []).filter(c => c.etiqueta !== 'Ahorro')
+/** Toque en un bloque de la tarjeta: si se puede cobrar, abre el pago y no la modal del socio. */
+function alTocarPeriodoTarjeta(periodo, evento) {
+  if (!periodo?.pagable || esVisor.value) return
+  evento.stopPropagation()
+  abrirModalPago(periodo.cuota)
 }
-function getPeriodosGrupo(grupo) {
-  return (grupo?.cuotas || []).map(c => {
-    // Solo los tres estados de la app: un abono parcial o una cuota que aún no
-    // vence siguen siendo «pendiente»; lo que falta lo dice el valor.
-    const estadoCuota = c.estadoReal || c.estado
-    const estado = estadoCuota === 'pagada' ? 'pagada' : estadoCuota === 'mora' ? 'mora' : 'pendiente'
-    const etiqueta = c.quincena === 1 ? '1ª quincena' : c.quincena === 2 ? '2ª quincena' : 'Cuota del mes'
-    return { id: c.id, etiqueta, estado, pendiente: estado === 'pagada' ? 0 : ahorroPendienteCuota(c) }
-  })
+const CLASES_BLOQUE_PERIODO = {
+  pagada: 'bg-exito-suave border-exito-borde',
+  mora: 'bg-peligro-suave border-peligro-borde',
+  pendiente: 'bg-superficie-suave border-borde',
 }
-const TEXTO_ESTADO_QUINCENA = {
-  pagada: 'pagada',
-  mora: 'en mora',
-  pendiente: 'pendiente',
-}
-const CLASES_ESTADO_QUINCENA = {
-  pagada: 'bg-emerald-50 oscuro:bg-emerald-500/15 text-emerald-700 oscuro:text-emerald-300 ring-emerald-300/80 oscuro:ring-emerald-500/40',
-  mora: 'bg-rose-50 oscuro:bg-rose-500/15 text-rose-700 oscuro:text-rose-300 ring-rose-200/70 oscuro:ring-rose-500/30',
-  pendiente: 'bg-orange-50 oscuro:bg-orange-500/15 text-orange-800 oscuro:text-orange-300 ring-orange-200/70 oscuro:ring-orange-500/30',
+/**
+ * Un periodo del socio (quincena o mes) para la tarjeta: cada concepto con lo
+ * que pagó y lo que le falta, y el estado del bloque. Todo sale de la cuota del
+ * periodo, igual que en la modal, para que la suma de los bloques sea el «Debe».
+ */
+function armarPeriodoTarjeta(cuota) {
+  const conceptos = []
+  const agregar = (clave, etiqueta, pagado, pendiente) => {
+    const p = Math.max(0, Number(pagado) || 0)
+    const f = Math.max(0, Number(pendiente) || 0)
+    if (p + f > 0) conceptos.push({ clave, etiqueta, pagado: p, pendiente: f })
+  }
+  const valorCuota = Number(cuota.valor_cuota) || 0
+  agregar('ahorro', 'Ahorro', Math.min(Number(cuota.valor_pagado) || 0, valorCuota), ahorroPendienteCuota(cuota))
+  agregar('multa', 'Multa', cuota.valor_pagado_sancion, getSancionCuota(cuota))
+  agregar(
+    'actividades',
+    getTextoActividadesSocio(cuota) || 'Actividades',
+    getActividadesInfoSocio(cuota)?.pagadas,
+    getActividadesPendientesSocio(cuota)
+  )
+  agregar(
+    'prestamo',
+    'Préstamo',
+    getTotalAbonadoPrestamosCuotaSocioSync(cuota) || getTotalCuotasPrestamosPagadasSocioSync(cuota),
+    getTotalCuotasPrestamosPendientesSocioSync(cuota)
+  )
+  const debe = conceptos.reduce((s, c) => s + c.pendiente, 0)
+  const estadoCuota = cuota.estadoReal || cuota.estado
+  const estado = debe <= 0 ? 'pagada' : estadoCuota === 'mora' ? 'mora' : 'pendiente'
+  const etiqueta = cuota.quincena === 1 ? '1ª quincena' : cuota.quincena === 2 ? '2ª quincena' : 'Cuota del mes'
+  // Se cobra directo desde el bloque con la misma regla que «Pagar» en la modal del socio:
+  // una cuota pagada con algo pendiente (multa, actividad) se gestiona desde esa modal.
+  const pagable = debe > 0 && estadoCuota !== 'pagada'
+  return { id: cuota.id, cuota, etiqueta, estado, debe, conceptos, pagable }
 }
 /** Etiqueta del periodo de una cuota (1ª/2ª quincena o mensual). */
 function getPeriodoCuotaLabel(cuota) {
@@ -8779,87 +8848,6 @@ const cuotasAgrupadasPorSocio = computed(() => {
       return sum + (getTotalAbonadoPrestamosCuotaSocioSync(cuota) || 0)
     }, 0)
     grupo.totalAPagar = grupo.pendiente + grupo.actividadesPendientes + grupo.cuotasPrestamosPendientes
-    // Valor de cada cuota del periodo. Normalmente todas valen lo mismo; si el socio cambió de
-    // valor a mitad de periodo, no se inventa un promedio: la fila muestra que varía.
-    const valoresCuota = grupo.cuotas.map(c => Number(c.valor_cuota) || 0)
-    const todasIguales = valoresCuota.every(v => v === valoresCuota[0])
-    grupo.valorPorCuota = todasIguales ? (valoresCuota[0] || 0) : null
-    // «2 cuotas quincenales de $80.000» / «1 cuota mensual de $200.000»
-    const n = grupo.cuotas.length
-    const esQuincenal = grupo.socio?.periodicidad === 'quincenal'
-    const sustantivo = n === 1 ? 'cuota' : 'cuotas'
-    const adjetivo = esQuincenal
-      ? (n === 1 ? 'quincenal' : 'quincenales')
-      : (n === 1 ? 'mensual' : 'mensuales')
-    grupo.textoCuotas = grupo.valorPorCuota !== null
-      ? `${n} ${sustantivo} ${adjetivo} de $${formatMoney(grupo.valorPorCuota)}`
-      : `${n} ${sustantivo} ${adjetivo} · valor variable`
-
-    // Conceptos que acompañan a la cuota, para los chips de la fila. Si el socio aún debe se
-    // muestran los PENDIENTES; si ya pagó todo, los ADICIONALES QUE PAGÓ (multa, actividades,
-    // abonos a préstamo), que si no quedarían invisibles. La cuota base no lleva chip: ya está
-    // en «2 cuotas quincenales de $80.000».
-    const debe = grupo.totalAPagar > 0
-    const chips = []
-
-    // El ahorro primero: es lo principal que se debe y sin él los chips no
-    // cuadraban con el total («¿y el resto de dónde sale?»).
-    const ahorro = debe ? grupo.cuotas.reduce((s, c) => s + ahorroPendienteCuota(c), 0) : 0
-    if (ahorro > 0) {
-      chips.push({
-        etiqueta: 'Ahorro',
-        valor: ahorro,
-        // Naranja de «pendiente», nunca verde: en esta vista el verde significa pagado.
-        clase: 'bg-orange-50 oscuro:bg-orange-500/15 text-orange-800 oscuro:text-orange-300 ring-orange-200/70 oscuro:ring-orange-500/30',
-        dot: 'bg-orange-500',
-      })
-    }
-
-    const multa = debe
-      ? grupo.cuotas.reduce((s, c) => s + (getSancionCuota(c) || 0), 0)
-      : grupo.cuotas.reduce((s, c) => s + (Number(c.valor_pagado_sancion) || 0), 0)
-    if (multa > 0) {
-      chips.push({
-        etiqueta: 'Multa',
-        valor: multa,
-        clase: debe ? 'bg-red-50 oscuro:bg-red-500/15 text-red-800 oscuro:text-red-300 ring-red-200/70 oscuro:ring-red-500/30' : 'bg-emerald-50 oscuro:bg-emerald-500/15 text-emerald-700 oscuro:text-emerald-300 ring-emerald-200/70 oscuro:ring-emerald-500/30',
-        dot: debe ? 'bg-red-500' : 'bg-emerald-500',
-      })
-    }
-
-    const actividades = debe
-      ? grupo.actividadesPendientes
-      : grupo.cuotas.reduce((s, c) => s + (getActividadesInfoSocio(c)?.pagadas || 0), 0)
-    if (actividades > 0) {
-      const conActividad = grupo.cuotas.find(c =>
-        debe ? getActividadesPendientesSocio(c) > 0 : (getActividadesInfoSocio(c)?.pagadas || 0) > 0
-      )
-      const bruto = String(getTextoActividadesSocio(conActividad) || '').trim().split(/\s+/)[0]
-      const nombre = bruto && !/^\d/.test(bruto)
-        ? bruto.charAt(0).toUpperCase() + bruto.slice(1).toLowerCase()
-        : 'Actividades'
-      chips.push({
-        etiqueta: nombre,
-        valor: actividades,
-        clase: debe ? 'bg-purple-50 oscuro:bg-purple-500/15 text-purple-800 oscuro:text-purple-300 ring-purple-200/70 oscuro:ring-purple-500/30' : 'bg-emerald-50 oscuro:bg-emerald-500/15 text-emerald-700 oscuro:text-emerald-300 ring-emerald-200/70 oscuro:ring-emerald-500/30',
-        dot: debe ? 'bg-purple-500' : 'bg-emerald-500',
-      })
-    }
-
-    const prestamo = debe
-      ? grupo.cuotasPrestamosPendientes
-      : grupo.cuotasPrestamosAbonado
-    if (prestamo > 0) {
-      chips.push({
-        etiqueta: 'Préstamo',
-        valor: prestamo,
-        clase: debe ? 'bg-blue-50 oscuro:bg-blue-500/15 text-blue-800 oscuro:text-blue-300 ring-blue-200/70 oscuro:ring-blue-500/30' : 'bg-emerald-50 oscuro:bg-emerald-500/15 text-emerald-700 oscuro:text-emerald-300 ring-emerald-200/70 oscuro:ring-emerald-500/30',
-        dot: debe ? 'bg-blue-500' : 'bg-emerald-500',
-      })
-    }
-
-    grupo.chips = chips
-    grupo.chipsPagados = !debe
     // Estado, monto total y progreso del socio para la fila de la lista
     grupo.estado = getEstadoGrupoSocio(grupo)
     grupo.montoTotal = grupo.pagado + grupo.totalAPagar
@@ -8883,6 +8871,8 @@ const cuotasAgrupadasPorSocio = computed(() => {
       // Si ninguna tiene quincena (ambas son mensuales), mantener el orden original
       return 0
     })
+    // Después de ordenar: los bloques de la tarjeta van 1ª quincena y luego 2ª
+    grupo.periodos = grupo.cuotas.map(armarPeriodoTarjeta)
   })
 
   // Convertir a array y ordenar por nombre del socio (socios inactivos sin pago completo ya excluidos en cuotasFiltradas)
@@ -16583,7 +16573,7 @@ function construirPasosGuiaCuotas({ manual = false } = {}) {
       icono: UserCircleIcon,
       gesto: 'tocar',
       titulo: 'O directo desde el socio',
-      texto: 'Tocas su tarjeta, ves sus cuotas del mes y le cobras ahí.',
+      texto: 'Tocas una quincena para cobrarla, o el nombre para ver todas sus cuotas.',
     },
     {
       tipo: 'final',
