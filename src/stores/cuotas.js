@@ -236,10 +236,12 @@ export const useCuotasStore = defineStore('cuotas', () => {
   // Opción skipMoraUpdate para cargas rápidas cuando solo necesitamos los datos
   // sin recalcular mora/multas (útil después de generar cuotas nuevas)
   async function fetchCuotasNatillera(natilleraId, opciones = {}) {
-    const { skipMoraUpdate = false } = opciones
+    // `silencioso`: revalidación por detrás de datos ya pintados. No toca `loading`
+    // porque las vistas lo usan para mostrar el skeleton y la lista parpadearía.
+    const { skipMoraUpdate = false, silencioso = false } = opciones
     
     try {
-      loading.value = true
+      if (!silencioso) loading.value = true
       error.value = null
 
       /*
@@ -320,7 +322,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
       console.error('Error cargando cuotas:', e)
       return []
     } finally {
-      loading.value = false
+      if (!silencioso) loading.value = false
     }
   }
 

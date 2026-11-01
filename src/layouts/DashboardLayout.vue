@@ -56,7 +56,7 @@
         <nav
           ref="navLateral"
           class="nav-lateral relative flex-1 min-h-0 p-4 space-y-4 overflow-y-auto overscroll-contain"
-          :class="natilleraParaVolver ? 'pb-[15.5rem]' : 'pb-[12.5rem]'"
+          :class="natilleraParaVolver ? 'pb-[15.5rem] lg:pb-[11rem]' : 'pb-[12.5rem] lg:pb-[8.25rem]'"
         >
           <!-- Pestaña de la opción activa: viaja entre opciones y se funde con el contenido -->
           <span
@@ -376,7 +376,7 @@
         con su nombre escrito. Antes «Mi cuenta» y «Cerrar sesión» eran dos iconos junto
         al avatar y en el celular no había title que dijera cuál era cuál.
       -->
-      <div data-guia="panel-usuario" class="flex flex-col gap-2">
+      <div data-guia="panel-usuario" class="panel-cuenta-grupo flex flex-col gap-2">
         <div class="panel-cuenta">
           <!--
             Ajustes de la persona: la fila es la propia persona (avatar + nombre) porque
@@ -455,10 +455,11 @@
           type="button"
           data-guia="panel-cerrar-sesion"
           class="boton-salir"
+          title="Cerrar sesión"
           @click="handleLogout"
         >
           <ArrowRightOnRectangleIcon class="boton-salir__icono" aria-hidden="true" />
-          <span>Cerrar sesión</span>
+          <span class="boton-salir__texto">Cerrar sesión</span>
         </button>
       </div>
     </div>
@@ -1573,6 +1574,71 @@ onUnmounted(() => {
    al desplazarse, ahora que el fondo es opaco */
 .panel-usuario-fijo {
   box-shadow: 0 -10px 18px -10px rgba(0, 0, 0, 0.45);
+}
+
+/*
+ * Escritorio: el panel se compacta. En pantalla grande el menú es lo principal y
+ * el panel ocupaba casi la mitad del alto. «Cerrar sesión» se vuelve un botón
+ * cuadrado dentro de la fila de la cuenta, y las filas de natillera pierden la
+ * segunda línea. Solo CSS sobre el mismo HTML: los recorridos guiados siguen
+ * encontrando cada botón por su data-guia. El texto de «Cerrar sesión» queda
+ * oculto a la vista pero no a los lectores de pantalla.
+ */
+@media (min-width: 1024px) {
+  .panel-cuenta-grupo {
+    position: relative;
+  }
+
+  .panel-cuenta__fila[data-guia="panel-mi-cuenta"] {
+    padding-right: 3.5rem;
+  }
+
+  .panel-cuenta__fila[data-guia="panel-mi-cuenta"] .panel-cuenta__flecha {
+    display: none;
+  }
+
+  .panel-cuenta__fila:not([data-guia="panel-mi-cuenta"]) {
+    min-height: 2.75rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+
+  .panel-cuenta__fila:not([data-guia="panel-mi-cuenta"]) .panel-cuenta__pista {
+    display: none;
+  }
+
+  .panel-cuenta__fila:not([data-guia="panel-mi-cuenta"]) .panel-cuenta__icono {
+    @apply h-7 w-7 rounded-lg;
+    /* Centrado bajo el avatar (36 px) para que la columna de iconos no baile */
+    margin-inline: 0.25rem;
+  }
+
+  .panel-cuenta__fila:not([data-guia="panel-mi-cuenta"]) .panel-cuenta__titulo {
+    @apply font-sans text-[0.8125rem] font-medium;
+    color: hsl(152 42% 88%);
+  }
+
+  /* 44 px: el iPad en horizontal también entra aquí y se toca con el dedo */
+  .boton-salir {
+    position: absolute;
+    /* Centrado en la fila de la cuenta (avatar 36 px + py-2 + borde del grupo) */
+    top: 0.3125rem;
+    right: 0.3125rem;
+    width: 2.75rem;
+    min-height: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border-radius: 0.875rem;
+  }
+
+  .boton-salir__texto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
 }
 
 /* Pestaña para abrir sidebar en lg: acento alineado al botón primario del login */

@@ -983,7 +983,14 @@ const cuotasFiltradas = computed(() => {
     : f === 'pendiente'
       ? cuotas.value.filter(c => c.estadoReal === 'pendiente' || c.estadoReal === 'programada')
       : cuotas.value.filter(c => c.estadoReal === f)
-  return [...lista].reverse()
+  // De la más antigua a la más reciente: el socio repasa su historial en el orden
+  // en que fue pagando. Orden explícito por periodo en vez de fiarse del que trae la RPC.
+  return [...lista].sort((x, y) =>
+    num(x.anio) - num(y.anio) ||
+    num(x.mes) - num(y.mes) ||
+    num(x.quincena) - num(y.quincena) ||
+    String(x.fecha_limite || '').localeCompare(String(y.fecha_limite || ''))
+  )
 })
 
 const cuotasPorAnio = computed(() => {

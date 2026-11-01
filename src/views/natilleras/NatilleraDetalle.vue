@@ -4078,6 +4078,16 @@ const inputBusquedaRef = ref(null)
 const seccionAlertasRef = ref(null) // Ya no se usa, pero se mantiene por compatibilidad
 const bannerSociosEnMoraRef = ref(null)
 const cuotasNatillera = ref([])
+/**
+ * Cuotas que aún se le cobran a alguien. Las impagas de un socio retirado se
+ * quedan en la base como historial, pero no deben salir como mora ni pendiente;
+ * las pagadas sí se conservan porque son movimientos reales.
+ */
+const cuotasPorCobrar = computed(() =>
+  (cuotasNatillera.value || []).filter(c =>
+    c && !(c.socio_natillera?.estado === 'inactivo' && c.estado !== 'pagada')
+  )
+)
 /** Movimientos extra (préstamos, actividades, rifas, liquidaciones) cargados en segundo plano */
 const movimientosNatilleraExtra = ref([])
 const sancionesPorCuota = ref({}) // Sanciones calculadas dinámicamente
@@ -5804,8 +5814,8 @@ const sociosEnMora = computed(() => {
   const sociosMap = {}
   
   // Procesar cuotas de natillera
-  if (cuotasNatillera.value && cuotasNatillera.value.length > 0) {
-    cuotasNatillera.value.forEach(cuota => {
+  if (cuotasPorCobrar.value.length > 0) {
+    cuotasPorCobrar.value.forEach(cuota => {
       if (!cuota) return
       
       const socioId = cuota.socio_natillera_id
@@ -5959,7 +5969,7 @@ const sociosEnMora = computed(() => {
       
       // Obtener información completa del socio
       const socioCompleto = s.socio || (() => {
-        const primeraCuota = s.cuotasMoraList[0] || cuotasNatillera.value?.find(c => c.socio_natillera_id === s.id)
+        const primeraCuota = s.cuotasMoraList[0] || cuotasPorCobrar.value.find(c => c.socio_natillera_id === s.id)
         return primeraCuota?.socio_natillera?.socio || null
       })()
       
@@ -6030,17 +6040,14 @@ const hayMasAlertasRecientes = computed(() => {
 
 // Estadísticas de mora
 const totalCuotasMora = computed(() => {
-  if (!cuotasNatillera.value || !cuotasNatillera.value.length) return 0
-  return cuotasNatillera.value.filter(c => c && c.estado === 'mora').length
+  return cuotasPorCobrar.value.filter(c => c.estado === 'mora').length
 })
 const totalCuotasPendientes = computed(() => {
-  if (!cuotasNatillera.value || !cuotasNatillera.value.length) return 0
-  
   const hoy = new Date()
   hoy.setHours(0, 0, 0, 0)
   
-  return cuotasNatillera.value.filter(c => {
-    if (!c || (c.estado !== 'pendiente' && c.estado !== 'parcial')) return false
+  return cuotasPorCobrar.value.filter(c => {
+    if ((c.estado !== 'pendiente' && c.estado !== 'parcial')) return false
     if (!c.fecha_limite) return false
     const fechaLimite = new Date(c.fecha_limite)
     fechaLimite.setHours(0, 0, 0, 0)

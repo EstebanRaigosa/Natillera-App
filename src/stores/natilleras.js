@@ -1113,7 +1113,11 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       }, 0)
 
     // Calcular totalPendiente: incluir valor de cuota pendiente + sanciones pendientes
+    // Al retirar a un socio sus cuotas sin pagar quedan en la base (el historial
+    // se conserva), pero ya no se le van a cobrar: no cuentan como pendiente.
+    const idsSociosRetirados = new Set(socios.filter(s => s.estado === 'inactivo').map(s => s.id))
     const cuotasPendientes = cuotas.filter(c => {
+      if (idsSociosRetirados.has(c.socio_natillera_id)) return false
       return c.estado !== 'pagada' && c.estado !== 'programada'
     })
 
