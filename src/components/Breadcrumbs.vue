@@ -127,7 +127,7 @@ const breadcrumbs = computed(() => {
     // Pagos de los socios (lo que cada socio ha pagado, mes a mes)
     else if (path.includes('/pagos')) {
       crumbs.push({
-        label: 'Pagos de los socios',
+        label: 'Historial de pagos',
         to: null
       })
     }

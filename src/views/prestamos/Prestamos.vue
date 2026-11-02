@@ -263,14 +263,16 @@
             <div class="flex items-baseline justify-between gap-3">
               <span class="text-sm text-slate-500 oscuro:text-texto-suave">Saldo</span>
               <span
-                class="font-display text-2xl font-extrabold leading-none tabular-nums"
-                :class="prestamo.enMora ? 'text-[color:var(--brand-danger)] oscuro:text-peligro' : 'text-slate-900 oscuro:text-texto-fuerte'"
+                class="font-display text-2xl font-extrabold leading-none tabular-nums text-slate-900 oscuro:text-texto-fuerte"
               >
                 ${{ formatMoney(saldoConMora(prestamo)) }}
               </span>
             </div>
-            <!-- El saldo lleva sus dos intereses: los del plan y los de mora -->
-            <p v-if="desgloseSaldoPrestamo(prestamo.id)" class="mt-0.5 text-right text-xs tabular-nums text-slate-500 oscuro:text-texto-suave">
+            <!-- El saldo lleva sus dos intereses: los del plan y los de mora. En mora se omite:
+                 la mora ya está en el bloque rojo y repetirla aquí era ruido (el desglose
+                 completo vive en el detalle). El saldo va en neutro por lo mismo: el rojo
+                 queda para la etiqueta y el bloque de «ponerse al día». -->
+            <p v-if="!prestamo.enMora && desgloseSaldoPrestamo(prestamo.id)" class="mt-0.5 text-right text-xs tabular-nums text-slate-500 oscuro:text-texto-suave">
               Capital ${{ formatMoney(desgloseSaldoPrestamo(prestamo.id).capital) }}
               · Intereses <span class="font-semibold text-[color:var(--brand-warning)] oscuro:text-alerta">${{ formatMoney(desgloseSaldoPrestamo(prestamo.id).interes) }}</span>
               <template v-if="desgloseSaldoPrestamo(prestamo.id).mora > 0">
@@ -300,13 +302,11 @@
                 ${{ formatMoney((prestamo.valorCuotasEnDeuda || 0) + (prestamo.moraAcumulada || 0)) }}
               </span>
             </div>
+            <!-- Una sola línea de apoyo. La siguiente cuota ya no va aquí: en mora lo urgente
+                 es ponerse al día, y la próxima fecha está en el detalle. -->
             <p class="text-xs">
-              <template v-if="prestamo.tieneCuotasVencidas">Vencido ${{ formatMoney(prestamo.valorCuotasEnDeuda || 0) }}</template>
-              <strong v-if="prestamo.moraAcumulada > 0" class="font-bold">{{ prestamo.tieneCuotasVencidas ? '+ ' : '' }}mora pendiente ${{ formatMoney(prestamo.moraAcumulada) }}</strong>
-            </p>
-            <p v-if="prestamo.proximoPago" class="mt-1 border-t border-[color:rgba(153,27,27,0.15)] pt-1 text-xs opacity-90">
-              Siguiente cuota {{ formatDate(prestamo.proximoPago.fechaLimite) }} ·
-              ${{ formatMoney(prestamo.proximoPago.valor) }}
+              <template v-if="prestamo.tieneCuotasVencidas">{{ prestamo.cuotasVencidas }} {{ prestamo.cuotasVencidas === 1 ? 'cuota vencida' : 'cuotas vencidas' }}</template>
+              <template v-if="prestamo.moraAcumulada > 0">{{ prestamo.tieneCuotasVencidas ? ' + ' : '' }}mora ${{ formatMoney(prestamo.moraAcumulada) }}</template>
             </p>
           </div>
 
@@ -905,16 +905,14 @@
             <!-- Vista después de generar: comprobante con opciones Descargar y Enviar por WhatsApp -->
             <template v-else>
               <div v-if="datosComprobanteCreado" ref="resumenPrestamoNuevoRef" data-tema="claro" class="comprobante-prestamo-nuevo rounded-2xl overflow-hidden border border-borde bg-superficie-tarjeta shadow-sm" style="min-width: 280px;">
+                <!-- Identidad del tipo: préstamo entregado  -->
+                <div style="background: #1B5E37; padding: 14px 16px;">
+                  <TipoComprobante clave="prestamoNuevo" />
+                </div>
                 <div class="comprobante-content" style="background: #ecfdf5; padding: 14px 12px; color: #1f2937;">
-                  <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 14px; padding-bottom: 4px;">
-                    <div style="width: 44px; height: 44px; background: #059669; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                    </div>
-                    <h1 style="font-size: 22px; font-weight: 800; margin: 0; color: #374151; letter-spacing: -0.5px;">Comprobante de Préstamo</h1>
-                  </div>
                   <div style="background: white; padding: 14px 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
                     <p style="color: #6b7280; font-size: 9px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: center;">MONTO DEL PRÉSTAMO</p>
-                    <p style="font-size: 24px; font-weight: 900; margin: 0 0 12px 0; letter-spacing: -0.5px; color: #059669; text-align: center;">${{ formatMoney(datosComprobanteCreado.monto) }}</p>
+                    <p style="color: #059669; font-size: 24px; font-weight: 900; margin: 0 0 12px 0; letter-spacing: -0.5px; text-align: center;">${{ formatMoney(datosComprobanteCreado.monto) }}</p>
                     <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;">
                       <div style="min-width: 0; flex: 1;">
                         <p style="color: #9ca3af; font-size: 9px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">SOCIO</p>
@@ -1339,17 +1337,9 @@
             id="comprobante-abono"
             style="width: 100%; position: relative; background: #ffffff; border-radius: 22px; overflow: hidden; font-family: 'Mulish', system-ui, -apple-system, 'Segoe UI', sans-serif; box-shadow: 0 22px 44px -18px rgba(20,71,42,0.45); border: 1px solid rgba(20,71,42,0.10);"
           >
-            <!-- Cabecera marca verde + hero del valor -->
+            <!-- Cabecera con la identidad del tipo + hero del valor -->
             <div style="background: #1B5E37; padding: 14px 20px 16px; color: #ffffff;">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 34px; height: 34px; border-radius: 10px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.28); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-                </div>
-                <div style="min-width: 0;">
-                  <p style="margin: 0; font-size: 14px; font-weight: 800; letter-spacing: -0.2px; line-height: 1.15;">Comprobante de abono</p>
-                  <p style="margin: 2px 0 0; font-size: 9.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.72);">Abono a préstamo</p>
-                </div>
-              </div>
+              <TipoComprobante clave="abonoPrestamo" />
 
               <div style="text-align: center; margin-top: 10px;">
                 <p style="margin: 0; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.72);">Valor pagado</p>
@@ -1387,19 +1377,28 @@
                 <span style="font-size: 12px; font-weight: 600; color: #8a938a;">Fecha</span>
                 <span style="font-size: 13px; font-weight: 700; color: #1f2937; text-align: right;">{{ comprobanteAbono.fecha }}</span>
               </div>
-              <!-- Pago completo y sin mora: el concepto dice todo, no hace falta desglose -->
-              <template v-if="!(comprobanteAbono.moraPagada > 0) && !(comprobanteAbono.cuotasPendientes || []).length">
+              <!-- Sin reparto por cuota (aún cargando o abono antiguo) y sin mora: basta el concepto -->
+              <template v-if="!(comprobanteAbono.moraPagada > 0) && !(comprobanteAbono.cuotasPendientes || []).length && !(comprobanteAbono.cuotasAbonadas || []).length">
                 <div style="height: 1px; background: #eef2ee;"></div>
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0;">
                   <span style="font-size: 12px; font-weight: 600; color: #8a938a;">Concepto</span>
                   <span style="font-size: 13px; font-weight: 700; color: #1f2937; text-align: right;">Abono a préstamo</span>
                 </div>
               </template>
-              <!-- 1. Lo que se pagó: solo si hubo mora o quedó pendiente (si no, basta el concepto de arriba) -->
-              <div v-if="comprobanteAbono.moraPagada > 0 || (comprobanteAbono.cuotasPendientes || []).length > 0" style="margin-top: 14px;">
+              <!-- 1. Lo que se pagó: cuánto fue a cada cuota, la mora y el total -->
+              <div v-if="comprobanteAbono.moraPagada > 0 || (comprobanteAbono.cuotasPendientes || []).length > 0 || (comprobanteAbono.cuotasAbonadas || []).length > 0" style="margin-top: 14px;">
                 <p style="margin: 0 0 5px; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #1B5E37;">Lo que se pagó</p>
                 <div style="padding: 5px 12px; border-left: 3px solid #81c784; background: #f6fbf7; border-radius: 0 10px 10px 0;">
-                  <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 13px; line-height: 1.8; color: #334155;">
+                  <div
+                    v-for="ca in comprobanteAbono.cuotasAbonadas || []"
+                    :key="`abonada-${ca.numero}`"
+                    style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 13px; line-height: 1.8; color: #334155;"
+                  >
+                    <span v-if="ca.numero == null">Abono al saldo</span>
+                    <span v-else>Cuota #{{ ca.numero }} <span style="font-size: 11px; font-weight: 700;" :style="{ color: ca.completa ? '#2e7d32' : '#c2410c' }">· {{ !ca.completa ? 'abono parcial' : (ca.previo > 0 ? 'pago del restante' : 'pagada') }}</span></span>
+                    <span style="font-weight: 700; white-space: nowrap;">${{ formatMoney(ca.abonado) }}</span>
+                  </div>
+                  <div v-if="!(comprobanteAbono.cuotasAbonadas || []).length" style="display: flex; justify-content: space-between; gap: 12px; font-size: 13px; line-height: 1.8; color: #334155;">
                     <span>Abono al préstamo</span>
                     <span style="font-weight: 700; white-space: nowrap;">${{ formatMoney(comprobanteAbono.abonoAPrestamo ?? comprobanteAbono.valor) }}</span>
                   </div>
@@ -1445,6 +1444,15 @@
                   <p style="margin: 0; font-size: 9.5px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: #3f8a54;">Saldo nuevo</p>
                   <p style="margin: 5px 0 0; font-size: 15px; font-weight: 800; color: #1B5E37; letter-spacing: -0.3px;">${{ formatMoney(comprobanteAbono.saldoNuevo) }}</p>
                 </div>
+              </div>
+              <!-- Aparte del saldo: el saldo queda fijo tras el pago, la mora sigue sumando cada día. -->
+              <div v-if="comprobanteAbono.moraPendiente > 0" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 10px 12px;">
+                <div style="min-width: 0;">
+                  <p style="margin: 0; font-size: 9.5px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: #c2410c;">Mora pendiente</p>
+                  <!-- Con la fecha escrita: el detalle del préstamo muestra la mora a hoy, que ya es mayor. -->
+                  <p style="margin: 3px 0 0; font-size: 11px; line-height: 1.3; color: #9a3412;">Al {{ comprobanteAbono.fecha }} · sube cada día hasta pagarla</p>
+                </div>
+                <p style="margin: 0; flex-shrink: 0; font-size: 15px; font-weight: 800; color: #c2410c; letter-spacing: -0.3px;">${{ formatMoney(comprobanteAbono.moraPendiente) }}</p>
               </div>
 
               <!-- Código y marca en una sola línea discreta: es referencia, no lo que se viene a mirar -->
@@ -1552,17 +1560,9 @@
             id="comprobante-pagado"
             style="width: 100%; position: relative; background: #ffffff; border-radius: 22px; overflow: hidden; font-family: 'Mulish', system-ui, -apple-system, 'Segoe UI', sans-serif; box-shadow: 0 22px 44px -20px rgba(15,23,42,0.35); border: 1px solid rgba(15,23,42,0.08);"
           >
-            <!-- Cabecera marca verde + hero del total -->
-            <div style="background: #1B5E37; padding: 22px 22px 22px; color: #ffffff;">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 34px; height: 34px; border-radius: 10px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.28); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-                </div>
-                <div style="min-width: 0;">
-                  <p style="margin: 0; font-size: 14px; font-weight: 800; letter-spacing: -0.2px; line-height: 1.15;">Comprobante de pago</p>
-                  <p style="margin: 2px 0 0; font-size: 9.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.72);">Préstamo liquidado</p>
-                </div>
-              </div>
+            <!-- Cabecera con la identidad del tipo + hero del total -->
+            <div style="background: #1B5E37; padding: 18px 22px 22px; color: #ffffff;">
+              <TipoComprobante clave="prestamoPagado" />
 
               <div style="text-align: center; margin-top: 20px;">
                 <p style="margin: 0; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.72);">Total pagado</p>
@@ -2275,7 +2275,7 @@
                     :class="prestamoDetalle.estado === 'pagado' ? 'text-texto-tenue' : (estadoResumenDetalle.alerta ? 'text-[color:var(--brand-danger)] oscuro:text-peligro' : 'text-texto-fuerte')"
                   >${{ formatMoney(prestamoDetalle.estado === 'pagado' ? 0 : saldoConMora(prestamoDetalle)) }}</dd>
                   <dd v-if="prestamoDetalle.estado !== 'pagado' && prestamoDetalle.moraAcumulada > 0" class="text-[10px] leading-tight tabular-nums text-[color:var(--brand-danger)] oscuro:text-peligro sm:text-[11px]">
-                    incluye mora ${{ formatMoney(prestamoDetalle.moraAcumulada) }}
+                    incluye mora a hoy ${{ formatMoney(prestamoDetalle.moraAcumulada) }}
                   </dd>
                   <dd v-else class="text-[10px] leading-tight text-texto-suave sm:text-[11px]">{{ prestamoDetalle.estado === 'pagado' ? 'Pagado' : 'por pagar' }}</dd>
                 </div>
@@ -2299,8 +2299,31 @@
                   </span>
                 </div>
                 <p class="text-xs text-red-800 oscuro:text-red-300">
-                  Cuotas vencidas ${{ formatMoney(prestamoDetalle.valorCuotasEnDeuda || 0) }} + mora ${{ formatMoney(prestamoDetalle.moraAcumulada || 0) }}
+                  Cuotas vencidas ${{ formatMoney(prestamoDetalle.valorCuotasEnDeuda || 0) }} + mora a hoy ${{ formatMoney(prestamoDetalle.moraAcumulada || 0) }}
                 </p>
+                <!-- De dónde sale la mora: plegado para no cargar el resumen. -->
+                <button
+                  v-if="detalleMora.filas.length > 0"
+                  type="button"
+                  class="-mx-1 mt-1 inline-flex min-h-[44px] touch-manipulation items-center gap-1 px-1 text-xs font-bold text-red-900 underline-offset-2 hover:underline oscuro:text-red-300"
+                  :aria-expanded="verDetalleMora"
+                  @click="verDetalleMora = !verDetalleMora"
+                >
+                  {{ verDetalleMora ? 'Ocultar detalle de la mora' : 'Ver detalle de la mora' }}
+                  <ChevronDownIcon class="h-4 w-4 transition-transform" :class="verDetalleMora ? 'rotate-180' : ''" />
+                </button>
+                <div v-if="verDetalleMora && detalleMora.filas.length > 0" class="mt-1 rounded-xl bg-superficie-tarjeta/80 px-3 py-2 oscuro:bg-superficie-tarjeta">
+                  <p class="text-[11px] text-texto-suave">{{ detalleMora.regla }}</p>
+                  <ul class="mt-1 divide-y divide-borde-suave">
+                    <li v-for="f in detalleMora.filas" :key="f.clave" class="py-2">
+                      <div class="flex items-baseline justify-between gap-2">
+                        <span class="text-sm font-bold text-texto-fuerte">{{ f.titulo }}</span>
+                        <span class="text-sm font-extrabold" :class="f.mora > 0 ? 'text-rose-700 oscuro:text-rose-300' : 'text-texto-suave'">${{ formatMoney(f.mora) }}</span>
+                      </div>
+                      <p class="text-xs text-texto-secundario">{{ f.detalle }}</p>
+                    </li>
+                  </ul>
+                </div>
               </div>
               <!-- Al día: cuándo toca la próxima -->
               <div v-else-if="prestamoDetalle.estado !== 'pagado' && proximaCuotaPago" class="flex items-center justify-between gap-3 border-t border-borde-suave bg-[#f6fbf7] oscuro:bg-superficie-suave px-4 py-3">
@@ -2374,30 +2397,41 @@
                   como botones con nombre en su propia fila (antes, tres íconos grises sueltos).
                 -->
                 <li v-for="pago in pagosCicloActual" :key="pago.id" class="px-4 py-3">
+                  <!--
+                    Pocas líneas: el valor pagado manda; fecha y forma de pago van a su lado en
+                    pequeño; las cuotas, una línea cada una (número, estado y monto). El detalle
+                    de «cuánto llevaba» queda en el `title` y la mora por cuota en el comprobante.
+                  -->
                   <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
-                      <!-- Lo que pagó el socio. Si incluyó mora, se separa: esa parte fue a utilidades y no bajó el saldo. -->
-                      <p class="font-display text-lg font-extrabold leading-tight tabular-nums text-texto-fuerte">${{ formatMoney((parseFloat(pago.valor) || 0) + (parseFloat(pago.mora_cobrada) || 0)) }}</p>
-                      <p v-if="(parseFloat(pago.mora_cobrada) || 0) > 0" class="text-xs tabular-nums text-texto-secundario">
-                        ${{ formatMoney(pago.valor) }} al préstamo · <span class="font-semibold text-rose-700 oscuro:text-rose-300">${{ formatMoney(pago.mora_cobrada) }} mora</span>
+                      <p class="font-display text-2xl font-extrabold leading-tight tabular-nums text-marca-tinta">${{ formatMoney((parseFloat(pago.valor) || 0) + (parseFloat(pago.mora_cobrada) || 0)) }}</p>
+                      <!-- Si incluyó mora, se separa: esa parte fue a utilidades y no bajó el saldo. -->
+                      <p v-if="(parseFloat(pago.mora_cobrada) || 0) > 0" class="text-xs tabular-nums text-texto-suave">
+                        incluye <span class="font-semibold text-rose-700 oscuro:text-rose-300">${{ formatMoney(pago.mora_cobrada) }} de mora</span>
                       </p>
                     </div>
-                    <span class="flex-shrink-0 pt-1 text-xs font-semibold text-texto-suave">{{ formatDate(pago.fecha) }}</span>
+                    <div class="flex-shrink-0 pt-0.5 text-right text-xs text-texto-suave">
+                      <p class="font-semibold">{{ formatDate(pago.fecha) }}</p>
+                      <p v-if="formaPagoAbono(pago) || pago.origen === 'cuota_natillera'">
+                        <template v-if="formaPagoAbono(pago)">{{ FORMA_PAGO_ABONO_ESTILO[formaPagoAbono(pago)].label }}</template><template v-if="pago.origen === 'cuota_natillera'"><template v-if="formaPagoAbono(pago)"> · </template>desde Cuotas</template>
+                      </p>
+                    </div>
                   </div>
 
-                  <div class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <template v-if="Array.isArray(pago.numeros_cuota) && pago.numeros_cuota.length > 0">
-                      <span
-                        v-for="(periodo, idx) in periodosDeNumerosCuota(pago.numeros_cuota)"
-                        :key="`${pago.id}-periodo-${idx}`"
-                        class="inline-flex items-center whitespace-nowrap rounded-full bg-marca-suave px-2 py-0.5 text-[11px] font-bold text-marca-tinta"
-                        :title="`Cuota correspondiente al período ${periodo}`"
-                      >{{ periodo }}</span>
-                    </template>
-                    <span class="text-[11px] text-texto-suave">
-                      <template v-if="formaPagoAbono(pago)">{{ FORMA_PAGO_ABONO_ESTILO[formaPagoAbono(pago)].label }} · </template>{{ pago.origen === 'cuota_natillera' ? 'desde Cuotas' : 'desde Préstamos' }}
-                    </span>
-                  </div>
+                  <ul v-if="(repartoAbonosCiclo.get(pago.id) || []).some(f => f.abonado > 0)" class="mt-2 border-l-2 border-borde pl-3">
+                    <li
+                      v-for="f in repartoAbonosCiclo.get(pago.id).filter(f => f.abonado > 0)"
+                      :key="`${pago.id}-cuota-${f.numero}`"
+                      class="flex items-baseline justify-between gap-3 py-0.5 text-sm"
+                      :title="f.previo > 0 ? `La cuota ya tenía $${formatMoney(f.previo)} de $${formatMoney(f.valorCuota)}` : undefined"
+                    >
+                      <span class="min-w-0 text-texto-secundario">
+                        Cuota {{ f.numero }}
+                        <span class="ml-1 text-xs font-bold" :class="f.completa ? 'text-marca-tinta' : 'text-[color:var(--brand-warning)] oscuro:text-alerta'">{{ etiquetaFilaReparto(f) }}</span>
+                      </span>
+                      <span class="flex-shrink-0 font-semibold tabular-nums text-texto-secundario">${{ formatMoney(f.abonado) }}</span>
+                    </li>
+                  </ul>
 
                   <div v-if="pago.codigo_comprobante || !soloLectura" class="mt-2.5 grid grid-cols-3 gap-2">
                     <button
@@ -2438,11 +2472,22 @@
             <!-- Condiciones del crédito y refinanciaciones: referencia -->
             <template v-if="pestanaDetalle === 'condiciones'">
               <section class="rounded-2xl border border-borde/80 bg-superficie-tarjeta p-4 shadow-sm">
-                <dl class="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
-                  <div>
+                <!-- Las tres cifras del crédito van juntas en la primera fila, también en móvil -->
+                <dl class="grid grid-cols-3 gap-x-3 border-b border-borde-suave pb-3">
+                  <div class="min-w-0">
                     <dt class="text-[11px] uppercase tracking-wide text-texto-suave">Monto prestado</dt>
-                    <dd class="font-bold tabular-nums text-texto-fuerte">${{ formatMoney(prestamoDetalle.monto) }}</dd>
+                    <dd class="truncate font-bold tabular-nums text-texto-fuerte">${{ formatMoney(prestamoDetalle.monto) }}</dd>
                   </div>
+                  <div class="min-w-0">
+                    <dt class="text-[11px] uppercase tracking-wide text-texto-suave">Total a pagar</dt>
+                    <dd class="truncate font-bold tabular-nums text-texto-fuerte">${{ formatMoney((prestamoDetalle.monto || 0) + (calcularInteresGeneradoDetalle(prestamoDetalle) || 0)) }}</dd>
+                  </div>
+                  <div class="min-w-0">
+                    <dt class="text-[11px] uppercase tracking-wide text-texto-suave">Interés generado</dt>
+                    <dd class="truncate font-bold tabular-nums text-[color:var(--brand-warning)] oscuro:text-alerta">${{ formatMoney(calcularInteresGeneradoDetalle(prestamoDetalle)) }}</dd>
+                  </div>
+                </dl>
+                <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
                   <div>
                     <dt class="text-[11px] uppercase tracking-wide text-texto-suave">Interés mensual</dt>
                     <dd class="font-bold tabular-nums text-texto-fuerte">{{ prestamoDetalle.interes }}%</dd>
@@ -2460,14 +2505,6 @@
                     <dd class="text-[11px] leading-tight text-texto-suave">
                       {{ interesAnticipadoDetalle ? 'Se descontó al entregar el préstamo' : 'Normal: va dentro de cada cuota' }}
                     </dd>
-                  </div>
-                  <div>
-                    <dt class="text-[11px] uppercase tracking-wide text-texto-suave">Interés generado</dt>
-                    <dd class="font-bold tabular-nums text-[color:var(--brand-warning)] oscuro:text-alerta">${{ formatMoney(calcularInteresGeneradoDetalle(prestamoDetalle)) }}</dd>
-                  </div>
-                  <div>
-                    <dt class="text-[11px] uppercase tracking-wide text-texto-suave">Total a pagar</dt>
-                    <dd class="font-bold tabular-nums text-texto-fuerte">${{ formatMoney((prestamoDetalle.monto || 0) + (calcularInteresGeneradoDetalle(prestamoDetalle) || 0)) }}</dd>
                   </div>
                   <div>
                     <dt class="text-[11px] uppercase tracking-wide text-texto-suave">Cuotas</dt>
@@ -2702,14 +2739,11 @@
             <div
               style="width: 100%; position: relative; background: #ffffff; border-radius: 22px; overflow: hidden; font-family: 'Mulish', system-ui, -apple-system, 'Segoe UI', sans-serif; box-shadow: 0 22px 44px -20px rgba(15,23,42,0.35); border: 1px solid rgba(15,23,42,0.08);"
             >
-              <!-- Cabecera marca verde + hero del monto (compacta) -->
+              <!-- Cabecera con la identidad del tipo + hero del monto (compacta) -->
               <div style="background: #1B5E37; padding: 16px 20px 18px; color: #ffffff;">
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
-                  <div style="display: flex; align-items: center; gap: 9px; min-width: 0;">
-                    <div style="width: 30px; height: 30px; border-radius: 9px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.28); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                    </div>
-                    <p style="margin: 0; font-size: 12.5px; font-weight: 800; letter-spacing: -0.1px; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Comprobante de préstamo</p>
+                  <div style="min-width: 0;">
+                    <TipoComprobante clave="prestamoEstado" />
                   </div>
                   <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.26); border-radius: 9999px; padding: 3px 10px;">
                     <span style="width: 5px; height: 5px; border-radius: 50%; background: #6ee7b7; display: inline-block;"></span>
@@ -2760,6 +2794,8 @@
                       <p style="margin: 0; font-size: 10px; font-weight: 800; letter-spacing: 0.3px; text-transform: uppercase; color: #1B5E37;">Pagado a la fecha</p>
                     </div>
                     <p style="margin: 8px 0 0; font-size: 23px; font-weight: 800; color: #1B5E37; letter-spacing: -0.6px; line-height: 1;">${{ formatMoney(calcularValorPagadoDetalle(prestamoDetalle)) }}</p>
+                    <!-- La mora no baja el saldo, por eso va aparte del valor pagado al préstamo -->
+                    <p v-if="moraPagadaComprobanteExistente.total > 0" style="margin: 6px 0 0; font-size: 11px; font-weight: 700; color: #b45309;">+ ${{ formatMoney(moraPagadaComprobanteExistente.total) }} interés de mora</p>
                   </div>
                   <div
                     :style="{
@@ -2877,6 +2913,7 @@
                             :style="{ color: parseFloat(cuota.valor_pagado || 0) > 0 ? '#1B5E37' : '#9ca3af' }"
                           >
                             ${{ formatMoney(cuota.valor_pagado || 0) }}
+                            <span v-if="moraPagadaComprobanteExistente.porCuota.get(cuota.numero_cuota) > 0" style="display: block; font-size: 8.5px; font-weight: 700; color: #b45309;">+${{ formatMoney(moraPagadaComprobanteExistente.porCuota.get(cuota.numero_cuota)) }} mora</span>
                           </td>
                           <td style="padding: 5px 4px; text-align: center; vertical-align: top;">
                             <span :style="estiloBadgeEstadoCuotaComprobante(cuota)">{{ etiquetaEstadoCuotaComprobante(cuota) }}</span>
@@ -3427,6 +3464,7 @@ import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useSessionDraftPersistence } from '../../composables/useSessionDraftPersistence'
 import { useModalStack, __modalStackSync } from '../../composables/useModalStack'
 import ModalWrapper from '../../components/ModalWrapper.vue'
+import TipoComprobante from '../../components/comprobantes/TipoComprobante.vue'
 import PrestamosSkeleton from '../../components/PrestamosSkeleton.vue'
 import ExplicacionInteresPrestamo from '../../components/ExplicacionInteresPrestamo.vue'
 import RecorridoInteractivo from '../../components/RecorridoInteractivo.vue'
@@ -4304,33 +4342,6 @@ function formatMoney(value) {
   return new Intl.NumberFormat('es-CO').format(value || 0)
 }
 
-const MESES_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-
-function etiquetaPeriodoCuotaPrestamo(cuota, periodicidad) {
-  if (!cuota) return null
-  let mes = cuota.mes
-  let anio = cuota.anio
-  let quincena = cuota.quincena
-  // Si falta cualquier dato (mes, anio o quincena cuando es quincenal), derivar de fecha_proyectada.
-  if (mes == null || anio == null || ((periodicidad || 'mensual') === 'quincenal' && quincena == null)) {
-    if (cuota.fecha_proyectada) {
-      const d = parseDateLocal(cuota.fecha_proyectada) || new Date(cuota.fecha_proyectada)
-      if (!isNaN(d.getTime())) {
-        if (mes == null) mes = d.getMonth() + 1
-        if (anio == null) anio = d.getFullYear()
-        if (quincena == null) quincena = d.getDate() <= 15 ? 1 : 2
-      }
-    }
-  }
-  if (mes == null || anio == null) return null
-  const nombreMes = MESES_ES[mes - 1] || ''
-  if ((periodicidad || 'mensual') === 'quincenal') {
-    const q = quincena === 2 ? '2da' : '1ra'
-    return `${q} quincena ${nombreMes} ${anio}`
-  }
-  return `${nombreMes} ${anio}`
-}
-
 // Determina la forma de pago de un abono usando el desglose efectivo/transferencia.
 function formaPagoAbono(pago) {
   if (!pago) return null
@@ -4346,35 +4357,6 @@ const FORMA_PAGO_ABONO_ESTILO = {
   efectivo: { label: 'Efectivo', icon: '💵', clase: 'bg-green-50 oscuro:bg-green-500/15 text-green-700 oscuro:text-green-300 border-green-200/70 oscuro:border-green-500/30' },
   transferencia: { label: 'Transferencia', icon: '🏦', clase: 'bg-blue-50 oscuro:bg-blue-500/15 text-blue-700 oscuro:text-blue-300 border-blue-200/70 oscuro:border-blue-500/30' },
   mixto: { label: 'Mixto', icon: '🔀', clase: 'bg-purple-50 oscuro:bg-purple-500/15 text-purple-700 oscuro:text-purple-300 border-purple-200/70 oscuro:border-purple-500/30' }
-}
-
-const cuotaPorNumeroMap = computed(() => {
-  const map = new Map()
-  for (const c of (planPagosPrestamo.value || [])) {
-    if (c.numero_cuota != null) map.set(c.numero_cuota, c)
-  }
-  return map
-})
-
-function periodosDeNumerosCuota(numerosCuota) {
-  if (!Array.isArray(numerosCuota) || numerosCuota.length === 0) return []
-  // Mostrar quincena (1ra/2da) si el socio en la natillera es quincenal o si el préstamo lo es.
-  const periodicidadSocio = prestamoDetalle.value?.socio_natillera?.periodicidad
-  const periodicidadPrestamo = prestamoDetalle.value?.periodicidad
-  const periodicidad = (periodicidadSocio === 'quincenal' || periodicidadPrestamo === 'quincenal')
-    ? 'quincenal'
-    : (periodicidadPrestamo || periodicidadSocio || 'mensual')
-  const labels = []
-  const seen = new Set()
-  for (const n of numerosCuota) {
-    const cuota = cuotaPorNumeroMap.value.get(n)
-    const label = etiquetaPeriodoCuotaPrestamo(cuota, periodicidad)
-    if (label && !seen.has(label)) {
-      seen.add(label)
-      labels.push(label)
-    }
-  }
-  return labels
 }
 
 function formatCurrencyInput(value) {
@@ -4574,6 +4556,22 @@ const proximaCuotaPago = computed(() => {
 })
 
 // Helper para verificar si una fecha está vencida (para usar en el template)
+/**
+ * Vencida = pasó la fecha MÁS los días de gracia, igual que la mora. Antes se miraba solo la
+ * fecha y una cuota en gracia salía «Vencida» sin mora, que no cuadraba.
+ */
+function cuotaVencida(cuota) {
+  if (!cuota?.fecha_proyectada) return false
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+  return fechaLimiteSinMora(cuota, diasGraciaPrestamos.value) < hoy
+}
+
+// Pasó la fecha pero sigue dentro de la gracia: aún se puede pagar sin mora.
+function cuotaEnGracia(cuota) {
+  return !!cuota?.fecha_proyectada && esFechaVencida(cuota.fecha_proyectada) && !cuotaVencida(cuota)
+}
+
 function esFechaVencida(fecha) {
   if (!fecha) return false
   const fechaParsed = parseDateLocal(fecha)
@@ -4595,7 +4593,7 @@ const estadoPrestamoDetalle = computed(() =>
 )
 const cuotasPagadasDetalle = computed(() => planPagosPrestamo.value.filter(c => c.pagada).length)
 const cuotasVencidasDetalle = computed(() =>
-  planPagosPrestamo.value.filter(c => !c.pagada && esFechaVencida(c.fecha_proyectada)).length
+  planPagosPrestamo.value.filter(c => !c.pagada && cuotaVencida(c)).length
 )
 const porcentajeCuotasDetalle = computed(() => {
   const total = planPagosPrestamo.value.length
@@ -4673,6 +4671,44 @@ const interesAnticipadoDetalle = computed(() => {
   return !!p.interes_anticipado
 })
 
+// Desglose de la mora del detalle: por cuota, días de atraso y capital sobre el que corre.
+// Usa las mismas reglas que `calcularMoraCuota` para que la suma dé la mora del resumen.
+const verDetalleMora = ref(false)
+const detalleMora = computed(() => {
+  const tasa = Number(reglasInteresNatillera.value.tasa_mora) || 0
+  const gracia = Number(diasGraciaPrestamos.value) || 0
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+  const filas = []
+  for (const c of planPagosPrestamo.value) {
+    const guardada = Math.round(parseFloat(c.mora_pendiente) || 0)
+    if (guardada > 0) {
+      filas.push({ clave: `${c.id}-g`, titulo: `Cuota ${c.numero_cuota} · mora sin cobrar`, mora: guardada, detalle: 'Quedó pendiente cuando se pagó la cuota' })
+    }
+    if (c.pagada) continue
+    const enGracia = cuotaEnGracia(c)
+    if (!cuotaVencida(c) && !enGracia) continue
+    const valorCuota = parseFloat(c.valor_cuota) || 0
+    const pendiente = Math.max(0, valorCuota - (parseFloat(c.valor_pagado) || 0))
+    const capitalPendiente = valorCuota > 0 ? Math.round((parseFloat(c.capital) || 0) * (pendiente / valorCuota)) : 0
+    const limite = fechaLimiteSinMora(c, gracia)
+    if (enGracia) {
+      const quedan = Math.round((limite - hoy) / 86400000) + 1
+      filas.push({ clave: c.id, titulo: `Cuota ${c.numero_cuota} · en gracia`, mora: 0, detalle: `Venció el ${formatDate(c.fecha_proyectada)} · sin mora ${quedan === 1 ? 'hasta hoy' : `por ${quedan} días más`}` })
+      continue
+    }
+    const dias = Math.floor((hoy - limite) / 86400000)
+    filas.push({
+      clave: c.id,
+      titulo: `Cuota ${c.numero_cuota} · ${dias} ${dias === 1 ? 'día' : 'días'} de atraso`,
+      mora: Math.round(calcularMoraCuota(c, tasa, hoy, gracia)),
+      detalle: `Venció el ${formatDate(c.fecha_proyectada)} · capital pendiente $${formatMoney(capitalPendiente)}`
+    })
+  }
+  const regla = `${tasa} % mensual sobre el capital pendiente${gracia > 0 ? ` · ${gracia} ${gracia === 1 ? 'día' : 'días'} de gracia` : ''}`
+  return { filas, regla }
+})
+
 const opcionesPestanaDetalle = computed(() => [
   { value: 'plan', label: `Plan (${planPagosPrestamo.value.length})` },
   { value: 'abonos', label: `Abonos (${pagosCicloActual.value.length})` },
@@ -4682,7 +4718,9 @@ const opcionesPestanaDetalle = computed(() => [
 function estadoCuotaDetalle(cuota) {
   if (cuota.pagada) return { texto: 'Pagada', clase: 'ds-badge--success', circulo: 'bg-marca-suave text-marca-tinta' }
   if (parseFloat(cuota.valor_pagado || 0) > 0) return { texto: 'Parcial', clase: 'ds-badge--warning', circulo: 'bg-amber-100 oscuro:bg-amber-500/15 text-amber-800 oscuro:text-amber-300' }
-  if (esFechaVencida(cuota.fecha_proyectada)) return { texto: 'Vencida', clase: 'ds-badge--danger', circulo: 'bg-red-100 oscuro:bg-red-500/15 text-red-700 oscuro:text-red-300' }
+  if (cuotaVencida(cuota)) return { texto: 'Vencida', clase: 'ds-badge--danger', circulo: 'bg-red-100 oscuro:bg-red-500/15 text-red-700 oscuro:text-red-300' }
+  // Cian, no ámbar: ámbar ya es «Parcial» y la cuota en gracia no debe nada de mora.
+  if (cuotaEnGracia(cuota)) return { texto: 'En gracia', clase: 'bg-cyan-100 text-cyan-800 oscuro:bg-cyan-500/15 oscuro:text-cyan-300', circulo: 'bg-cyan-100 oscuro:bg-cyan-500/15 text-cyan-800 oscuro:text-cyan-300' }
   return { texto: 'Pendiente', clase: 'ds-badge--muted', circulo: 'bg-superficie-hundida text-texto-secundario' }
 }
 
@@ -4699,7 +4737,8 @@ function etiquetaEstadoCuotaComprobante(cuota) {
   if (cuotaPagadaCompletaComprobante(cuota)) return 'Pagada'
   const vp = parseFloat(cuota.valor_pagado || 0)
   if (vp > 0) return 'Parcial'
-  if (esFechaVencida(cuota.fecha_proyectada)) return 'Vencida'
+  if (cuotaVencida(cuota)) return 'Vencida'
+  if (cuotaEnGracia(cuota)) return 'En gracia'
   return 'Pendiente'
 }
 
@@ -4721,6 +4760,8 @@ function estiloBadgeEstadoCuotaComprobante(cuota) {
   if (e === 'Pagada') return { ...base, background: '#d1fae5', color: '#059669' }
   if (e === 'Parcial') return { ...base, background: '#dbeafe', color: '#1d4ed8' }
   if (e === 'Vencida') return { ...base, background: '#fef3c7', color: '#b45309' }
+  // Distinto de «Parcial» (azul) y «Vencida» (ámbar): en gracia aún no corre mora.
+  if (e === 'En gracia') return { ...base, background: '#cffafe', color: '#0e7490' }
   return { ...base, background: '#f3f4f6', color: '#4b5563' }
 }
 
@@ -4733,6 +4774,99 @@ const planPagosComprobanteExistente = computed(() => {
       ? [...planPagosPrestamo.value]
       : todosLosPlanesPagos.value.filter((c) => c.prestamo_id === pid)
   return rows.sort((a, b) => (Number(a.numero_cuota) || 0) - (Number(b.numero_cuota) || 0))
+})
+
+/*
+ * Reparto de cada abono del ciclo vigente entre las cuotas del plan: cuánto puso en cada
+ * una, si la terminó de pagar y cuánta mora se le cobró. Los abonos llenan las cuotas en
+ * orden de fecha (como `recalcularPlanPagosPrestamo`): cada abono ocupa un tramo de esa fila
+ * y a cada cuota le toca lo que su tramo se solapa con el del abono.
+ * La mora se guarda por abono (`mora_cobrada`), no por cuota: la pendiente que el abono saldó
+ * va a su cuota (`mora_movimientos` con delta negativo) y el resto, proporcional a lo abonado.
+ * @returns {Map<string, { numero: number, fecha: string, abonado: number, completa: boolean, previo: number, valorCuota: number, mora: number }[]>}
+ */
+const repartoAbonosCiclo = computed(() => {
+  const porPago = new Map()
+  const pid = prestamoDetalle.value?.id
+  const plan = planPagosComprobanteExistente.value
+  if (!pid || plan.length === 0) return porPago
+  const numeroDePlan = new Map(plan.map(c => [c.id, c.numero_cuota]))
+  const pagos = (pagosPrestamo.value || [])
+    .filter(pg => pg.prestamo_id === pid && !pg.refinanciacion_id)
+    .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+  let inicio = 0
+  for (const pg of pagos) {
+    const valor = parseFloat(pg.valor) || 0
+    const fin = inicio + valor
+    const filas = []
+    let acum = 0
+    for (const c of plan) {
+      const valorCuota = parseFloat(c.valor_cuota) || 0
+      const finCuota = acum + valorCuota
+      const tramo = Math.min(fin, finCuota) - Math.max(inicio, acum)
+      acum = finCuota
+      // `previo`: lo que abonos anteriores ya habían puesto en esta cuota; si es > 0, este abono
+      // continúa una cuota empezada (y si la termina, está pagando el restante).
+      if (tramo > 0) filas.push({ numero: c.numero_cuota, fecha: c.fecha_proyectada, tramo, abonado: Math.round(tramo), completa: finCuota <= fin, previo: Math.round(Math.max(0, inicio - (finCuota - valorCuota))), valorCuota: Math.round(valorCuota), mora: 0 })
+    }
+    // Redondeo: la suma por cuota da exacto lo abonado; el peso que falte va a la última.
+    if (filas.length) filas[filas.length - 1].abonado += Math.round(valor) - filas.reduce((t, f) => t + f.abonado, 0)
+
+    let mora = Math.round(parseFloat(pg.mora_cobrada) || 0)
+    const filaDe = (numero) => {
+      let f = filas.find(x => x.numero === numero)
+      if (!f && numero != null) {
+        // Mora pendiente de una cuota que este abono no tocó en capital.
+        const c = plan.find(x => x.numero_cuota === numero)
+        f = { numero, fecha: c?.fecha_proyectada, tramo: 0, abonado: 0, completa: !!c?.pagada, previo: 0, valorCuota: Math.round(parseFloat(c?.valor_cuota) || 0), mora: 0 }
+        filas.push(f)
+      }
+      return f
+    }
+    for (const mov of Array.isArray(pg.mora_movimientos) ? pg.mora_movimientos : []) {
+      const delta = Math.round(parseFloat(mov?.delta) || 0)
+      if (delta >= 0 || mora <= 0) continue
+      const f = filaDe(numeroDePlan.get(mov.plan_id))
+      if (!f) continue
+      const toma = Math.min(-delta, mora)
+      f.mora += toma
+      mora -= toma
+    }
+    const conTramo = filas.filter(f => f.tramo > 0)
+    const base = conTramo.reduce((t, f) => t + f.tramo, 0)
+    if (mora > 0 && base > 0) {
+      let repartido = 0
+      conTramo.forEach((f, i) => {
+        const parte = i === conTramo.length - 1 ? mora - repartido : Math.round(mora * f.tramo / base)
+        f.mora += parte
+        repartido += parte
+      })
+    }
+    porPago.set(pg.id, filas.sort((a, b) => a.numero - b.numero))
+    inicio = fin
+  }
+  return porPago
+})
+
+/** «pagada» de una vez, «restante» si termina una cuota empezada por otro abono, si no «parcial». */
+function etiquetaFilaReparto(f) {
+  if (f.abonado <= 0) return 'mora pendiente'
+  if (!f.completa) return 'parcial'
+  return f.previo > 0 ? 'restante' : 'pagada'
+}
+
+/** Interés de mora pagado por cuota y en total en el ciclo vigente (sale del reparto de abonos). */
+const moraPagadaComprobanteExistente = computed(() => {
+  const porCuota = new Map()
+  let total = 0
+  for (const filas of repartoAbonosCiclo.value.values()) {
+    for (const f of filas) {
+      if (f.mora <= 0) continue
+      porCuota.set(f.numero, (porCuota.get(f.numero) || 0) + f.mora)
+      total += f.mora
+    }
+  }
+  return { porCuota, total }
 })
 
 /** Al día / en mora (N cuotas) junto al socio en el comprobante; si no hay plan, usa cuotasVencidas del listado. */
@@ -5344,6 +5478,17 @@ async function fetchSocios() {
 }
 
 // Función para actualizar un préstamo específico en la lista con toda su información
+/**
+ * Detalle refrescado tras un abono. La fila de `prestamos` que devuelve el update solo trae
+ * saldo y estado: la mora, las cuotas vencidas y «Para ponerse al día» se calculan en
+ * `actualizarPrestamoEnLista`, y sin copiarlos el detalle seguía mostrando la mora de antes
+ * del abono (con las cuotas que ese abono ya pagó).
+ */
+function detalleConDatosDeLista(prestamoId, fila) {
+  const enLista = prestamos.value.find(p => p.id === prestamoId)
+  return { ...prestamoDetalle.value, ...fila, ...(enLista || {}) }
+}
+
 async function actualizarPrestamoEnLista(prestamoId) {
   try {
     // Obtener el préstamo actualizado de la base de datos
@@ -5509,26 +5654,75 @@ async function actualizarPrestamoEnLista(prestamoId) {
  * liquidarla exacto según el plan; si no, la cuota estándar acotada al saldo.
  */
 /**
- * Cuotas que tocó un abono y siguen sin completarse, con lo que les falta. Sale del plan
- * actual: si después se completaron, ya no aparecen.
+ * Cuánto fue a cada cuota en un abono y qué les quedó faltando. Reproduce el reparto de
+ * `recalcularPlanPagosPrestamo`: los abonos del ciclo, por fecha, llenan las cuotas en
+ * orden, así que el abono ocupa un tramo de esa fila y a cada cuota le toca lo que su
+ * tramo se solapa con el del abono. El pendiente sale del plan actual: si la cuota se
+ * completó después, ya no aparece.
  */
-async function cuotasPendientesDelAbono(prestamoId, pagoId) {
+/**
+ * Mora que quedó debiendo el socio justo después de un abono, a la fecha de ese abono. Va en
+ * el comprobante aparte del saldo: el saldo queda fijo, la mora sigue corriendo cada día.
+ * El plan de hoy ya tiene encima los abonos posteriores, así que se reconstruye cuánto llevaba
+ * pagado cada cuota con lo abonado hasta este pago (`fin`), igual que el reparto.
+ */
+function moraPendienteTrasAbono(plan, pagos, pago, fin) {
+  const tasa = reglasInteresNatillera.value.tasa_mora
+  const gracia = diasGraciaPrestamos.value
+  const corte = pago.fecha ? parseDateLocal(String(pago.fecha).slice(0, 10)) : new Date()
+  let acum = 0
+  let mora = 0
+  for (const c of plan) {
+    const valorCuota = parseFloat(c.valor_cuota) || 0
+    const pagadoHasta = Math.min(valorCuota, Math.max(0, fin - acum))
+    acum += valorCuota
+    mora += calcularMoraCuota({ ...c, valor_pagado: pagadoHasta }, tasa, corte, gracia)
+  }
+  // La mora que se dejó sin cobrar en cuotas pagadas solo se conoce como está hoy: cuenta
+  // si este es el último abono, porque entonces «hoy» es justo después de él.
+  const esUltimo = pagos[pagos.length - 1]?.id === pago.id
+  if (esUltimo) mora += moraPendienteGuardada(cuotasConMoraPendienteDe(plan))
+  return Math.round(mora)
+}
+
+async function repartoDelAbono(prestamoId, pagoId) {
+  const vacio = { abonadas: [], pendientes: [], moraPendiente: 0 }
   try {
-    const { data: pago } = await supabase.from('pagos_prestamo').select('numeros_cuota').eq('id', pagoId).maybeSingle()
-    const numeros = Array.isArray(pago?.numeros_cuota) ? pago.numeros_cuota : []
-    if (numeros.length === 0) return []
-    const { data: plan } = await supabase
-      .from('plan_pagos_prestamo')
-      .select('numero_cuota, valor_cuota, valor_pagado, pagada')
-      .eq('prestamo_id', prestamoId)
-      .in('numero_cuota', numeros)
-    return (plan || [])
-      .filter(c => !c.pagada)
-      .map(c => ({ numero: c.numero_cuota, pendiente: Math.round((parseFloat(c.valor_cuota) || 0) - (parseFloat(c.valor_pagado) || 0)) }))
-      .filter(c => c.pendiente > 0)
-      .sort((a, b) => a.numero - b.numero)
+    const [{ data: pagos }, { data: plan }] = await Promise.all([
+      supabase.from('pagos_prestamo').select('id, valor, fecha').eq('prestamo_id', prestamoId).is('refinanciacion_id', null).order('fecha', { ascending: true }).order('created_at', { ascending: true }),
+      supabase.from('plan_pagos_prestamo').select('numero_cuota, valor_cuota, valor_pagado, pagada, capital, fecha_proyectada, mora_pendiente').eq('prestamo_id', prestamoId).order('numero_cuota', { ascending: true })
+    ])
+    if (!pagos?.length || !plan?.length) return vacio
+    let inicio = 0
+    for (const p of pagos) {
+      if (p.id === pagoId) break
+      inicio += parseFloat(p.valor) || 0
+    }
+    const pago = pagos.find(p => p.id === pagoId)
+    if (!pago) return vacio
+    const fin = inicio + (parseFloat(pago.valor) || 0)
+    const abonadas = []
+    const pendientes = []
+    let acum = 0
+    for (const c of plan) {
+      const valorCuota = parseFloat(c.valor_cuota) || 0
+      const finCuota = acum + valorCuota
+      const tramo = Math.min(fin, finCuota) - Math.max(inicio, acum)
+      acum = finCuota
+      if (tramo <= 0) continue
+      const pendiente = c.pagada ? 0 : Math.round(valorCuota - (parseFloat(c.valor_pagado) || 0))
+      // «Completa» = este abono la terminó de pagar (aunque otro abono anterior pusiera una parte).
+      abonadas.push({ numero: c.numero_cuota, abonado: Math.round(tramo), completa: finCuota <= fin, previo: Math.round(Math.max(0, inicio - acum + valorCuota)) })
+      if (pendiente > 0) pendientes.push({ numero: c.numero_cuota, pendiente })
+    }
+    // Redondeo: la suma por cuota debe dar exacto lo abonado; el peso que falte va a la última.
+    const diferencia = Math.round(parseFloat(pago.valor) || 0) - abonadas.reduce((s, a) => s + a.abonado, 0)
+    if (abonadas.length && Math.abs(diferencia) <= abonadas.length) abonadas[abonadas.length - 1].abonado += diferencia
+    // Si el abono pasó del total del plan, lo que sobra bajó el saldo sin caer en ninguna cuota.
+    else if (abonadas.length && diferencia > 0) abonadas.push({ numero: null, abonado: diferencia, completa: true })
+    return { abonadas, pendientes, moraPendiente: moraPendienteTrasAbono(plan, pagos, pago, fin) }
   } catch {
-    return []
+    return vacio
   }
 }
 
@@ -5753,6 +5947,26 @@ function descargarComprobanteAbono() {
   }))
 }
 
+/**
+ * Saldo que quedó justo después de un abono: al saldo de hoy se le suman los abonos
+ * posteriores del mismo ciclo. Los abonos de un ciclo cerrado por
+ * refinanciación parten del saldo que tenía el préstamo al refinanciar.
+ */
+function saldoTrasPago(pago, prestamo) {
+  const ciclo = pago.refinanciacion_id || null
+  const base = ciclo
+    ? parseFloat(historialRefinanciaciones.value.find(h => h.id === ciclo)?.saldo_actual_anterior)
+    : parseFloat(prestamo.saldo_actual)
+  if (!Number.isFinite(base)) return parseFloat(prestamo.saldo_actual) || 0
+  // Mismo orden que usa el recálculo del plan: por fecha y, a igual fecha, por registro.
+  const clave = p => `${p.fecha || ''}|${p.created_at || ''}|${p.id}`
+  const claveDelPago = clave(pago)
+  const posteriores = pagosPrestamo.value
+    .filter(p => (p.refinanciacion_id || null) === ciclo && p.id !== pago.id && clave(p) > claveDelPago)
+    .reduce((s, p) => s + (parseFloat(p.valor) || 0), 0)
+  return Math.max(0, base + posteriores)
+}
+
 async function reenviarComprobanteAbono(pago) {
   if (!pago || !pago.codigo_comprobante) {
     notificationStore.error('Este abono no tiene código de comprobante', 'Error')
@@ -5770,9 +5984,11 @@ async function reenviarComprobanteAbono(pago) {
     const socioNombre = prestamo.socio_natillera?.socio?.nombre || 'Socio'
     const socioTelefono = prestamo.socio_natillera?.socio?.telefono || null
     
+    // El saldo nuevo es el que quedó tras ESTE pago, no el de hoy: antes se tomaba
+    // `saldo_actual` y un comprobante viejo mostraba lo que se debe ahora.
     // Saldo anterior = saldo nuevo + lo que se abonó + la mora que se cobró: lo que debía
     // antes del pago, mora incluida, para que la resta cuadre con el valor pagado.
-    const saldoNuevo = parseFloat(prestamo.saldo_actual) || 0
+    const saldoNuevo = saldoTrasPago(pago, prestamo)
     const saldoAnterior = saldoNuevo + (parseFloat(pago.valor) || 0) + (Math.round(parseFloat(pago.mora_cobrada) || 0))
     
     // Preparar datos del comprobante
@@ -5814,8 +6030,8 @@ async function reenviarComprobanteAbono(pago) {
     
     // Abrir modal de comprobante
     modalComprobanteAbono.value = true
-    cuotasPendientesDelAbono(prestamo.id, pago.id).then(lista => {
-      if (comprobanteAbono.value?.pagoPrestamoId === pago.id) comprobanteAbono.value = { ...comprobanteAbono.value, cuotasPendientes: lista }
+    repartoDelAbono(prestamo.id, pago.id).then(({ abonadas, pendientes, moraPendiente }) => {
+      if (comprobanteAbono.value?.pagoPrestamoId === pago.id) comprobanteAbono.value = { ...comprobanteAbono.value, cuotasAbonadas: abonadas, cuotasPendientes: pendientes, moraPendiente }
     })
   } catch (e) {
     console.error('Error al preparar comprobante:', e)
@@ -6009,6 +6225,7 @@ async function abrirModalDetalle(prestamo) {
   // Cerrar el desplegable antes de abrir el modal
   planPagosExpandido.value = false
   prestamoDetalle.value = prestamo
+  verDetalleMora.value = false
   modalDetalle.value = true
   await Promise.all([
     fetchPagosPrestamo(prestamo.id),
@@ -7557,7 +7774,7 @@ async function handleRegistrarAbono() {
         fetchPlanPagosPrestamo(prestamoIdAbonado)
       ])
       // Actualizar también el préstamo en el detalle
-      prestamoDetalle.value = { ...prestamoDetalle.value, ...data }
+      prestamoDetalle.value = detalleConDatosDeLista(prestamoIdAbonado, data)
     }
     
     // Preparar datos del comprobante
@@ -7589,29 +7806,30 @@ async function handleRegistrarAbono() {
     modalComprobanteAbono.value = true
     // El plan ya se recalculó: se ve qué quedó debiendo de las cuotas que tocó el abono.
     const pagoIdComprobante = pagoInsertado[0].id
-    cuotasPendientesDelAbono(prestamoIdAbonado, pagoIdComprobante).then(lista => {
-      if (comprobanteAbono.value?.pagoPrestamoId === pagoIdComprobante) comprobanteAbono.value = { ...comprobanteAbono.value, cuotasPendientes: lista }
+    repartoDelAbono(prestamoIdAbonado, pagoIdComprobante).then(({ abonadas, pendientes, moraPendiente }) => {
+      if (comprobanteAbono.value?.pagoPrestamoId === pagoIdComprobante) comprobanteAbono.value = { ...comprobanteAbono.value, cuotasAbonadas: abonadas, cuotasPendientes: pendientes, moraPendiente }
     })
     
     // SIEMPRE recargar los pagos si el modal de detalle está abierto para este préstamo
     if (estabaEnDetalle) {
       console.log('🔄 Actualizando modal de detalle después del abono')
       // Actualizar el préstamo en el detalle con los nuevos datos
-      prestamoDetalle.value = { ...prestamoDetalle.value, ...data }
+      prestamoDetalle.value = detalleConDatosDeLista(prestamoIdAbonado, data)
       // Esperar un momento para que la base de datos se actualice completamente
       await new Promise(resolve => setTimeout(resolve, 500))
       // Recargar los pagos del préstamo
       console.log('🔄 Recargando pagos para préstamo:', prestamoIdAbonado)
       await fetchPagosPrestamo(prestamoIdAbonado)
-      // Asegurarse de que el modal de detalle esté abierto y cerrar el desplegable
-      planPagosExpandido.value = false // Cerrar el desplegable
-      modalDetalle.value = true
+      // No se reabre el detalle aquí: está guardado en la pila de modales debajo del
+      // comprobante y vuelve solo al cerrarlo. Forzar `modalDetalle = true` lo ponía encima
+      // y la pila ocultaba el comprobante a los 500 ms («se cerraba solo»).
+      planPagosExpandido.value = false
       console.log('✅ Modal de detalle actualizado, pagos recargados. Total pagos:', pagosPrestamo.value.length)
       console.log('📋 Lista de pagos:', pagosPrestamo.value)
     } else if (modalDetalle.value && prestamoDetalle.value && prestamoDetalle.value.id === prestamoIdAbonado) {
       // Si el modal de detalle está abierto para este préstamo, recargar también
       console.log('🔄 Recargando pagos en modal de detalle abierto')
-      prestamoDetalle.value = { ...prestamoDetalle.value, ...data }
+      prestamoDetalle.value = detalleConDatosDeLista(prestamoIdAbonado, data)
       await new Promise(resolve => setTimeout(resolve, 500))
       await fetchPagosPrestamo(prestamoIdAbonado)
       console.log('✅ Pagos recargados. Total:', pagosPrestamo.value.length)
@@ -8098,6 +8316,8 @@ async function abrirModalCompartirPrestamo() {
   modalCompartirPrestamo.value = true
   await Promise.all([
     fetchPlanPagosPrestamo(prestamoDetalle.value.id),
+    // Los abonos traen la mora cobrada que se muestra en «Abonado».
+    fetchPagosPrestamo(prestamoDetalle.value.id),
     fetchHistorialRefinanciaciones(prestamoDetalle.value.id)
   ])
   await nextTick()

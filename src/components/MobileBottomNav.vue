@@ -53,7 +53,7 @@
           @click="irACaja(opcion.ruta)"
         >
           <component :is="opcion.icono" class="h-5 w-5 flex-shrink-0" />
-          <span class="text-[10px] font-semibold leading-tight">{{ opcion.etiqueta }}</span>
+          <span class="max-w-[76px] text-center text-[10px] font-semibold leading-tight">{{ opcion.etiqueta }}</span>
         </button>
       </div>
     </Transition>
@@ -578,13 +578,13 @@ function isActive(path) {
 const menuCajaAbierto = ref(false)
 const menuCajaRef = ref(null)
 
-/* Los destinos que agrupa «Caja». Etiquetas de una palabra: van bajo un icono. */
+/* Los destinos que agrupa «Caja». Van bajo un icono: una etiqueta larga parte en dos líneas centradas. */
 const opcionesCaja = computed(() => {
   const base = `/natilleras/${natilleraId.value}`
   return [
     {
       clave: 'pagos',
-      etiqueta: 'Pagos',
+      etiqueta: 'Historial de pagos',
       icono: ReceiptPercentIcon,
       ruta: `${base}/pagos`,
       esActual: rutaEnSeccion(route.path, `${base}/pagos`)

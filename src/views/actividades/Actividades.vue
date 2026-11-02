@@ -751,21 +751,22 @@
       card-max-width="28rem"
       @close="comprobanteActividad = null"
     >
-        <div class="relative w-full flex-shrink-0 bg-[#1B5E37] text-white overflow-hidden">
-          <div class="flex min-h-[4.2rem] items-center gap-2 pb-3 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top))]">
-            <div class="flex min-w-0 flex-1 items-center gap-2">
-              <div class="w-10 h-10 flex-shrink-0 rounded-xl border border-white/25 bg-white/15 flex items-center justify-center">
-                <CheckIcon class="w-5 h-5 text-white" />
-              </div>
-              <div class="min-w-0 flex-1">
-                <h3 class="text-base font-display font-bold leading-tight">¡Pago registrado!</h3>
-                <p class="mt-0.5 truncate text-[0.6875rem] text-white/90">Comprobante {{ comprobanteActividad?.codigo }}</p>
-              </div>
-            </div>
-            <button type="button" class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15 touch-manipulation" aria-label="Cerrar" @click="comprobanteActividad = null">
-              <XMarkIcon class="w-6 h-6" />
-            </button>
-          </div>
+        <!--
+          Sin cabecera de marca: el ticket ya trae la suya (verde, con el tipo de comprobante) y
+          dos cabeceras verdes seguidas sobraban. Solo una barra mínima con la confirmación y la X,
+          que tiene que seguir a mano (excepción al patrón de la skill de modales, a pedido).
+        -->
+        <div class="flex flex-shrink-0 items-center gap-2 bg-emerald-50/60 oscuro:bg-emerald-500/15 pl-4 pr-2 pt-[max(0.25rem,env(safe-area-inset-top))]">
+          <CheckCircleIcon class="h-5 w-5 flex-shrink-0 text-marca-tinta" aria-hidden="true" />
+          <p class="min-w-0 flex-1 truncate text-sm font-bold text-marca-tinta">Pago registrado</p>
+          <button
+            type="button"
+            class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-texto-medio transition hover:bg-superficie-suave active:bg-superficie-hundida [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            @click="comprobanteActividad = null"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
         </div>
 
         <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -776,9 +777,11 @@
         >
           <!-- Lo que se captura con toPng: el recibo, sin botones ni cabecera. Siempre en claro
                (data-tema): se comparte por WhatsApp y se imprime -->
-          <div ref="comprobanteActividadRef" data-tema="claro" class="rounded-2xl border border-emerald-200 oscuro:border-emerald-500/30 bg-superficie-tarjeta p-5">
-            <p class="text-center font-display text-base font-bold text-marca-tinta">{{ comprobanteActividad?.natilleraNombre }}</p>
-            <p class="mt-0.5 text-center text-[11px] uppercase tracking-widest text-slate-400 oscuro:text-texto-tenue">Comprobante de pago</p>
+          <div ref="comprobanteActividadRef" data-tema="claro" class="overflow-hidden rounded-2xl border border-emerald-200 oscuro:border-emerald-500/30 bg-superficie-tarjeta p-5">
+            <!-- Identidad del tipo: pago de actividad -->
+            <div class="-mx-5 -mt-5 mb-1 px-5 py-4" style="background: #1B5E37;">
+              <TipoComprobante clave="actividad" :detalle="comprobanteActividad?.natilleraNombre || ''" />
+            </div>
 
             <div class="my-4 border-t border-dashed border-slate-200 oscuro:border-borde"></div>
 
@@ -3817,6 +3820,7 @@ import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useNatiscroll } from '../../composables/useNatiscroll'
 import { useEliminarPagoActividad } from '../../composables/useEliminarPagoActividad'
 import ModalWrapper from '../../components/ModalWrapper.vue'
+import TipoComprobante from '../../components/comprobantes/TipoComprobante.vue'
 import IconoWhatsApp from '../../components/iconos/IconoWhatsApp.vue'
 import NatiscrollHint from '../../components/NatiscrollHint.vue'
 import ActividadCard from '../../components/ActividadCard.vue'

@@ -11,9 +11,9 @@
     :style="{ width: fluido ? '100%' : '400px' }"
     style="box-sizing: border-box; background: #ffffff; border-radius: 20px; overflow: hidden; border: 1px solid #e5e7eb; font-family: Mulish, system-ui, -apple-system, 'Segoe UI', sans-serif; color: #0f172a;"
   >
-    <div style="background: #1B5E37; color: #ffffff; padding: 20px 22px 18px;">
-      <p style="margin: 0; font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.75);">Comprobante de cierre</p>
-      <div style="margin-top: 10px; display: flex; align-items: center; gap: 12px;">
+    <div style="background: #1B5E37; color: #ffffff; padding: 18px 22px 18px;">
+      <TipoComprobante clave="cierre" />
+      <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.22); display: flex; align-items: center; gap: 12px;">
         <span style="width: 40px; height: 40px; flex-shrink: 0; border-radius: 9999px; background: rgba(255,255,255,0.16); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800;">{{ iniciales }}</span>
         <span style="min-width: 0; font-size: 18px; font-weight: 800; line-height: 1.2;">{{ nombre }}</span>
       </div>
@@ -107,6 +107,7 @@
 <script setup>
 import { computed } from 'vue'
 import { formatMoney } from '../../utils/formatMoney'
+import TipoComprobante from '../comprobantes/TipoComprobante.vue'
 
 const props = defineProps({
   /** Fila del cierre tal como la arma `NatilleraCierre`. */

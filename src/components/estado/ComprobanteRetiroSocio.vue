@@ -12,8 +12,8 @@
     <div style="position: relative; background: #ffffff; border-radius: 18px; overflow: hidden; box-shadow: 0 10px 30px -12px rgba(15, 83, 45, 0.35);">
       <!-- Cabecera -->
       <div style="background: #1B5E37; color: #ffffff; padding: 18px 20px 16px;">
-        <p style="margin: 0; font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.75);">Liquidación por retiro</p>
-        <p style="margin: 6px 0 0; font-size: 19px; font-weight: 800; line-height: 1.2;">{{ datos.socioNombre || 'Socio' }}</p>
+        <TipoComprobante clave="retiro" />
+        <p style="margin: 14px 0 0; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.22); font-size: 19px; font-weight: 800; line-height: 1.2;">{{ datos.socioNombre || 'Socio' }}</p>
         <p style="margin: 4px 0 0; font-size: 12px; color: rgba(255,255,255,0.8);">{{ datos.fecha }}</p>
       </div>
 
@@ -71,6 +71,7 @@
 <script setup>
 import { computed } from 'vue'
 import { formatMoney } from '../../utils/formatMoney'
+import TipoComprobante from '../comprobantes/TipoComprobante.vue'
 
 const props = defineProps({
   /**

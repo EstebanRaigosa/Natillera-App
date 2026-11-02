@@ -300,7 +300,7 @@ const routes = [
         name: 'PagosSocios',
         component: PagosSocios,
         props: true,
-        meta: { title: 'Pagos de los socios', temaOscuro: true }
+        meta: { title: 'Historial de pagos', temaOscuro: true }
       },
       {
         path: 'natilleras/:id/movimientos',

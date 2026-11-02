@@ -132,6 +132,37 @@
             </ul>
           </section>
 
+          <!-- 1b. Cuotas con varios abonos: qué abonos se muestran en el comprobante -->
+          <section v-if="cuotasConVariosAbonos.length > 0">
+            <p class="mb-2 text-xs font-bold uppercase tracking-wide text-texto-suave">Abonos a mostrar</p>
+            <div class="space-y-2.5">
+              <div v-for="c in cuotasConVariosAbonos" :key="c.cuotaId" class="rounded-xl border border-borde bg-superficie-suave/60 p-2.5">
+                <p class="px-1 pb-1.5 text-sm font-semibold text-texto-fuerte">{{ c.periodo }}</p>
+                <ul class="space-y-1">
+                  <li v-for="a in c.abonos" :key="a.id">
+                    <button
+                      type="button"
+                      role="checkbox"
+                      :aria-checked="abonoElegido(c.cuotaId, a.id)"
+                      class="flex min-h-[44px] w-full touch-manipulation items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors"
+                      :class="abonoElegido(c.cuotaId, a.id) ? 'bg-marca-suave' : 'hover:bg-superficie-hundida'"
+                      @click="alternarAbono(c.cuotaId, a.id)"
+                    >
+                      <span
+                        class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2"
+                        :class="abonoElegido(c.cuotaId, a.id) ? 'border-[#1B5E37] oscuro:border-marca-tinta bg-[#1B5E37] text-white' : 'border-borde-fuerte bg-superficie-tarjeta'"
+                      >
+                        <CheckIcon v-if="abonoElegido(c.cuotaId, a.id)" class="h-3.5 w-3.5" stroke-width="3" />
+                      </span>
+                      <span class="min-w-0 flex-1 text-sm text-texto-medio">{{ a.fecha }} · {{ a.forma }}</span>
+                      <span class="flex-shrink-0 text-sm font-bold tabular-nums text-texto-fuerte">${{ formatMoney(a.valor) }}</span>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
           <!-- 2. El comprobante tal cual se va a enviar: esto es lo que se convierte en imagen -->
           <section v-if="periodosElegidos.length > 0">
             <p v-if="!esReciboDePago" class="mb-2 text-xs font-bold uppercase tracking-wide text-texto-suave">Así se enviará</p>
@@ -147,10 +178,8 @@
               style="box-sizing: border-box; width: 100%; background: #ffffff; border-radius: 20px; overflow: hidden; border: 1px solid #e5e7eb; font-family: Mulish, system-ui, -apple-system, 'Segoe UI', sans-serif; color: #0f172a;"
             >
               <div style="background: #1B5E37; color: #ffffff; padding: 18px 20px 16px;">
-                <p style="margin: 0; font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.75);">
-                  Comprobante de pago · {{ conteoElegidos }}
-                </p>
-                <div style="margin-top: 10px; display: flex; align-items: center; gap: 12px;">
+                <TipoComprobante clave="cuota" titulo="Pago de cuotas" :detalle="conteoElegidos" />
+                <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.22); display: flex; align-items: center; gap: 12px;">
                   <span style="width: 40px; height: 40px; flex-shrink: 0; border-radius: 9999px; background: rgba(255,255,255,0.16); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800;">{{ iniciales }}</span>
                   <span style="min-width: 0; font-size: 18px; font-weight: 800; line-height: 1.2;">{{ socioNombre }}</span>
                 </div>
@@ -332,6 +361,7 @@ import { useTapadoInferior } from '../../composables/useTapadoInferior'
 import { detectIosPlatform } from '../../composables/useIsIos'
 import { useNotificationStore } from '../../stores/notifications'
 import { formatMoney } from '../../utils/formatMoney'
+import TipoComprobante from '../comprobantes/TipoComprobante.vue'
 import { numeroWhatsApp } from '../../utils/telefono'
 import IconoWhatsApp from '../iconos/IconoWhatsApp.vue'
 
@@ -376,6 +406,12 @@ const actividadesAparte = ref([])
 const actividadesSocio = ref({})
 const planSocio = ref({})
 const seleccion = reactive(new Set())
+/*
+ * Cuotas con varios abonos: cuáles de esos abonos (filas de historial_pagos_cuota) entran al
+ * comprobante. cuotaId → Set de ids. Por defecto, los de la transacción recién hecha o, si
+ * no la hay, todos.
+ */
+const abonosElegidos = reactive(new Map())
 
 useBodyScrollLock(computed(() => props.show))
 const { tapado } = useTapadoInferior()
@@ -425,7 +461,7 @@ async function cargarPagos() {
       const [resHist, resPlan] = await Promise.all([
         supabase
           .from('historial_pagos_cuota')
-          .select('cuota_id, fecha_pago, forma_pago, valor_actividades, valor_cuotas_prestamo, detalle_actividades, detalle_cuotas_prestamo')
+          .select('id, cuota_id, fecha_pago, forma_pago, valor_cuota, valor_sancion, valor_actividades, valor_cuotas_prestamo, impuesto_4x1000, detalle_actividades, detalle_cuotas_prestamo')
           .in('cuota_id', ids)
           .order('fecha_pago', { ascending: true }),
         supabase
@@ -458,6 +494,7 @@ async function cargarPagos() {
         transaccion: deEsta.length > 0 ? deEsta : null
       }
     })
+    iniciarAbonosElegidos()
     seleccionarUltimoDia()
   } catch (e) {
     errorCarga.value = e?.message || 'No se pudieron cargar los pagos'
@@ -642,6 +679,14 @@ const periodosCuotas = computed(() => {
         const v = Math.round(aNumero(valor))
         if (v > 0) lineas.push({ nombre, tipo, valor: v })
       }
+      // Con varios abonos se arma con los elegidos; si son todos (y no es un recibo), sigue el
+      // cálculo acumulado de abajo, que cubre también lo pagado sin fila en el historial.
+      const elegidos = abonosElegidos.get(c.id)
+      if (elegidos && historialCuota.length > 1) {
+        const filas = historialCuota.filter(h => elegidos.has(h.id))
+        const todos = filas.length === historialCuota.length
+        if (filas.length > 0 && !(todos && !transaccion)) return periodoDeTransaccion(c, filas, lineas, agregar, plan)
+      }
       if (transaccion) return periodoDeTransaccion(c, transaccion, lineas, agregar, plan)
       const historial = historialCuota
       const fuera = porFueraPorCuota.value[c.id]
@@ -813,6 +858,53 @@ const porFueraPorCuota = computed(() => {
 
 const periodos = computed(() => periodosCuotas.value)
 
+function iniciarAbonosElegidos() {
+  abonosElegidos.clear()
+  for (const { cuota, historial, transaccion } of pagos.value) {
+    if (historial.length < 2) continue
+    const ids = transaccion ? transaccion.map(h => h.id).filter(Boolean) : []
+    abonosElegidos.set(cuota.id, new Set(ids.length > 0 ? ids : historial.map(h => h.id)))
+  }
+}
+
+function montoAbono(h) {
+  return Math.round(aNumero(h.valor_cuota) + aNumero(h.valor_sancion) + aNumero(h.valor_actividades) + aNumero(h.valor_cuotas_prestamo) + aNumero(h.impuesto_4x1000))
+}
+
+/** Cuotas elegidas que tienen más de un abono, con sus abonos para escoger. */
+const cuotasConVariosAbonos = computed(() =>
+  periodosElegidos.value
+    .map(p => {
+      const pago = pagos.value.find(x => x.cuota.id === p.cuotaId)
+      if (!pago || pago.historial.length < 2) return null
+      return {
+        cuotaId: p.cuotaId,
+        periodo: p.periodo,
+        abonos: pago.historial.map(h => ({
+          id: h.id,
+          fecha: fechaCorta(h.fecha_pago),
+          forma: nombreForma(h.forma_pago),
+          valor: montoAbono(h)
+        }))
+      }
+    })
+    .filter(Boolean)
+)
+
+function abonoElegido(cuotaId, id) {
+  return !!abonosElegidos.get(cuotaId)?.has(id)
+}
+
+// Al menos un abono por cuota: para sacar la cuota entera se desmarca la cuota
+function alternarAbono(cuotaId, id) {
+  const actual = new Set(abonosElegidos.get(cuotaId) || [])
+  if (actual.has(id)) {
+    if (actual.size === 1) return
+    actual.delete(id)
+  } else actual.add(id)
+  abonosElegidos.set(cuotaId, actual)
+}
+
 // Por defecto: las cuotas pagadas el último día que el socio pagó (el caso típico de
 // «pagó varias de una vez»).
 function seleccionarUltimoDia() {
@@ -932,6 +1024,7 @@ async function prepararImagen() {
 }
 
 watch(() => [...seleccion].join(','), programarImagen)
+watch(() => [...abonosElegidos].map(([id, set]) => `${id}:${[...set].join('.')}`).join('|'), programarImagen)
 
 function textoMensaje() {
   return `${props.socioNombre || 'Socio'} - Comprobante de ${conteoElegidos.value}: $${formatMoney(totalGeneral.value)}`

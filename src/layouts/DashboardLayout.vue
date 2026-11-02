@@ -135,7 +135,7 @@
                 @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/pagos')"
               >
                 <ReceiptPercentIcon class="w-5 h-5 shrink-0" />
-                <span class="sidebar-option-label">Pagos</span>
+                <span class="sidebar-option-label">Historial de pagos</span>
               </button>
               <button
                 v-if="permisosNat.puedeVer('caja')"

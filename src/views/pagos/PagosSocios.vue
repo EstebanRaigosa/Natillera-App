@@ -9,8 +9,7 @@
           </div>
           <div class="min-w-0 flex-1">
             <h1 class="ds-page-header__title truncate">
-              <span class="sm:hidden">Pagos</span>
-              <span class="hidden sm:inline">Pagos de los socios</span>
+              Historial de pagos
             </h1>
             <p class="ds-page-header__sub hidden sm:block">
               Todo lo que ha pagado cada socio, mes a mes: cuotas, sanciones, actividades y préstamos

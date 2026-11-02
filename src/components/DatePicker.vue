@@ -17,7 +17,9 @@
       <CalendarDaysIcon class="w-5 h-5 text-texto-tenue" />
     </div>
 
-    <!-- Calendario desplegable -->
+    <!-- Calendario desplegable: flotante sobre la página (Teleport + fixed). Dentro de un modal con
+         scroll, un desplegable absoluto quedaba cortado y obligaba a desplazarse para ver los días. -->
+    <Teleport to="body">
     <Transition
       enter-active-class="transition duration-200 ease-out"
       enter-from-class="opacity-0 scale-95 -translate-y-2"
@@ -28,10 +30,27 @@
     >
       <div 
         v-if="isOpen"
-        class="absolute z-50 mt-2 bg-superficie-tarjeta rounded-2xl shadow-2xl border border-borde-suave p-3 w-[min(21rem,calc(100vw-2rem))]"
-        :class="dropdownPosition"
+        ref="dropdownRef"
+        class="fixed z-[200] bg-superficie-tarjeta rounded-2xl shadow-2xl border border-borde-suave p-3 w-[min(21rem,calc(100vw-2rem))]"
         :style="dropdownStyle"
       >
+        <!-- Acciones rápidas arriba: son lo más usado y quedan a la vista sin bajar por el mes -->
+        <div class="flex gap-2 mb-3 pb-3 border-b border-borde-suave">
+          <button 
+            type="button"
+            @click="selectToday"
+            class="flex-1 min-h-11 touch-manipulation px-3 py-2 text-xs font-semibold text-natillera-600 oscuro:text-natillera-300 bg-natillera-50 oscuro:bg-natillera-500/15 hover:bg-natillera-100 oscuro:hover:bg-natillera-500/15 rounded-lg transition-colors"
+          >
+            Hoy
+          </button>
+          <button 
+            type="button"
+            @click="clearDate"
+            class="flex-1 min-h-11 touch-manipulation px-3 py-2 text-xs font-semibold text-texto-secundario bg-superficie-suave hover:bg-superficie-hundida rounded-lg transition-colors"
+          >
+            Limpiar
+          </button>
+        </div>
         <!-- Header del calendario -->
         <div class="flex items-center justify-between mb-4">
           <button 
@@ -100,30 +119,14 @@
           </button>
         </div>
 
-        <!-- Acciones rápidas -->
-        <div class="flex gap-2 mt-4 pt-3 border-t border-borde-suave">
-          <button 
-            type="button"
-            @click="selectToday"
-            class="flex-1 min-h-11 touch-manipulation px-3 py-2 text-xs font-semibold text-natillera-600 oscuro:text-natillera-300 bg-natillera-50 oscuro:bg-natillera-500/15 hover:bg-natillera-100 oscuro:hover:bg-natillera-500/15 rounded-lg transition-colors"
-          >
-            Hoy
-          </button>
-          <button 
-            type="button"
-            @click="clearDate"
-            class="flex-1 min-h-11 touch-manipulation px-3 py-2 text-xs font-semibold text-texto-secundario bg-superficie-suave hover:bg-superficie-hundida rounded-lg transition-colors"
-          >
-            Limpiar
-          </button>
-        </div>
       </div>
     </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { CalendarDaysIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -153,6 +156,7 @@ const emit = defineEmits(['update:modelValue'])
 
 const isOpen = ref(false)
 const containerRef = ref(null)
+const dropdownRef = ref(null)
 const currentMonth = ref(new Date().getMonth())
 const currentYear = ref(new Date().getFullYear())
 
@@ -163,40 +167,57 @@ const monthNames = [
 
 const weekDays = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do']
 
-const dropdownPosition = computed(() => {
-  return 'left-0'
+// Antes de medir se pinta fuera de vista para no ver un salto desde (0,0)
+const dropdownStyle = ref({ top: '-9999px', left: '0px' })
+const MARGEN = 8
+
+// Abre debajo del campo si cabe; si no, encima; si tampoco, pegado al borde visible.
+// Se mide con visualViewport porque el teclado y el zoom de iOS achican el área visible
+// sin cambiar window.innerHeight.
+function posicionarCalendario() {
+  if (!containerRef.value || !dropdownRef.value) return
+  const rect = containerRef.value.getBoundingClientRect()
+  const vv = window.visualViewport
+  const altoVisible = vv ? vv.height + vv.offsetTop : window.innerHeight
+  const anchoVisible = vv ? vv.width + vv.offsetLeft : window.innerWidth
+  const alto = dropdownRef.value.offsetHeight
+  const ancho = dropdownRef.value.offsetWidth
+
+  let top
+  if (altoVisible - rect.bottom - MARGEN >= alto) top = rect.bottom + MARGEN
+  else if (rect.top - MARGEN >= alto) top = rect.top - MARGEN - alto
+  else top = Math.max(MARGEN, altoVisible - alto - MARGEN)
+
+  const left = Math.min(Math.max(16, rect.left), Math.max(16, anchoVisible - ancho - 16))
+  dropdownStyle.value = { top: `${top}px`, left: `${left}px` }
+}
+
+// Con el calendario abierto, sigue al campo si el contenedor hace scroll (captura: el scroll
+// del cuerpo del modal no burbujea) o si cambia el viewport (rotación, teclado, zoom).
+function escucharPosicion(activo) {
+  const accion = activo ? 'addEventListener' : 'removeEventListener'
+  window[accion]('scroll', posicionarCalendario, true)
+  window[accion]('resize', posicionarCalendario)
+  window[accion]('orientationchange', posicionarCalendario)
+  window.visualViewport?.[accion]('resize', posicionarCalendario)
+  window.visualViewport?.[accion]('scroll', posicionarCalendario)
+}
+
+watch(isOpen, async (open) => {
+  escucharPosicion(open)
+  if (!open) {
+    dropdownStyle.value = { top: '-9999px', left: '0px' }
+    return
+  }
+  await nextTick()
+  posicionarCalendario()
 })
 
-const dropdownStyle = ref({})
-
-// Calcular posición del calendario cuando se abre
-watch(isOpen, (open) => {
-  if (open) {
-    setTimeout(() => {
-      if (!containerRef.value) return
-      
-      const rect = containerRef.value.getBoundingClientRect()
-      const viewportWidth = window.innerWidth
-      const calendarWidth = Math.min(336, viewportWidth - 32) // w-[min(21rem,100vw-2rem)]
-      const spaceOnRight = viewportWidth - rect.right
-      const spaceOnLeft = rect.left
-      
-      // Si no hay espacio a la derecha, posicionar a la izquierda
-      if (spaceOnRight < calendarWidth && spaceOnLeft > calendarWidth) {
-        dropdownStyle.value = {
-          left: 'auto',
-          right: '0'
-        }
-      } else {
-        dropdownStyle.value = {
-          left: '0',
-          right: 'auto'
-        }
-      }
-    }, 10)
-  } else {
-    dropdownStyle.value = {}
-  }
+// Un mes de 6 semanas es más alto que uno de 5: si abrió encima del campo, hay que reubicarlo
+watch([currentMonth, currentYear], async () => {
+  if (!isOpen.value) return
+  await nextTick()
+  posicionarCalendario()
 })
 
 // Mostrar la fecha en formato dd/mm/yyyy
@@ -297,9 +318,10 @@ function clearDate() {
 
 // Cerrar al hacer clic fuera
 function handleClickOutside(event) {
-  if (containerRef.value && !containerRef.value.contains(event.target)) {
-    isOpen.value = false
-  }
+  // El calendario vive en <body> (Teleport): tocarlo no es «fuera» aunque no esté dentro del campo
+  if (containerRef.value?.contains(event.target)) return
+  if (dropdownRef.value?.contains(event.target)) return
+  isOpen.value = false
 }
 
 // Además de `click`, `touchstart`: Safari en iOS no emite click al tocar zonas no
@@ -312,6 +334,7 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
   document.removeEventListener('touchstart', handleClickOutside)
+  escucharPosicion(false)
 })
 
 // Actualizar el mes/año cuando cambia el valor

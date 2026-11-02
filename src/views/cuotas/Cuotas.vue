@@ -1346,11 +1346,7 @@
             :id="grupo.cuotas.some(c => esPrimerFlujoSocioCuota(c)) ? 'tour-primer-flujo-socio-cuota-card' : undefined"
             @click="abrirModalCuotasSocio(grupo)"
             class="cursor-pointer rounded-xl border border-borde border-l-[5px] bg-superficie-tarjeta p-3 active:bg-superficie-suave"
-            :class="[
-              estadoTarjetaSocio(grupo) === 'pagada' ? 'border-l-green-500' :
-              estadoTarjetaSocio(grupo) === 'mora' ? 'border-l-red-500' :
-              'border-l-orange-400'
-            ]"
+            :class="ACENTO_CUOTA[estadoTarjetaSocio(grupo)].franja"
             style="touch-action: manipulation;"
           >
             <!--
@@ -1391,7 +1387,8 @@
                   class="text-[10.5px] font-bold uppercase leading-none tracking-wide"
                   :class="grupo.totalAPagar > 0 ? 'text-texto-suave' : 'text-exito'"
                 >
-                  {{ grupo.totalAPagar > 0 ? 'Debe' : 'Al día' }}
+                  <!-- Si todo lo que falta es programado aún no lo debe: «Por pagar», no «Debe» -->
+                  {{ grupo.totalAPagar <= 0 ? 'Al día' : estadoTarjetaSocio(grupo) === 'programada' ? 'Por pagar' : 'Debe' }}
                 </p>
                 <p
                   class="mt-1 text-[17px] font-extrabold leading-none tabular-nums"
@@ -1407,8 +1404,9 @@
               :class="grupo.periodos.length > 1 ? 'grid-cols-2' : 'grid-cols-1'"
             >
               <!-- Un periodo por cobrar es un botón que abre directo el pago de esa cuota (misma
-                   regla que «Pagar» en la modal del socio). Uno pagado, o para el visor, no
-                   captura el toque: sube a la tarjeta y abre la modal del socio. -->
+                   regla que «Pagar» en la modal del socio, que también deja adelantar una
+                   programada). Uno pagado, o para el visor, no captura el toque: sube a la
+                   tarjeta y abre la modal del socio. -->
               <component
                 :is="p.pagable && !esVisor ? 'button' : 'section'"
                 v-for="p in grupo.periodos"
@@ -1416,18 +1414,28 @@
                 :type="p.pagable && !esVisor ? 'button' : undefined"
                 class="flex min-w-0 flex-col rounded-lg border px-2.5 py-2 text-left"
                 :class="[
-                  CLASES_BLOQUE_PERIODO[p.estado],
+                  ESTILO_PERIODO_TARJETA[p.estado].bloque,
                   p.pagable && !esVisor ? 'cursor-pointer active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca-tinta' : ''
                 ]"
                 :style="p.pagable && !esVisor ? 'touch-action: manipulation;' : undefined"
                 :aria-label="p.pagable && !esVisor
-                  ? `Pagar ${p.etiqueta}: ${p.estado === 'mora' ? 'en mora' : 'falta'} $${formatMoney(p.debe)}`
-                  : `${p.etiqueta}: ${p.debe > 0 ? `debe $${formatMoney(p.debe)}` : 'pagada'}`"
+                  ? `Pagar ${p.etiqueta}, ${ETIQUETA_ESTADO_PERIODO[p.estado].toLowerCase()}: ${textoPiePeriodo(p).toLowerCase()} $${formatMoney(p.debe)}`
+                  : `${p.etiqueta}, ${ETIQUETA_ESTADO_PERIODO[p.estado].toLowerCase()}${p.debe > 0 ? `: ${textoPiePeriodo(p).toLowerCase()} $${formatMoney(p.debe)}` : ''}`"
                 @click="alTocarPeriodoTarjeta(p, $event)"
               >
-                <p class="truncate text-[11px] font-bold uppercase leading-tight tracking-wide text-texto-medio">
-                  {{ p.etiqueta }}
-                </p>
+                <!-- Periodo y badge de estado en una fila; si en un teléfono angosto no caben
+                     juntos, el badge baja a la línea siguiente en vez de cortarse -->
+                <div class="flex flex-wrap items-center justify-between gap-x-1.5 gap-y-1">
+                  <p class="min-w-0 truncate text-[11px] font-bold uppercase leading-tight tracking-wide text-texto-medio">
+                    {{ p.etiqueta }}
+                  </p>
+                  <span
+                    class="inline-flex flex-shrink-0 items-center rounded-full px-1.5 py-[3px] text-[10px] font-bold leading-none"
+                    :class="ESTILO_PERIODO_TARJETA[p.estado].badge"
+                  >
+                    {{ ETIQUETA_ESTADO_PERIODO[p.estado] }}
+                  </span>
+                </div>
                 <ul class="mt-1.5 flex-1 space-y-1 text-xs leading-tight">
                   <li v-for="c in p.conceptos" :key="c.clave">
                     <div class="flex items-center justify-between gap-1.5">
@@ -1442,7 +1450,7 @@
                         <span
                           v-else
                           class="mx-[3px] h-1.5 w-1.5 flex-shrink-0 rounded-full"
-                          :class="p.estado === 'mora' ? 'bg-red-500' : 'bg-amber-500'"
+                          :class="ESTILO_PERIODO_TARJETA[p.estado].punto"
                           role="img"
                           aria-label="Falta"
                         />
@@ -1466,20 +1474,23 @@
                 </ul>
                 <p
                   class="mt-1.5 flex items-center justify-between gap-1.5 border-t pt-1.5 text-xs font-extrabold leading-tight"
-                  :class="p.estado === 'mora' ? 'border-peligro-borde text-red-700 oscuro:text-red-300' : p.estado === 'pagada' ? 'border-exito-borde text-exito' : 'border-borde text-alerta'"
+                  :class="ESTILO_PERIODO_TARJETA[p.estado].pie"
                 >
                   <template v-if="p.debe > 0">
-                    <span>{{ p.estado === 'mora' ? 'En mora' : 'Falta' }}</span>
-                    <span class="inline-flex items-center gap-0.5 tabular-nums">
+                    <span class="truncate">{{ textoPiePeriodo(p) }}</span>
+                    <span class="inline-flex flex-shrink-0 items-center gap-0.5 tabular-nums">
                       ${{ formatMoney(p.debe) }}
                       <!-- Señal de que el bloque se toca para cobrar -->
                       <ChevronRightIcon v-if="p.pagable && !esVisor" class="h-3.5 w-3.5 flex-shrink-0" stroke-width="2.5" aria-hidden="true" />
                     </span>
                   </template>
-                  <span v-else class="inline-flex items-center gap-1">
-                    <CheckCircleIcon class="h-3.5 w-3.5" aria-hidden="true" />
-                    Pagada
-                  </span>
+                  <template v-else>
+                    <span class="inline-flex items-center gap-1">
+                      <CheckCircleIcon class="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
+                      Pagó
+                    </span>
+                    <span class="flex-shrink-0 tabular-nums">${{ formatMoney(p.pagado) }}</span>
+                  </template>
                 </p>
               </component>
             </div>
@@ -5250,56 +5261,22 @@
       card-max-width="28rem"
       @close="cerrarConfirmacion"
     >
-        <!-- Cabecera móvil: fila — icono | títulos | X -->
-        <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
-          <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
-            <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-              <CheckCircleIcon class="h-5 w-5 text-[#1B5E37]" />
-            </div>
-            <div class="min-w-0 flex-1 text-left">
-              <h3 class="font-display text-base font-bold leading-tight text-white">
-                ¡Pago Registrado!
-              </h3>
-              <p class="mt-0.5 text-[0.6875rem] leading-snug text-white/90">
-                Comprobante generado exitosamente
-              </p>
-            </div>
-            <button
-              type="button"
-              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 active:bg-white/20 [-webkit-tap-highlight-color:transparent] touch-manipulation"
-              aria-label="Cerrar"
-              @click="cerrarConfirmacion"
-            >
-              <XMarkIcon class="h-6 w-6" />
-            </button>
-          </div>
-        </div>
-        <!-- Cabecera desktop: tres columnas — reserva | icono+títulos centrados | X -->
-        <div class="hidden sm:block flex-shrink-0 bg-[#1B5E37] text-white">
-          <div class="flex items-start px-4 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
-            <div class="w-11 shrink-0" aria-hidden="true" />
-            <div class="flex min-w-0 flex-1 flex-col items-center text-center">
-              <!-- tema-fijo: círculo blanco con icono verde sobre la cabecera de marca -->
-              <div class="flex h-[3.2rem] w-[3.2rem] shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-                <CheckCircleIcon class="h-6 w-6 text-[#1B5E37]" />
-              </div>
-              <h3 class="mt-2.5 font-display text-lg font-bold leading-tight text-white">
-                ¡Pago Registrado!
-              </h3>
-              <p class="mt-1 px-1 text-xs leading-snug text-white/90">
-                Comprobante generado exitosamente
-              </p>
-            </div>
-            <button
-              type="button"
-              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 active:bg-white/20 [-webkit-tap-highlight-color:transparent] touch-manipulation"
-              aria-label="Cerrar"
-              @click="cerrarConfirmacion"
-            >
-              <XMarkIcon class="h-6 w-6" />
-            </button>
-          </div>
+        <!--
+          Sin cabecera de marca: el ticket ya trae la suya (verde, con el tipo de comprobante) y
+          dos cabeceras verdes seguidas sobraban. Solo una barra mínima con la confirmación y la X,
+          que tiene que seguir a mano (excepción al patrón de la skill de modales, a pedido).
+        -->
+        <div class="flex flex-shrink-0 items-center gap-2 bg-superficie-tarjeta pl-4 pr-2 pt-[max(0.25rem,env(safe-area-inset-top))]">
+          <CheckCircleIcon class="h-5 w-5 flex-shrink-0 text-marca-tinta" aria-hidden="true" />
+          <p class="min-w-0 flex-1 truncate text-sm font-bold text-marca-tinta">Pago registrado</p>
+          <button
+            type="button"
+            class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-texto-medio transition hover:bg-superficie-suave active:bg-superficie-hundida [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            @click="cerrarConfirmacion"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
         </div>
 
         <!-- Cuerpo: solo el comprobante hace scroll; las acciones van en el pie fijo -->
@@ -5339,23 +5316,12 @@
             class="bg-superficie-tarjeta rounded-2xl overflow-hidden"
             style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);"
           >
+          <!-- Cabecera con la identidad del tipo: pago de cuota -->
+          <div style="background: #1B5E37; padding: 14px 16px;">
+            <TipoComprobante clave="cuota" />
+          </div>
           <!-- Contenido del comprobante con fondo verdoso claro -->
           <div class="comprobante-content" style="background: #ecfdf5; padding: 14px 12px; color: #1f2937;">
-            <!-- TÍTULO Y CHULO VERDE -->
-            <div style="text-align: center; margin-bottom: 16px;">
-              <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
-                <!-- Chulo verde -->
-                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white"/>
-                  </svg>
-                </div>
-                <!-- Título -->
-                <h1 style="font-size: 24px; font-weight: 800; margin: 0; color: #111827; letter-spacing: -0.5px;">
-                  Comprobante de Pago
-                </h1>
-              </div>
-            </div>
             
             <!-- SECCIÓN 1: INFORMACIÓN DEL PAGO (Parte Superior) -->
             <div style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
@@ -6154,6 +6120,19 @@
           </div>
 
           <div class="space-y-5">
+            <!-- Fecha del pago: solo si ya hay dinero registrado (si no, se edita el valor de la cuota) -->
+            <div v-if="(cuotaEditando?.valor_pagado || 0) > 0 || (cuotaEditando?.estadoReal || cuotaEditando?.estado) === 'pagada'">
+              <label class="block text-sm font-semibold text-texto-medio mb-2">
+                Fecha del pago <span class="text-red-500">*</span>
+              </label>
+              <DatePicker
+                v-model="formEditarCuota.fecha_pago"
+                placeholder="Seleccionar fecha"
+                :max-date="hoyISO"
+                input-class="bg-superficie-tarjeta border-2 border-borde rounded-xl focus:ring-2 focus:ring-natillera-200 oscuro:focus:ring-natillera-500/30 focus:border-natillera-500"
+              />
+            </div>
+
             <!-- Campo de tipo de pago -->
             <div>
               <label class="block text-sm font-semibold text-texto-medio mb-2">
@@ -6902,7 +6881,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import { UserIcon as UserIconSolid } from '@heroicons/vue/24/solid'
 import DatePicker from '../../components/DatePicker.vue'
-import { getCurrentDateISO, fechaPagoAIso, parseDateLocal } from '../../utils/formatDate'
+import { getCurrentDateISO, fechaPagoAIso, parseDateLocal, formatDateToLocalISO } from '../../utils/formatDate'
 import { calcularMoraCuota, reglasMoraNatillera } from '../../composables/usePagoPrestamo'
 
 import BackButton from '../../components/BackButton.vue'
@@ -6911,6 +6890,7 @@ import CargaCaja from '../../components/carga/CargaCaja.vue'
 import CargaRapidaPagosModal from '../../components/cuotas/CargaRapidaPagosModal.vue'
 import CuotasSkeleton from '../../components/CuotasSkeleton.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
+import TipoComprobante from '../../components/comprobantes/TipoComprobante.vue'
 import CuotasAyudaModal from '../../components/CuotasAyudaModal.vue'
 import RecorridoInteractivo from '../../components/RecorridoInteractivo.vue'
 import { crearContadorGuia } from '../../composables/useContadorGuia'
@@ -7312,14 +7292,18 @@ function ahorroPendienteCuota(cuota) {
   return Math.max(0, getTotalAPagar(cuota) - getSancionCuota(cuota))
 }
 /**
- * Estado del socio en la tarjeta, reducido a los tres de la app. Sale de sus
- * periodos: basta uno en mora para marcarlo, y sin nada pendiente está al día
- * aunque alguna cuota diga otra cosa (p. ej. pagada con la multa pendiente).
+ * Estado del socio en la tarjeta, con los mismos cinco de la lista y la modal. Sale
+ * de sus periodos, no de las cuotas: sin nada pendiente está al día aunque alguna
+ * cuota diga otra cosa (p. ej. pagada con la multa pendiente), y solo es
+ * «programada» si todo lo que falta aún no ha llegado a su fecha.
  */
 function estadoTarjetaSocio(grupo) {
   if (!(grupo?.totalAPagar > 0)) return 'pagada'
-  if ((grupo.periodos || []).some(p => p.estado === 'mora')) return 'mora'
-  return 'pendiente'
+  const estados = (grupo.periodos || []).map(p => p.estado)
+  for (const estado of ['mora', 'parcial', 'pendiente']) {
+    if (estados.includes(estado)) return estado
+  }
+  return 'programada'
 }
 /** Toque en un bloque de la tarjeta: si se puede cobrar, abre el pago y no la modal del socio. */
 function alTocarPeriodoTarjeta(periodo, evento) {
@@ -7327,10 +7311,65 @@ function alTocarPeriodoTarjeta(periodo, evento) {
   evento.stopPropagation()
   abrirModalPago(periodo.cuota)
 }
-const CLASES_BLOQUE_PERIODO = {
-  pagada: 'bg-exito-suave border-exito-borde',
-  mora: 'bg-peligro-suave border-peligro-borde',
-  pendiente: 'bg-superficie-suave border-borde',
+/*
+ * Colores de cada bloque según su estado, los mismos de la modal del socio
+ * (RESALTE_TOTAL / ACENTO_CUOTA): pendiente naranja, parcial violeta, mora rojo,
+ * programada gris con borde punteado porque aún no se debe. Clases completas
+ * para que Tailwind las encuentre.
+ */
+const ESTILO_PERIODO_TARJETA = {
+  pagada: {
+    bloque: 'bg-exito-suave border-exito-borde',
+    punto: 'bg-green-500',
+    pie: 'border-exito-borde text-exito',
+    badge: 'bg-green-100 text-green-700 oscuro:bg-green-500/15 oscuro:text-green-300',
+  },
+  mora: {
+    bloque: 'bg-peligro-suave border-peligro-borde',
+    punto: 'bg-red-500',
+    pie: 'border-peligro-borde text-red-700 oscuro:text-red-300',
+    badge: 'bg-red-100 text-red-700 oscuro:bg-red-500/15 oscuro:text-red-300',
+  },
+  parcial: {
+    bloque: 'bg-violet-50 oscuro:bg-violet-500/10 border-violet-200 oscuro:border-violet-500/30',
+    punto: 'bg-violet-500',
+    pie: 'border-violet-200 oscuro:border-violet-500/30 text-violet-700 oscuro:text-violet-300',
+    badge: 'bg-violet-100 text-violet-700 oscuro:bg-violet-500/15 oscuro:text-violet-300',
+  },
+  pendiente: {
+    bloque: 'bg-alerta-suave border-alerta-borde',
+    punto: 'bg-orange-500',
+    pie: 'border-alerta-borde text-orange-700 oscuro:text-orange-300',
+    badge: 'bg-orange-100 text-orange-700 oscuro:bg-orange-500/15 oscuro:text-orange-300',
+  },
+  programada: {
+    bloque: 'bg-superficie-suave border-borde border-dashed',
+    punto: 'bg-slate-400',
+    pie: 'border-borde text-texto-suave',
+    badge: 'bg-superficie-hundida text-texto-medio',
+  },
+}
+/** «15/11» de una fecha YYYY-MM-DD: en el bloque solo cabe día y mes. */
+function diaMesCorto(fecha) {
+  const [, mes, dia] = String(fecha || '').slice(0, 10).split('-')
+  return dia && mes ? `${dia}/${mes}` : ''
+}
+/** Texto del badge de cada bloque: los mismos nombres de estado que la lista y la modal. */
+const ETIQUETA_ESTADO_PERIODO = {
+  pagada: 'Pagada',
+  mora: 'En mora',
+  parcial: 'Parcial',
+  pendiente: 'Pendiente',
+  programada: 'Programada',
+}
+/*
+ * Rótulo de la cifra del pie. El estado ya va en el badge; aquí solo «Falta», salvo
+ * en una programada, donde lo útil es cuándo vence, porque todavía no se debe.
+ */
+function textoPiePeriodo(periodo) {
+  if (periodo.estado !== 'programada') return 'Falta'
+  const fecha = diaMesCorto(periodo.cuota?.fecha_limite)
+  return fecha ? `Vence ${fecha}` : 'Falta'
 }
 /**
  * Un periodo del socio (quincena o mes) para la tarjeta: cada concepto con lo
@@ -7360,13 +7399,20 @@ function armarPeriodoTarjeta(cuota) {
     getTotalCuotasPrestamosPendientesSocioSync(cuota)
   )
   const debe = conceptos.reduce((s, c) => s + c.pendiente, 0)
+  const pagado = conceptos.reduce((s, c) => s + c.pagado, 0)
   const estadoCuota = cuota.estadoReal || cuota.estado
-  const estado = debe <= 0 ? 'pagada' : estadoCuota === 'mora' ? 'mora' : 'pendiente'
+  // Mismo orden que el badge de la modal (tonoCuota), pero mirando lo que falta en el
+  // bloque: así una cuota pagada con la multa pendiente no sale «Pagada».
+  let estado = 'pendiente'
+  if (debe <= 0) estado = 'pagada'
+  else if (estadoCuota === 'mora') estado = 'mora'
+  else if (pagado > 0) estado = 'parcial'
+  else if (estadoCuota === 'programada') estado = 'programada'
   const etiqueta = cuota.quincena === 1 ? '1ª quincena' : cuota.quincena === 2 ? '2ª quincena' : 'Cuota del mes'
   // Se cobra directo desde el bloque con la misma regla que «Pagar» en la modal del socio:
   // una cuota pagada con algo pendiente (multa, actividad) se gestiona desde esa modal.
   const pagable = debe > 0 && estadoCuota !== 'pagada'
-  return { id: cuota.id, cuota, etiqueta, estado, debe, conceptos, pagable }
+  return { id: cuota.id, cuota, etiqueta, estado, debe, pagado, conceptos, pagable }
 }
 /** Etiqueta del periodo de una cuota (1ª/2ª quincena o mensual). */
 function getPeriodoCuotaLabel(cuota) {
@@ -7647,6 +7693,7 @@ function cerrarModalEditarCuota() {
   formEditarCuota.valor = 0
   formEditarCuota.tipo_pago = 'efectivo'
   formEditarCuota.aplicaImpuesto4x1000 = false
+  formEditarCuota.fecha_pago = ''
   if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
 }
 watch(modalEditarCuota, async (abierto) => {
@@ -9276,6 +9323,8 @@ const formEditarCuota = reactive({
   tipo_pago: 'efectivo',
   /** Solo transferencia: suma 4×1000 sobre el valor neto del campo (opcional), igual que en registrar pago. */
   aplicaImpuesto4x1000: false,
+  /** YYYY-MM-DD. Se precarga con la fecha real del pago para que editar el valor no la cambie a hoy. */
+  fecha_pago: '',
 })
 
 function getImpuesto4x1000Editar() {
@@ -12789,6 +12838,7 @@ function obtenerAjustesFormateados(cuota) {
 async function abrirModalEditar(cuota) {
   cuotaEditando.value = cuota
   formEditarCuota.tipo_pago = cuota.tipo_pago || 'efectivo'
+  formEditarCuota.fecha_pago = formatDateToLocalISO(cuota.fecha_pago) || getCurrentDateISO()
   
   // Cargar actividades y cuotas de préstamos pagadas
   await cargarActividadesPagadasEditar(cuota)
@@ -13243,11 +13293,13 @@ async function guardarEdicionCuota() {
       const tipoPagoCambio = formEditarCuota.tipo_pago !== tipoPagoAnterior
       const gmfCambio =
         Math.round(nuevoImpuestoGmfEditar) !== Math.round(impuesto4x1000AnteriorEditar.value || 0)
+      const fechaOriginal = formatDateToLocalISO(cuotaEditando.value.fecha_pago)
+      const fechaCambio = !!formEditarCuota.fecha_pago && formEditarCuota.fecha_pago !== fechaOriginal
       // Generar código nuevo si: hay cambio de valor, o si está pagada/tiene pago parcial y hay cualquier cambio (valor, forma de pago o 4×1000)
       // Si la cuota está pagada o tiene pago parcial, siempre generar código nuevo al hacer cualquier modificación
       const debeGenerarCodigo =
         (valorCambio && nuevoValorPagado > 0) ||
-        ((estaPagada || tienePagoParcial) && (valorCambio || tipoPagoCambio || gmfCambio))
+        ((estaPagada || tienePagoParcial) && (valorCambio || tipoPagoCambio || gmfCambio || fechaCambio))
       
       if (debeGenerarCodigo) {
         // Generar nuevo código de comprobante cuando se modifica el pago
@@ -13276,14 +13328,13 @@ async function guardarEdicionCuota() {
         }
       }
       
-      // Actualizar fecha_pago cuando se modifica el valor pagado
-      // Si el nuevo valor pagado es mayor que 0, actualizar la fecha de pago
-      // Si se reduce a 0, eliminar la fecha de pago
+      // La fecha es la del modal: corregir un valor no debe mover el pago a hoy, porque la mora
+      // y la sanción se miden hasta esa fecha. Si no se tocó, se conserva el valor original con su hora.
       let fechaPagoActualizada = null
       if (nuevoValorPagado > 0) {
-        fechaPagoActualizada = new Date().toISOString()
-      } else {
-        fechaPagoActualizada = null
+        fechaPagoActualizada = fechaCambio || !cuotaEditando.value.fecha_pago
+          ? fechaPagoAIso(formEditarCuota.fecha_pago)
+          : cuotaEditando.value.fecha_pago
       }
       
       // Calcular el desglose del nuevo valor total

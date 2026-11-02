@@ -36,7 +36,11 @@ export async function registrarPagoCompletoDeCuota({ pago, socio, natilleraId, n
   // con este pago y va a préstamos, pero no baja el saldo: va al fondo, como en Préstamos.
   const totalMora = pago.prestamo.reduce((s, cp) => s + (Number(cp.mora) || 0), 0)
   const efectivo = formaPago === 'efectivo'
-  const impuesto4x1000 = !efectivo && cobrar4x1000 ? calcular4x1000(pago.valorPagado) : 0
+  // `pago.impuesto4x1000` viene fijado cuando el total recibido debe cuadrar al peso (abono
+  // parcial del pago rápido); si no, se calcula sobre lo pagado.
+  const impuesto4x1000 = !efectivo && cobrar4x1000
+    ? (pago.impuesto4x1000 ?? calcular4x1000(pago.valorPagado))
+    : 0
 
   const res = await cuotasStore.registrarPago(pago.cuota.id, pago.valorPagado, null, formaPago, totalActs, {
     valorEfectivo: efectivo ? pago.valorPagado : 0,
@@ -61,7 +65,8 @@ export async function registrarPagoCompletoDeCuota({ pago, socio, natilleraId, n
       mora: Number(cp.mora) || 0,
       numero_cuota: cp.numero_cuota,
       prestamo_id: cp.prestamo_id,
-      pagado: true
+      // Un abono parcial (monto recibido en el pago rápido) puede dejar la cuota a medias
+      pagado: cp.pagado !== false
     })),
     omitirRecalculoMora: true,
     _socioNombre: socio?.nombre,

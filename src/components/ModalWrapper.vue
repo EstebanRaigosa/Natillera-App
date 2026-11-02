@@ -41,11 +41,35 @@
           @click="tryClose"
         />
         <div
-          :class="cardClass"
-          style="position: relative; z-index: 10;"
+          ref="cardRef"
+          :class="[cardClass, maximizada && cabeceraCompacta ? 'modal-wrapper--ampliada' : '']"
+          :style="maximizada ? estiloMaximizada : { position: 'relative', zIndex: 10 }"
           @click.stop
         >
           <slot />
+          <!--
+            Ampliar, solo en escritorio (puntero fino y >= 1024 px). Va después del slot para
+            que la cabecera siga siendo el primer hijo de la card (el CSS de abajo la busca así).
+            Normal: arriba a la izquierda, donde no cae nada de la cabecera de escritorio (icono y
+            títulos centrados, X a la derecha). Ampliado: la cabecera pasa a la fila de móvil y el
+            botón se pone junto a la X. Fondo oscuro translúcido para verse sobre verde o blanco.
+          -->
+          <button
+            v-if="puedeMaximizar"
+            type="button"
+            :class="[
+              'absolute z-30 flex h-11 w-11 items-center justify-center rounded-full [touch-action:manipulation] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+              maximizada && cabeceraCompacta ? 'right-[3.75rem] top-[0.725rem]' : 'left-1 top-1'
+            ]"
+            :aria-label="maximizada ? 'Restaurar tamaño' : 'Ampliar'"
+            :title="maximizada ? 'Restaurar tamaño' : 'Ampliar'"
+            @click="alternarAmpliada"
+          >
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-black/25 text-white transition-colors hover:bg-black/40">
+              <ArrowsPointingInIcon v-if="maximizada" class="h-4 w-4" aria-hidden="true" />
+              <ArrowsPointingOutIcon v-else class="h-4 w-4" aria-hidden="true" />
+            </span>
+          </button>
         </div>
       </div>
     </template>
@@ -53,7 +77,8 @@
 </template>
 
 <script setup>
-import { watch, onBeforeUnmount } from 'vue'
+import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
+import { ArrowsPointingOutIcon, ArrowsPointingInIcon } from '@heroicons/vue/24/outline'
 import { useIsIos } from '../composables/useIsIos'
 import { useTapadoInferior } from '../composables/useTapadoInferior'
 
@@ -110,7 +135,9 @@ const props = defineProps({
   /** Android: capa detrás de la card (overlay oscuro por defecto) */
   backdropClass: { type: String, default: 'absolute inset-0 bg-black/50 backdrop-blur-sm' },
   /** iOS: ancho máximo de la card (ej. '28rem' para max-w-md, '42rem' para max-w-2xl) */
-  cardMaxWidth: { type: String, default: '' }
+  cardMaxWidth: { type: String, default: '' },
+  /** Escritorio: botón para que la card ocupe toda la pantalla. `false` para quitarlo. */
+  maximizable: { type: Boolean, default: true }
 })
 
 const emit = defineEmits(['close'])
@@ -147,6 +174,67 @@ watch(
 onBeforeUnmount(unregister)
 
 const isIos = useIsIos()
+
+// Ampliar en escritorio: la card puede tomar todo el alto (conserva su ancho: el contenido está
+// pensado en una columna y estirarlo lo deforma) y la cabecera grande de escritorio (icono
+// arriba + título centrado) se cambia por la fila compacta de móvil, que ya trae cada modal
+// del patrón (`sm:hidden` + `hidden sm:flex`). Las cards traen su alto máximo en clases
+// (max-h-[90vh]); el estilo en línea les gana sin tocar cada modal.
+const maximizada = ref(false)
+// Tope de alto, no alto fijo: un modal corto (p. ej. el selector de mes) se queda de su
+// tamaño; antes `height` lo estiraba a toda la pantalla y quedaba un hueco en blanco.
+const estiloMaximizada = {
+  position: 'relative',
+  zIndex: 10,
+  maxHeight: 'calc(100vh - 2rem)'
+}
+const cardRef = ref(null)
+// Solo se compacta si la cabecera sigue el patrón; si no, se deja como está.
+const cabeceraCompacta = ref(false)
+function detectarCabeceraCompacta() {
+  const cabecera = cardRef.value?.firstElementChild
+  cabeceraCompacta.value = !!cabecera?.querySelector(':scope > .sm\\:hidden')
+}
+function alternarAmpliada() {
+  detectarCabeceraCompacta()
+  maximizada.value = !maximizada.value
+}
+
+// Portátiles de hasta ~15 pulgadas: ahí la cabecera grande y el 90 % de alto se comen la
+// pantalla, así que el modal abre ya ampliado. Las pulgadas no se pueden leer; se usa el
+// ancho de la pantalla en px CSS: los de 13–15" quedan en 1280–1536 (1366×768, 1440×900,
+// 1512×982, 1920×1080 al 125 % = 1536). 1600 deja fuera los de 16" y los monitores externos.
+// Es `screen`, no la ventana: achicar la ventana en un monitor grande no lo activa.
+const PANTALLA_PEQUENA_MAX = 1600
+function esPantallaPequena() {
+  return typeof window !== 'undefined' && (window.screen?.width || 0) <= PANTALLA_PEQUENA_MAX
+}
+const puedeMaximizar = ref(false)
+let consultaEscritorio = null
+function alCambiarEscritorio() {
+  puedeMaximizar.value = props.maximizable && !!consultaEscritorio?.matches
+  if (!puedeMaximizar.value) maximizada.value = false
+}
+if (typeof window !== 'undefined' && window.matchMedia) {
+  consultaEscritorio = window.matchMedia('(min-width: 1024px) and (pointer: fine)')
+  alCambiarEscritorio()
+  consultaEscritorio.addEventListener?.('change', alCambiarEscritorio)
+}
+watch(() => props.maximizable, alCambiarEscritorio)
+// Al cerrar vuelve a su tamaño; al abrir, ampliado de entrada si es portátil pequeño.
+watch(() => props.show, async (visible) => {
+  if (!visible) {
+    maximizada.value = false
+    return
+  }
+  if (!puedeMaximizar.value || !esPantallaPequena()) return
+  // La card aún no está en el DOM: hay que esperar para ver si su cabecera sigue el patrón.
+  await nextTick()
+  if (!props.show) return
+  detectarCabeceraCompacta()
+  maximizada.value = true
+}, { immediate: true })
+onBeforeUnmount(() => consultaEscritorio?.removeEventListener?.('change', alCambiarEscritorio))
 
 // La barra de Safari (iOS 15+) se dibuja abajo, encima del contenido, y no es safe-area.
 // Se publica como `--tapado-inferior` en el contenedor iOS para que el pie de una hoja
@@ -243,5 +331,20 @@ const { tapado } = useTapadoInferior()
 .modal-wrapper-ios:not(.modal-wrapper-ios--bottom) .modal-wrapper-ios__card {
   border-radius: 1rem !important;
   border-bottom: 1px solid var(--borde) !important;
+}
+/*
+ * Ampliado en escritorio: la cabecera muestra su fila de móvil y oculta el bloque grande.
+ * `:deep` porque la cabecera es contenido del slot (scope del padre). `!important` porque
+ * `sm:hidden` / `sm:flex` de Tailwind aplican a este ancho.
+ */
+.modal-wrapper--ampliada > :deep(:first-child > .sm\:hidden) {
+  display: flex !important;
+}
+.modal-wrapper--ampliada > :deep(:first-child > .hidden[class*="sm:"]) {
+  display: none !important;
+}
+/* Deja sitio al botón de restaurar, que queda entre el título y la X. */
+.modal-wrapper--ampliada > :deep(:first-child > .sm\:hidden > :first-child) {
+  padding-right: 2.75rem;
 }
 </style>

@@ -14,16 +14,8 @@
       <!-- Cabecera: marca + sello de pago -->
       <div style="position: relative; overflow: hidden; background: #1B5E37; color: #ffffff; padding: 18px 20px 46px;">
         <span style="position: absolute; right: -40px; top: -60px; width: 150px; height: 150px; border-radius: 9999px; background: rgba(255,255,255,0.07);" />
-        <div style="position: relative; display: flex; align-items: center; gap: 12px;">
-          <span style="flex-shrink: 0; width: 40px; height: 40px; border-radius: 9999px; background: #ffffff; display: flex; align-items: center; justify-content: center;">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M5 12.5l4.2 4.2L19 7" stroke="#1B5E37" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </span>
-          <div style="min-width: 0;">
-            <p style="margin: 0; font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.75);">Comprobante de pago</p>
-            <p style="margin: 3px 0 0; font-size: 17px; font-weight: 800; line-height: 1.2;">{{ pago.natilleraNombre || 'Natillera' }}</p>
-          </div>
+        <div style="position: relative;">
+          <TipoComprobante clave="cuota" :detalle="pago.natilleraNombre || 'Natillera'" />
         </div>
       </div>
 
@@ -115,6 +107,7 @@
 <script setup>
 import { computed } from 'vue'
 import { formatMoney } from '../../utils/formatMoney'
+import TipoComprobante from '../comprobantes/TipoComprobante.vue'
 
 const props = defineProps({
   /**

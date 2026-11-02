@@ -4,8 +4,10 @@
     sus conceptos (cuota, sanción, actividades, cuotas de préstamo y 4×1000). Se marcan las
     que paga y se registran juntas; al terminar se abre el comprobante de varias cuotas.
 
-    Cada cuota se registra por el camino del pago normal (usePagoCuotaCompleto). Los abonos a
-    medias no van por aquí: «Pagar otro valor» abre el modal de pago de siempre.
+    Cada cuota se registra por el camino del pago normal (usePagoCuotaCompleto). Con «Monto
+    recibido» el dinero se reparte solo, de la cuota más vieja a la más nueva; lo que no alcanza
+    para una cuota entera queda como abono a esa cuota. «Pagar otro valor» sigue abriendo el
+    modal de pago de siempre.
   -->
   <ModalWrapper
     :show="show"
@@ -108,6 +110,31 @@
               <input v-model="cobrar4x1000" type="checkbox" class="h-5 w-5 rounded border-borde-fuerte text-marca-tinta focus:ring-[#1B5E37]" :disabled="guardando" />
               Cobrar 4×1000
             </label>
+            <!-- Monto recibido: alternativa a marcar las cuotas a mano. Se reparte en orden. -->
+            <div>
+              <label for="monto-recibido-rapido" class="mb-1 block text-xs font-semibold text-texto-secundario">Monto recibido (opcional)</label>
+              <div class="relative">
+                <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-semibold text-texto-tenue">$</span>
+                <!-- text-base (16px): con menos, iOS hace zoom al enfocar -->
+                <input
+                  id="monto-recibido-rapido"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  placeholder="0"
+                  class="min-h-[44px] w-full rounded-xl border-2 border-borde bg-superficie-tarjeta py-2 pl-7 pr-3 text-base font-bold tabular-nums text-texto-fuerte focus:border-[#1B5E37] focus:outline-none focus:ring-2 focus:ring-[#1B5E37]/20"
+                  :value="montoRecibido > 0 ? formatMoney(montoRecibido) : ''"
+                  :disabled="guardando"
+                  @input="alEscribirMonto"
+                />
+              </div>
+              <p v-if="montoRecibido > 0 && sobrante > 0" class="mt-1 text-xs font-semibold text-amber-700 oscuro:text-amber-300">
+                Sobran ${{ formatMoney(sobrante) }}: no hay más saldo pendiente para asignarlos.
+              </p>
+              <p v-else-if="montoRecibido > 0 && reparto.parcial" class="mt-1 text-xs text-texto-suave">
+                {{ reparto.parcial.periodo }} queda con un abono de ${{ formatMoney(reparto.parcial.valor) }}.
+              </p>
+            </div>
           </section>
 
           <div class="flex items-center justify-between gap-2">
@@ -152,7 +179,11 @@
                   <span class="mt-0.5 inline-flex rounded-md px-1.5 py-0.5 text-[11px] font-bold" :class="fila.estado.clase">{{ fila.estado.texto }}</span>
                 </span>
                 <span class="flex-shrink-0 text-right">
-                  <span class="block text-base font-extrabold tabular-nums text-texto-fuerte">${{ formatMoney(fila.total) }}</span>
+                  <template v-if="abonoDe(fila.cuota.id) != null">
+                    <span class="block text-base font-extrabold tabular-nums text-amber-700 oscuro:text-amber-300">Abona ${{ formatMoney(abonoDe(fila.cuota.id)) }}</span>
+                    <span class="block text-[11px] tabular-nums text-texto-suave">de ${{ formatMoney(fila.total) }}</span>
+                  </template>
+                  <span v-else class="block text-base font-extrabold tabular-nums text-texto-fuerte">${{ formatMoney(fila.total) }}</span>
                 </span>
               </button>
 
@@ -182,13 +213,43 @@
                 />
               </div>
 
-              <!-- Abono o valor distinto: el modal de pago de siempre -->
-              <div class="px-3 pb-3">
+              <!-- Otro valor dentro del lote: las anteriores ya van marcadas, así que se paga aquí,
+                   después de ellas, sin pasar por el aviso de periodos atrasados -->
+              <div v-if="valoresOtro.has(fila.cuota.id)" class="mx-3 mb-3">
+                <label :for="`otro-valor-${fila.cuota.id}`" class="mb-1 block text-xs font-semibold text-texto-secundario">Valor a pagar en esta cuota</label>
+                <div class="flex items-center gap-2">
+                  <div class="relative min-w-0 flex-1">
+                    <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-semibold text-texto-tenue">$</span>
+                    <!-- text-base (16px): con menos, iOS hace zoom al enfocar -->
+                    <input
+                      :id="`otro-valor-${fila.cuota.id}`"
+                      type="text"
+                      inputmode="numeric"
+                      autocomplete="off"
+                      class="min-h-[44px] w-full rounded-xl border-2 border-borde bg-superficie-tarjeta py-2 pl-7 pr-3 text-base font-bold tabular-nums text-texto-fuerte focus:border-[#1B5E37] focus:outline-none focus:ring-2 focus:ring-[#1B5E37]/20"
+                      :value="valoresOtro.get(fila.cuota.id) > 0 ? formatMoney(valoresOtro.get(fila.cuota.id)) : ''"
+                      :disabled="guardando"
+                      @input="alEscribirOtroValor(fila.cuota.id, $event)"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    class="min-h-[44px] flex-shrink-0 touch-manipulation px-2 text-xs font-semibold text-texto-secundario"
+                    :disabled="guardando"
+                    @click="quitarOtroValor(fila.cuota.id)"
+                  >
+                    Pagar completa
+                  </button>
+                </div>
+              </div>
+
+              <!-- Abono o valor distinto: dentro del lote si las anteriores van marcadas; si no, el modal de pago de siempre -->
+              <div v-else class="px-3 pb-3">
                 <button
                   type="button"
                   class="inline-flex min-h-[44px] w-full touch-manipulation items-center justify-center gap-2 rounded-full border-2 border-[#1B5E37]/30 oscuro:border-marca-tinta/30 bg-superficie-tarjeta px-4 text-sm font-semibold text-marca-tinta transition-colors hover:border-[#1B5E37] oscuro:hover:border-marca-tinta hover:bg-marca-suave disabled:opacity-50"
                   :disabled="guardando"
-                  @click="emit('detalle', fila.cuota.id)"
+                  @click="pagarOtroValor(i)"
                 >
                   <PencilSquareIcon class="h-5 w-5" />
                   Pagar otro valor (abono)
@@ -198,7 +259,7 @@
           </ul>
 
           <p class="text-xs leading-snug text-texto-suave">
-            Las cuotas se pagan en orden: al marcar una se marcan las anteriores.
+            Las cuotas se pagan en orden: al marcar una se marcan las anteriores. Marcar a mano borra el monto recibido.
           </p>
         </template>
       </div>
@@ -331,6 +392,8 @@ async function cargar() {
   cargando.value = true
   errorCarga.value = ''
   seleccion.value = new Set()
+  montoRecibido.value = 0
+  valoresOtro.value = new Map()
   try {
     const [natRes, snRes, cuotasRes, saRes, prestRes] = await Promise.all([
       supabase.from('natilleras').select('reglas_multas, reglas_interes').eq('id', props.natilleraId).single(),
@@ -566,6 +629,7 @@ const filas = computed(() => {
 function alternar(indice) {
   const id = filas.value[indice]?.cuota.id
   if (!id) return
+  montoRecibido.value = 0
   const nuevo = new Set()
   const marcar = !seleccion.value.has(id)
   filas.value.forEach((f, i) => {
@@ -583,6 +647,7 @@ const vencidasMarcadas = computed(() =>
   indiceUltimaVencida.value >= 0 && filas.value.slice(0, indiceUltimaVencida.value + 1).every(f => seleccion.value.has(f.cuota.id))
 )
 function marcarVencidas() {
+  montoRecibido.value = 0
   if (vencidasMarcadas.value) {
     seleccion.value = new Set()
     return
@@ -596,8 +661,150 @@ watch(filas, lista => {
   if ([...seleccion.value].some(id => !ids.has(id))) seleccion.value = new Set([...seleccion.value].filter(id => ids.has(id)))
 })
 
+// ---------------------------------------------------------------- Monto recibido
+
+const montoRecibido = ref(0)
+
+function alEscribirMonto(e) {
+  const antes = montoRecibido.value
+  montoRecibido.value = Number(String(e.target.value).replace(/\D/g, '')) || 0
+  valoresOtro.value = new Map()
+  // Borrar el monto quita lo que él había marcado
+  if (antes > 0 && montoRecibido.value === 0) seleccion.value = new Set()
+}
+
+/*
+ * Reparte el monto de la cuota más vieja a la más nueva: cada una entera mientras alcance;
+ * la primera que no alcanza recibe lo que queda como abono. Es la misma regla de orden que
+ * al marcar a mano (no se cobra un periodo con otro anterior sin pagar).
+ */
+const reparto = computed(() => {
+  let restante = montoRecibido.value
+  const ids = []
+  let parcial = null
+  for (const f of filas.value) {
+    if (restante <= 0) break
+    ids.push(f.cuota.id)
+    if (restante >= f.total) {
+      restante -= f.total
+      continue
+    }
+    parcial = { id: f.cuota.id, periodo: f.periodo, valor: restante }
+    restante = 0
+  }
+  return { ids, parcial, sobrante: restante }
+})
+/*
+ * «Pagar otro valor» dentro del lote: cuotaId → valor. Solo vale en la última cuota marcada,
+ * porque una cuota a medias no deja cobrar las siguientes (mismo orden de siempre).
+ */
+const valoresOtro = ref(new Map())
+
+/** Lo que se abona a una cuota cuando no se paga entera; null si se paga completa. */
+function abonoDe(cuotaId) {
+  if (montoRecibido.value > 0) return reparto.value.parcial?.id === cuotaId ? reparto.value.parcial.valor : null
+  if (!valoresOtro.value.has(cuotaId) || !seleccion.value.has(cuotaId)) return null
+  const fila = filas.value.find(f => f.cuota.id === cuotaId)
+  const valor = valoresOtro.value.get(cuotaId)
+  return fila && valor < fila.total ? valor : null
+}
+
+/*
+ * Antes de mandar al modal de pago (que muestra el aviso de periodos atrasados), se mira el
+ * lote: si todas las cuotas anteriores ya van marcadas, se pagarán antes que esta en el mismo
+ * registro, así que el valor se pide aquí. Si falta alguna, el aviso sigue siendo lo correcto.
+ */
+function pagarOtroValor(indice) {
+  const fila = filas.value[indice]
+  if (!fila) return
+  const anteriores = filas.value.slice(0, indice)
+  if (anteriores.length === 0 || !anteriores.every(f => seleccion.value.has(f.cuota.id))) {
+    emit('detalle', fila.cuota.id)
+    return
+  }
+  montoRecibido.value = 0
+  seleccion.value = new Set(filas.value.slice(0, indice + 1).map(f => f.cuota.id))
+  valoresOtro.value = new Map([[fila.cuota.id, fila.total]])
+  nextTick(() => {
+    const campo = document.getElementById(`otro-valor-${fila.cuota.id}`)
+    campo?.focus()
+    campo?.select()
+  })
+}
+
+function alEscribirOtroValor(cuotaId, e) {
+  const nuevo = new Map(valoresOtro.value)
+  nuevo.set(cuotaId, Number(String(e.target.value).replace(/\D/g, '')) || 0)
+  valoresOtro.value = nuevo
+}
+
+function quitarOtroValor(cuotaId) {
+  const nuevo = new Map(valoresOtro.value)
+  nuevo.delete(cuotaId)
+  valoresOtro.value = nuevo
+}
+
+// Si la cuota con otro valor deja de ser la última marcada (se desmarcó una anterior, que
+// arrastra a esta, o se marcó una siguiente), el valor propio ya no aplica.
+watch(seleccion, sel => {
+  if (valoresOtro.value.size === 0) return
+  const marcadas = filas.value.filter(f => sel.has(f.cuota.id))
+  const ultima = marcadas[marcadas.length - 1]?.cuota.id
+  if ([...valoresOtro.value.keys()].some(id => id !== ultima)) {
+    valoresOtro.value = new Map([...valoresOtro.value].filter(([id]) => id === ultima))
+  }
+})
+const sobrante = computed(() => (montoRecibido.value > 0 ? reparto.value.sobrante : 0))
+
+// Con monto, la selección la decide el reparto (y se rehace si cambian fechas, forma o 4×1000)
+watch(reparto, r => {
+  if (montoRecibido.value > 0) seleccion.value = new Set(r.ids)
+})
+
+/*
+ * Lo que un abono parcial paga de cada concepto, en el orden del store (cuotas.registrarPago):
+ * sanción, actividades, préstamos (mora primero) y cuota. Las actividades y préstamos se
+ * recortan a lo que cubre el abono, porque se registran por su valor_pendiente.
+ */
+function pagoParcialDe(fila, abono) {
+  const conGmf = formaPago.value === 'transferencia' && cobrar4x1000.value
+  // El monto recibido trae el 4×1000 adentro y debe cuadrar exacto: se busca el mayor neto
+  // con neto + 4×1000(neto) <= abono, empezando por encima (con floor quedaba $1 corto:
+  // 122.000 daba 121.513 + 486 = 121.999). Si por redondeo ningún neto cuadra justo,
+  // el peso que falta va al neto y el 4×1000 se fija explícito.
+  let neto = abono
+  let impuesto4x1000
+  if (conGmf) {
+    neto = Math.floor((abono * 1000) / 1004) + 2
+    while (neto > 0 && neto + calcular4x1000(neto) > abono) neto--
+    impuesto4x1000 = calcular4x1000(neto)
+    neto = abono - impuesto4x1000
+  }
+  let restante = neto - Math.min(neto, fila.multa)
+  const actividades = []
+  for (const sa of fila.actividades) {
+    const valor = Math.min(restante, Math.round(sa.valor_pendiente))
+    if (valor <= 0) break
+    actividades.push({ ...sa, valor_pendiente: valor })
+    restante -= valor
+  }
+  const prestamo = []
+  for (const cp of fila.prestamo) {
+    if (restante <= 0) break
+    const mora = Math.min(restante, cp.mora || 0)
+    restante -= mora
+    const pendiente = Math.round(cp.valor_pendiente)
+    const valor = Math.min(restante, pendiente)
+    restante -= valor
+    prestamo.push({ ...cp, mora, valor_pendiente: valor, pagado: valor >= pendiente })
+  }
+  return { multa: fila.multa, valorPagado: neto, impuesto4x1000, actividades, prestamo }
+}
+
 const filasElegidas = computed(() => filas.value.filter(f => seleccion.value.has(f.cuota.id)))
-const totalElegido = computed(() => filasElegidas.value.reduce((s, f) => s + f.total, 0))
+const totalElegido = computed(() =>
+  filasElegidas.value.reduce((s, f) => s + (abonoDe(f.cuota.id) ?? f.total), 0)
+)
 const resumenElegido = computed(() => {
   const n = filasElegidas.value.length
   const partes = [`${n} ${n === 1 ? 'cuota' : 'cuotas'}`]
@@ -623,14 +830,17 @@ async function registrar() {
     // En orden y de a una: cada pago cambia el saldo que ve el siguiente.
     for (const fila of lote) {
       progreso.value++
+      const abono = abonoDe(fila.cuota.id)
+      const conceptos = abono != null
+        ? pagoParcialDe(fila, abono)
+        : { multa: fila.multa, valorPagado: fila.neto, actividades: fila.actividades, prestamo: fila.prestamo }
+      // Un sobrante de pocos pesos con 4×1000 puede no dejar nada neto: no hay qué registrar
+      if (conceptos.valorPagado <= 0) continue
       const { ok, historialPagoId } = await registrarPagoCompletoDeCuota({
         pago: {
           cuota: fila.cuota,
           fecha: fechaDe(fila.cuota.id),
-          multa: fila.multa,
-          valorPagado: fila.neto,
-          actividades: fila.actividades,
-          prestamo: fila.prestamo
+          ...conceptos
         },
         socio: socio.value,
         natilleraId: props.natilleraId,
