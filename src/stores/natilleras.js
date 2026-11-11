@@ -477,6 +477,17 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     return resultado
   }
 
+  /*
+   * Deshace un cierre. Cerrar solo cambia el estado (no borra socios, cuotas ni pagos),
+   * así que volver a 'activa' deja la natillera tal como estaba antes de cerrarla.
+   */
+  async function reabrirNatillera(id) {
+    return actualizarNatillera(id, {
+      estado: 'activa',
+      fecha_cierre: null
+    })
+  }
+
   async function reasignarNatillera(natilleraId, nuevoAdminId) {
     try {
       loading.value = true
@@ -1927,6 +1938,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     crearNatillera,
     actualizarNatillera,
     cerrarNatillera,
+    reabrirNatillera,
     reasignarNatillera,
     eliminarNatillera,
     calcularEstadisticas,

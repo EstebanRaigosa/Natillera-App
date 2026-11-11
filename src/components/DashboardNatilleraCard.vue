@@ -168,7 +168,10 @@
             <button
               v-if="showPin"
               type="button"
-              class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border border-indigo-200/90 oscuro:border-indigo-500/30 bg-indigo-50 oscuro:bg-indigo-500/15 text-indigo-800 oscuro:text-indigo-300 shadow-sm ring-1 ring-indigo-100/70 oscuro:ring-indigo-500/30 transition hover:bg-indigo-100 oscuro:hover:bg-indigo-500/15 hover:ring-indigo-200/80 oscuro:hover:ring-indigo-500/30 touch-manipulation"
+              class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border transition touch-manipulation"
+              :class="pinned ? clasePinMarcado : clasePinLibre"
+              :aria-pressed="pinned"
+              :aria-label="pinned ? 'Quitar de fijadas' : 'Fijar arriba'"
               :title="pinned ? 'Quitar de fijadas' : 'Fijar arriba'"
               @click="$emit('toggle-pin')"
             >
@@ -304,7 +307,10 @@
       <button
         v-if="showPin"
         type="button"
-        class="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-indigo-200/95 oscuro:border-indigo-500/30 bg-indigo-50 oscuro:bg-indigo-500/15 text-indigo-800 oscuro:text-indigo-300 shadow-sm ring-1 ring-indigo-100/80 oscuro:ring-indigo-500/30 transition hover:border-indigo-300 oscuro:hover:border-indigo-500/30 hover:bg-indigo-100 oscuro:hover:bg-indigo-500/15 hover:text-indigo-950 oscuro:hover:text-indigo-300 hover:ring-indigo-200/90 oscuro:hover:ring-indigo-500/30 touch-manipulation"
+        class="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border transition touch-manipulation"
+        :class="pinned ? clasePinMarcado : clasePinLibre"
+        :aria-pressed="pinned"
+        :aria-label="pinned ? 'Quitar de fijadas' : 'Fijar arriba'"
         :title="pinned ? 'Quitar de fijadas' : 'Fijar arriba'"
         @click.stop="$emit('toggle-pin')"
       >
@@ -348,6 +354,11 @@ const props = defineProps({
 })
 
 defineEmits(['toggle-pin', 'delete'])
+
+// Antes el botón era el mismo índigo claro fijada o no, y solo cambiaba el relleno de un
+// icono de 20 px: no se distinguía. Ahora fijada = botón sólido; sin fijar = contorno gris.
+const clasePinMarcado = 'border-indigo-600 bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 oscuro:border-indigo-400 oscuro:bg-indigo-500 oscuro:text-white'
+const clasePinLibre = 'border-borde bg-superficie-tarjeta text-texto-tenue hover:border-indigo-300 hover:text-indigo-700 oscuro:hover:text-indigo-300'
 
 const detalleUrl = computed(() => `/natilleras/${props.natillera.id}`)
 

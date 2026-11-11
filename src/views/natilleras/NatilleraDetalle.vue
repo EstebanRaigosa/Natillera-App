@@ -72,6 +72,32 @@
         </div>
       </header>
 
+      <!--
+        Natillera cerrada: el cierre solo cambia el estado, así que se puede deshacer.
+        Va aquí, a la vista, porque es la página a la que se llega desde el inicio.
+      -->
+      <div
+        v-if="natillera.estado === 'cerrada'"
+        class="flex flex-col gap-3 rounded-2xl border border-amber-200 oscuro:border-amber-500/30 bg-amber-50 oscuro:bg-amber-500/10 px-3.5 py-3 sm:flex-row sm:items-center"
+      >
+        <div class="flex min-w-0 flex-1 items-start gap-2.5">
+          <LockClosedIcon class="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-700 oscuro:text-amber-300" />
+          <p class="text-sm leading-snug text-amber-900 oscuro:text-amber-200">
+            <span class="font-bold">Natillera cerrada</span><template v-if="fechaCierreTexto"> el {{ fechaCierreTexto }}</template>.
+            <template v-if="puedeReabrirNatillera"> Si fue un error o falta algo, puedes reabrirla.</template>
+          </p>
+        </div>
+        <button
+          v-if="puedeReabrirNatillera"
+          type="button"
+          class="inline-flex min-h-[44px] flex-shrink-0 touch-manipulation items-center justify-center gap-2 rounded-full bg-[#166534] px-4 text-sm font-bold text-white shadow-sm hover:bg-[#145a2d] active:bg-[#124d26]"
+          @click="modalReabrir = true"
+        >
+          <LockOpenIcon class="h-4 w-4" />
+          Reabrir natillera
+        </button>
+      </div>
+
       <!-- ─── Indicadores (paleta: #2D2D2D · #E91E63 · #F58231 · #90D15B · #2EBA74) ─── -->
       <div data-guia="indicadores" class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         <!-- Socios -->
@@ -3369,6 +3395,13 @@
         </template>
       </div>
     </ModalWrapper>
+    <ReabrirNatilleraModal
+      :show="modalReabrir"
+      :nombre="natillera?.nombre || 'esta natillera'"
+      :cargando="reabriendo"
+      @close="modalReabrir = false"
+      @confirmar="confirmarReabrir"
+    />
     <!-- Modal Sin Socios (skill natillerapp-modals: ModalWrapper, velo 70 %, cabecera móvil horizontal / sm+ centrada, cuerpo scroll, pie CTA) -->
     <ModalWrapper
       :show="!!modalSinSocios"
@@ -3704,6 +3737,8 @@ import {
   ListBulletIcon,
   FunnelIcon,
   UserCircleIcon,
+  LockClosedIcon,
+  LockOpenIcon,
 } from '@heroicons/vue/24/outline'
 import {
   ExclamationTriangleIcon as ExclamationTriangleIconSolid,
@@ -3717,6 +3752,7 @@ import { useColaboradoresStore } from '../../stores/colaboradores'
 import { getNatilleraAvatarUrl } from '../../utils/avatars'
 import { supabase } from '../../lib/supabase'
 import RechazarInvitacionConfirmModal from '../../components/RechazarInvitacionConfirmModal.vue'
+import ReabrirNatilleraModal from '../../components/cierre/ReabrirNatilleraModal.vue'
 import { useNotificationStore } from '../../stores/notifications'
 import {
   formatearRolColaboradorInvitacion,
@@ -5138,6 +5174,36 @@ const puedeNotificar = computed(() => {
   if (!misPermisos.value) return false
   return misPermisos.value.permisos?.notificar === true
 })
+// Reabrir lo puede quien puede cerrar: es deshacer esa misma acción.
+const puedeReabrirNatillera = computed(() => {
+  if (esAdmin.value) return true
+  if (!misPermisos.value) return false
+  return misPermisos.value.permisos?.cerrar_natillera === true
+})
+const modalReabrir = ref(false)
+const reabriendo = ref(false)
+const fechaCierreTexto = computed(() => {
+  const f = natillera.value?.fecha_cierre
+  if (!f) return ''
+  const d = new Date(f)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })
+})
+async function confirmarReabrir() {
+  if (reabriendo.value || !natillera.value) return
+  reabriendo.value = true
+  try {
+    const resultado = await natillerasStore.reabrirNatillera(natillera.value.id)
+    if (!resultado.success) {
+      notificationStore.critica(resultado.error || 'Error desconocido', 'No se pudo reabrir')
+      return
+    }
+    modalReabrir.value = false
+    notificationStore.exito('La natillera vuelve a estar activa.', 'Natillera reabierta')
+  } finally {
+    reabriendo.value = false
+  }
+}
 // Función para buscar comprobante
 // Función auxiliar para calcular el total a pagar de una cuota incluyendo todos los conceptos
 async function calcularTotalAPagarCompleto(cuota) {

@@ -20,11 +20,12 @@
 
       <div v-else class="space-y-4 lg:space-y-6">
         <!--
-          Cabecera en verde de marca, como las del resto de la app. En <lg lleva además
-          las pestañas «Resumen | Socios»: con veinte socios, la lista y el resumen en
-          una sola columna obligaban a bajar media página para pasar de uno a otro.
+          Cabecera en verde de marca, como las del resto de la app. En móvil ya no lleva
+          pestañas «Resumen | Socios»: la de socios pasaba desapercibida y la gente no
+          encontraba la lista. Ahora todo va en un solo scroll y el resumen tiene accesos
+          directos a la lista.
         -->
-        <header class="rounded-2xl bg-[#1B5E37] px-3 pb-3 pt-3 text-white shadow-sm sm:px-5 sm:pt-4 lg:px-6 lg:py-5">
+        <header class="rounded-2xl bg-[#1B5E37] px-3 py-3 text-white shadow-sm sm:px-5 sm:pt-4 lg:px-6 lg:py-5">
           <div class="flex items-center gap-2 sm:gap-3">
             <router-link
               :to="`/natilleras/${natilleraId}`"
@@ -65,32 +66,6 @@
             </div>
           </div>
 
-          <nav
-            v-if="datosCierre.length > 0 && !calculandoCierre"
-            aria-label="Secciones del cierre"
-            class="mt-3 flex gap-1 rounded-full bg-black/20 p-1 lg:hidden"
-          >
-            <button
-              v-for="pestana in PESTANAS_CIERRE"
-              :key="pestana.valor"
-              type="button"
-              :aria-pressed="vistaMovil === pestana.valor"
-              :class="[
-                'flex min-h-[44px] flex-1 touch-manipulation items-center justify-center gap-1.5 rounded-full text-sm transition-colors',
-                vistaMovil === pestana.valor ? 'bg-superficie-tarjeta font-extrabold text-marca-tinta shadow' : 'font-bold text-white/90'
-              ]"
-              @click="cambiarVistaMovil(pestana.valor)"
-            >
-              {{ pestana.etiqueta }}
-              <span
-                v-if="pestana.valor === 'socios'"
-                :class="[
-                  'rounded-full px-1.5 text-[11px] font-extrabold tabular-nums',
-                  vistaMovil === 'socios' ? 'bg-marca-suave text-marca-tinta' : 'bg-white/20 text-white'
-                ]"
-              >{{ datosCierre.length }}</span>
-            </button>
-          </nav>
         </header>
 
         <div v-if="calculandoCierre" class="rounded-2xl border border-dashed border-borde bg-superficie-tarjeta/70 py-14">
@@ -99,14 +74,14 @@
 
         <!--
           Escritorio: resumen a la izquierda y socios a la derecha, las dos a la vista.
-          Móvil: una columna a la vez, según la pestaña.
+          Móvil: una sola columna, resumen compacto arriba y la lista de socios debajo.
         -->
         <div
           v-else-if="datosCierre.length > 0"
           class="lg:grid lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:items-start lg:gap-6"
         >
           <!-- ===== Resumen ===== -->
-          <aside :class="['space-y-3 lg:sticky lg:top-4 lg:block lg:space-y-4', vistaMovil === 'resumen' ? 'block' : 'hidden']">
+          <aside class="space-y-3 lg:sticky lg:top-4 lg:space-y-4">
             <!--
               El total arriba y, debajo, la cuenta que lo explica: ahorros + utilidades
               − administración − deudas descontadas. Así se ve de dónde sale cada peso
@@ -120,7 +95,53 @@
                 </p>
                 <p class="mt-1 text-xs text-texto-suave">Efectivo a tener listo para liquidar</p>
               </div>
-              <dl class="divide-y divide-borde-suave border-t border-borde-suave">
+              <!--
+                Accesos a la lista de socios (solo móvil): cuántos son, cuántos reciben y
+                cuántos deben, y cada cifra lleva a la lista ya filtrada. Es la puerta de
+                entrada que antes escondía la pestaña «Socios».
+              -->
+              <div class="grid grid-cols-3 divide-x divide-borde-suave border-t border-borde-suave lg:hidden" role="group" aria-label="Ir a los socios">
+                <button
+                  v-for="acceso in accesosSocios"
+                  :key="acceso.valor"
+                  type="button"
+                  class="flex min-h-[60px] touch-manipulation flex-col items-center justify-center px-1 py-2 active:bg-marca-suave"
+                  :aria-label="`Ver ${acceso.etiqueta.toLowerCase()}: ${acceso.cantidad}`"
+                  @click="irASocios(acceso.valor)"
+                >
+                  <span
+                    :class="[
+                      'font-display text-lg font-extrabold leading-none tabular-nums',
+                      acceso.valor === 'deben' && acceso.cantidad > 0 ? 'text-orange-700 oscuro:text-orange-300' : 'text-texto-fuerte'
+                    ]"
+                  >{{ acceso.cantidad }}</span>
+                  <span class="mt-1 flex items-center gap-0.5 text-[11px] font-bold text-marca-tinta">
+                    {{ acceso.etiqueta }}
+                    <ChevronDownIcon class="h-3 w-3" />
+                  </span>
+                </button>
+              </div>
+              <!-- En móvil la cuenta va plegada: es consulta, no lo primero que se busca -->
+              <button
+                type="button"
+                class="flex min-h-[52px] w-full touch-manipulation items-center gap-3 border-t border-borde-suave px-4 text-left active:bg-marca-suave lg:hidden"
+                :aria-expanded="cuentaAbierta"
+                aria-controls="cuenta-cierre"
+                @click="cuentaAbierta = !cuentaAbierta"
+              >
+                <!-- Verbo + chevron en círculo, como el «Ver desglose» de utilidades: que se lea como algo que se abre -->
+                <CalculatorIcon class="h-5 w-5 flex-shrink-0 text-marca-tinta" />
+                <span class="min-w-0 flex-1 text-sm font-bold text-marca-tinta">
+                  {{ cuentaAbierta ? 'Ocultar la cuenta' : 'Ver de dónde sale el total' }}
+                </span>
+                <span class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-marca-suave text-marca-tinta">
+                  <ChevronDownIcon :class="['h-4 w-4 transition-transform', cuentaAbierta ? 'rotate-180' : '']" />
+                </span>
+              </button>
+              <dl
+                id="cuenta-cierre"
+                :class="['divide-y divide-borde-suave border-t border-borde-suave lg:block', cuentaAbierta ? 'block' : 'hidden']"
+              >
                 <div class="flex min-h-[48px] items-center justify-between gap-3 px-4">
                   <dt class="text-sm text-texto-secundario">Ahorros</dt>
                   <dd class="font-display text-[15px] font-bold tabular-nums text-texto-fuerte">${{ formatMoney(totalAhorros) }}</dd>
@@ -205,7 +226,7 @@
 
             <div class="flex items-start gap-2.5 rounded-2xl bg-marca-suave px-3.5 py-3 text-[13px] leading-snug text-[#14532d] oscuro:text-marca-tinta">
               <InformationCircleIcon class="mt-px h-[18px] w-[18px] flex-shrink-0" />
-              <span>Exporta los comprobantes antes de confirmar. Al cerrar no se puede deshacer.</span>
+              <span>Exporta los comprobantes antes de confirmar. Si hace falta, la natillera se puede reabrir desde su página.</span>
             </div>
 
             <!-- Escritorio: el botón vive en la columna del resumen -->
@@ -213,26 +234,18 @@
               Confirmar cierre definitivo
             </button>
 
-            <!-- Móvil: al final del resumen, en su sitio, sin flotar sobre el contenido -->
-            <div class="flex gap-2.5 pt-1 lg:hidden">
-              <button type="button" class="btn-modal-secondary flex-1" @click="abrirExportar">
-                <ArrowDownTrayIcon class="h-[18px] w-[18px]" />
-                Exportar
-              </button>
-              <button type="button" class="btn-modal-primary flex-[1.4]" @click="confirmarCerrarNatillera">
-                Confirmar cierre
-              </button>
-            </div>
           </aside>
 
           <!-- ===== Socios ===== -->
-          <section
-            :class="['lg:block', vistaMovil === 'socios' ? 'block' : 'hidden']"
-            aria-labelledby="titulo-socios-cierre"
-          >
-            <div class="overflow-hidden rounded-2xl border border-borde/80 bg-superficie-tarjeta shadow-sm">
+          <section class="mt-5 lg:mt-0" aria-labelledby="titulo-socios-cierre">
+            <!-- Título fuera de la tarjeta en móvil: que la lista se vea como sección propia -->
+            <h2 class="mb-2 flex items-baseline gap-2 px-1 font-display text-lg font-extrabold text-texto-fuerte lg:hidden">
+              Socios
+              <span class="text-sm font-bold text-texto-suave tabular-nums">{{ datosCierre.length }}</span>
+            </h2>
+            <div id="titulo-socios-cierre" class="scroll-mt-3 overflow-hidden rounded-2xl border border-borde/80 bg-superficie-tarjeta shadow-sm">
               <div class="space-y-3 border-b border-borde-suave p-3 sm:p-4 lg:flex lg:items-center lg:gap-4 lg:space-y-0">
-                <h2 id="titulo-socios-cierre" class="hidden flex-1 font-display text-lg font-extrabold text-texto-fuerte lg:block">
+                <h2 class="hidden flex-1 font-display text-lg font-extrabold text-texto-fuerte lg:block">
                   Detalle por socio
                 </h2>
                 <!-- Lupa por flex, no por `absolute`: en iOS el search cambia de alto al enfocar -->
@@ -382,13 +395,11 @@
           </section>
 
           <!--
-            Barra de acciones de la pestaña «Socios» en móvil: `sticky`, acompaña el scroll
-            de la lista y queda anclada justo encima de la barra inferior de la app, cuyo
-            alto se mide en vivo (`useHuecoBarraInferior`, relativo al <main>: por eso es
-            sticky y no fixed). En «Resumen» no sale: allí los botones van al final.
+            Barra de acciones en móvil: `sticky`, acompaña todo el scroll y queda anclada
+            justo encima de la barra inferior de la app, cuyo alto se mide en vivo
+            (`useHuecoBarraInferior`, relativo al <main>: por eso es sticky y no fixed).
           -->
           <div
-            v-if="vistaMovil === 'socios'"
             class="cierre-barra-acciones sticky z-20 mt-4 rounded-2xl border border-borde bg-superficie-tarjeta p-3 shadow-[0_8px_24px_-8px_rgba(15,83,45,0.35)] lg:hidden"
           >
             <div class="flex gap-2.5">
@@ -498,6 +509,8 @@ onMounted(precargarXlsxEnIos)
 import {
   ArrowDownTrayIcon,
   ArrowUpIcon,
+  CalculatorIcon,
+  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ExclamationTriangleIcon,
@@ -556,17 +569,13 @@ const puedeCerrarNatillera = computed(() => {
 const datosCierre = ref([])
 const busquedaCierre = ref('')
 
-const PESTANAS_CIERRE = [
-  { valor: 'resumen', etiqueta: 'Resumen' },
-  { valor: 'socios', etiqueta: 'Socios' }
-]
 const FILTROS_SOCIOS = [
   { valor: 'todos', etiqueta: 'Todos' },
   { valor: 'reciben', etiqueta: 'Reciben' },
   { valor: 'deben', etiqueta: 'Deben' }
 ]
-/** Pestaña visible en <lg. En escritorio se ven las dos columnas y esto no pinta. */
-const vistaMovil = ref('resumen')
+/** En móvil la cuenta del total arranca plegada; en escritorio siempre se ve. */
+const cuentaAbierta = ref(false)
 const filtroSocios = ref('todos')
 const socioAbierto = ref(null)
 const modalExportar = ref(false)
@@ -728,20 +737,23 @@ function inicialesSocio(dato) {
   return (dato.socio?.nombre || 'S').split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0].toUpperCase()).join('')
 }
 
-function cambiarVistaMovil(vista) {
-  if (vistaMovil.value === vista) return
-  vistaMovil.value = vista
-  scrollToTop()
+const accesosSocios = computed(() => [
+  { valor: 'todos', etiqueta: 'Socios', cantidad: datosCierre.value.length },
+  { valor: 'reciben', etiqueta: 'Reciben', cantidad: datosCierre.value.length - sociosQueDeben.value },
+  { valor: 'deben', etiqueta: 'Deben', cantidad: sociosQueDeben.value }
+])
+
+// Lleva a la lista ya filtrada, sin tener que buscar a nadie.
+function irASocios(filtro) {
+  filtroSocios.value = filtro
+  busquedaCierre.value = ''
+  nextTick(() => {
+    document.getElementById('titulo-socios-cierre')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
 }
 
-// Desde el aviso de «por cobrar»: la lista ya filtrada, sin tener que buscar a nadie.
 function verSociosQueDeben() {
-  filtroSocios.value = 'deben'
-  busquedaCierre.value = ''
-  cambiarVistaMovil('socios')
-  if (window.matchMedia?.('(min-width: 1024px)').matches) {
-    document.getElementById('titulo-socios-cierre')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
+  irASocios('deben')
 }
 
 function abrirSocio(dato) {
@@ -824,7 +836,7 @@ async function calcularDatosCierre() {
 }
 
 async function confirmarCerrarNatillera() {
-  if (!confirm('¿Estás seguro de cerrar esta natillera? Esta acción no se puede deshacer.')) {
+  if (!confirm('¿Cerrar esta natillera? Dejará de estar activa. Si hace falta, se puede reabrir desde su página.')) {
     return
   }
   const result = await natillerasStore.cerrarNatillera(natilleraId.value)

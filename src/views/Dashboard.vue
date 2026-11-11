@@ -156,7 +156,7 @@
         <!-- Filtros: móvil — panel con jerarquía; desktop — fila sin panel. -->
         <div
           v-if="mostrarBarraFiltrosNatilleras"
-          class="flex flex-col gap-3 rounded-2xl border border-borde/90 bg-gradient-to-b from-superficie-tarjeta to-emerald-50/35 oscuro:to-emerald-500/10 p-3.5 shadow-sm ring-1 ring-borde-suave/90 sm:rounded-none sm:border-0 sm:bg-none sm:p-0 sm:shadow-none sm:ring-0 sm:flex-row sm:items-end sm:justify-between sm:gap-8 lg:gap-10"
+          class="flex flex-col gap-3 rounded-2xl border border-borde/90 bg-gradient-to-b from-superficie-tarjeta to-emerald-50/35 oscuro:to-emerald-500/10 p-3.5 shadow-sm ring-1 ring-borde-suave/90 sm:rounded-none sm:border-0 sm:bg-none sm:p-0 sm:shadow-none sm:ring-0 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-8 sm:gap-y-4 lg:gap-10"
           role="region"
           aria-label="Filtros de natilleras"
         >
@@ -165,6 +165,33 @@
           >
             <FunnelIcon class="h-4 w-4 shrink-0 text-[#166534] oscuro:text-marca-tinta" aria-hidden="true" />
             <span class="text-[11px] font-bold uppercase tracking-[0.14em] text-texto">Filtros</span>
+          </div>
+          <!-- Búsqueda por nombre: con muchas natilleras, los filtros de estado y propiedad no bastan. -->
+          <!-- En escritorio, fila propia arriba (basis-full): al lado apretaba Propiedad y Estado. -->
+          <div class="w-full sm:basis-full">
+          <label class="relative block w-full sm:max-w-md">
+            <span class="sr-only">Buscar natillera</span>
+            <MagnifyingGlassIcon class="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-texto-tenue" aria-hidden="true" />
+            <!-- 16 px: con menos, iOS hace zoom al enfocar. `text` y no `search`: Safari y Chrome
+                 le ponen su propia X y su estilo, y se duplicaba con la de borrar. -->
+            <input
+              v-model="busqueda"
+              type="text"
+              enterkeyhint="search"
+              autocomplete="off"
+              placeholder="Buscar natillera"
+              class="min-h-[44px] w-full rounded-full border border-borde bg-superficie-tarjeta py-2 pl-11 pr-11 text-base text-texto-fuerte placeholder:text-texto-tenue shadow-sm focus:border-[#166534] focus:outline-none focus:ring-2 focus:ring-[#166534]/20"
+            />
+            <button
+              v-if="busqueda"
+              type="button"
+              class="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 touch-manipulation items-center justify-center text-texto-suave hover:text-texto-fuerte"
+              aria-label="Borrar búsqueda"
+              @click="busqueda = ''"
+            >
+              <XMarkIcon class="h-5 w-5" />
+            </button>
+          </label>
           </div>
           <!-- Móvil: Propiedad primero; fila Estado + Vista. Desktop: Propiedad + Estado (sin caja). -->
           <div class="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-end sm:gap-8 lg:gap-12">
@@ -354,7 +381,7 @@
             class="w-full"
           />
           <div v-else class="flex w-full justify-center">
-            <DashboardFiltroSinResultados @ver-todas="filtro = 'todas'" />
+            <DashboardFiltroSinResultados @ver-todas="filtro = 'todas'; busqueda = ''" />
           </div>
         </div>
 
@@ -428,7 +455,7 @@
             descripcion="No administras ninguna natillera en esta cuenta. Cambia el filtro de propiedad para ver «Todas» o las compartidas."
             @ver-todas="vistaActiva = 'todas'"
           />
-          <DashboardFiltroSinResultados v-else @ver-todas="filtro = 'todas'" />
+          <DashboardFiltroSinResultados v-else @ver-todas="filtro = 'todas'; busqueda = ''" />
         </div>
 
         <div
@@ -494,7 +521,7 @@
             descripcion="No colaboras en ninguna natillera compartida. Cuando te inviten, aparecerán aquí. También puedes revisar «Todas»."
             @ver-todas="vistaActiva = 'todas'"
           />
-          <DashboardFiltroSinResultados v-else @ver-todas="filtro = 'todas'" />
+          <DashboardFiltroSinResultados v-else @ver-todas="filtro = 'todas'; busqueda = ''" />
         </div>
 
         <div
@@ -553,7 +580,7 @@
           "
         >
           <DashboardNatilleraSocioCard
-            v-for="item in natillerasSocioPortal"
+            v-for="item in natillerasSocioPortal.filter(i => coincideBusqueda(i.natillera_nombre))"
             :key="item.socio_natillera_id"
             :item="item"
             :variant="vistaLayout === 'tarjetas' ? 'grid' : 'list'"
@@ -808,6 +835,8 @@ import {
   Squares2X2Icon,
   ListBulletIcon,
   FunnelIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
 } from '@heroicons/vue/24/outline'
 
 const authStore = useAuthStore()
@@ -849,6 +878,7 @@ const natillerasSocioVisibles = computed(() => {
   return natillerasSocioPortal.value.filter(n => !yaListadas.has(n.natillera_id))
 })
 const natillerasSocioFiltradas = computed(() => natillerasSocioVisibles.value.filter(n => {
+  if (!coincideBusqueda(n.natillera_nombre)) return false
   if (filtro.value === 'todas') return true
   return String(n.natillera_estado || 'activa').toLowerCase() === filtro.value
 }))
@@ -1012,10 +1042,19 @@ const mensajesEliminacion = [
 const mensajeEliminacionActual = ref(mensajesEliminacion[0])
 let intervaloMensajeEliminacion = null
 
+// Búsqueda por nombre, sin tildes ni mayúsculas: «aguinaldo» encuentra «Aguinaldo Navideño».
+const busqueda = ref('')
+const normalizarTexto = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+function coincideBusqueda(nombre) {
+  const q = normalizarTexto(busqueda.value)
+  return !q || normalizarTexto(nombre).includes(q)
+}
+
 const natillerasFiltradas = computed(() => {
   let list = filtro.value === 'todas'
     ? natillerasStore.natilleras
     : natillerasStore.natilleras.filter(n => n.estado === filtro.value)
+  list = list.filter(n => coincideBusqueda(n.nombre))
   // En "Mías" solo mostrar natilleras donde el usuario es el propietario (admin).
   // Importante para superusuario raigo: excluye natilleras de otros que ve en el listado general.
   const userId = usuarioAutenticado.value?.id
@@ -1029,6 +1068,7 @@ const natillerasCompartidasFiltradas = computed(() => {
   let list = filtro.value === 'todas'
     ? natillerasStore.natillerasCompartidas
     : natillerasStore.natillerasCompartidas.filter(n => n.estado === filtro.value)
+  list = list.filter(n => coincideBusqueda(n.nombre))
   return ordenarPineadasPrimero(list)
 })
 
@@ -1052,6 +1092,7 @@ const todasLasNatillerasFiltradas = computed(() => {
   if (filtro.value !== 'todas') {
     todas = todas.filter(n => n.estado === filtro.value)
   }
+  todas = todas.filter(n => coincideBusqueda(n.nombre))
   
   // Ordenar: primero las propias, luego las compartidas
   todas = todas.sort((a, b) => {

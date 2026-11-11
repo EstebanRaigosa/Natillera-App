@@ -33,6 +33,23 @@ sancionAPagar = max(0, sancionTotal - sancionPagadaAnterior)
 
 Si queda remanente y la cuota ya estaba cubierta pero el UI mandó actividades a 0, un ajuste puede sumar el remanente a actividades para no perder historial.
 
+## Pago de varias cuotas
+
+El pago rápido de un socio y la carga rápida reparten el monto por prioridad global:
+
+1. Sanciones de todas las cuotas vencidas del socio, incluso las no marcadas.
+2. Actividades pendientes del conjunto.
+3. Cuotas de préstamos pendientes (mora antes del capital).
+4. Ahorro de la natillera, desde la cuota más antigua.
+
+Las marcas y los valores ingresados definen el presupuesto; no permiten saltar deudas de mayor
+prioridad de otro mes. Las cuotas futuras se atienden después de saldar lo vencido. En carga
+rápida se conservan las fechas y la marca de pago a tiempo de las cuotas seleccionadas.
+
+`repartirPagoPrioritario` calcula el resumen por cuota y los abonos por concepto que se
+registran en ese orden. Si falla un abono, se detiene el resto de ese socio. El GMF se
+redondea sobre el acumulado por cuota y se distribuye entre sus abonos sin duplicarlo.
+
 ## Actualización de columnas en `cuotas`
 
 - `valor_pagado` (solo lo correspondiente a **cuota base**, no la sanción).

@@ -5,9 +5,8 @@
     que paga y se registran juntas; al terminar se abre el comprobante de varias cuotas.
 
     Cada cuota se registra por el camino del pago normal (usePagoCuotaCompleto). Con «Monto
-    recibido» el dinero se reparte solo, de la cuota más vieja a la más nueva; lo que no alcanza
-    para una cuota entera queda como abono a esa cuota. «Pagar otro valor» sigue abriendo el
-    modal de pago de siempre.
+    recibido» el dinero se reparte por concepto en todo el conjunto: sanciones, actividades,
+    préstamos y finalmente ahorro, de la cuota más antigua a la más reciente.
   -->
   <ModalWrapper
     :show="show"
@@ -129,10 +128,10 @@
                 />
               </div>
               <p v-if="montoRecibido > 0 && sobrante > 0" class="mt-1 text-xs font-semibold text-amber-700 oscuro:text-amber-300">
-                Sobran ${{ formatMoney(sobrante) }}: no hay más saldo pendiente para asignarlos.
+                Quedan ${{ formatMoney(sobrante) }} sin aplicar al pago.
               </p>
-              <p v-else-if="montoRecibido > 0 && reparto.parcial" class="mt-1 text-xs text-texto-suave">
-                {{ reparto.parcial.periodo }} queda con un abono de ${{ formatMoney(reparto.parcial.valor) }}.
+              <p v-else-if="montoRecibido > 0" class="mt-1 text-xs text-texto-suave">
+                Se cobran primero todas las sanciones, luego actividades, préstamos y ahorro.
               </p>
             </div>
           </section>
@@ -158,29 +157,29 @@
               v-for="(fila, i) in filas"
               :key="fila.cuota.id"
               class="overflow-hidden rounded-xl border-2 transition-colors"
-              :class="seleccion.has(fila.cuota.id) ? 'border-[#1B5E37] oscuro:border-marca-tinta bg-[#F4FAF5] oscuro:bg-marca-suave' : 'border-borde bg-superficie-tarjeta'"
+              :class="asignadoDe(fila.cuota.id) > 0 ? 'border-[#1B5E37] oscuro:border-marca-tinta bg-[#F4FAF5] oscuro:bg-marca-suave' : 'border-borde bg-superficie-tarjeta'"
             >
               <button
                 type="button"
                 role="checkbox"
-                :aria-checked="seleccion.has(fila.cuota.id)"
+                :aria-checked="asignadoDe(fila.cuota.id) > 0"
                 class="flex min-h-[52px] w-full touch-manipulation items-center gap-3 px-3 pt-3 pb-2 text-left"
                 :disabled="guardando"
                 @click="alternar(i)"
               >
                 <span
                   class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border-2"
-                  :class="seleccion.has(fila.cuota.id) ? 'border-[#1B5E37] oscuro:border-marca-tinta bg-[#1B5E37] text-white' : 'border-borde-fuerte bg-superficie-tarjeta'"
+                  :class="asignadoDe(fila.cuota.id) > 0 ? 'border-[#1B5E37] oscuro:border-marca-tinta bg-[#1B5E37] text-white' : 'border-borde-fuerte bg-superficie-tarjeta'"
                 >
-                  <CheckIcon v-if="seleccion.has(fila.cuota.id)" class="h-4 w-4" stroke-width="3" />
+                  <CheckIcon v-if="asignadoDe(fila.cuota.id) > 0" class="h-4 w-4" stroke-width="3" />
                 </span>
                 <span class="min-w-0 flex-1">
                   <span class="block text-sm font-bold text-texto-fuerte">{{ fila.periodo }}</span>
                   <span class="mt-0.5 inline-flex rounded-md px-1.5 py-0.5 text-[11px] font-bold" :class="fila.estado.clase">{{ fila.estado.texto }}</span>
                 </span>
                 <span class="flex-shrink-0 text-right">
-                  <template v-if="abonoDe(fila.cuota.id) != null">
-                    <span class="block text-base font-extrabold tabular-nums text-amber-700 oscuro:text-amber-300">Abona ${{ formatMoney(abonoDe(fila.cuota.id)) }}</span>
+                  <template v-if="asignadoDe(fila.cuota.id) > 0 && asignadoDe(fila.cuota.id) < fila.total">
+                    <span class="block text-base font-extrabold tabular-nums text-amber-700 oscuro:text-amber-300">Abona ${{ formatMoney(asignadoDe(fila.cuota.id)) }}</span>
                     <span class="block text-[11px] tabular-nums text-texto-suave">de ${{ formatMoney(fila.total) }}</span>
                   </template>
                   <span v-else class="block text-base font-extrabold tabular-nums text-texto-fuerte">${{ formatMoney(fila.total) }}</span>
@@ -216,7 +215,7 @@
               <!-- Otro valor dentro del lote: las anteriores ya van marcadas, así que se paga aquí,
                    después de ellas, sin pasar por el aviso de periodos atrasados -->
               <div v-if="valoresOtro.has(fila.cuota.id)" class="mx-3 mb-3">
-                <label :for="`otro-valor-${fila.cuota.id}`" class="mb-1 block text-xs font-semibold text-texto-secundario">Valor a pagar en esta cuota</label>
+                <label :for="`otro-valor-${fila.cuota.id}`" class="mb-1 block text-xs font-semibold text-texto-secundario">Valor para completar el monto del lote</label>
                 <div class="flex items-center gap-2">
                   <div class="relative min-w-0 flex-1">
                     <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-semibold text-texto-tenue">$</span>
@@ -259,7 +258,7 @@
           </ul>
 
           <p class="text-xs leading-snug text-texto-suave">
-            Las cuotas se pagan en orden: al marcar una se marcan las anteriores. Marcar a mano borra el monto recibido.
+            Primero se cobran las sanciones de todas las cuotas vencidas, después actividades y préstamos, y por último el ahorro de la cuota más antigua a la más reciente.
           </p>
         </template>
       </div>
@@ -291,7 +290,7 @@
       :visible="guardando"
       flotante
       texto="Registrando pagos"
-      :detalle="`Cuota ${progreso} de ${filasElegidas.length}. No cierres la app.`"
+      :detalle="`Abono ${progreso}. No cierres la app.`"
     />
   </ModalWrapper>
 </template>
@@ -316,6 +315,7 @@ import { supabase } from '../../lib/supabase'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useTapadoInferior } from '../../composables/useTapadoInferior'
 import { registrarPagoCompletoDeCuota, calcular4x1000 } from '../../composables/usePagoCuotaCompleto'
+import { repartirPagoPrioritario } from '../../utils/repartirPagoPrioritario'
 import { useCuotasStore, capitalCuotaCompleto, cuotaPagadaDentroDePlazo } from '../../stores/cuotas'
 import { useNotificationStore } from '../../stores/notifications'
 import { formatMoney } from '../../utils/formatMoney'
@@ -673,26 +673,11 @@ function alEscribirMonto(e) {
   if (antes > 0 && montoRecibido.value === 0) seleccion.value = new Set()
 }
 
-/*
- * Reparte el monto de la cuota más vieja a la más nueva: cada una entera mientras alcance;
- * la primera que no alcanza recibe lo que queda como abono. Es la misma regla de orden que
- * al marcar a mano (no se cobra un periodo con otro anterior sin pagar).
- */
+// El monto recorre primero los conceptos de TODAS las cuotas vencidas.
 const reparto = computed(() => {
-  let restante = montoRecibido.value
-  const ids = []
-  let parcial = null
-  for (const f of filas.value) {
-    if (restante <= 0) break
-    ids.push(f.cuota.id)
-    if (restante >= f.total) {
-      restante -= f.total
-      continue
-    }
-    parcial = { id: f.cuota.id, periodo: f.periodo, valor: restante }
-    restante = 0
-  }
-  return { ids, parcial, sobrante: restante }
+  const resultado = repartirPagoPrioritario(filas.value, montoRecibido.value,
+    formaPago.value === 'transferencia' && cobrar4x1000.value)
+  return { ...resultado, ids: resultado.pagos.map(p => p.cuota.id) }
 })
 /*
  * «Pagar otro valor» dentro del lote: cuotaId → valor. Solo vale en la última cuota marcada,
@@ -702,7 +687,12 @@ const valoresOtro = ref(new Map())
 
 /** Lo que se abona a una cuota cuando no se paga entera; null si se paga completa. */
 function abonoDe(cuotaId) {
-  if (montoRecibido.value > 0) return reparto.value.parcial?.id === cuotaId ? reparto.value.parcial.valor : null
+  if (montoRecibido.value > 0) {
+    const pago = reparto.value.pagos.find(p => p.cuota.id === cuotaId)
+    const fila = filas.value.find(f => f.cuota.id === cuotaId)
+    const bruto = pago ? pago.valorPagado + pago.impuesto4x1000 : 0
+    return pago && bruto < fila.total ? bruto : null
+  }
   if (!valoresOtro.value.has(cuotaId) || !seleccion.value.has(cuotaId)) return null
   const fila = filas.value.find(f => f.cuota.id === cuotaId)
   const valor = valoresOtro.value.get(cuotaId)
@@ -761,56 +751,33 @@ watch(reparto, r => {
   if (montoRecibido.value > 0) seleccion.value = new Set(r.ids)
 })
 
-/*
- * Lo que un abono parcial paga de cada concepto, en el orden del store (cuotas.registrarPago):
- * sanción, actividades, préstamos (mora primero) y cuota. Las actividades y préstamos se
- * recortan a lo que cubre el abono, porque se registran por su valor_pendiente.
- */
-function pagoParcialDe(fila, abono) {
-  const conGmf = formaPago.value === 'transferencia' && cobrar4x1000.value
-  // El monto recibido trae el 4×1000 adentro y debe cuadrar exacto: se busca el mayor neto
-  // con neto + 4×1000(neto) <= abono, empezando por encima (con floor quedaba $1 corto:
-  // 122.000 daba 121.513 + 486 = 121.999). Si por redondeo ningún neto cuadra justo,
-  // el peso que falta va al neto y el 4×1000 se fija explícito.
-  let neto = abono
-  let impuesto4x1000
-  if (conGmf) {
-    neto = Math.floor((abono * 1000) / 1004) + 2
-    while (neto > 0 && neto + calcular4x1000(neto) > abono) neto--
-    impuesto4x1000 = calcular4x1000(neto)
-    neto = abono - impuesto4x1000
-  }
-  let restante = neto - Math.min(neto, fila.multa)
-  const actividades = []
-  for (const sa of fila.actividades) {
-    const valor = Math.min(restante, Math.round(sa.valor_pendiente))
-    if (valor <= 0) break
-    actividades.push({ ...sa, valor_pendiente: valor })
-    restante -= valor
-  }
-  const prestamo = []
-  for (const cp of fila.prestamo) {
-    if (restante <= 0) break
-    const mora = Math.min(restante, cp.mora || 0)
-    restante -= mora
-    const pendiente = Math.round(cp.valor_pendiente)
-    const valor = Math.min(restante, pendiente)
-    restante -= valor
-    prestamo.push({ ...cp, mora, valor_pendiente: valor, pagado: valor >= pendiente })
-  }
-  return { multa: fila.multa, valorPagado: neto, impuesto4x1000, actividades, prestamo }
+// Al marcar cuotas a mano se conserva el monto elegido, pero las obligaciones vencidas
+// del socio participan primero en el reparto, aunque no estuvieran marcadas.
+const planPrioritario = computed(() => {
+  if (montoRecibido.value > 0) return reparto.value
+  const elegidas = filas.value.filter(f => seleccion.value.has(f.cuota.id))
+  const presupuesto = elegidas.reduce((s, f) => s + (abonoDe(f.cuota.id) ?? f.total), 0)
+  const candidatas = filas.value.filter(f => f.vencida || seleccion.value.has(f.cuota.id))
+  return repartirPagoPrioritario(candidatas, presupuesto,
+    formaPago.value === 'transferencia' && cobrar4x1000.value)
+})
+const filasElegidas = computed(() => {
+  const ids = new Set(planPrioritario.value.pagos.map(p => p.cuota.id))
+  return filas.value.filter(f => ids.has(f.cuota.id))
+})
+const totalElegido = computed(() => planPrioritario.value.pagos.reduce((s, p) => s + p.valorPagado + p.impuesto4x1000, 0))
+function asignadoDe(cuotaId) {
+  const pago = planPrioritario.value.pagos.find(p => p.cuota.id === cuotaId)
+  return pago ? pago.valorPagado + pago.impuesto4x1000 : 0
 }
 
-const filasElegidas = computed(() => filas.value.filter(f => seleccion.value.has(f.cuota.id)))
-const totalElegido = computed(() =>
-  filasElegidas.value.reduce((s, f) => s + (abonoDe(f.cuota.id) ?? f.total), 0)
-)
 const resumenElegido = computed(() => {
   const n = filasElegidas.value.length
   const partes = [`${n} ${n === 1 ? 'cuota' : 'cuotas'}`]
-  const multas = filasElegidas.value.filter(f => f.multa > 0).length
-  const acts = filasElegidas.value.reduce((s, f) => s + f.actividades.length, 0)
-  const prest = filasElegidas.value.reduce((s, f) => s + f.prestamo.length, 0)
+  const pagos = planPrioritario.value.pagos
+  const multas = pagos.filter(p => p.multa > 0).length
+  const acts = pagos.reduce((s, p) => s + p.actividades.length, 0)
+  const prest = pagos.reduce((s, p) => s + p.prestamo.length, 0)
   if (multas) partes.push(`${multas} con sanción`)
   if (acts) partes.push(`${acts} ${acts === 1 ? 'actividad' : 'actividades'}`)
   if (prest) partes.push(`${prest} de préstamo`)
@@ -825,23 +792,13 @@ async function registrar() {
   progreso.value = 0
   const pagadas = []
   const historialIds = []
-  const lote = [...filasElegidas.value]
+  const lote = planPrioritario.value.pasos.map(p => ({ ...p, fecha: fechaDe(p.cuota.id) }))
   try {
     // En orden y de a una: cada pago cambia el saldo que ve el siguiente.
     for (const fila of lote) {
       progreso.value++
-      const abono = abonoDe(fila.cuota.id)
-      const conceptos = abono != null
-        ? pagoParcialDe(fila, abono)
-        : { multa: fila.multa, valorPagado: fila.neto, actividades: fila.actividades, prestamo: fila.prestamo }
-      // Un sobrante de pocos pesos con 4×1000 puede no dejar nada neto: no hay qué registrar
-      if (conceptos.valorPagado <= 0) continue
       const { ok, historialPagoId } = await registrarPagoCompletoDeCuota({
-        pago: {
-          cuota: fila.cuota,
-          fecha: fechaDe(fila.cuota.id),
-          ...conceptos
-        },
+        pago: fila,
         socio: socio.value,
         natilleraId: props.natilleraId,
         natilleraNombre: props.natilleraNombre || null,
@@ -850,13 +807,13 @@ async function registrar() {
       })
       if (!ok) {
         notificationStore.error(
-          `No se pudo registrar ${fila.periodo}.${pagadas.length ? ` Las ${pagadas.length} anteriores sí quedaron.` : ''}`,
+          `No se pudo registrar ${fila.periodo}.${pagadas.length ? ` Quedaron registrados abonos en ${pagadas.length} cuotas.` : ''}`,
           'Registrar pago',
           6000
         )
         break
       }
-      pagadas.push(fila.cuota.id)
+      if (!pagadas.includes(fila.cuota.id)) pagadas.push(fila.cuota.id)
       if (historialPagoId) historialIds.push(historialPagoId)
     }
     // Un solo recálculo de estados y mora para todo el lote.

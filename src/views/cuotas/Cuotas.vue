@@ -6503,12 +6503,15 @@
       :socio-natillera-id="comprobanteVariasDatos?.socioNatilleraId || ''"
       :socio-nombre="comprobanteVariasDatos?.nombre || ''"
       :socio-telefono="comprobanteVariasDatos?.telefono || ''"
+      :natillera-id="id"
+      :puede-eliminar="(esAdmin || esUsuarioAdmin) && !esVisor"
       :cuotas-iniciales="comprobanteVariasDatos?.cuotaIds || []"
       :historial-ids="comprobanteVariasDatos?.historialIds || []"
       :natillera-nombre="natilleraNombre || natillerasStore.natilleraActual?.nombre || ''"
       :mostrar-volver="!!comprobanteVariasDatos?.desdeSocio"
       @volver="requestCloseTopModal"
       @cerrar="cerrarComprobanteVarias"
+      @pagos-eliminados="alEliminarPagosMultiples"
     />
     <!--
       Pago rápido: al elegir un socio en «Registrar pago» salen todas sus cuotas con saldo, de
@@ -11913,6 +11916,14 @@ function alPagarRapido({ cuotaIds, historialIds, socio }) {
     }
     modalComprobanteVarias.value = true
   })
+}
+
+async function alEliminarPagosMultiples() {
+  if (cuotaDetalle.value?.id) {
+    const actualizada = cuotasStore.cuotas.find(c => c.id === cuotaDetalle.value.id)
+    if (actualizada) cuotaDetalle.value = actualizada
+    await cargarHistorialPagosCuota(cuotaDetalle.value.id)
+  }
 }
 
 function abrirComprobanteVariasDelSocio() {

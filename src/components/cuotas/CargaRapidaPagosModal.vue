@@ -8,7 +8,7 @@
     ejes y las casillas no decían de qué mes ni de cuánto eran. Por eso la lista.
 
     Cada socio se registra con el mismo camino del pago normal: cuotasStore.registrarPago por
-    cada cuota y, en su último pago, las actividades y cuotas de préstamo (usePagoConceptosCuota),
+    cada concepto, primero todas las sanciones, luego actividades y préstamos, y al final ahorro,
     enlazadas a ese pago como cuando se cobran juntas desde el modal. Un solo recálculo de
     mora al final, no uno por pago.
   -->
@@ -32,7 +32,7 @@
         </div>
         <div class="min-w-0 flex-1">
           <h2 class="font-display text-base font-bold leading-tight text-white">Carga rápida de pagos</h2>
-          <p class="mt-0.5 truncate text-[0.6875rem] leading-snug text-white/80">Pasa lo del cuaderno de una vez</p>
+          <p class="mt-0.5 truncate text-[0.6875rem] leading-snug text-white/80">Prioridad: sanciones, actividades, préstamos y ahorro</p>
         </div>
         <button
           type="button"
@@ -55,7 +55,7 @@
             <TableCellsIcon class="h-6 w-6 text-white" />
           </div>
           <h2 class="font-display text-lg font-bold leading-tight text-white">Carga rápida de pagos</h2>
-          <p class="mt-1 text-xs leading-snug text-white/80">Pasa lo del cuaderno de una vez</p>
+          <p class="mt-1 text-xs leading-snug text-white/80">Prioridad: sanciones, actividades, préstamos y ahorro</p>
         </div>
         <button
           type="button"
@@ -323,7 +323,8 @@ import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useNatiscroll } from '../../composables/useNatiscroll'
 import { useTapadoInferior } from '../../composables/useTapadoInferior'
 import { registrarPagoCompletoDeCuota } from '../../composables/usePagoCuotaCompleto'
-import { useCuotasStore, capitalCuotaCompleto } from '../../stores/cuotas'
+import { repartirPagoPrioritario } from '../../utils/repartirPagoPrioritario'
+import { useCuotasStore, capitalCuotaCompleto, cuotaPagadaDentroDePlazo } from '../../stores/cuotas'
 import { formatMoney } from '../../utils/formatMoney'
 
 const props = defineProps({
@@ -376,10 +377,6 @@ function claveMes(cuota) {
 }
 function pendienteDe(cuota) {
   return Math.max(0, (parseFloat(cuota.valor_cuota) || 0) - (parseFloat(cuota.valor_pagado) || 0))
-}
-function calcular4x1000(neto) {
-  const n = Math.max(0, Math.floor(Number(neto) || 0))
-  return n === 0 ? 0 : Math.round((n * 4) / 1000)
 }
 
 // ---------------------------------------------------------------- Cuotas
@@ -667,7 +664,7 @@ const sociosVisibles = computed(() => {
 
 /*
  * Qué se paga, por socio: sus cuotas marcadas (de la más vieja a la más nueva, cada una con
- * su fecha y su multa) y, colgadas del último pago, sus actividades y cuotas de préstamo.
+ * su fecha y su multa), sus actividades y cuotas de préstamo; se registran por prioridad.
  */
 const plan = computed(() => {
   const porSocio = new Map()
@@ -701,17 +698,25 @@ const plan = computed(() => {
 })
 
 const totales = computed(() => {
-  let cuotas = 0, valorCuotas = 0, multas = 0, valorMultas = 0, acts = 0, valorActs = 0, prest = 0, valorPrest = 0
+  let valorCuotas = 0, valorMultas = 0, valorActs = 0, valorPrest = 0
+  const cuotas = new Set(), multas = new Set(), acts = new Set(), prest = new Set()
   for (const p of plan.value) {
-    for (const c of p.cuotas) {
-      cuotas++
-      valorCuotas += c.valor
-      if (c.multa > 0) { multas++; valorMultas += c.multa }
+    for (const pago of repartirPagos(p)) {
+      if (pago.sinPortador) continue
+      if (pago.multa > 0) {
+        multas.add(pago.cuota.id)
+        valorMultas += pago.valorPagado
+      } else if (pago.actividades.length) {
+        for (const a of pago.actividades) { acts.add(a.id); valorActs += a.valor_pendiente }
+      } else if (pago.prestamo.length) {
+        for (const cp of pago.prestamo) { prest.add(cp.id); valorPrest += cp.valor_pendiente + (cp.mora || 0) }
+      } else {
+        cuotas.add(pago.cuota.id)
+        valorCuotas += pago.valorPagado
+      }
     }
-    for (const a of p.actividades) { acts++; valorActs += a.valor_pendiente }
-    for (const cp of p.prestamo) { prest++; valorPrest += cp.valor_pendiente }
   }
-  return { cuotas, valorCuotas, multas, valorMultas, acts, valorActs, prest, valorPrest }
+  return { cuotas: cuotas.size, valorCuotas, multas: multas.size, valorMultas, acts: acts.size, valorActs, prest: prest.size, valorPrest }
 })
 const netoGeneral = computed(() => totales.value.valorCuotas + totales.value.valorMultas + totales.value.valorActs + totales.value.valorPrest)
 const aplica4x1000 = computed(() => formaPago.value === 'transferencia' && cobrar4x1000.value)
@@ -721,7 +726,7 @@ const total4x1000 = computed(() => {
   let t = 0
   for (const p of plan.value) {
     const pagos = repartirPagos(p)
-    for (const pago of pagos) t += calcular4x1000(pago.valorPagado)
+    for (const pago of pagos) t += pago.impuesto4x1000 || 0
   }
   return t
 })
@@ -755,9 +760,8 @@ function limpiar() {
 }
 
 /*
- * Pagos concretos de un socio. Cada cuota marcada es un pago; actividades y préstamo van en
- * el último. Si el socio no tiene cuotas marcadas, van sobre su cuota pagada más reciente
- * (como un segundo abono), con fecha de hoy.
+ * Las marcas definen el monto recibido. El reparto consulta también las obligaciones
+ * vencidas sin marcar y registra abonos por prioridad, conservando las fechas elegidas.
  */
 function repartirPagos(p) {
   const totalActs = p.actividades.reduce((s, a) => s + a.valor_pendiente, 0)
@@ -766,20 +770,48 @@ function repartirPagos(p) {
     cuota: c.cuota, fecha: c.fecha, multa: c.multa, valorPagado: c.valor + c.multa, actividades: [], prestamo: []
   }))
   if (totalActs + totalPrest > 0) {
-    let portador = pagos[pagos.length - 1]
+    let portador = pagos[0]
     if (!portador) {
-      const pagadas = (cuotasStore.cuotas || [])
-        .filter(c => c.socio_natillera_id === p.socioId && capitalCuotaCompleto(c))
-        .sort((a, b) => String(b.fecha_limite).localeCompare(String(a.fecha_limite)))
-      if (!pagadas[0]) return [{ sinPortador: true, valorPagado: totalActs + totalPrest }]
-      portador = { cuota: pagadas[0], fecha: hoyIso, multa: 0, valorPagado: 0, actividades: [], prestamo: [] }
+      const portadoras = (cuotasStore.cuotas || [])
+        .filter(c => c.socio_natillera_id === p.socioId)
+        .sort((a, b) => String(a.fecha_limite).localeCompare(String(b.fecha_limite)))
+      if (!portadoras[0]) return [{ sinPortador: true, valorPagado: totalActs + totalPrest }]
+      portador = { cuota: portadoras[0], fecha: hoyIso, multa: 0, valorPagado: 0, actividades: [], prestamo: [] }
       pagos.push(portador)
     }
     portador.actividades = p.actividades
     portador.prestamo = p.prestamo
     portador.valorPagado += totalActs + totalPrest
   }
-  return pagos
+  // Las marcas fijan cuánto recibió el socio. El monto se reparte considerando todas
+  // sus obligaciones vencidas, incluso las de meses que no fueron marcados.
+  const impuesto = n => aplica4x1000.value ? Math.round(n * 4 / 1000) : 0
+  const presupuesto = pagos.reduce((s, pago) => s + pago.valorPagado + impuesto(pago.valorPagado), 0)
+  const seleccionadas = new Map(pagos.map(pago => [pago.cuota.id, pago]))
+  const candidatas = cuotasVisibles.value.filter(c => c.socio_natillera_id === p.socioId && (
+    seleccionadas.has(c.id) || ((c.fecha_vencimiento || c.fecha_limite) && String(c.fecha_vencimiento || c.fecha_limite).slice(0, 10) < hoyIso)
+  )).sort((a, b) => String(a.fecha_limite).localeCompare(String(b.fecha_limite)))
+  const filas = candidatas.map(cuota => {
+    const elegida = seleccionadas.get(cuota.id)
+    const totalMulta = hayMultas.value && !cuota.no_calcular_multa && !cuotaPagadaDentroDePlazo(cuota)
+      ? (capitalCuotaCompleto(cuota)
+          ? (Number(cuota.valor_multa) || (Number(cuota.valor_multa_base) || 0) + (Number(cuota.valor_multa_intereses) || 0))
+          : cuotasStore.calcularSancionCuotaAFecha(cuota, configSanciones.value, hoyIso, diasGracia.value))
+      : 0
+    return {
+      cuota,
+      fecha: elegida?.fecha || hoyIso,
+      multa: elegida ? elegida.multa : Math.max(0, Math.round(totalMulta - (Number(cuota.valor_pagado_sancion) || 0))),
+      cuotaPend: pendienteDe(cuota),
+      actividades: [], prestamo: []
+    }
+  })
+  // Cada concepto se cobra una sola vez y se enlaza a la cuota más antigua.
+  if (filas[0]) {
+    filas[0].actividades = sociosActividad.value.filter(a => a.socio_natillera_id === p.socioId)
+    filas[0].prestamo = prestamosDe(p.socioId)
+  }
+  return repartirPagoPrioritario(filas, presupuesto, aplica4x1000.value).pasos
 }
 
 // ---------------------------------------------------------------- Registrar
@@ -806,9 +838,9 @@ async function registrar() {
   const colas = plan.value.map(p => ({ socio: sociosPorId.get(p.socioId), pagos: repartirPagos(p) }))
   sociosAProcesar.value = colas.length
 
-  let registrados = 0
+  const cuotasRegistradas = new Set()
   const fallidos = new Set()
-  // Cada socio en orden (sus pagos de lo más viejo a lo más nuevo), tres socios a la vez.
+  // Cada socio por prioridad de concepto y antigüedad; tres socios a la vez.
   async function trabajador() {
     while (colas.length > 0) {
       const { socio, pagos } = colas.shift()
@@ -816,7 +848,7 @@ async function registrar() {
         if (pago.sinPortador) {
           // Sin ninguna cuota a la cual asociar actividades o préstamo
           fallidos.add(`${socio?.nombre || 'un socio'} (marca también una cuota)`)
-          continue
+          break
         }
         let ok = false
         try {
@@ -824,8 +856,11 @@ async function registrar() {
         } catch (e) {
           console.warn('Carga rápida:', e)
         }
-        if (ok) registrados++
-        else fallidos.add(socio?.nombre || 'un socio')
+        if (ok) cuotasRegistradas.add(pago.cuota.id)
+        else {
+          fallidos.add(socio?.nombre || 'un socio')
+          break // No cobrar conceptos de menor prioridad si falló uno anterior.
+        }
       }
       progreso.value++
     }
@@ -841,7 +876,7 @@ async function registrar() {
 
   limpiar()
   guardando.value = false
-  resultado.value = { registrados, fallidos: [...fallidos] }
+  resultado.value = { registrados: cuotasRegistradas.size, fallidos: [...fallidos] }
   emit('guardado', resultado.value)
 }
 

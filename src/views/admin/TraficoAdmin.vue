@@ -34,7 +34,18 @@
       </div>
     </header>
 
-    <div class="flex justify-end">
+    <!-- En móvil el «Actualizar» de la cabecera no se ve: va aquí, junto al interruptor. -->
+    <div class="flex items-center justify-end gap-2">
+      <button
+        type="button"
+        class="flex min-h-11 min-w-11 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-borde bg-superficie-tarjeta px-3 text-xs font-semibold text-texto-suave sm:hidden"
+        :disabled="cargando"
+        aria-label="Actualizar"
+        @click="cargarTodo"
+      >
+        <ArrowPathIcon class="h-4 w-4" :class="{ 'animate-spin': cargando }" aria-hidden="true" />
+        Actualizar
+      </button>
       <button
         type="button"
         role="switch"
@@ -118,14 +129,18 @@
                 <span class="block truncate text-sm font-semibold text-texto-fuerte">
                   {{ s.nombre || s.email }}
                 </span>
-                <span class="mt-0.5 block truncate text-xs text-texto-suave">
+                <!-- Móvil: la columna derecha apretaba nombre y dispositivo hasta cortarlos. -->
+                <span class="mt-0.5 block text-[0.6875rem] text-texto-tenue sm:hidden">
+                  {{ dispositivoDeRegistro(s).etiqueta }} · <span class="text-emerald-700 oscuro:text-emerald-300">{{ hace(s.ultimo_latido) }}</span>
+                </span>
+                <span class="mt-0.5 block text-xs text-texto-suave sm:truncate">
                   {{ ultimaAccionDe(s.email) || 'Navegando' }}
                 </span>
                 <span class="mt-1 block text-[0.6875rem]">
                   <NatillerasUsuario :natilleras="natillerasDe(s.user_id)" />
                 </span>
               </span>
-              <span class="max-w-[45%] flex-shrink-0 text-right">
+              <span class="hidden max-w-[45%] flex-shrink-0 text-right sm:block">
                 <span class="block truncate text-[0.6875rem] text-texto-tenue">{{ dispositivoDeRegistro(s).etiqueta }}</span>
                 <span class="block text-[0.6875rem] text-emerald-700 oscuro:text-emerald-300">{{ hace(s.ultimo_latido) }}</span>
               </span>
@@ -144,9 +159,11 @@
             Todavía no ha pasado nada.
           </p>
 
-          <ul v-else class="max-h-[26rem] divide-y divide-borde-suave overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
+          <!-- Scroll propio solo en escritorio: en el móvil una lista con scroll dentro de la
+               página atrapa el dedo. Allí se muestran unas pocas y «Ver más». -->
+          <ul v-else class="divide-y divide-borde-suave lg:max-h-[26rem] lg:overflow-y-auto lg:overscroll-contain lg:[-webkit-overflow-scrolling:touch]">
             <li
-              v-for="a in actividad"
+              v-for="a in actividadVisible"
               :key="a.id"
               class="px-4 py-2.5"
               :class="{ 'trafico-nuevo': a._nuevo }"
@@ -160,7 +177,7 @@
                   <span class="block break-words text-xs leading-snug text-texto">
                     {{ a.descripcion || a.entidad }}
                   </span>
-                  <span class="mt-0.5 block truncate text-[0.6875rem] text-texto-suave">
+                  <span class="mt-0.5 block break-words text-[0.6875rem] text-texto-suave sm:truncate">
                     {{ a.usuario_email }}
                     <span v-if="a.natillera_nombre"> · {{ a.natillera_nombre }}</span>
                     · {{ hace(a.created_at) }}
@@ -169,6 +186,14 @@
               </div>
             </li>
           </ul>
+          <button
+            v-if="esMovil && actividad.length > limiteActividad"
+            type="button"
+            class="min-h-11 w-full touch-manipulation border-t border-borde-suave text-xs font-semibold text-marca-tinta hover:bg-superficie-suave"
+            @click="limiteActividad += PASO_MOVIL"
+          >
+            Ver más actividad ({{ actividad.length - limiteActividad }})
+          </button>
         </section>
       </div>
 
@@ -193,7 +218,45 @@
           Sin ingresos registrados todavía. Empiezan a aparecer en cuanto alguien use la app.
         </p>
 
-        <div v-else class="overflow-x-auto">
+        <!-- Móvil: una tarjeta por sesión. La tabla de seis columnas obligaba a deslizar de
+             lado y nunca se veía una fila entera. -->
+        <ul v-if="sesiones.length > 0" class="divide-y divide-borde-suave sm:hidden">
+          <li
+            v-for="s in sesionesVisiblesMovil"
+            :key="s.id"
+            class="px-4 py-3"
+            :class="estaEnLinea(s) ? 'bg-emerald-50/40 oscuro:bg-emerald-500/15' : ''"
+          >
+            <div class="flex items-center gap-2">
+              <span
+                class="h-2 w-2 flex-shrink-0 rounded-full"
+                :class="estaEnLinea(s) ? 'bg-emerald-500' : 'bg-borde-fuerte'"
+                aria-hidden="true"
+              />
+              <span class="min-w-0 flex-1 truncate text-sm font-semibold text-texto-fuerte">{{ s.nombre || s.email }}</span>
+              <span class="flex-shrink-0 text-xs tabular-nums text-texto-secundario">{{ duracion(s) }}</span>
+            </div>
+            <p class="mt-1 text-xs tabular-nums text-texto-secundario">
+              Entró {{ fechaHora(s.inicio) }} · última señal {{ hace(s.ultimo_latido) }}
+            </p>
+            <p class="mt-0.5 text-xs text-texto-suave">
+              {{ dispositivoDeRegistro(s).etiqueta }}<template v-if="s.modo_app"> · {{ s.modo_app === 'app' ? 'App instalada' : 'Navegador' }}</template>
+            </p>
+            <div class="mt-1.5 text-[0.6875rem]">
+              <NatillerasUsuario :natilleras="natillerasDe(s.user_id)" />
+            </div>
+          </li>
+        </ul>
+        <button
+          v-if="sesiones.length > limiteSesiones"
+          type="button"
+          class="min-h-11 w-full touch-manipulation border-t border-borde-suave text-xs font-semibold text-marca-tinta hover:bg-superficie-suave sm:hidden"
+          @click="limiteSesiones += PASO_MOVIL"
+        >
+          Ver más ingresos ({{ sesiones.length - limiteSesiones }})
+        </button>
+
+        <div v-if="sesiones.length > 0" class="hidden overflow-x-auto sm:block">
           <table class="w-full text-sm">
             <thead>
               <tr class="bg-superficie-suave text-left text-xs font-semibold text-texto-secundario">
@@ -326,6 +389,21 @@ function esMio(correo) {
 const ahora = ref(Date.now())
 let relojId = null
 let canal = null
+
+/*
+ * En el móvil las listas largas se cortan y crecen con «Ver más»: 80 apuntes y 150 sesiones
+ * seguidos eran una pared de scroll. En escritorio se ve todo (actividad con scroll propio).
+ */
+const PASO_MOVIL = 15
+const consultaMovil = typeof window !== 'undefined' ? window.matchMedia('(max-width: 1023px)') : null
+const esMovil = ref(consultaMovil?.matches ?? false)
+function alCambiarAncho(e) { esMovil.value = e.matches }
+consultaMovil?.addEventListener?.('change', alCambiarAncho)
+onUnmounted(() => consultaMovil?.removeEventListener?.('change', alCambiarAncho))
+const limiteActividad = ref(PASO_MOVIL)
+const limiteSesiones = ref(PASO_MOVIL)
+const actividadVisible = computed(() => (esMovil.value ? actividad.value.slice(0, limiteActividad.value) : actividad.value))
+const sesionesVisiblesMovil = computed(() => sesiones.value.slice(0, limiteSesiones.value))
 
 const conectados = computed(() => {
   // Una fila por persona: si alguien tiene varias sesiones vivas (móvil y escritorio),

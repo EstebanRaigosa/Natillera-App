@@ -22,6 +22,7 @@
           type="button"
           class="flex h-11 w-11 flex-shrink-0 touch-manipulation items-center justify-center rounded-full text-white hover:bg-white/15 [-webkit-tap-highlight-color:transparent]"
           aria-label="Volver al socio"
+          :disabled="eliminando || cargandoEliminacion"
           @click="emit('volver')"
         >
           <ChevronLeftIcon class="h-6 w-6" />
@@ -50,6 +51,7 @@
             type="button"
             class="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full text-white hover:bg-white/15"
             aria-label="Volver al socio"
+            :disabled="eliminando || cargandoEliminacion"
             @click="emit('volver')"
           >
             <ChevronLeftIcon class="h-6 w-6" />
@@ -80,6 +82,35 @@
         class="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden bg-superficie-tarjeta px-4 pt-4 pb-6 overscroll-contain [-webkit-overflow-scrolling:touch] sm:px-5"
         @scroll.passive="programarNatiscroll"
       >
+        <div v-if="errorEliminacion" role="alert" class="rounded-xl border border-red-200 bg-red-50 px-3 py-3 text-sm text-red-800 oscuro:border-red-500/30 oscuro:bg-red-500/15 oscuro:text-red-300">
+          {{ errorEliminacion }}
+        </div>
+        <ul v-if="avisosEliminacion.length" role="status" class="list-disc space-y-1 rounded-xl border border-amber-200 bg-amber-50 py-3 pl-7 pr-3 text-xs text-amber-800 oscuro:border-amber-500/30 oscuro:bg-amber-500/15 oscuro:text-amber-300">
+          <li v-for="aviso in avisosEliminacion" :key="aviso">{{ aviso }}</li>
+        </ul>
+        <CargaCaja v-if="cargandoEliminacion" texto="Calculando qué se revertirá" />
+        <section v-if="confirmacionEliminar" class="space-y-3 rounded-xl border border-red-200 bg-red-50 p-3 oscuro:border-red-500/30 oscuro:bg-red-500/15">
+          <h4 class="text-sm font-bold text-red-800 oscuro:text-red-300">Eliminar pagos seleccionados</h4>
+          <p class="text-xs text-texto-medio">Se revertirán {{ confirmacionEliminar.pagos.length }} pagos. Los conceptos pagados volverán a quedar pendientes.</p>
+          <ul class="space-y-1 text-xs text-texto-medio">
+            <li v-for="concepto in confirmacionEliminar.conceptos" :key="concepto.nombre" class="flex justify-between gap-3">
+              <span>{{ concepto.nombre }}</span><strong class="tabular-nums">${{ formatMoney(concepto.valor) }}</strong>
+            </li>
+          </ul>
+          <p class="text-sm font-bold text-red-800 oscuro:text-red-300">Total a revertir: ${{ formatMoney(confirmacionEliminar.total) }}</p>
+          <ul v-if="confirmacionEliminar.avisos.length" class="list-disc space-y-1 pl-4 text-xs text-amber-800 oscuro:text-amber-300">
+            <li v-for="aviso in confirmacionEliminar.avisos" :key="aviso">{{ aviso }}</li>
+          </ul>
+          <p class="text-xs text-texto-medio">Los pagos hechos directamente en Préstamos o Actividades se eliminan desde esas secciones.</p>
+          <p class="text-xs text-texto-medio">Esta eliminación es permanente. Para recuperarlos tendrás que registrar los pagos nuevamente.</p>
+          <div class="flex gap-2">
+            <button type="button" class="btn-modal-secondary flex-1" :disabled="eliminando" @click="confirmacionEliminar = null">Cancelar</button>
+            <button type="button" class="min-h-[44px] flex-1 rounded-full bg-red-700 px-3 py-2 text-sm font-bold text-white disabled:opacity-50" :disabled="eliminando" @click="confirmarEliminarSeleccion">
+              {{ eliminando ? `Eliminando ${progresoEliminacion} de ${confirmacionEliminar.pagos.length}…` : 'Sí, eliminar pagos' }}
+            </button>
+          </div>
+        </section>
+
         <CargaCaja v-if="cargando" texto="Cargando pagos" detalle="Buscando las cuotas que ha pagado." />
 
         <p v-else-if="errorCarga" class="rounded-xl border border-red-200 oscuro:border-red-500/30 bg-red-50 oscuro:bg-red-500/15 px-3 py-2.5 text-sm text-red-700 oscuro:text-red-300">
@@ -91,6 +122,16 @@
         </p>
 
         <template v-else>
+          <button
+            v-if="esReciboDePago"
+            type="button"
+            class="btn-modal-secondary w-full"
+            :disabled="seleccionBloqueada"
+            @click="seleccionarOtrasCuotas"
+          >
+            Seleccionar otras cuotas pagadas
+          </button>
+
           <!-- 1. Qué cuotas entran. Por defecto, las del último día en que pagó. En el recibo
                de un pago recién hecho no se elige: se muestra lo que se pagó. -->
           <section v-if="!esReciboDePago">
@@ -99,6 +140,7 @@
               <button
                 type="button"
                 class="min-h-[44px] touch-manipulation px-2 text-xs font-semibold text-marca-tinta"
+                :disabled="seleccionBloqueada"
                 @click="alternarTodas"
               >
                 {{ todasSeleccionadas ? 'Quitar todas' : 'Elegir todas' }}
@@ -112,6 +154,7 @@
                   :aria-checked="seleccion.has(p.clave)"
                   class="flex min-h-[48px] w-full touch-manipulation items-center gap-3 rounded-xl border px-3 py-2 text-left transition-colors"
                   :class="seleccion.has(p.clave) ? 'border-[#1B5E37] oscuro:border-marca-tinta bg-marca-suave' : 'border-borde bg-superficie-tarjeta hover:bg-superficie-suave'"
+                  :disabled="seleccionBloqueada"
                   @click="alternar(p.clave)"
                 >
                   <span
@@ -146,6 +189,7 @@
                       :aria-checked="abonoElegido(c.cuotaId, a.id)"
                       class="flex min-h-[44px] w-full touch-manipulation items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors"
                       :class="abonoElegido(c.cuotaId, a.id) ? 'bg-marca-suave' : 'hover:bg-superficie-hundida'"
+                      :disabled="seleccionBloqueada"
                       @click="alternarAbono(c.cuotaId, a.id)"
                     >
                       <span
@@ -312,6 +356,16 @@
       class="flex-shrink-0 space-y-2.5 border-t border-borde bg-superficie-tarjeta px-4 pt-4 sm:px-5"
       :style="{ paddingBottom: `calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
     >
+      <button
+        v-if="puedeEliminar && !confirmacionEliminar"
+        type="button"
+        class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border border-red-300 px-3 py-2 text-sm font-semibold text-red-700 disabled:opacity-50 oscuro:border-red-500/40 oscuro:text-red-300"
+        :disabled="pagosParaEliminar.length === 0 || cargando || seleccionBloqueada"
+        @click="previsualizarEliminarSeleccion"
+      >
+        <TrashIcon class="h-4 w-4" />
+        Eliminar pagos seleccionados
+      </button>
       <!--
         La imagen se prepara antes (al cambiar la selección) para que `navigator.share`
         salga directo del toque: en Safari, un `await` antes lo rechaza por falta de gesto.
@@ -320,7 +374,7 @@
         <button
           type="button"
           class="btn-descargar flex-1"
-          :disabled="!archivo || preparando"
+          :disabled="!archivo || preparando || seleccionBloqueada"
           @click="descargar"
         >
           <ArrowDownTrayIcon class="h-5 w-5 flex-shrink-0" />
@@ -329,7 +383,7 @@
         <button
           type="button"
           class="btn-compartir flex-1"
-          :disabled="!archivo || preparando"
+          :disabled="!archivo || preparando || seleccionBloqueada"
           @click="compartir"
         >
           <CargaBoton v-if="preparando" pequena />
@@ -349,6 +403,7 @@ import {
   CheckIcon,
   ChevronLeftIcon,
   ClipboardDocumentListIcon,
+  TrashIcon,
   XMarkIcon
 } from '@heroicons/vue/24/outline'
 import ModalWrapper from '../ModalWrapper.vue'
@@ -360,6 +415,8 @@ import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useTapadoInferior } from '../../composables/useTapadoInferior'
 import { detectIosPlatform } from '../../composables/useIsIos'
 import { useNotificationStore } from '../../stores/notifications'
+import { useCuotasStore } from '../../stores/cuotas'
+import { seleccionarPagosRegistrados, eliminarPagosSeleccionados } from '../../utils/seleccionarPagosRegistrados'
 import { formatMoney } from '../../utils/formatMoney'
 import TipoComprobante from '../comprobantes/TipoComprobante.vue'
 import { numeroWhatsApp } from '../../utils/telefono'
@@ -378,22 +435,26 @@ const props = defineProps({
   socioNombre: { type: String, default: '' },
   socioTelefono: { type: String, default: '' },
   natilleraNombre: { type: String, default: '' },
+  natilleraId: { type: String, default: '' },
+  puedeEliminar: { type: Boolean, default: false },
   /** Cuotas a dejar marcadas al abrir (p. ej. las recién pagadas). Vacío: las del último día. */
   cuotasIniciales: { type: Array, default: () => [] },
   /**
    * Filas de `historial_pagos_cuota` de un pago recién hecho. Con ellas el comprobante
-   * muestra SOLO lo de esa transacción (no lo abonado antes a esas cuotas) y no ofrece
-   * elegir cuotas: es el recibo de lo que se acaba de pagar.
+   * muestra inicialmente SOLO lo de esa transacción. «Seleccionar otras cuotas pagadas»
+   * abre el historial completo sin perder la selección actual.
    */
   historialIds: { type: Array, default: () => [] },
   /** Abierto desde otra modal (la del socio): «←» devuelve a ella; la X cierra todo. */
   mostrarVolver: { type: Boolean, default: false }
 })
 
-const esReciboDePago = computed(() => props.cuotasIniciales.length > 0)
-const emit = defineEmits(['cerrar', 'volver'])
+const verTodosLosPagos = ref(false)
+const esReciboDePago = computed(() => props.cuotasIniciales.length > 0 && !verTodosLosPagos.value)
+const emit = defineEmits(['cerrar', 'volver', 'pagos-eliminados'])
 
 const notificationStore = useNotificationStore()
+const cuotasStore = useCuotasStore()
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
 
 const cargando = ref(false)
@@ -413,10 +474,102 @@ const seleccion = reactive(new Set())
  */
 const abonosElegidos = reactive(new Map())
 
+const cargandoEliminacion = ref(false)
+const eliminando = ref(false)
+const progresoEliminacion = ref(0)
+const confirmacionEliminar = ref(null)
+const errorEliminacion = ref('')
+const avisosEliminacion = ref([])
+const seleccionBloqueada = computed(() => cargando.value || cargandoEliminacion.value || eliminando.value || !!confirmacionEliminar.value)
+const pagosParaEliminar = computed(() => seleccionarPagosRegistrados(pagos.value, seleccion, abonosElegidos))
+
+async function seleccionarOtrasCuotas() {
+  if (seleccionBloqueada.value) return
+  verTodosLosPagos.value = true
+  await cargarPagos({ conservarSeleccion: true })
+  programarImagen()
+}
+
+async function previsualizarEliminarSeleccion() {
+  if (!props.puedeEliminar || seleccionBloqueada.value || !pagosParaEliminar.value.length) return
+  cargandoEliminacion.value = true
+  errorEliminacion.value = ''
+  avisosEliminacion.value = []
+  const elegidos = pagosParaEliminar.value.map(p => ({ ...p }))
+  try {
+    const resumenes = []
+    for (const pago of elegidos) {
+      const res = pago.directo
+        ? await cuotasStore.previsualizarEliminacionPagoDirecto(pago.cuotaId)
+        : await cuotasStore.previsualizarEliminacionPago(pago.historialId)
+      if (!res.success) throw new Error(res.error || 'No se pudo calcular qué se revertirá')
+      resumenes.push(res.resumen)
+    }
+    const campos = [
+      ['Cuota de ahorro', 'valorCuota'], ['Sanciones', 'valorSancion'],
+      ['Actividades', 'valorActividades'], ['Préstamos', 'valorPrestamos'], ['4×1000', 'impuesto4x1000']
+    ]
+    const conceptos = campos.map(([nombre, campo]) => ({ nombre, valor: resumenes.reduce((s, r) => s + aNumero(r[campo]), 0) })).filter(c => c.valor > 0)
+    confirmacionEliminar.value = {
+      pagos: elegidos,
+      conceptos,
+      total: conceptos.reduce((s, c) => s + c.valor, 0),
+      avisos: [...new Set(resumenes.flatMap(r => r.avisos || []))]
+    }
+    await nextTick()
+    areaScroll.value?.scrollTo({ top: 0, behavior: 'smooth' })
+  } catch (e) {
+    errorEliminacion.value = e.message || 'No se pudo preparar la eliminación'
+  } finally {
+    cargandoEliminacion.value = false
+  }
+}
+
+async function confirmarEliminarSeleccion() {
+  if (!props.puedeEliminar || !confirmacionEliminar.value || eliminando.value) return
+  eliminando.value = true
+  progresoEliminacion.value = 0
+  errorEliminacion.value = ''
+  const opciones = {
+    _natilleraId: props.natilleraId,
+    _natilleraNombre: props.natilleraNombre || null,
+    _socioNombre: props.socioNombre || null
+  }
+  try {
+    const resultado = await eliminarPagosSeleccionados(confirmacionEliminar.value.pagos, pago => {
+      progresoEliminacion.value++
+      return pago.directo
+        ? cuotasStore.eliminarPagoDirectoCuota(pago.cuotaId, opciones)
+        : cuotasStore.eliminarPagoHistorial(pago.historialId, opciones)
+    })
+    confirmacionEliminar.value = null
+    avisosEliminacion.value = resultado.problemas
+    if (resultado.error) errorEliminacion.value = resultado.error
+    if (resultado.eliminados.length) {
+      notificationStore.success(`${resultado.eliminados.length} pagos eliminados`, 'Pagos')
+      // No conservar la lista de ids de un recibo que acaba de ser eliminado.
+      verTodosLosPagos.value = true
+    }
+    // Incluso un fallo puede haber revertido una parte del pago: siempre recargar los saldos.
+    if (props.natilleraId) await cuotasStore.fetchCuotasNatillera(props.natilleraId)
+    await cargarPagos({ conservarSeleccion: true })
+    emit('pagos-eliminados', { cuotaIds: [...new Set(resultado.eliminados.map(p => p.cuotaId))] })
+    programarImagen()
+  } catch (e) {
+    confirmacionEliminar.value = null
+    errorEliminacion.value = e.message || 'No se pudieron actualizar los pagos'
+  } finally {
+    eliminando.value = false
+    await nextTick()
+    areaScroll.value?.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+}
+
 useBodyScrollLock(computed(() => props.show))
 const { tapado } = useTapadoInferior()
 
 function cerrar() {
+  if (eliminando.value || cargandoEliminacion.value) return
   emit('cerrar')
 }
 
@@ -444,7 +597,9 @@ function diaDe(iso) {
  * escriben), y el comprobante debe mostrarlas todas. El historial y el plan de préstamos
  * solo aportan detalle: nombres de actividades, cuotas de préstamo y fechas de cada abono.
  */
-async function cargarPagos() {
+async function cargarPagos({ conservarSeleccion = false } = {}) {
+  const cuotasAnteriores = new Set(seleccion)
+  const abonosAnteriores = new Map([...abonosElegidos].map(([id, ids]) => [id, new Set(ids)]))
   if (!props.socioNatilleraId) return
   cargando.value = true
   errorCarga.value = ''
@@ -476,10 +631,10 @@ async function cargarPagos() {
     }
     // Recibo de un pago recién hecho: las filas exactas de esa transacción.
     let transaccion = []
-    if (props.historialIds.length > 0) {
+    if (esReciboDePago.value && props.historialIds.length > 0) {
       const { data, error: errTx } = await supabase
         .from('historial_pagos_cuota')
-        .select('cuota_id, fecha_pago, forma_pago, valor_cuota, valor_sancion, valor_actividades, valor_cuotas_prestamo, impuesto_4x1000, detalle_actividades, detalle_cuotas_prestamo')
+        .select('id, cuota_id, fecha_pago, forma_pago, valor_cuota, valor_sancion, valor_actividades, valor_cuotas_prestamo, impuesto_4x1000, detalle_actividades, detalle_cuotas_prestamo')
         .in('id', props.historialIds)
       if (errTx) throw errTx
       transaccion = data || []
@@ -496,6 +651,18 @@ async function cargarPagos() {
     })
     iniciarAbonosElegidos()
     seleccionarUltimoDia()
+    if (conservarSeleccion) {
+      seleccion.clear()
+      for (const p of periodos.value) if (cuotasAnteriores.has(p.clave)) seleccion.add(p.clave)
+      for (const { cuota, historial } of pagos.value) {
+        const anteriores = abonosAnteriores.get(cuota.id)
+        if (!anteriores) continue
+        const restantes = new Set(historial.filter(h => anteriores.has(h.id)).map(h => h.id))
+        abonosElegidos.set(cuota.id, restantes)
+        if (!restantes.size) seleccion.delete(cuota.id)
+      }
+    }
+    programarImagen()
   } catch (e) {
     errorCarga.value = e?.message || 'No se pudieron cargar los pagos'
     pagos.value = []
@@ -861,7 +1028,6 @@ const periodos = computed(() => periodosCuotas.value)
 function iniciarAbonosElegidos() {
   abonosElegidos.clear()
   for (const { cuota, historial, transaccion } of pagos.value) {
-    if (historial.length < 2) continue
     const ids = transaccion ? transaccion.map(h => h.id).filter(Boolean) : []
     abonosElegidos.set(cuota.id, new Set(ids.length > 0 ? ids : historial.map(h => h.id)))
   }
@@ -897,6 +1063,7 @@ function abonoElegido(cuotaId, id) {
 
 // Al menos un abono por cuota: para sacar la cuota entera se desmarca la cuota
 function alternarAbono(cuotaId, id) {
+  if (seleccionBloqueada.value) return
   const actual = new Set(abonosElegidos.get(cuotaId) || [])
   if (actual.has(id)) {
     if (actual.size === 1) return
@@ -911,7 +1078,7 @@ function seleccionarUltimoDia() {
   seleccion.clear()
   const lista = periodos.value
   if (lista.length === 0) return
-  if (props.cuotasIniciales.length > 0) {
+  if (esReciboDePago.value && props.cuotasIniciales.length > 0) {
     const pedidas = new Set(props.cuotasIniciales)
     lista.filter(p => pedidas.has(p.cuotaId)).forEach(p => seleccion.add(p.clave))
     if (seleccion.size > 0) return
@@ -923,11 +1090,13 @@ function seleccionarUltimoDia() {
 const todasSeleccionadas = computed(() => periodos.value.length > 0 && periodos.value.every(p => seleccion.has(p.clave)))
 
 function alternar(clave) {
+  if (seleccionBloqueada.value) return
   if (seleccion.has(clave)) seleccion.delete(clave)
   else seleccion.add(clave)
 }
 
 function alternarTodas() {
+  if (seleccionBloqueada.value) return
   if (todasSeleccionadas.value) seleccion.clear()
   else periodos.value.forEach(p => seleccion.add(p.clave))
 }
@@ -1087,6 +1256,10 @@ watch([() => periodos.value.length, () => periodosElegidos.value.length, cargand
 
 watch(() => props.show, abierto => {
   if (abierto) {
+    verTodosLosPagos.value = false
+    confirmacionEliminar.value = null
+    errorEliminacion.value = ''
+    avisosEliminacion.value = []
     cargarPagos()
     return
   }
